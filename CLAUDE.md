@@ -3,12 +3,18 @@
 Kho slide deck HTML tĩnh của **Bảo Tín Mạnh Hải (BTMH)**. Chủ dự án: **Thắng Nguyễn (CFO)**.
 Tách từ `vanthang81/n8n` sang repo riêng (25/07/2026). Phát hành tại `deck.consultx.vn`.
 
-## Hạ tầng & deploy
-- VPS `45.77.247.185`, chạy **Coolify** (Traefik + Let's Encrypt tự cấp TLS).
-- DNS: `deck.consultx.vn → 45.77.247.185` (A record, đã trỏ & verify 25/07).
-- **`main` = nhánh production Coolify theo dõi** → đưa code vào `main` là lên web.
-- Coolify Static Site: repo `vanthang81/decks`, branch `main`, Base Directory `/site`,
-  domain `https://deck.consultx.vn`, bật Generate SSL + Auto Deploy. Chi tiết: `docs/COOLIFY-SETUP.md`.
+## Hạ tầng & deploy (ĐÃ LIVE 25/07/2026 — chi tiết `docs/COOLIFY-SETUP.md`)
+- VPS `45.77.247.185`. Biên là **host nginx** (`nginx/1.18.0`) + **certbot**, KHÔNG phải Traefik
+  Coolify. Mỗi subdomain = 1 vhost nginx → cổng localhost 1 container.
+- Deck = Coolify **static app "decks"** (uuid `ssh3yybpge1ps0y9poredqwl`, project Applications),
+  Base Directory `/site`, repo `vanthang81/decks@main`, port `8600:80`. Host nginx vhost
+  `deck.consultx.vn` → `proxy_pass 127.0.0.1:8600`; TLS certbot (`/etc/letsencrypt/live/deck.consultx.vn/`).
+- DNS: `deck.consultx.vn → 45.77.247.185` (A record, verify 25/07).
+- **Đưa deck lên:** push `main` → redeploy Coolify app (auto nếu gắn webhook, hoặc
+  `GET coolify.vanthang.io/api/v1/deploy?uuid=ssh3yybpge1ps0y9poredqwl` kèm Bearer token).
+- Thao tác root trên VPS (nginx/certbot): user `thang` KHÔNG có passwordless sudo → đi qua
+  container privileged (`docker run --pid=host --network host -v /:/host … chroot /host …`),
+  LUÔN `nginx -t` trước khi `nginx -s reload`. n8n SSH cred `SSH - VPS deploy` (`q10ObtcvPYMRQs5P`).
 
 ## Quy ước deck (BẮT BUỘC giữ đồng nhất)
 - Mỗi deck = **1 file HTML self-contained** trong `site/decks/<slug>.html` — KHÔNG framework,
