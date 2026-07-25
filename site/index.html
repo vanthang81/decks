@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deck Library · deck.consultx.vn</title>
+<style>
+  :root {
+    --paper: #FBFAF8; --ink: #161A21; --neutral: #5B6472; --neutral-soft: #8A929E;
+    --line: #E4E0D8; --accent: #B07B32; --accent-soft: #EBD9BE; --data: #2E6F72;
+    --card: #FFFFFF; --shadow: 0 20px 50px -30px rgba(22,26,33,.4);
+    --display: Georgia, "Times New Roman", serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --paper:#14171D; --ink:#F1EEE8; --neutral:#A6ADB8; --neutral-soft:#767E8B;
+      --line:#2A2F38; --accent:#D6A051; --accent-soft:#4A3A22; --data:#4FA8AB;
+      --card:#1B1F26; --shadow:0 20px 50px -30px rgba(0,0,0,.6); }
+  }
+  :root[data-theme="light"] { --paper:#FBFAF8; --ink:#161A21; --neutral:#5B6472; --neutral-soft:#8A929E; --line:#E4E0D8; --accent:#B07B32; --accent-soft:#EBD9BE; --data:#2E6F72; --card:#FFFFFF; --shadow:0 20px 50px -30px rgba(22,26,33,.4); }
+  :root[data-theme="dark"] { --paper:#14171D; --ink:#F1EEE8; --neutral:#A6ADB8; --neutral-soft:#767E8B; --line:#2A2F38; --accent:#D6A051; --accent-soft:#4A3A22; --data:#4FA8AB; --card:#1B1F26; --shadow:0 20px 50px -30px rgba(0,0,0,.6); }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans);
+    -webkit-font-smoothing: antialiased; line-height: 1.5; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: clamp(40px,7vw,90px) clamp(22px,5vw,40px) 80px; }
+
+  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px;
+    border-bottom: 1px solid var(--line); padding-bottom: 26px; margin-bottom: 44px; }
+  .brand { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  h1 { font-family: var(--display); font-weight: 600; font-size: clamp(32px,5.5vw,56px);
+    letter-spacing: -.015em; line-height: 1.03; margin: 10px 0 0; text-wrap: balance; }
+  .sub { color: var(--neutral); margin: 14px 0 0; max-width: 58ch; }
+  .host { text-align: right; color: var(--neutral); font-size: 13px; white-space: nowrap; }
+  .host code { color: var(--accent); font-family: ui-monospace, Menlo, monospace; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 20px; }
+  a.deck { text-decoration: none; color: inherit; background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 26px; display: flex; flex-direction: column; gap: 12px;
+    box-shadow: var(--shadow); transition: transform .2s ease, border-color .2s ease; }
+  a.deck:hover { transform: translateY(-3px); border-color: var(--accent); }
+  a.deck:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .deck .tag { align-self: flex-start; font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 4px 10px; border-radius: 100px; }
+  .deck h2 { font-family: var(--display); font-size: 22px; margin: 6px 0 0; font-weight: 600; }
+  .deck p { margin: 0; color: var(--neutral); font-size: 14px; }
+  .deck .meta { margin-top: auto; padding-top: 8px; font-size: 12px; color: var(--neutral-soft);
+    display: flex; justify-content: space-between; align-items: center; }
+  .deck .go { color: var(--accent); font-weight: 600; }
+
+  footer { margin-top: 64px; padding-top: 22px; border-top: 1px solid var(--line);
+    color: var(--neutral-soft); font-size: 12.5px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  footer code { font-family: ui-monospace, Menlo, monospace; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="brand">Deck Library</div>
+        <h1>Slide deck, tạo &amp; host tự động.</h1>
+        <p class="sub">Kho slide deck HTML self-contained — sinh bằng Claude, deploy tĩnh lên VPS qua Coolify. Mỗi deck là một file, mở là chạy.</p>
+      </div>
+      <div class="host">phục vụ tại<br><code>deck.consultx.vn</code></div>
+    </header>
+
+    <main class="grid">
+      <a class="deck" href="decks/template.html">
+        <span class="tag">Template</span>
+        <h2>Deck mẫu — khung chuẩn</h2>
+        <p>5 slide demo: điều hướng phím, sáng/tối, thanh tiến độ, in PDF. Dùng làm khung cho deck mới.</p>
+        <div class="meta"><span>HTML · 1 file</span><span class="go">Mở →</span></div>
+      </a>
+      <!-- DECK-INSERT-POINT: deck mới thêm ở đây -->
+    </main>
+
+    <footer>
+      <span>Deck engine · HTML self-contained · deploy qua Coolify static site</span>
+      <span><code>vanthang81/decks</code> · /site</span>
+    </footer>
+  </div>
+</body>
+</html>
