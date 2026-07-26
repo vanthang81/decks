@@ -1,0 +1,53 @@
+import { SignJWT, jwtVerify } from 'jose';
+
+// Phiên VIEWER (khác phiên admin của Auth.js). Cookie 'deck_session', ký bằng AUTH_SECRET.
+export const VIEWER_COOKIE = 'deck_session';
+const TTL_SECONDS = 8 * 60 * 60; // 8h
+
+function secret(): Uint8Array {
+  const s = process.env.AUTH_SECRET;
+  if (!s) throw new Error('AUTH_SECRET missing');
+  return new TextEncoder().encode(s);
+}
+
+export type ViewerSession = {
+  grantId: string;
+  viewerId: string;
+  deckId: string;
+  deckSlug: string;
+  email: string;
+  name: string | null;
+};
+
+export async function signViewerSession(v: ViewerSession): Promise<string> {
+  return new SignJWT({ ...v })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(`${TTL_SECONDS}s`)
+    .sign(secret());
+}
+
+export async function verifyViewerSession(token: string | undefined): Promise<ViewerSession | null> {
+  if (!token) return null;
+  try {
+    const { payload } = await jwtVerify(token, secret());
+    return {
+      grantId: String(payload.grantId),
+      viewerId: String(payload.viewerId),
+      deckId: String(payload.deckId),
+      deckSlug: String(payload.deckSlug),
+      email: String(payload.email),
+      name: (payload.name as string | null) ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export const viewerCookieOptions = {
+  httpOnly: true,
+  secure: true,
+  sameSite: 'lax' as const,
+  path: '/',
+  maxAge: TTL_SECONDS,
+};

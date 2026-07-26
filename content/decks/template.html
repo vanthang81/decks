@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slide Deck HTML — Template</title>
+<style>
+  :root {
+    --paper: #FBFAF8;
+    --ink: #161A21;
+    --neutral: #5B6472;
+    --neutral-soft: #8A929E;
+    --line: #E4E0D8;
+    --accent: #B07B32;
+    --accent-soft: #EBD9BE;
+    --data: #2E6F72;
+    --card: #FFFFFF;
+    --shadow: 0 24px 60px -28px rgba(22,26,33,.35);
+    --display: Georgia, "Times New Roman", serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #14171D; --ink: #F1EEE8; --neutral: #A6ADB8; --neutral-soft: #767E8B;
+      --line: #2A2F38; --accent: #D6A051; --accent-soft: #4A3A22; --data: #4FA8AB;
+      --card: #1B1F26; --shadow: 0 24px 60px -28px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="light"] {
+    --paper: #FBFAF8; --ink: #161A21; --neutral: #5B6472; --neutral-soft: #8A929E;
+    --line: #E4E0D8; --accent: #B07B32; --accent-soft: #EBD9BE; --data: #2E6F72;
+    --card: #FFFFFF; --shadow: 0 24px 60px -28px rgba(22,26,33,.35);
+  }
+  :root[data-theme="dark"] {
+    --paper: #14171D; --ink: #F1EEE8; --neutral: #A6ADB8; --neutral-soft: #767E8B;
+    --line: #2A2F38; --accent: #D6A051; --accent-soft: #4A3A22; --data: #4FA8AB;
+    --card: #1B1F26; --shadow: 0 24px 60px -28px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans);
+    display: flex; align-items: center; justify-content: center; min-height: 100vh;
+    -webkit-font-smoothing: antialiased; transition: background .3s ease, color .3s ease;
+  }
+
+  .stage { width: min(92vw, 1180px); aspect-ratio: 16 / 9; position: relative; }
+
+  .slide {
+    position: absolute; inset: 0; background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; box-shadow: var(--shadow); padding: clamp(28px, 5vw, 68px);
+    display: none; flex-direction: column; overflow: hidden;
+  }
+  .slide.active { display: flex; animation: rise .45s cubic-bezier(.22,.61,.36,1); }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .slide.active { animation: none; } }
+
+  .eyebrow { font-size: clamp(11px, 1.1vw, 13px); letter-spacing: .18em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600; margin: 0 0 auto; }
+  .kicker-row { display: flex; align-items: center; gap: 14px; color: var(--neutral);
+    font-size: clamp(11px, 1.1vw, 13px); letter-spacing: .14em; text-transform: uppercase; }
+  .kicker-row .rule { flex: 1; height: 1px; background: var(--line); }
+
+  h1 { font-family: var(--display); font-weight: 600; font-size: clamp(34px, 6vw, 74px);
+    line-height: 1.02; letter-spacing: -.015em; text-wrap: balance; margin: .35em 0 .3em; }
+  h2 { font-family: var(--display); font-weight: 600; font-size: clamp(26px, 4vw, 46px);
+    line-height: 1.08; letter-spacing: -.01em; text-wrap: balance; margin: 0 0 .5em; }
+  .lead { font-size: clamp(15px, 1.7vw, 21px); line-height: 1.55; color: var(--neutral);
+    max-width: 62ch; margin: 0; }
+
+  .fill { flex: 1; }
+  .title-foot { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px;
+    color: var(--neutral); font-size: clamp(12px, 1.3vw, 15px); }
+  .title-foot strong { color: var(--ink); font-weight: 600; }
+
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(18px, 3vw, 40px);
+    flex: 1; align-content: center; }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: clamp(18px, 2.4vw, 30px);
+    display: flex; flex-direction: column; gap: 10px;
+    background: linear-gradient(180deg, transparent, rgba(176,123,50,.03)); }
+  .card .tag { align-self: flex-start; font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+    font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 4px 10px; border-radius: 100px; }
+  .card h3 { font-family: var(--display); font-size: clamp(19px,2.2vw,26px); margin: 4px 0 0; font-weight: 600; }
+  .card p { margin: 0; color: var(--neutral); font-size: clamp(13px,1.4vw,16px); line-height: 1.5; }
+
+  ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: flex;
+    flex-direction: column; gap: 14px; flex: 1; justify-content: center; }
+  ol.steps li { counter-increment: s; display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; }
+  ol.steps li::before { content: counter(s, decimal-leading-zero); font-family: var(--display);
+    font-variant-numeric: tabular-nums; color: var(--accent); font-size: clamp(18px, 2vw, 24px);
+    line-height: 1.3; min-width: 2.2ch; }
+  ol.steps b { font-weight: 600; }
+  ol.steps span { color: var(--neutral); }
+  ol.steps li div { font-size: clamp(14px, 1.5vw, 17px); line-height: 1.5; }
+
+  .chart-wrap { flex: 1; display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(20px,3vw,44px); align-items: center; }
+  .bars { display: flex; align-items: flex-end; gap: clamp(10px,1.8vw,22px); height: 62%; padding-top: 20px; }
+  .bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 10px; height: 100%; }
+  .bar .col { width: 100%; border-radius: 6px 6px 0 0; background: var(--data); position: relative;
+    transition: height .6s cubic-bezier(.22,.61,.36,1); }
+  .bar:last-child .col { background: var(--accent); }
+  .bar .val { font-variant-numeric: tabular-nums; font-weight: 600; font-size: clamp(13px,1.4vw,17px); }
+  .bar .lbl { font-size: clamp(11px,1.2vw,13px); color: var(--neutral); text-align: center; }
+  .chart-note h3 { font-family: var(--display); font-size: clamp(20px,2.4vw,30px); margin: 0 0 12px; font-weight: 600; }
+  .chart-note p { margin: 0; color: var(--neutral); line-height: 1.55; font-size: clamp(13px,1.4vw,16px); }
+
+  .close-grid { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 22px; }
+  .linkbox { display: inline-flex; align-items: center; gap: 12px; align-self: flex-start;
+    border: 1px solid var(--line); border-radius: 100px; padding: 12px 22px;
+    font-size: clamp(14px,1.5vw,18px); color: var(--ink); }
+  .linkbox .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .linkbox code { font-family: ui-monospace, "SF Mono", Menlo, monospace; color: var(--accent); }
+
+  .hud { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 16px; z-index: 20;
+    background: var(--card); border: 1px solid var(--line); border-radius: 100px;
+    padding: 7px 9px 7px 18px; box-shadow: var(--shadow); }
+  .hud .count { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--neutral); letter-spacing: .04em; }
+  .hud button { border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+    width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 16px; display: grid; place-items: center; }
+  .hud button:hover { border-color: var(--accent); color: var(--accent); }
+  .hud button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .theme-btn { margin-left: 2px; }
+
+  .progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); z-index: 20; transition: width .4s ease; }
+
+  .dots { display: flex; gap: 7px; }
+  .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); cursor: pointer; transition: all .25s; }
+  .dots i.on { background: var(--accent); transform: scale(1.25); }
+
+  @media (max-width: 640px) { .cols, .chart-wrap { grid-template-columns: 1fr; } .stage { width: 94vw; } }
+  @media print {
+    body { display: block; }
+    .hud, .progress { display: none; }
+    .slide { display: flex !important; position: relative; inset: auto; page-break-after: always;
+      box-shadow: none; margin-bottom: 20px; aspect-ratio: 16/9; }
+    .stage { width: 100%; aspect-ratio: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<div class="stage">
+  <!-- 1 · Title -->
+  <section class="slide active">
+    <div class="kicker-row"><span>Bản mẫu · Template</span><span class="rule"></span><span>2026</span></div>
+    <div class="fill"></div>
+    <h1>Slide deck HTML,<br>tạo &amp; host tự động.</h1>
+    <p class="lead">Một khung deck self-contained: soạn bằng Claude, xem thử tức thì qua Artifact, rồi deploy lên domain riêng qua Coolify — cùng một file, hai nơi phát hành.</p>
+    <div class="fill"></div>
+    <div class="title-foot">
+      <span>Điều hướng bằng <strong>← →</strong> hoặc <strong>Space</strong></span>
+      <span><strong>deck.consultx.vn</strong> · deck engine</span>
+    </div>
+  </section>
+
+  <!-- 2 · Two paths -->
+  <section class="slide">
+    <p class="eyebrow">Hai hướng phát hành</p>
+    <h2>Cùng một file HTML, chọn nơi nó sống.</h2>
+    <div class="cols">
+      <div class="card">
+        <span class="tag">Nhanh</span>
+        <h3>Claude host</h3>
+        <p>Render qua công cụ Artifact → link <code>claude.ai/…</code> tức thì. Không đụng VPS, chia sẻ được ngay, mặc định riêng tư.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Domain riêng</span>
+        <h3>VPS · Coolify</h3>
+        <p>Push file tĩnh → Coolify tự deploy tại <code>deck.consultx.vn</code>, tự cấp SSL. Thương hiệu của bạn, kiểm soát hoàn toàn.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · Pipeline -->
+  <section class="slide">
+    <p class="eyebrow">Quy trình deploy tĩnh</p>
+    <h2>Từ prompt đến link công khai.</h2>
+    <ol class="steps">
+      <li><div><b>Soạn deck.</b> <span>Claude tạo file HTML một-file, đã tối ưu sáng/tối, phím điều hướng, in PDF.</span></div></li>
+      <li><div><b>Xem thử.</b> <span>Publish Artifact để duyệt nội dung &amp; bố cục trước khi lên domain.</span></div></li>
+      <li><div><b>Push repo.</b> <span>Commit vào <code>site/decks/</code> → Coolify static site nhận webhook.</span></div></li>
+      <li><div><b>Nhận link.</b> <span>Coolify auto-deploy tại <code>deck.consultx.vn/decks/&lt;slug&gt;.html</code>. Xong.</span></div></li>
+    </ol>
+  </section>
+
+  <!-- 4 · Data slide -->
+  <section class="slide">
+    <p class="eyebrow">Vì sao HTML tĩnh</p>
+    <h2>Nhẹ, nhanh, không phụ thuộc.</h2>
+    <div class="chart-wrap">
+      <div class="bars" id="bars">
+        <div class="bar"><span class="col" style="height:0" data-h="34%"></span><span class="val">~40<small>KB</small></span><span class="lbl">1 file deck</span></div>
+        <div class="bar"><span class="col" style="height:0" data-h="18%"></span><span class="val">0</span><span class="lbl">build step</span></div>
+        <div class="bar"><span class="col" style="height:0" data-h="26%"></span><span class="val">0</span><span class="lbl">dependency</span></div>
+        <div class="bar"><span class="col" style="height:0" data-h="92%"></span><span class="val">100%</span><span class="lbl">tự chứa</span></div>
+      </div>
+      <div class="chart-note">
+        <h3>Một file là đủ.</h3>
+        <p>Không framework, không CDN, không runtime. CSS &amp; JS inline nên web server chỉ việc trả về — tải nhanh, cache dễ, và chạy y hệt ở mọi nơi bạn đặt nó.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · Close -->
+  <section class="slide">
+    <p class="eyebrow">Sẵn sàng</p>
+    <div class="close-grid">
+      <h2>Đưa cho mình nội dung — mình lo phần còn lại.</h2>
+      <p class="lead">Chủ đề, số slide, thương hiệu (màu/logo). Mình dựng deck, tạo link Artifact để duyệt, rồi xuất file tĩnh đúng chuẩn để Coolify phát hành.</p>
+      <div class="linkbox"><span class="dot"></span><span>Link sẽ là&nbsp; <code>deck.consultx.vn/decks/ten-deck.html</code></span></div>
+    </div>
+    <div class="title-foot" style="margin-top:auto">
+      <span>Deck engine · HTML self-contained</span>
+      <span><strong>← →</strong> để xem lại</span>
+    </div>
+  </section>
+</div>
+
+<div class="hud">
+  <button id="prev" aria-label="Slide trước">‹</button>
+  <div class="dots" id="dots"></div>
+  <span class="count" id="count">1 / 5</span>
+  <button id="next" aria-label="Slide kế">›</button>
+  <button class="theme-btn" id="theme" aria-label="Đổi giao diện sáng/tối">◐</button>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotsWrap = document.getElementById('dots');
+  const countEl = document.getElementById('count');
+  const progress = document.getElementById('progress');
+  let i = 0;
+
+  slides.forEach((_, n) => {
+    const d = document.createElement('i');
+    if (n === 0) d.className = 'on';
+    d.addEventListener('click', () => go(n));
+    dotsWrap.appendChild(d);
+  });
+  const dots = Array.from(dotsWrap.children);
+
+  function go(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, k) => s.classList.toggle('active', k === i));
+    dots.forEach((d, k) => d.classList.toggle('on', k === i));
+    countEl.textContent = (i + 1) + ' / ' + slides.length;
+    progress.style.width = ((i + 1) / slides.length * 100) + '%';
+    animateBars();
+  }
+  function next() { go(i + 1); }
+  function prev() { go(i - 1); }
+
+  function animateBars() {
+    if (!slides[i].querySelector('#bars')) return;
+    requestAnimationFrame(() => {
+      slides[i].querySelectorAll('.col').forEach(c => { c.style.height = c.dataset.h; });
+    });
+  }
+
+  document.getElementById('next').addEventListener('click', next);
+  document.getElementById('prev').addEventListener('click', prev);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+    if (e.key === 'Home') go(0);
+    if (e.key === 'End') go(slides.length - 1);
+  });
+
+  const themeBtn = document.getElementById('theme');
+  themeBtn.addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const isDark = cur ? cur === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  });
+
+  progress.style.width = (1 / slides.length * 100) + '%';
+  animateBars();
+</script>
+</body>
+</html>

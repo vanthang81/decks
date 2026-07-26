@@ -1,0 +1,112 @@
+import { createHash, randomBytes } from 'node:crypto';
+import { query, queryOne } from './db';
+
+export type GrantStatus = 'active' | 'revoked';
+
+export type Grant = {
+  id: string;
+  deck_id: string;
+  viewer_id: string;
+  status: GrantStatus;
+  expires_at: string | null;
+};
+
+export type GrantWithCtx = Grant & {
+  deck_slug: string;
+  deck_title: string;
+  deck_visibility: 'public' | 'protected';
+  deck_require_otp: boolean;
+  viewer_email: string;
+  viewer_name: string | null;
+};
+
+export function hashToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
+
+// Cấp (hoặc cấp lại) link cho (deck, viewer). Trả token THÔ để hiển thị 1 lần.
+export async function issueGrant(
+  deckId: string,
+  viewerId: string,
+  createdBy: string | null,
+  expiresAt: Date | null = null,
+): Promise<{ grant: Grant; token: string }> {
+  const token = randomBytes(32).toString('base64url');
+  const token_hash = hashToken(token);
+  const grant = await queryOne<Grant>(
+    `INSERT INTO deck_grants (deck_id, viewer_id, token_hash, status, expires_at, created_by)
+     VALUES ($1,$2,$3,'active',$4,$5)
+     ON CONFLICT (deck_id, viewer_id) DO UPDATE SET
+       token_hash=EXCLUDED.token_hash, status='active', expires_at=EXCLUDED.expires_at,
+       revoked_at=NULL, created_by=EXCLUDED.created_by, created_at=now()
+     RETURNING id, deck_id, viewer_id, status, expires_at`,
+    [deckId, viewerId, token_hash, expiresAt, createdBy],
+  );
+  return { grant: grant!, token };
+}
+
+export async function findGrantByToken(token: string): Promise<GrantWithCtx | null> {
+  return queryOne<GrantWithCtx>(
+    `SELECT g.id, g.deck_id, g.viewer_id, g.status, g.expires_at,
+            d.slug AS deck_slug, d.title AS deck_title, d.visibility AS deck_visibility,
+            d.require_otp AS deck_require_otp,
+            v.email AS viewer_email, v.name AS viewer_name
+     FROM deck_grants g
+     JOIN deck_decks d   ON d.id = g.deck_id
+     JOIN deck_viewers v ON v.id = g.viewer_id
+     WHERE g.token_hash = $1`,
+    [hashToken(token)],
+  );
+}
+
+// Kiểm tra grant còn dùng được: active + chưa hết hạn + deck published.
+export async function getActiveGrant(grantId: string): Promise<GrantWithCtx | null> {
+  const g = await queryOne<GrantWithCtx>(
+    `SELECT g.id, g.deck_id, g.viewer_id, g.status, g.expires_at,
+            d.slug AS deck_slug, d.title AS deck_title, d.visibility AS deck_visibility,
+            d.require_otp AS deck_require_otp,
+            v.email AS viewer_email, v.name AS viewer_name
+     FROM deck_grants g
+     JOIN deck_decks d   ON d.id = g.deck_id
+     JOIN deck_viewers v ON v.id = g.viewer_id
+     WHERE g.id = $1`,
+    [grantId],
+  );
+  if (!g) return null;
+  if (g.status !== 'active') return null;
+  if (g.expires_at && new Date(g.expires_at).getTime() < Date.now()) return null;
+  return g;
+}
+
+export async function revokeGrant(grantId: string): Promise<void> {
+  await query(
+    "UPDATE deck_grants SET status='revoked', revoked_at=now() WHERE id=$1",
+    [grantId],
+  );
+}
+
+export type GrantRow = {
+  id: string;
+  viewer_id: string;
+  viewer_email: string;
+  viewer_name: string | null;
+  status: GrantStatus;
+  expires_at: string | null;
+  created_at: string;
+  last_view: string | null;
+  views: number;
+};
+
+export async function listGrantsForDeck(deckId: string): Promise<GrantRow[]> {
+  return query<GrantRow>(
+    `SELECT g.id, g.viewer_id, v.email AS viewer_email, v.name AS viewer_name,
+            g.status, g.expires_at, g.created_at,
+            (SELECT max(created_at) FROM deck_access_log l WHERE l.grant_id=g.id AND l.event='view') AS last_view,
+            (SELECT count(*)::int FROM deck_access_log l WHERE l.grant_id=g.id AND l.event='view') AS views
+     FROM deck_grants g
+     JOIN deck_viewers v ON v.id=g.viewer_id
+     WHERE g.deck_id=$1
+     ORDER BY g.created_at DESC`,
+    [deckId],
+  );
+}
