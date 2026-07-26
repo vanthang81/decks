@@ -1,39 +1,34 @@
-# Slide Deck — tạo & host tự động
+# decks-portal — Deck portal có kiểm soát truy cập
 
-Sinh slide deck HTML self-contained bằng Claude, phát hành tĩnh lên
-`deck.consultx.vn` qua Coolify (TLS tự cấp).
+Portal slide deck của **BTMH**, live tại **https://deck.consultx.vn**. Next.js app phục vụ deck
+HTML self-contained với **phân quyền từng người xem** (magic link · watermark · log · thu hồi) và
+trang quản trị đăng nhập Google.
+
+## Đặc điểm
+- **Deck công khai** hoặc **bảo mật** (mỗi người xem 1 link cá nhân, watermark định danh, ghi log,
+  thu hồi tức thì, OTP email tùy chọn).
+- **Admin** (`/admin`): đăng nhập Google (allowlist), quản deck · cấp/thu hồi link · xem nhật ký.
+- Deck vẫn là **1 file HTML self-contained** trong `content/decks/<slug>.html` (không đổi cách soạn).
 
 ## Cấu trúc
-
 ```
-site/                web root Coolify publish
-  index.html         trang gallery liệt kê deck
-  decks/
-    template.html    deck mẫu (khung chuẩn, 5 slide)
-docs/
-  COOLIFY-SETUP.md   hướng dẫn gắn vào Coolify + DNS + auto-deploy
+content/decks/<slug>.html   nội dung deck (self-contained)
+src/app/                    routes: / (gallery) · /d/<slug> · /v/<token> · /admin · /api/*
+src/lib/                    db, auth, grants, session, watermark, otp, mail…
+db/001_deck_access.sql      schema deck_* (Postgres)
+docs/ACCESS-CONTROL.md      thiết kế & data model
+Dockerfile                  build standalone
 ```
 
-## Đặc điểm mỗi deck
+## Thêm deck
+1. Tạo `content/decks/<slug>.html` (copy từ `template.html`) → push `main` → deploy.
+2. `/admin` → Thêm deck (slug trùng tên file; đặt public/protected).
+3. Protected: thêm viewer → Cấp link → gửi.
 
-- Một file `.html` — không framework, không CDN, không build step.
-- Điều hướng phím `← →` / `Space`, thanh tiến độ, chấm chuyển slide.
-- Sáng/tối tự theo hệ thống + nút đổi thủ công.
-- In ra PDF được (mỗi slide một trang).
+## Dev
+```
+cp .env.example .env   # điền DATABASE_URL, GOOGLE_*, AUTH_SECRET, AUTH_URL…
+npm install && npm run build && npm start
+```
 
-## Xem thử nhanh (không cần VPS)
-
-Mở trực tiếp file trong trình duyệt, hoặc dùng bản Claude Artifact khi cần
-link tạm để duyệt trước.
-
-## Phát hành lên domain riêng
-
-Xem [`docs/COOLIFY-SETUP.md`](docs/COOLIFY-SETUP.md). Sau khi setup 1 lần:
-push HTML → Coolify auto-deploy → `https://deck.consultx.vn/decks/<slug>.html`.
-
-## Thêm deck mới
-
-1. Tạo `site/decks/<slug>.html` (copy `template.html` rồi thay nội dung).
-2. Thêm một card `<a class="deck">` vào `site/index.html` tại
-   `DECK-INSERT-POINT`.
-3. Commit + push branch phát hành.
+Chi tiết vận hành/deploy: xem `CLAUDE.md` và `docs/ACCESS-CONTROL.md`.
