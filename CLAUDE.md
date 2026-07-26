@@ -67,8 +67,10 @@ phục vụ + chèn watermark/log.
 - Deploy/đổi code MCP: `cd mcp-server && docker build -t decks-mcp:latest . && docker rm -f decks-mcp &&
   docker run -d --name decks-mcp -e MCP_TOKEN=… -e PUBLISH_KEY=… -e PORTAL_URL=https://deck.consultx.vn
   -p 127.0.0.1:8620:8620 --restart unless-stopped decks-mcp:latest`. (KHÔNG nằm trong "Decks Deploy".)
-- claude.ai: Settings → Connectors → Add custom connector → URL `https://deck.consultx.vn/mcp`,
-  Request header `Authorization: Bearer <MCP_TOKEN>`. Rotate token = đổi env + restart container.
+- claude.ai: Settings → Connectors → Add custom connector → **Remote MCP server URL =
+  `https://deck.consultx.vn/mcp/<MCP_TOKEN>`** (token nằm TRONG url — vì UI connector claude.ai hiện
+  chỉ có ô URL + OAuth, KHÔNG có ô request header). Server nhận cả 2: `/mcp/<token>` (path-secret) và
+  `/mcp` (header `Authorization: Bearer <token>`, gác ở tools/call). Rotate = đổi env MCP_TOKEN + restart.
 
 ## Nguyên tắc làm việc với CFO (áp cho MỌI session)
 Luôn **tự động làm hết**: tự tra mọi nguồn (memory/CLAUDE.md mọi project, Outline KB, n8n MCP,
