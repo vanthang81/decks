@@ -52,6 +52,11 @@ phục vụ + chèn watermark/log.
   `content/decks/<slug>.html`** (fallback).
 - **Qua repo (file)**: tạo `content/decks/<slug>.html` (copy `template.html`) → push `main` → deploy
   (rebuild) → `/admin` Thêm deck với slug trùng tên file.
+- **Qua API (cho Claude/máy tự publish)**: `POST https://deck.consultx.vn/api/publish` header
+  `x-publish-key: <PUBLISH_KEY>` (đọc từ `.env` VPS qua SSH relay), body JSON
+  `{slug,title,html,visibility('public'|'protected'),require_otp?,description?}` → upsert vào DB, trả
+  `{ok,url}`. Dùng cách này khi CFO nhờ "tạo deck ở Claude chat, publish luôn": sinh HTML self-contained
+  → gọi API → trả link. (Proxy sandbox chặn deck.consultx.vn → gọi qua relay curl trên VPS.)
 - Nếu protected: thêm viewer → **Cấp link** → gửi (email tự động qua "Deck Mail" hoặc copy link).
 
 ## Nguyên tắc làm việc với CFO (áp cho MỌI session)
