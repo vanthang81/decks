@@ -21,7 +21,8 @@ phục vụ + chèn watermark/log.
   accent `#B07B32`/data `#2E6F72`; serif hệ thống + system-ui; nav ←→/Space, sáng/tối; in PDF).
 - DB Postgres `btmh_data`, bảng prefix `deck_` (admins/decks/viewers/grants/access_log/otp).
   Schema `db/001_deck_access.sql` (+ `002_deck_content.sql` cột content, `003_admin_groups.sql`
-  bảng deck_groups/deck_group_members + cột deck_grants.group_id) — chạy bằng superuser postgres qua
+  bảng deck_groups/deck_group_members + cột deck_grants.group_id, `004_group_decks.sql` bảng
+  deck_group_decks = entitlement nhóm↔deck) — chạy bằng superuser postgres qua
   `docker exec` (hoặc n8n admin cred); app dùng user `btmh_app` (đã GRANT). Typecheck: `npm run build`.
 - **`mcp-server/` là project RIÊNG** (deps riêng, image Docker riêng `decks-mcp`) → ĐÃ loại khỏi
   build của app (`tsconfig.json` exclude + `.dockerignore`). ĐỪNG bỏ exclude: glob `**/*.ts` sẽ kéo
@@ -35,9 +36,13 @@ phục vụ + chèn watermark/log.
     `admin`↔`editor` (editor quản deck/người xem/link, KHÔNG đụng mục này). Guard: không tự hạ/xoá
     mình, không xoá admin cuối. `src/lib/admins.ts` + actions `requireOwnerAdmin`.
   - **Nhóm người xem** `/admin/groups` + `/admin/groups/[id]`: gom viewer thành nhóm; cấp 1 deck cho
-    cả nhóm → fan-out link cá nhân + watermark riêng từng người (`src/lib/groups.ts`, grant mang
-    `group_id`). Thêm thành viên sau → tự nhận quyền các deck của nhóm; bỏ khỏi nhóm/thu hồi cả nhóm =
-    revoke các grant phát sinh từ `group_id`. Trang chi tiết deck có mục "Cấp cho nhóm".
+    cả nhóm → ghi **entitlement `deck_group_decks`** (nhóm RỖNG vẫn giữ quyền) + fan-out link cá nhân +
+    watermark riêng từng người (`src/lib/groups.ts`, grant mang `group_id`). Thêm thành viên sau → tự
+    nhận link các deck nhóm được cấp; bỏ khỏi nhóm/thu hồi cả nhóm = revoke grant + xoá entitlement.
+    Trang chi tiết deck có mục "Cấp cho nhóm" (hiện cả nhóm 0 người). **4 nhóm seed sẵn**: Ban điều hành
+    BTMH · Nhà đầu tư · Đối tác chiến lược · Tư vấn & Kiểm toán (2 nhóm đầu+cuối đã được cấp `portal-bao-mat`).
+  - **Admin xem MỌI deck**: admin đăng nhập Google mở được mọi deck (công khai+bảo mật) qua `/d/<slug>`
+    KHÔNG cần link cấp (route check `auth()`+`getAdmin`); deck bảo mật vẫn bọc watermark định danh admin.
 - **Deck tài liệu nội bộ** `portal-bao-mat` (protected): tài liệu kiến trúc bảo mật & phân quyền
   (chuẩn MBB) — publish qua `/api/publish`, chỉ xem qua link được cấp (KHÔNG ở gallery).
 - **Viewer**: mỗi người 1 **magic link** `/v/<token>` (lưu sha256, KHÔNG lưu token thô) → phiên jose
