@@ -45,10 +45,14 @@ phục vụ + chèn watermark/log.
   DB superuser = `postgres` (docker exec vào container `wg8owogscc4ogog8ccgw0ok8`).
 - Rollback: trỏ nginx `8610 → 8600` (container static cũ vẫn còn) + reload.
 
-## Thêm deck mới
-1. Tạo `content/decks/<slug>.html` (copy `template.html`), commit + push `main` → deploy (rebuild container).
-2. Vào `/admin` → **Thêm deck** (slug trùng tên file, đặt public/protected).
-3. Nếu protected: thêm viewer → **Cấp link** → gửi (email tự động hoặc copy link).
+## Thêm deck mới (2 cách)
+- **Tự phục vụ trên admin (KHÔNG cần rebuild)**: `/admin` → Thêm deck → nhập slug/tiêu đề → **tải file
+  `.html`** hoặc **dán HTML** → chọn public/protected. Nội dung lưu cột `deck_decks.content` (DB), phục
+  vụ ngay. Sửa nội dung sau ở trang chi tiết deck ("Nội dung deck"). Nguồn render = **DB content > file
+  `content/decks/<slug>.html`** (fallback).
+- **Qua repo (file)**: tạo `content/decks/<slug>.html` (copy `template.html`) → push `main` → deploy
+  (rebuild) → `/admin` Thêm deck với slug trùng tên file.
+- Nếu protected: thêm viewer → **Cấp link** → gửi (email tự động qua "Deck Mail" hoặc copy link).
 
 ## Nguyên tắc làm việc với CFO (áp cho MỌI session)
 Luôn **tự động làm hết**: tự tra mọi nguồn (memory/CLAUDE.md mọi project, Outline KB, n8n MCP,
