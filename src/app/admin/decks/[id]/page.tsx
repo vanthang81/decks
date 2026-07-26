@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
-import { getDeckById } from '@/lib/decks';
+import { getDeckById, hasDeckContent } from '@/lib/decks';
 import { listGrantsForDeck } from '@/lib/grants';
 import { listDeckLog } from '@/lib/log';
-import { issueLinkAction, revokeLinkAction } from '../../actions';
+import { issueLinkAction, revokeLinkAction, updateContentAction } from '../../actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +23,7 @@ export default async function DeckDetailPage({
 
   const grants = await listGrantsForDeck(deck.id).catch(() => []);
   const log = await listDeckLog(deck.id, 60).catch(() => []);
+  const hasContent = await hasDeckContent(deck.id).catch(() => false);
 
   return (
     <div>
@@ -40,6 +41,27 @@ export default async function DeckDetailPage({
           <input readOnly value={searchParams.link} onFocus={undefined} />
         </div>
       )}
+
+      <h2 style={{ marginTop: 8 }}>Nội dung deck</h2>
+      <p className="muted">
+        Nguồn hiện tại:{' '}
+        {hasContent ? (
+          <span className="pill ok">HTML trong DB (tải qua admin)</span>
+        ) : (
+          <span className="pill">file <code>content/decks/{deck.slug}.html</code> trong repo</span>
+        )}
+        {' · '}<a href={`/d/${deck.slug}`} target="_blank" rel="noreferrer">Xem deck →</a>
+      </p>
+      <form action={updateContentAction} style={{ maxWidth: 560, marginBottom: 32 }}>
+        <input type="hidden" name="deck_id" value={deck.id} />
+        <label htmlFor="htmlfile">Cập nhật nội dung — tải file .html</label>
+        <input id="htmlfile" name="htmlfile" type="file" accept=".html,text/html" />
+        <label htmlFor="content">…hoặc dán HTML</label>
+        <textarea id="content" name="content" rows={4} placeholder="<!doctype html>…" style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12 }} />
+        <div style={{ marginTop: 12 }}>
+          <button className="btn" type="submit">Lưu nội dung</button>
+        </div>
+      </form>
 
       <h2 style={{ marginTop: 8 }}>Cấp link cho người xem</h2>
       <form action={issueLinkAction} style={{ maxWidth: 560, marginBottom: 32 }}>

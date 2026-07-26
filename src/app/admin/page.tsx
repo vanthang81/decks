@@ -52,6 +52,11 @@ export default async function AdminDecksPage() {
         <input id="title" name="title" required />
         <label htmlFor="description">Mô tả</label>
         <input id="description" name="description" />
+        <label htmlFor="htmlfile">Nội dung deck — tải file .html <span className="muted">(hoặc dán HTML bên dưới)</span></label>
+        <input id="htmlfile" name="htmlfile" type="file" accept=".html,text/html" />
+        <label htmlFor="content">…hoặc dán HTML self-contained</label>
+        <textarea id="content" name="content" rows={5} placeholder="<!doctype html>…" style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12 }} />
+        <p className="muted">Để trống cả hai nếu bạn đã đặt file <code>content/decks/&lt;slug&gt;.html</code> trong repo.</p>
         <label htmlFor="visibility">Chế độ</label>
         <select id="visibility" name="visibility" defaultValue="protected">
           <option value="protected">Bảo mật (cần link cá nhân)</option>

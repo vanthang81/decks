@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import { upsertDeck, getDeckById, type Visibility } from '@/lib/decks';
+import { upsertDeck, getDeckById, updateDeckContent, type Visibility } from '@/lib/decks';
 import { upsertViewer } from '@/lib/viewers';
 import { issueGrant, revokeGrant } from '@/lib/grants';
 import { sendMail } from '@/lib/mail';
@@ -15,11 +15,23 @@ async function requireAdminEmail(): Promise<string> {
   return email;
 }
 
+// Lấy nội dung HTML từ form: ưu tiên file upload 'htmlfile', rồi textarea 'content'. null nếu không có.
+async function extractContent(formData: FormData): Promise<string | null> {
+  const file = formData.get('htmlfile');
+  if (file && typeof file === 'object' && 'text' in file && (file as File).size > 0) {
+    const text = await (file as File).text();
+    if (text.trim().length > 0) return text;
+  }
+  const pasted = String(formData.get('content') ?? '').trim();
+  return pasted.length > 0 ? pasted : null;
+}
+
 export async function createDeckAction(formData: FormData) {
   const by = await requireAdminEmail();
   const slug = String(formData.get('slug') ?? '').trim().toLowerCase();
   const title = String(formData.get('title') ?? '').trim();
   if (!/^[a-z0-9][a-z0-9-]{0,80}$/.test(slug) || !title) return;
+  const content = await extractContent(formData);
   await upsertDeck({
     slug,
     title,
@@ -27,9 +39,19 @@ export async function createDeckAction(formData: FormData) {
     visibility: (String(formData.get('visibility') ?? 'protected') as Visibility),
     require_otp: formData.get('require_otp') === 'on',
     is_published: formData.get('is_published') !== 'off',
+    content,
     createdBy: by,
   });
   revalidatePath('/admin');
+}
+
+export async function updateContentAction(formData: FormData) {
+  await requireAdminEmail();
+  const deckId = String(formData.get('deck_id') ?? '');
+  if (!deckId) return;
+  const content = await extractContent(formData);
+  if (content) await updateDeckContent(deckId, content);
+  revalidatePath(`/admin/decks/${deckId}`);
 }
 
 export async function issueLinkAction(formData: FormData) {
