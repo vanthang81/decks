@@ -2,6 +2,7 @@ node_modules
 .next
 .git
 site
+mcp-server
 npm-debug.log
 .env
 .env.local
