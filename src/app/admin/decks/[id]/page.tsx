@@ -1,8 +1,9 @@
 import { notFound } from 'next/navigation';
 import { getDeckById, hasDeckContent } from '@/lib/decks';
 import { listGrantsForDeck } from '@/lib/grants';
+import { listGroups, grantedGroupsForDeck } from '@/lib/groups';
 import { listDeckLog } from '@/lib/log';
-import { issueLinkAction, revokeLinkAction, updateContentAction } from '../../actions';
+import { issueLinkAction, revokeLinkAction, updateContentAction, grantDeckToGroupAction, revokeGroupOnDeckAction } from '../../actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,6 +25,8 @@ export default async function DeckDetailPage({
   const grants = await listGrantsForDeck(deck.id).catch(() => []);
   const log = await listDeckLog(deck.id, 60).catch(() => []);
   const hasContent = await hasDeckContent(deck.id).catch(() => false);
+  const groups = await listGroups().catch(() => []);
+  const grantedGroups = await grantedGroupsForDeck(deck.id).catch(() => []);
 
   return (
     <div>
@@ -63,7 +66,43 @@ export default async function DeckDetailPage({
         </div>
       </form>
 
-      <h2 style={{ marginTop: 8 }}>Cấp link cho người xem</h2>
+      <h2 style={{ marginTop: 8 }}>Cấp cho nhóm</h2>
+      <p className="muted">Cấp deck này cho cả một nhóm — mỗi thành viên tự nhận link cá nhân + watermark riêng. Thành viên thêm vào nhóm sau cũng tự có quyền.</p>
+      {grantedGroups.length > 0 && (
+        <table style={{ marginBottom: 16 }}>
+          <thead><tr><th>Nhóm đã cấp</th><th>Đang hiệu lực</th><th></th></tr></thead>
+          <tbody>
+            {grantedGroups.map((g) => (
+              <tr key={g.id}>
+                <td>{g.name}</td>
+                <td>{g.active} người</td>
+                <td>
+                  <form action={revokeGroupOnDeckAction}>
+                    <input type="hidden" name="deck_id" value={deck.id} />
+                    <input type="hidden" name="group_id" value={g.id} />
+                    <button className="btn" type="submit">Thu hồi cả nhóm</button>
+                  </form>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      <form action={grantDeckToGroupAction} className="row" style={{ maxWidth: 560, marginBottom: 32, alignItems: 'flex-end' }}>
+        <input type="hidden" name="deck_id" value={deck.id} />
+        <div style={{ flex: 1 }}>
+          <label htmlFor="group_id">Chọn nhóm</label>
+          <select id="group_id" name="group_id" required>
+            <option value="">— chọn nhóm —</option>
+            {groups.map((g) => (
+              <option key={g.id} value={g.id}>{g.name} ({g.member_count ?? 0} người)</option>
+            ))}
+          </select>
+        </div>
+        <button className="btn primary" type="submit">Cấp cho nhóm</button>
+      </form>
+
+      <h2 style={{ marginTop: 8 }}>Cấp link cho từng người</h2>
       <form action={issueLinkAction} style={{ maxWidth: 560, marginBottom: 32 }}>
         <input type="hidden" name="deck_id" value={deck.id} />
         <div className="row">

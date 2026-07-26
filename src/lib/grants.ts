@@ -25,24 +25,45 @@ export function hashToken(token: string): string {
 }
 
 // Cấp (hoặc cấp lại) link cho (deck, viewer). Trả token THÔ để hiển thị 1 lần.
+// groupId != null khi grant phát sinh từ việc cấp deck cho một nhóm.
 export async function issueGrant(
   deckId: string,
   viewerId: string,
   createdBy: string | null,
   expiresAt: Date | null = null,
+  groupId: string | null = null,
 ): Promise<{ grant: Grant; token: string }> {
   const token = randomBytes(32).toString('base64url');
   const token_hash = hashToken(token);
   const grant = await queryOne<Grant>(
-    `INSERT INTO deck_grants (deck_id, viewer_id, token_hash, status, expires_at, created_by)
-     VALUES ($1,$2,$3,'active',$4,$5)
+    `INSERT INTO deck_grants (deck_id, viewer_id, token_hash, status, expires_at, created_by, group_id)
+     VALUES ($1,$2,$3,'active',$4,$5,$6)
      ON CONFLICT (deck_id, viewer_id) DO UPDATE SET
        token_hash=EXCLUDED.token_hash, status='active', expires_at=EXCLUDED.expires_at,
-       revoked_at=NULL, created_by=EXCLUDED.created_by, created_at=now()
+       revoked_at=NULL, created_by=EXCLUDED.created_by,
+       group_id=COALESCE(EXCLUDED.group_id, deck_grants.group_id), created_at=now()
      RETURNING id, deck_id, viewer_id, status, expires_at`,
-    [deckId, viewerId, token_hash, expiresAt, createdBy],
+    [deckId, viewerId, token_hash, expiresAt, createdBy, groupId],
   );
   return { grant: grant!, token };
+}
+
+// Thu hồi toàn bộ grant của 1 nhóm trên 1 deck.
+export async function revokeGroupOnDeck(deckId: string, groupId: string): Promise<number> {
+  const rows = await query<{ id: string }>(
+    "UPDATE deck_grants SET status='revoked', revoked_at=now() WHERE deck_id=$1 AND group_id=$2 AND status='active' RETURNING id",
+    [deckId, groupId],
+  );
+  return rows.length;
+}
+
+// Các deck mà 1 nhóm đang được cấp (còn hiệu lực) — để đồng bộ khi thêm thành viên.
+export async function activeDeckIdsForGroup(groupId: string): Promise<string[]> {
+  const rows = await query<{ deck_id: string }>(
+    "SELECT DISTINCT deck_id FROM deck_grants WHERE group_id=$1 AND status='active'",
+    [groupId],
+  );
+  return rows.map((r) => r.deck_id);
 }
 
 export async function findGrantByToken(token: string): Promise<GrantWithCtx | null> {

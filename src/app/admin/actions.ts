@@ -5,7 +5,9 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { upsertDeck, getDeckById, updateDeckContent, type Visibility } from '@/lib/decks';
 import { upsertViewer } from '@/lib/viewers';
-import { issueGrant, revokeGrant } from '@/lib/grants';
+import { issueGrant, revokeGrant, revokeGroupOnDeck } from '@/lib/grants';
+import { getAdmin, addAdmin, setAdminActive, setAdminRole, removeAdmin, countActiveAdmins, type AdminRole } from '@/lib/admins';
+import { createGroup, deleteGroup, addMember, removeMember, grantDeckToGroup } from '@/lib/groups';
 import { sendMail } from '@/lib/mail';
 
 async function requireAdminEmail(): Promise<string> {
@@ -13,6 +15,110 @@ async function requireAdminEmail(): Promise<string> {
   const email = session?.user?.email;
   if (!email) redirect('/login');
   return email;
+}
+
+// Chỉ vai trò 'admin' mới quản trị viên khác được.
+async function requireOwnerAdmin(): Promise<string> {
+  const email = await requireAdminEmail();
+  const me = await getAdmin(email);
+  if (me?.role !== 'admin') redirect('/admin?err=forbidden');
+  return email;
+}
+
+// ---- Quản trị viên ----
+export async function addAdminAction(formData: FormData) {
+  const by = await requireOwnerAdmin();
+  void by;
+  const email = String(formData.get('email') ?? '').trim().toLowerCase();
+  const role = (String(formData.get('role') ?? 'editor') === 'admin' ? 'admin' : 'editor') as AdminRole;
+  const name = String(formData.get('display_name') ?? '').trim() || null;
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return;
+  await addAdmin(email, role, name);
+  revalidatePath('/admin/admins');
+}
+
+export async function setAdminActiveAction(formData: FormData) {
+  await requireOwnerAdmin();
+  const email = String(formData.get('email') ?? '');
+  const active = String(formData.get('active') ?? '') === 'true';
+  // chặn tự vô hiệu admin cuối
+  if (!active && (await countActiveAdmins()) <= 1) return;
+  await setAdminActive(email, active);
+  revalidatePath('/admin/admins');
+}
+
+export async function setAdminRoleAction(formData: FormData) {
+  await requireOwnerAdmin();
+  const email = String(formData.get('email') ?? '');
+  const role = (String(formData.get('role') ?? 'editor') === 'admin' ? 'admin' : 'editor') as AdminRole;
+  if (role !== 'admin' && (await countActiveAdmins()) <= 1) return;
+  await setAdminRole(email, role);
+  revalidatePath('/admin/admins');
+}
+
+export async function removeAdminAction(formData: FormData) {
+  await requireOwnerAdmin();
+  const email = String(formData.get('email') ?? '');
+  const me = await getAdmin(await requireAdminEmail());
+  if (me?.email?.toLowerCase() === email.toLowerCase()) return; // không tự xoá mình
+  await removeAdmin(email);
+  revalidatePath('/admin/admins');
+}
+
+// ---- Nhóm người xem ----
+export async function createGroupAction(formData: FormData) {
+  const by = await requireAdminEmail();
+  const name = String(formData.get('name') ?? '').trim();
+  if (!name) return;
+  await createGroup(name, String(formData.get('description') ?? '').trim() || null, by);
+  revalidatePath('/admin/groups');
+}
+
+export async function deleteGroupAction(formData: FormData) {
+  await requireAdminEmail();
+  const id = String(formData.get('group_id') ?? '');
+  if (id) await deleteGroup(id);
+  revalidatePath('/admin/groups');
+}
+
+export async function addGroupMemberAction(formData: FormData) {
+  const by = await requireAdminEmail();
+  const groupId = String(formData.get('group_id') ?? '');
+  const email = String(formData.get('email') ?? '').trim().toLowerCase();
+  if (!groupId || !email) return;
+  const viewer = await upsertViewer({
+    email,
+    name: String(formData.get('name') ?? '').trim() || null,
+    company: String(formData.get('company') ?? '').trim() || null,
+    createdBy: by,
+  });
+  await addMember(groupId, viewer.id, by);
+  revalidatePath(`/admin/groups/${groupId}`);
+}
+
+export async function removeGroupMemberAction(formData: FormData) {
+  await requireAdminEmail();
+  const groupId = String(formData.get('group_id') ?? '');
+  const viewerId = String(formData.get('viewer_id') ?? '');
+  if (groupId && viewerId) await removeMember(groupId, viewerId);
+  revalidatePath(`/admin/groups/${groupId}`);
+}
+
+// ---- Phân quyền deck theo nhóm ----
+export async function grantDeckToGroupAction(formData: FormData) {
+  const by = await requireAdminEmail();
+  const deckId = String(formData.get('deck_id') ?? '');
+  const groupId = String(formData.get('group_id') ?? '');
+  if (deckId && groupId) await grantDeckToGroup(deckId, groupId, by);
+  revalidatePath(`/admin/decks/${deckId}`);
+}
+
+export async function revokeGroupOnDeckAction(formData: FormData) {
+  await requireAdminEmail();
+  const deckId = String(formData.get('deck_id') ?? '');
+  const groupId = String(formData.get('group_id') ?? '');
+  if (deckId && groupId) await revokeGroupOnDeck(deckId, groupId);
+  revalidatePath(`/admin/decks/${deckId}`);
 }
 
 // Lấy nội dung HTML từ form: ưu tiên file upload 'htmlfile', rồi textarea 'content'. null nếu không có.
