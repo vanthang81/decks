@@ -10,8 +10,13 @@ phục vụ + chèn watermark/log.
 
 ## Stack & cấu trúc
 - **Next.js 14 (App Router, standalone)** + TypeScript, **Auth.js v5** (Google OAuth, admin),
-  **node-postgres** (không ORM), **jose** (phiên viewer). Không Tailwind — CSS thường (`globals.css`,
-  palette deck). Pattern auth 2 tầng giống price-engine (`src/auth.config.ts` edge, `src/auth.ts` node).
+  **node-postgres** (không ORM), **jose** (phiên viewer). Không Tailwind — CSS thường (`globals.css`).
+  Pattern auth 2 tầng giống price-engine (`src/auth.config.ts` edge, `src/auth.ts` node).
+- **Theme ConsultX (chuyên nghiệp)**: palette xanh ConsultX `#3595D5` (sáng/tối), `globals.css` làm lại
+  (card shadow, header sticky). Logo + favicon ConsultX nhúng **data-URI** trong `src/lib/brand.ts`
+  (logo lấy từ consultx.vn, resize+tối ưu ~2.4KB — KHÔNG để asset rời trong repo public). Header dùng
+  chung `src/components/SiteHeader.tsx` (logo→Home + nút "Trang chủ" + slot actions) đặt ở TRÊN `.wrap`
+  của trang chủ/admin/login → **mọi trang portal luôn có đường về Home**.
 - Nội dung deck: `content/decks/<slug>.html` (self-contained; palette paper `#FBFAF8`/ink `#161A21`/
   accent `#B07B32`/data `#2E6F72`; serif hệ thống + system-ui; nav ←→/Space, sáng/tối; in PDF).
 - DB Postgres `btmh_data`, bảng prefix `deck_` (admins/decks/viewers/grants/access_log/otp).
