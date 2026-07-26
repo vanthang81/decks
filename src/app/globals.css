@@ -1,43 +1,132 @@
 :root {
-  --paper: #FBFAF8; --ink: #161A21; --neutral: #5B6472; --line: #E4E0D8;
-  --accent: #B07B32; --accent-soft: #EBD9BE; --data: #2E6F72; --card: #FFFFFF;
-  --display: Georgia, "Times New Roman", serif;
-  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* ConsultX brand — xanh #3595D5 (primary), phụ xanh lá #157F4A, nền lạnh sạch. */
+  --brand: #3595D5; --brand-strong: #2478B8; --brand-soft: #E7F1FB; --brand-ink: #12405F;
+  --paper: #F4F7FB; --card: #FFFFFF; --raise: #FFFFFF;
+  --ink: #16202B; --neutral: #5A6675; --faint: #8A94A2;
+  --line: #E2E8F0; --line-strong: #CFD8E3;
+  --ok: #157F4A; --ok-soft: #E4F3EA; --bad: #C0432B; --bad-soft: #F7E7E2; --warn: #9A6B1E;
+  --shadow: 0 1px 2px rgba(16,32,43,.04), 0 8px 24px -16px rgba(16,32,43,.18);
+  --shadow-lg: 0 24px 60px -34px rgba(16,32,43,.35);
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --display: var(--sans);
+  --radius: 12px;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --paper:#14171D; --ink:#F1EEE8; --neutral:#A6ADB8; --line:#2A2F38;
-    --accent:#D6A051; --accent-soft:#4A3A22; --data:#4FA8AB; --card:#1B1F26; }
+  :root {
+    --brand: #52A8E6; --brand-strong: #6FB8EC; --brand-soft: #15324A; --brand-ink: #BFE0F6;
+    --paper: #0F1620; --card: #172230; --raise: #1C2836;
+    --ink: #EAF0F6; --neutral: #9EAAB8; --faint: #6C7787;
+    --line: #26323F; --line-strong: #33414F;
+    --ok: #46B884; --ok-soft: #123528; --bad: #E27a63; --bad-soft: #3A211B; --warn: #D2A253;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -18px rgba(0,0,0,.6);
+    --shadow-lg: 0 30px 70px -40px rgba(0,0,0,.7);
+  }
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.5; }
-a { color: var(--accent); }
-.wrap { max-width: 1000px; margin: 0 auto; padding: clamp(28px,6vw,72px) clamp(18px,5vw,36px) 72px; }
-.brand { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
-h1 { font-family: var(--display); font-weight: 600; font-size: clamp(28px,5vw,48px); letter-spacing: -.015em; margin: 8px 0 4px; }
-h2 { font-family: var(--display); font-weight: 600; margin: 0 0 8px; }
-.sub { color: var(--neutral); margin: 6px 0 24px; }
-.grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); gap: 18px; }
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 22px;
-  display: flex; flex-direction: column; gap: 10px; text-decoration: none; color: inherit; }
-.card h3 { font-family: var(--display); font-size: 20px; margin: 0; font-weight: 600; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: var(--sans); line-height: 1.55; -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+a { color: var(--brand); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---------- Header thương hiệu (dùng chung mọi trang) ---------- */
+.site-header {
+  position: sticky; top: 0; z-index: 30;
+  background: var(--card); border-bottom: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+.site-header-inner {
+  max-width: 1120px; margin: 0 auto;
+  padding: 11px clamp(16px, 4vw, 40px);
+  display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+}
+.site-brand { display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit; }
+.site-brand:hover { text-decoration: none; }
+.logo-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #fff; border: 1px solid var(--line); border-radius: 10px;
+  padding: 7px 12px; box-shadow: var(--shadow);
+}
+.logo-chip img { display: block; height: 26px; width: auto; }
+.site-brand-text { display: flex; flex-direction: column; line-height: 1.15; }
+.site-brand-name { font-weight: 700; font-size: 16px; letter-spacing: -.01em; color: var(--ink); }
+.site-brand-sub { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--brand); font-weight: 600; }
+.site-nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.site-nav .muted { margin: 0 2px; }
+
+/* ---------- Layout ---------- */
+.wrap { max-width: 1120px; margin: 0 auto; padding: clamp(24px,4vw,44px) clamp(16px,4vw,40px) 72px; }
+.brand { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--brand); font-weight: 700; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(26px,4.4vw,40px); letter-spacing: -.02em; margin: 10px 0 4px; }
+h2 { font-family: var(--display); font-weight: 700; font-size: clamp(19px,2.4vw,24px); letter-spacing: -.01em; margin: 26px 0 10px; }
+.sub { color: var(--neutral); margin: 6px 0 26px; max-width: 68ch; }
+
+/* ---------- Hero (trang chủ) ---------- */
+.hero { display: flex; flex-direction: column; gap: 6px; margin-bottom: 30px;
+  padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+
+/* ---------- Cards / grid ---------- */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+.card {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 22px; display: flex; flex-direction: column; gap: 10px;
+  text-decoration: none; color: inherit; box-shadow: var(--shadow);
+  transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+}
+a.card:hover { text-decoration: none; transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--line-strong); }
+.card h3 { font-family: var(--display); font-size: 19px; margin: 0; font-weight: 700; letter-spacing: -.01em; }
 .card p { margin: 0; color: var(--neutral); font-size: 14px; }
-.tag { align-self: flex-start; font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
-  font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 3px 9px; border-radius: 100px; }
-.btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line);
-  background: var(--card); color: var(--ink); border-radius: 8px; padding: 9px 16px; font: inherit;
-  font-weight: 600; cursor: pointer; text-decoration: none; }
-.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-.btn:hover { border-color: var(--accent); }
-input, select, textarea { font: inherit; padding: 8px 10px; border: 1px solid var(--line);
-  border-radius: 8px; background: var(--card); color: var(--ink); width: 100%; }
-label { font-size: 13px; color: var(--neutral); display: block; margin: 10px 0 4px; }
+
+/* ---------- Tags / pills ---------- */
+.tag { align-self: flex-start; font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+  font-weight: 700; color: var(--brand-ink); background: var(--brand-soft); padding: 3px 10px; border-radius: 100px; }
+.tag.protected { color: var(--warn); background: var(--bad-soft); }
+.pill { font-size: 11px; padding: 2px 9px; border-radius: 100px; border: 1px solid var(--line); font-weight: 600; }
+.pill.ok { color: var(--ok); background: var(--ok-soft); border-color: transparent; }
+.pill.bad { color: var(--bad); background: var(--bad-soft); border-color: transparent; }
+
+/* ---------- Buttons ---------- */
+.btn { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line-strong);
+  background: var(--card); color: var(--ink); border-radius: 9px; padding: 8px 15px; font: inherit;
+  font-weight: 600; font-size: 14px; cursor: pointer; text-decoration: none; white-space: nowrap;
+  transition: border-color .12s ease, background .12s ease, color .12s ease; }
+.btn:hover { border-color: var(--brand); color: var(--brand); text-decoration: none; }
+.btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+.btn.primary:hover { background: var(--brand-strong); border-color: var(--brand-strong); color: #fff; }
+
+/* ---------- Forms ---------- */
+input, select, textarea { font: inherit; padding: 9px 11px; border: 1px solid var(--line-strong);
+  border-radius: 9px; background: var(--card); color: var(--ink); width: 100%; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+label { font-size: 13px; color: var(--neutral); display: block; margin: 12px 0 5px; font-weight: 600; }
+
+/* ---------- Tables ---------- */
 table { border-collapse: collapse; width: 100%; font-size: 14px; }
-th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
-th { color: var(--neutral); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+th { color: var(--neutral); font-weight: 700; font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; }
+tbody tr:hover { background: color-mix(in srgb, var(--brand-soft) 55%, transparent); }
+
+/* ---------- Utilities ---------- */
 .muted { color: var(--neutral); font-size: 13px; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-.pill { font-size: 11px; padding: 2px 8px; border-radius: 100px; border: 1px solid var(--line); }
-.pill.ok { color: #2E6F72; } .pill.bad { color: #b04a32; }
-.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px;
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px;
   padding-bottom: 14px; border-bottom: 1px solid var(--line); }
-.notice { padding: 40px; text-align: center; color: var(--neutral); }
+.card-block { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 20px 22px; box-shadow: var(--shadow); margin-bottom: 20px; }
+.notice { padding: 44px; text-align: center; color: var(--neutral);
+  background: var(--card); border: 1px dashed var(--line-strong); border-radius: var(--radius); }
+
+/* ---------- Login ---------- */
+.login-card { max-width: 400px; margin: clamp(40px,10vh,120px) auto; text-align: center;
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  padding: 40px 34px; box-shadow: var(--shadow-lg); }
+.login-card .logo-chip { margin: 0 auto 22px; padding: 12px 18px; }
+.login-card .logo-chip img { height: 34px; }
+
+@media (max-width: 560px) {
+  .site-brand-sub { display: none; }
+  .site-header-inner { padding: 10px 16px; }
+}

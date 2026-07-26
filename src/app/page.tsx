@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { listDecks } from '@/lib/decks';
+import SiteHeader from '@/components/SiteHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,38 +21,42 @@ export default async function GalleryPage() {
   }
 
   return (
-    <main className="wrap">
-      <div className="topbar">
-        <div>
-          <div className="brand">Deck Library</div>
-          <h1 style={{ marginBottom: 0 }}>Slide deck BTMH</h1>
+    <>
+      <SiteHeader
+        subtitle="Thư viện deck"
+        showHome={false}
+        actions={<Link className="btn primary" href="/admin">Quản trị</Link>}
+      />
+      <main className="wrap">
+        <div className="hero">
+          <div className="brand">Bảo Tín Mạnh Hải · ConsultX</div>
+          <h1 style={{ marginBottom: 0 }}>Thư viện Slide Deck</h1>
+          <p className="sub" style={{ margin: '8px 0 0' }}>
+            Danh sách deck nội bộ — chỉ hiện sau khi đăng nhập. Người xem ngoài chỉ vào từng deck
+            qua link cá nhân được cấp (có watermark &amp; thu hồi được).
+          </p>
         </div>
-        <Link className="btn" href="/admin">Quản trị</Link>
-      </div>
-      <p className="sub">
-        Danh sách deck nội bộ — chỉ hiện sau khi đăng nhập. Người xem ngoài chỉ vào từng deck
-        qua link cá nhân được cấp (có watermark + thu hồi được).
-      </p>
 
-      {dbErr ? (
-        <div className="notice">Chưa kết nối được dữ liệu. Kiểm tra cấu hình DB.</div>
-      ) : decks.length === 0 ? (
-        <div className="notice">Chưa có deck nào. Vào <Link href="/admin">Quản trị</Link> để thêm.</div>
-      ) : (
-        <div className="grid">
-          {decks.map((d) => (
-            <Link key={d.id} className="card" href={`/admin/decks/${d.id}`}>
-              <span className={`tag ${d.visibility === 'public' ? '' : 'protected'}`}>
-                {d.visibility === 'public' ? 'Công khai' : 'Bảo mật'}
-                {d.require_otp ? ' · OTP' : ''}
-                {d.is_published ? '' : ' · nháp'}
-              </span>
-              <h3>{d.title}</h3>
-              {d.description && <p>{d.description}</p>}
-            </Link>
-          ))}
-        </div>
-      )}
-    </main>
+        {dbErr ? (
+          <div className="notice">Chưa kết nối được dữ liệu. Kiểm tra cấu hình DB.</div>
+        ) : decks.length === 0 ? (
+          <div className="notice">Chưa có deck nào. Vào <Link href="/admin">Quản trị</Link> để thêm.</div>
+        ) : (
+          <div className="grid">
+            {decks.map((d) => (
+              <Link key={d.id} className="card" href={`/admin/decks/${d.id}`}>
+                <span className={`tag ${d.visibility === 'public' ? '' : 'protected'}`}>
+                  {d.visibility === 'public' ? 'Công khai' : 'Bảo mật'}
+                  {d.require_otp ? ' · OTP' : ''}
+                  {d.is_published ? '' : ' · nháp'}
+                </span>
+                <h3>{d.title}</h3>
+                {d.description && <p>{d.description}</p>}
+              </Link>
+            ))}
+          </div>
+        )}
+      </main>
+    </>
   );
 }
