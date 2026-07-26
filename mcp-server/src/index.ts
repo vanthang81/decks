@@ -106,6 +106,30 @@ function authorized(req: express.Request): boolean {
   return req.headers['authorization'] === `Bearer ${MCP_TOKEN}`;
 }
 
+async function handleMcp(req: express.Request, res: express.Response): Promise<void> {
+  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
+  res.on('close', () => transport.close());
+  const server = buildServer();
+  await server.connect(transport);
+  await transport.handleRequest(req, res, req.body);
+}
+
+const notAllowed = (_req: express.Request, res: express.Response) =>
+  res.status(405).set('Allow', 'POST').json({ jsonrpc: '2.0', error: { code: -32000, message: 'Method Not Allowed' }, id: null });
+
+// (A) Biến thể TOKEN-TRONG-URL: dùng khi client chỉ có ô URL (vd claude.ai custom connector
+//     không có ô "Request headers"). URL = https://deck.consultx.vn/mcp/<MCP_TOKEN> — path gác tất cả.
+app.post('/mcp/:token', async (req, res) => {
+  if (req.params.token !== MCP_TOKEN) {
+    res.status(404).json({ jsonrpc: '2.0', error: { code: -32001, message: 'Not found' }, id: null });
+    return;
+  }
+  await handleMcp(req, res);
+});
+app.get('/mcp/:token', notAllowed);
+app.delete('/mcp/:token', notAllowed);
+
+// (B) Biến thể HEADER: dùng khi client có ô request header. initialize/tools/list mở, tools/call cần Bearer.
 app.post('/mcp', async (req, res) => {
   if (needsAuth(req.body) && !authorized(req)) {
     res.status(401).json({
@@ -115,20 +139,10 @@ app.post('/mcp', async (req, res) => {
     });
     return;
   }
-  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
-  res.on('close', () => transport.close());
-  const server = buildServer();
-  await server.connect(transport);
-  await transport.handleRequest(req, res, req.body);
+  await handleMcp(req, res);
 });
-
-// GET/DELETE /mcp: server stateless không có SSE stream -> 405 (endpoint tồn tại) thay vì 404.
-app.get('/mcp', (_req, res) => {
-  res.status(405).set('Allow', 'POST').json({ jsonrpc: '2.0', error: { code: -32000, message: 'Method Not Allowed' }, id: null });
-});
-app.delete('/mcp', (_req, res) => {
-  res.status(405).set('Allow', 'POST').json({ jsonrpc: '2.0', error: { code: -32000, message: 'Method Not Allowed' }, id: null });
-});
+app.get('/mcp', notAllowed);
+app.delete('/mcp', notAllowed);
 
 app.listen(PORT, '0.0.0.0', () => {
   console.error(`deck-publisher-mcp-server lắng nghe :${PORT}/mcp`);
