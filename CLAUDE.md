@@ -59,6 +59,17 @@ phục vụ + chèn watermark/log.
   → gọi API → trả link. (Proxy sandbox chặn deck.consultx.vn → gọi qua relay curl trên VPS.)
 - Nếu protected: thêm viewer → **Cấp link** → gửi (email tự động qua "Deck Mail" hoặc copy link).
 
+## MCP connector cho claude.ai (publish deck từ chat claude.ai)
+- **MCP server `deck-publisher`** (`mcp-server/`, Node + @modelcontextprotocol/sdk, Streamable HTTP
+  stateless): container `decks-mcp` port `127.0.0.1:8620`, nginx `location /mcp` (snippet
+  `/etc/nginx/snippets/deck-mcp.conf`) → endpoint `https://deck.consultx.vn/mcp`. Auth: header
+  `Authorization: Bearer <MCP_TOKEN>` (env container). Tool `deck_publish` gọi portal `/api/publish`.
+- Deploy/đổi code MCP: `cd mcp-server && docker build -t decks-mcp:latest . && docker rm -f decks-mcp &&
+  docker run -d --name decks-mcp -e MCP_TOKEN=… -e PUBLISH_KEY=… -e PORTAL_URL=https://deck.consultx.vn
+  -p 127.0.0.1:8620:8620 --restart unless-stopped decks-mcp:latest`. (KHÔNG nằm trong "Decks Deploy".)
+- claude.ai: Settings → Connectors → Add custom connector → URL `https://deck.consultx.vn/mcp`,
+  Request header `Authorization: Bearer <MCP_TOKEN>`. Rotate token = đổi env + restart container.
+
 ## Nguyên tắc làm việc với CFO (áp cho MỌI session)
 Luôn **tự động làm hết**: tự tra mọi nguồn (memory/CLAUDE.md mọi project, Outline KB, n8n MCP,
 Metabase/BigQuery, GitHub…) để tìm cách tự làm; **tự review & tự kiểm kỹ vài vòng**; xong & chắc
