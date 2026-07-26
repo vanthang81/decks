@@ -19,6 +19,7 @@ function gate(msg: string): Response {
 }
 
 export async function GET(req: NextRequest, { params }: { params: { token: string } }) {
+  const base = process.env.APP_URL ?? req.url;
   const g = await findGrantByToken(params.token);
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null;
   const ua = req.headers.get('user-agent');
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest, { params }: { params: { token: strin
       kind: 'otp',
     }).catch(() => {});
     await logEvent({ event: 'otp_sent', deckId: g.deck_id, viewerId: g.viewer_id, grantId: g.id }).catch(() => {});
-    return NextResponse.redirect(new URL(`/v/${params.token}/otp`, req.url));
+    return NextResponse.redirect(new URL(`/v/${params.token}/otp`, base));
   }
 
   // Không OTP: cấp phiên rồi vào deck.
@@ -50,7 +51,7 @@ export async function GET(req: NextRequest, { params }: { params: { token: strin
     grantId: g.id, viewerId: g.viewer_id, deckId: g.deck_id,
     deckSlug: g.deck_slug, email: g.viewer_email, name: g.viewer_name,
   });
-  const res = NextResponse.redirect(new URL(`/d/${g.deck_slug}`, req.url));
+  const res = NextResponse.redirect(new URL(`/d/${g.deck_slug}`, base));
   res.cookies.set(VIEWER_COOKIE, jwt, viewerCookieOptions);
   return res;
 }
