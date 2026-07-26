@@ -92,9 +92,27 @@ app.get('/healthz', (_req, res) => {
   res.status(200).send('ok');
 });
 
+// Chỉ những method THỰC THI mới cần token. initialize/tools/list mở để claude.ai
+// hoàn tất bước "Connect" (discovery của nó không kèm header auth). Token vẫn được
+// claude.ai gửi ở các lần gọi tool -> tools/call bị gác, không token = không publish.
+const AUTH_METHODS = new Set(['tools/call']);
+
+function needsAuth(body: unknown): boolean {
+  const arr = Array.isArray(body) ? body : [body];
+  return arr.some((m) => typeof m === 'object' && m !== null && AUTH_METHODS.has((m as { method?: string }).method ?? ''));
+}
+
+function authorized(req: express.Request): boolean {
+  return req.headers['authorization'] === `Bearer ${MCP_TOKEN}`;
+}
+
 app.post('/mcp', async (req, res) => {
-  if (req.headers['authorization'] !== `Bearer ${MCP_TOKEN}`) {
-    res.status(401).json({ jsonrpc: '2.0', error: { code: -32001, message: 'Unauthorized' }, id: null });
+  if (needsAuth(req.body) && !authorized(req)) {
+    res.status(401).json({
+      jsonrpc: '2.0',
+      error: { code: -32001, message: 'Unauthorized: thiếu/sai header Authorization: Bearer <MCP_TOKEN>' },
+      id: (req.body && (req.body as { id?: unknown }).id) ?? null,
+    });
     return;
   }
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
@@ -102,6 +120,14 @@ app.post('/mcp', async (req, res) => {
   const server = buildServer();
   await server.connect(transport);
   await transport.handleRequest(req, res, req.body);
+});
+
+// GET/DELETE /mcp: server stateless không có SSE stream -> 405 (endpoint tồn tại) thay vì 404.
+app.get('/mcp', (_req, res) => {
+  res.status(405).set('Allow', 'POST').json({ jsonrpc: '2.0', error: { code: -32000, message: 'Method Not Allowed' }, id: null });
+});
+app.delete('/mcp', (_req, res) => {
+  res.status(405).set('Allow', 'POST').json({ jsonrpc: '2.0', error: { code: -32000, message: 'Method Not Allowed' }, id: null });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
