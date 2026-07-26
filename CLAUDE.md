@@ -15,12 +15,26 @@ phục vụ + chèn watermark/log.
 - Nội dung deck: `content/decks/<slug>.html` (self-contained; palette paper `#FBFAF8`/ink `#161A21`/
   accent `#B07B32`/data `#2E6F72`; serif hệ thống + system-ui; nav ←→/Space, sáng/tối; in PDF).
 - DB Postgres `btmh_data`, bảng prefix `deck_` (admins/decks/viewers/grants/access_log/otp).
-  Schema `db/001_deck_access.sql` — chạy bằng superuser postgres qua `docker exec` (hoặc n8n admin cred);
-  app dùng user `btmh_app` (đã GRANT). Typecheck: `npm run build` (hoặc `npx tsc --noEmit`).
+  Schema `db/001_deck_access.sql` (+ `002_deck_content.sql` cột content, `003_admin_groups.sql`
+  bảng deck_groups/deck_group_members + cột deck_grants.group_id) — chạy bằng superuser postgres qua
+  `docker exec` (hoặc n8n admin cred); app dùng user `btmh_app` (đã GRANT). Typecheck: `npm run build`.
+- **`mcp-server/` là project RIÊNG** (deps riêng, image Docker riêng `decks-mcp`) → ĐÃ loại khỏi
+  build của app (`tsconfig.json` exclude + `.dockerignore`). ĐỪNG bỏ exclude: glob `**/*.ts` sẽ kéo
+  `mcp-server/src` vào typecheck app, mà Docker build root chỉ cài deps app → lỗi thiếu
+  `@modelcontextprotocol/sdk` (chỉ pass ở local vì còn `mcp-server/node_modules`).
 
 ## Phân quyền & luồng (xem `docs/ACCESS-CONTROL.md`)
 - **Admin** `/admin`: Google login, allowlist `deck_admins` (seed `vanthang81@gmail.com`). Quản deck
   (public/protected, OTP), cấp/thu hồi link theo người xem, xem nhật ký. Middleware gác `/admin`.
+  - **Quản trị viên** `/admin/admins` (chỉ role `admin`): thêm/khoá/xoá admin + đổi vai trò
+    `admin`↔`editor` (editor quản deck/người xem/link, KHÔNG đụng mục này). Guard: không tự hạ/xoá
+    mình, không xoá admin cuối. `src/lib/admins.ts` + actions `requireOwnerAdmin`.
+  - **Nhóm người xem** `/admin/groups` + `/admin/groups/[id]`: gom viewer thành nhóm; cấp 1 deck cho
+    cả nhóm → fan-out link cá nhân + watermark riêng từng người (`src/lib/groups.ts`, grant mang
+    `group_id`). Thêm thành viên sau → tự nhận quyền các deck của nhóm; bỏ khỏi nhóm/thu hồi cả nhóm =
+    revoke các grant phát sinh từ `group_id`. Trang chi tiết deck có mục "Cấp cho nhóm".
+- **Deck tài liệu nội bộ** `portal-bao-mat` (protected): tài liệu kiến trúc bảo mật & phân quyền
+  (chuẩn MBB) — publish qua `/api/publish`, chỉ xem qua link được cấp (KHÔNG ở gallery).
 - **Viewer**: mỗi người 1 **magic link** `/v/<token>` (lưu sha256, KHÔNG lưu token thô) → phiên jose
   (cookie `deck_session`, 8h) → `/d/<slug>` render **có watermark tên+email+giờ** + log `view`.
   Kiểm grant **mỗi request** → thu hồi tức thì. OTP email tùy chọn per-deck.
