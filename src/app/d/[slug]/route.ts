@@ -5,6 +5,8 @@ import { getActiveGrant } from '@/lib/grants';
 import { verifyViewerSession, VIEWER_COOKIE } from '@/lib/session';
 import { wrapProtectedDeck } from '@/lib/watermark';
 import { logEvent } from '@/lib/log';
+import { auth } from '@/auth';
+import { getAdmin } from '@/lib/admins';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,6 +43,29 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
 
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null;
   const ua = req.headers.get('user-agent');
+
+  // Admin đăng nhập Google → xem được MỌI deck (công khai + bảo mật) không cần link cấp.
+  // Deck bảo mật vẫn bọc watermark định danh admin + chặn tải; công khai trả raw.
+  try {
+    const adminEmail = (await auth())?.user?.email;
+    if (adminEmail) {
+      const admin = await getAdmin(adminEmail);
+      if (admin?.is_active) {
+        await logEvent({ event: 'view', deckId: deck.id, ip, userAgent: ua }).catch(() => {});
+        return htmlResponse(
+          deck.visibility === 'public'
+            ? html
+            : wrapProtectedDeck(html, {
+                email: adminEmail,
+                name: admin.display_name ?? 'Quản trị viên',
+                deckSlug: deck.slug,
+              }),
+        );
+      }
+    }
+  } catch {
+    // Không có phiên admin hợp lệ → tiếp tục luồng viewer bên dưới.
+  }
 
   // Public: mở tự do, không watermark.
   if (deck.visibility === 'public') {

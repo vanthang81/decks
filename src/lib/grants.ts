@@ -48,8 +48,9 @@ export async function issueGrant(
   return { grant: grant!, token };
 }
 
-// Thu hồi toàn bộ grant của 1 nhóm trên 1 deck.
+// Thu hồi quyền của 1 nhóm trên 1 deck: bỏ entitlement + revoke các grant phát sinh từ nhóm.
 export async function revokeGroupOnDeck(deckId: string, groupId: string): Promise<number> {
+  await query('DELETE FROM deck_group_decks WHERE deck_id=$1 AND group_id=$2', [deckId, groupId]);
   const rows = await query<{ id: string }>(
     "UPDATE deck_grants SET status='revoked', revoked_at=now() WHERE deck_id=$1 AND group_id=$2 AND status='active' RETURNING id",
     [deckId, groupId],
@@ -57,10 +58,10 @@ export async function revokeGroupOnDeck(deckId: string, groupId: string): Promis
   return rows.length;
 }
 
-// Các deck mà 1 nhóm đang được cấp (còn hiệu lực) — để đồng bộ khi thêm thành viên.
+// Các deck mà 1 nhóm ĐƯỢC CẤP QUYỀN (entitlement) — dùng để tự cấp link khi thêm thành viên.
 export async function activeDeckIdsForGroup(groupId: string): Promise<string[]> {
   const rows = await query<{ deck_id: string }>(
-    "SELECT DISTINCT deck_id FROM deck_grants WHERE group_id=$1 AND status='active'",
+    'SELECT deck_id FROM deck_group_decks WHERE group_id=$1',
     [groupId],
   );
   return rows.map((r) => r.deck_id);

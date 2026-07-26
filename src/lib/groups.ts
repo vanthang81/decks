@@ -73,19 +73,29 @@ export async function removeMember(groupId: string, viewerId: string): Promise<v
   );
 }
 
-// Các nhóm đang được cấp 1 deck (còn hiệu lực) — hiển thị + thu hồi theo nhóm.
-export async function grantedGroupsForDeck(deckId: string): Promise<{ id: string; name: string; active: number }[]> {
-  return query<{ id: string; name: string; active: number }>(
-    `SELECT g.id, g.name, count(*) FILTER (WHERE gr.status='active')::int AS active
-     FROM deck_grants gr JOIN deck_groups g ON g.id=gr.group_id
-     WHERE gr.deck_id=$1 GROUP BY g.id, g.name HAVING count(*) FILTER (WHERE gr.status='active') > 0
+// Các nhóm ĐƯỢC CẤP QUYỀN 1 deck (kể cả nhóm đang rỗng) — hiển thị + thu hồi theo nhóm.
+// active = số người đang có link hiệu lực; members = tổng thành viên nhóm.
+export async function grantedGroupsForDeck(
+  deckId: string,
+): Promise<{ id: string; name: string; active: number; members: number }[]> {
+  return query<{ id: string; name: string; active: number; members: number }>(
+    `SELECT g.id, g.name,
+            (SELECT count(*) FROM deck_grants gr WHERE gr.deck_id=$1 AND gr.group_id=g.id AND gr.status='active')::int AS active,
+            (SELECT count(*) FROM deck_group_members m WHERE m.group_id=g.id)::int AS members
+     FROM deck_group_decks gd JOIN deck_groups g ON g.id=gd.group_id
+     WHERE gd.deck_id=$1
      ORDER BY g.name`,
     [deckId],
   );
 }
 
-// Cấp 1 deck cho cả nhóm: fan-out grant cho từng thành viên (mỗi người link + watermark riêng).
+// Cấp 1 deck cho cả nhóm: ghi entitlement (nhóm rỗng vẫn giữ quyền) + fan-out grant cho
+// từng thành viên hiện có (mỗi người link + watermark riêng). Thành viên thêm sau tự nhận.
 export async function grantDeckToGroup(deckId: string, groupId: string, by: string | null): Promise<number> {
+  await query(
+    'INSERT INTO deck_group_decks (group_id, deck_id, granted_by) VALUES ($1,$2,$3) ON CONFLICT (group_id, deck_id) DO NOTHING',
+    [groupId, deckId, by],
+  );
   const members = await listMembers(groupId);
   for (const m of members) {
     await issueGrant(deckId, m.viewer_id, by, null, groupId);

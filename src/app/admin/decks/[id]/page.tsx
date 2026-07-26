@@ -70,12 +70,12 @@ export default async function DeckDetailPage({
       <p className="muted">Cấp deck này cho cả một nhóm — mỗi thành viên tự nhận link cá nhân + watermark riêng. Thành viên thêm vào nhóm sau cũng tự có quyền.</p>
       {grantedGroups.length > 0 && (
         <table style={{ marginBottom: 16 }}>
-          <thead><tr><th>Nhóm đã cấp</th><th>Đang hiệu lực</th><th></th></tr></thead>
+          <thead><tr><th>Nhóm đã cấp</th><th>Có link / thành viên</th><th></th></tr></thead>
           <tbody>
             {grantedGroups.map((g) => (
               <tr key={g.id}>
                 <td>{g.name}</td>
-                <td>{g.active} người</td>
+                <td>{g.active}/{g.members} người</td>
                 <td>
                   <form action={revokeGroupOnDeckAction}>
                     <input type="hidden" name="deck_id" value={deck.id} />
