@@ -38,7 +38,11 @@ phục vụ + chèn watermark/log.
 - **Viewer**: mỗi người 1 **magic link** `/v/<token>` (lưu sha256, KHÔNG lưu token thô) → phiên jose
   (cookie `deck_session`, 8h) → `/d/<slug>` render **có watermark tên+email+giờ** + log `view`.
   Kiểm grant **mỗi request** → thu hồi tức thì. OTP email tùy chọn per-deck.
-- **Deck public**: `/d/<slug>` mở tự do (không watermark), hiện ở gallery `/`.
+- **Trang chủ `/` = thư viện deck NỘI BỘ, ĐÃ KHOÁ sau đăng nhập** (middleware gác `/` + `/admin/*`;
+  khách chưa login → đẩy về `/login`). Liệt kê **mọi** deck (badge công khai/bảo mật/OTP/nháp), card mở
+  trang quản trị deck. `src/app/page.tsx` + `auth()` guard (defense-in-depth). KHÔNG để lộ danh sách deck ra ngoài.
+- **Deck public**: `/d/<slug>` vẫn mở tự do qua link trực tiếp (không watermark) — nhưng KHÔNG còn liệt kê
+  công khai ở `/` nữa (muốn khoá luôn cả xem-qua-link thì đổi route `/d`).
 - Chặn tải/in: render qua route (không URL file rời) + chặn menu/in + watermark. KHÔNG chặn được chụp màn hình.
 
 ## Hạ tầng & deploy (ĐÃ LIVE 26/07/2026)
