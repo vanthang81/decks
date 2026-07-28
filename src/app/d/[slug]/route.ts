@@ -100,42 +100,43 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
     // Không có phiên admin hợp lệ → tiếp tục luồng viewer bên dưới.
   }
 
-  // Lớp mật khẩu (nếu deck có đặt): phải mở khoá TRƯỚC. Sau khi mở khoá thì tiếp tục
-  // theo visibility (public → mở; protected → vẫn cần link cá nhân). Admin đã bỏ qua ở trên.
-  if (deck.has_password) {
-    const unlocked = await verifyDeckPwSession(
-      req.cookies.get(deckPwCookieName(deck.id))?.value,
-      deck.id,
-    );
-    if (!unlocked) return passwordForm(deck.slug);
+  // Các đường vào hợp lệ (HOẶC): (1) link cá nhân còn hiệu lực, (2) mật khẩu chung đã mở khoá,
+  // (3) public không mật khẩu. Không đường nào → form mật khẩu (nếu deck có mật khẩu) hoặc gate.
+
+  // (1) Link cá nhân: phiên viewer + grant active → watermark định danh riêng.
+  const sess = await verifyViewerSession(req.cookies.get(VIEWER_COOKIE)?.value);
+  if (sess && sess.deckSlug === deck.slug) {
+    const grant = await getActiveGrant(sess.grantId);
+    if (grant && grant.deck_id === deck.id) {
+      await logEvent({ event: 'view', deckId: deck.id, viewerId: sess.viewerId, grantId: sess.grantId, ip, userAgent: ua }).catch(() => {});
+      return htmlResponse(wrapProtectedDeck(html, { email: sess.email, name: sess.name, deckSlug: deck.slug }));
+    }
+    // Có phiên nhưng grant đã thu hồi/hết hạn → ghi nhận, vẫn cho thử đường mật khẩu bên dưới.
+    await logEvent({ event: 'revoked_hit', deckId: deck.id, viewerId: sess.viewerId, grantId: sess.grantId, ip, userAgent: ua }).catch(() => {});
   }
 
-  // Public: mở tự do (đã qua mật khẩu nếu có), không watermark.
-  if (deck.visibility === 'public') {
+  // (2) Mật khẩu chung đã mở khoá → xem được (public: raw; bảo mật: watermark chung + chặn tải).
+  if (deck.has_password) {
+    const unlocked = await verifyDeckPwSession(req.cookies.get(deckPwCookieName(deck.id))?.value, deck.id);
+    if (unlocked) {
+      await logEvent({ event: 'view', deckId: deck.id, ip, userAgent: ua }).catch(() => {});
+      return htmlResponse(
+        deck.visibility === 'public'
+          ? html
+          : wrapProtectedDeck(html, { email: 'mật khẩu chung', name: null, deckSlug: deck.slug }),
+      );
+    }
+  }
+
+  // (3) Public không mật khẩu → mở tự do.
+  if (deck.visibility === 'public' && !deck.has_password) {
     await logEvent({ event: 'view', deckId: deck.id, ip, userAgent: ua }).catch(() => {});
     return htmlResponse(html);
   }
 
-  // Protected: cần phiên viewer hợp lệ + grant còn active (kiểm DB mỗi request → thu hồi tức thì).
-  const sess = await verifyViewerSession(req.cookies.get(VIEWER_COOKIE)?.value);
-  if (!sess || sess.deckSlug !== deck.slug) {
-    return gate(deck.slug, 'Bạn cần mở deck này bằng link cá nhân được cấp.');
-  }
-  const grant = await getActiveGrant(sess.grantId);
-  if (!grant || grant.deck_id !== deck.id) {
-    await logEvent({
-      event: 'revoked_hit', deckId: deck.id, viewerId: sess.viewerId, grantId: sess.grantId, ip, userAgent: ua,
-    }).catch(() => {});
-    return gate(deck.slug, 'Quyền truy cập của bạn đã bị thu hồi hoặc hết hạn.');
-  }
-
-  await logEvent({
-    event: 'view', deckId: deck.id, viewerId: sess.viewerId, grantId: sess.grantId, ip, userAgent: ua,
-  }).catch(() => {});
-
-  return htmlResponse(
-    wrapProtectedDeck(html, { email: sess.email, name: sess.name, deckSlug: deck.slug }),
-  );
+  // Chưa vào được: có mật khẩu → cho nhập mật khẩu chung; nếu không → cần link cá nhân.
+  if (deck.has_password) return passwordForm(deck.slug);
+  return gate(deck.slug, 'Bạn cần mở deck này bằng link cá nhân được cấp.');
 }
 
 // Nhận mật khẩu deck: đúng → set cookie mở khoá + redirect về GET; sai → hiện lại form.

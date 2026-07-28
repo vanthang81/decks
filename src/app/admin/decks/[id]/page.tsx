@@ -22,6 +22,9 @@ export default async function DeckDetailPage({
   const deck = await getDeckById(params.id);
   if (!deck) notFound();
 
+  const appUrl = process.env.APP_URL ?? '';
+  const viewUrl = `${appUrl}/d/${deck.slug}`;
+
   const grants = await listGrantsForDeck(deck.id).catch(() => []);
   const log = await listDeckLog(deck.id, 60).catch(() => []);
   const hasContent = await hasDeckContent(deck.id).catch(() => false);
@@ -49,16 +52,18 @@ export default async function DeckDetailPage({
       {searchParams.pw && (
         <div className="card" style={{ marginBottom: 20 }}>
           <span className="tag">Mật khẩu deck vừa đặt</span>
-          <p className="muted">Chỉ hiện <b>1 lần</b> (hệ chỉ lưu bản băm). Gửi kèm link deck cho người xem:</p>
-          <input readOnly value={searchParams.pw} style={{ fontFamily: 'ui-monospace, monospace', fontSize: 15 }} />
-          <p className="muted" style={{ marginTop: 8 }}>Link xem: <code>{`/d/${deck.slug}`}</code> → nhập mật khẩu trên.</p>
+          <p className="muted">Chỉ hiện <b>1 lần</b> (hệ chỉ lưu bản băm). Gửi <b>link + mật khẩu</b> cho người xem:</p>
+          <label htmlFor="pwval" style={{ marginTop: 4 }}>Mật khẩu</label>
+          <input id="pwval" readOnly value={searchParams.pw} style={{ fontFamily: 'ui-monospace, monospace', fontSize: 15 }} />
+          <label htmlFor="pwlink" style={{ marginTop: 10 }}>Link xem (gửi kèm)</label>
+          <input id="pwlink" readOnly value={viewUrl} />
         </div>
       )}
 
       <h2 style={{ marginTop: 8 }}>Mật khẩu deck</h2>
       <p className="muted">
-        Khoá deck bằng <b>một mật khẩu chung</b>: ai có link <code>/d/{deck.slug}</code> + mật khẩu là xem được,
-        không cần cấp link cá nhân. {deck.visibility === 'protected' && 'Deck bảo mật vẫn cần thêm link cá nhân sau khi qua mật khẩu.'} Trạng thái:{' '}
+        Khoá deck bằng <b>một mật khẩu chung</b>: ai có link <code>{viewUrl}</code> + mật khẩu là xem được ngay,
+        KHÔNG cần cấp link cá nhân. {deck.visibility === 'protected' && '(Người đã có link cá nhân vẫn vào thẳng, không cần mật khẩu.)'} Trạng thái:{' '}
         {deck.has_password ? <span className="pill ok">Đang bật</span> : <span className="pill">Chưa đặt</span>}
       </p>
       <div className="row" style={{ maxWidth: 560, marginBottom: 32, alignItems: 'flex-end' }}>
