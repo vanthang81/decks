@@ -4,6 +4,7 @@ import { listGrantsForDeck } from '@/lib/grants';
 import { listGroups, grantedGroupsForDeck } from '@/lib/groups';
 import { listDeckLog } from '@/lib/log';
 import { issueLinkAction, revokeLinkAction, updateContentAction, grantDeckToGroupAction, revokeGroupOnDeckAction, setDeckPasswordAction, generateDeckPasswordAction, clearDeckPasswordAction } from '../../actions';
+import CopyField from '@/components/CopyField';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,7 +46,7 @@ export default async function DeckDetailPage({
         <div className="card" style={{ marginBottom: 20 }}>
           <span className="tag">Link cá nhân vừa cấp</span>
           <p className="muted">Gửi link này cho người xem (mỗi người một link riêng, có thể thu hồi):</p>
-          <input readOnly value={searchParams.link} onFocus={undefined} />
+          <CopyField value={searchParams.link} />
         </div>
       )}
 
@@ -53,10 +54,10 @@ export default async function DeckDetailPage({
         <div className="card" style={{ marginBottom: 20 }}>
           <span className="tag">Mật khẩu deck vừa đặt</span>
           <p className="muted">Chỉ hiện <b>1 lần</b> (hệ chỉ lưu bản băm). Gửi <b>link + mật khẩu</b> cho người xem:</p>
-          <label htmlFor="pwval" style={{ marginTop: 4 }}>Mật khẩu</label>
-          <input id="pwval" readOnly value={searchParams.pw} style={{ fontFamily: 'ui-monospace, monospace', fontSize: 15 }} />
-          <label htmlFor="pwlink" style={{ marginTop: 10 }}>Link xem (gửi kèm)</label>
-          <input id="pwlink" readOnly value={viewUrl} />
+          <CopyField label="Mật khẩu" value={searchParams.pw} mono />
+          <div style={{ marginTop: 10 }}>
+            <CopyField label="Link xem (gửi kèm)" value={viewUrl} />
+          </div>
         </div>
       )}
 
@@ -66,6 +67,9 @@ export default async function DeckDetailPage({
         KHÔNG cần cấp link cá nhân. {deck.visibility === 'protected' && '(Người đã có link cá nhân vẫn vào thẳng, không cần mật khẩu.)'} Trạng thái:{' '}
         {deck.has_password ? <span className="pill ok">Đang bật</span> : <span className="pill">Chưa đặt</span>}
       </p>
+      <div style={{ maxWidth: 560, marginBottom: 14 }}>
+        <CopyField label="Link xem (gửi cho người xem)" value={viewUrl} />
+      </div>
       <div className="row" style={{ maxWidth: 560, marginBottom: 32, alignItems: 'flex-end' }}>
         <form action={setDeckPasswordAction} className="row" style={{ flex: 1, alignItems: 'flex-end' }}>
           <input type="hidden" name="deck_id" value={deck.id} />
