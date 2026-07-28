@@ -22,7 +22,8 @@ phục vụ + chèn watermark/log.
 - DB Postgres `btmh_data`, bảng prefix `deck_` (admins/decks/viewers/grants/access_log/otp).
   Schema `db/001_deck_access.sql` (+ `002_deck_content.sql` cột content, `003_admin_groups.sql`
   bảng deck_groups/deck_group_members + cột deck_grants.group_id, `004_group_decks.sql` bảng
-  deck_group_decks = entitlement nhóm↔deck) — chạy bằng superuser postgres qua
+  deck_group_decks = entitlement nhóm↔deck, `005_deck_password.sql` cột deck_decks.password_hash)
+  — chạy bằng superuser postgres qua
   `docker exec` (hoặc n8n admin cred); app dùng user `btmh_app` (đã GRANT). Typecheck: `npm run build`.
 - **`mcp-server/` là project RIÊNG** (deps riêng, image Docker riêng `decks-mcp`) → ĐÃ loại khỏi
   build của app (`tsconfig.json` exclude + `.dockerignore`). ĐỪNG bỏ exclude: glob `**/*.ts` sẽ kéo
@@ -48,6 +49,11 @@ phục vụ + chèn watermark/log.
 - **Viewer**: mỗi người 1 **magic link** `/v/<token>` (lưu sha256, KHÔNG lưu token thô) → phiên jose
   (cookie `deck_session`, 8h) → `/d/<slug>` render **có watermark tên+email+giờ** + log `view`.
   Kiểm grant **mỗi request** → thu hồi tức thì. OTP email tùy chọn per-deck.
+- **Mật khẩu deck** (tùy chọn, `deck_decks.password_hash` sha256): 1 mật khẩu chung — ai có link
+  `/d/<slug>` + mật khẩu là xem được (không cần link cá nhân). Là **lớp khoá chồng lên** public/protected:
+  chưa mở khoá → form nhập mật khẩu (POST `/d/<slug>` verify → cookie jose `dpw_<id8>` 12h). Admin bỏ qua.
+  Đặt/gỡ ở trang chi tiết deck (đặt tay / **tạo tự động** / gỡ; hiện 1 lần qua `?pw`). API publish nhận
+  thêm field `password`. `src/lib/decks.ts` (setDeckPassword/verifyDeckPassword/generateDeckPassword).
 - **Trang chủ `/` = thư viện deck NỘI BỘ, ĐÃ KHOÁ sau đăng nhập** (middleware gác `/` + `/admin/*`;
   khách chưa login → đẩy về `/login`). Liệt kê **mọi** deck (badge công khai/bảo mật/OTP/nháp), card mở
   trang quản trị deck. `src/app/page.tsx` + `auth()` guard (defense-in-depth). KHÔNG để lộ danh sách deck ra ngoài.
