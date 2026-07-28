@@ -54,8 +54,11 @@ phục vụ + chèn watermark/log.
   (grant active, watermark định danh) **HOẶC** mật khẩu đúng (watermark "mật khẩu chung") **HOẶC** public
   không mật khẩu. Chưa vào được + deck có mật khẩu → form nhập (POST `/d/<slug>` verify → cookie jose
   `dpw_<id8>` 12h). Admin bỏ qua. (OTP chỉ áp cho luồng link cá nhân, không chặn đường mật khẩu.)
-  Đặt/gỡ ở trang chi tiết deck (đặt tay / **tạo tự động** / gỡ; hiện 1 lần qua `?pw`). API publish nhận
-  thêm field `password`. `src/lib/decks.ts` (setDeckPassword/verifyDeckPassword/generateDeckPassword).
+  Đặt/gỡ ở trang chi tiết deck (đặt tay / **tạo tự động** / gỡ; hiện 1 lần qua `?pw`, có nút Copy —
+  `src/components/CopyField.tsx`). API publish + tool MCP `deck_publish` nhận thêm `password` (đặt/gỡ) và
+  `generate_password` (tự sinh, TRẢ VỀ mật khẩu trong response). `src/lib/decks.ts`
+  (setDeckPassword/verifyDeckPassword/generateDeckPassword). **Đổi schema tool MCP thì phải rebuild
+  `decks-mcp` VÀ reconnect connector claude.ai (hoặc mở chat mới) để nạp schema mới.**
 - **Trang chủ `/` = thư viện deck NỘI BỘ, ĐÃ KHOÁ sau đăng nhập** (middleware gác `/` + `/admin/*`;
   khách chưa login → đẩy về `/login`). Liệt kê **mọi** deck (badge công khai/bảo mật/OTP/nháp), card mở
   trang quản trị deck. `src/app/page.tsx` + `auth()` guard (defense-in-depth). KHÔNG để lộ danh sách deck ra ngoài.
