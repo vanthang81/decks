@@ -50,8 +50,10 @@ phục vụ + chèn watermark/log.
   (cookie `deck_session`, 8h) → `/d/<slug>` render **có watermark tên+email+giờ** + log `view`.
   Kiểm grant **mỗi request** → thu hồi tức thì. OTP email tùy chọn per-deck.
 - **Mật khẩu deck** (tùy chọn, `deck_decks.password_hash` sha256): 1 mật khẩu chung — ai có link
-  `/d/<slug>` + mật khẩu là xem được (không cần link cá nhân). Là **lớp khoá chồng lên** public/protected:
-  chưa mở khoá → form nhập mật khẩu (POST `/d/<slug>` verify → cookie jose `dpw_<id8>` 12h). Admin bỏ qua.
+  `/d/<slug>` + mật khẩu là xem được NGAY (không cần link cá nhân). Truy cập là **HOẶC**: link cá nhân
+  (grant active, watermark định danh) **HOẶC** mật khẩu đúng (watermark "mật khẩu chung") **HOẶC** public
+  không mật khẩu. Chưa vào được + deck có mật khẩu → form nhập (POST `/d/<slug>` verify → cookie jose
+  `dpw_<id8>` 12h). Admin bỏ qua. (OTP chỉ áp cho luồng link cá nhân, không chặn đường mật khẩu.)
   Đặt/gỡ ở trang chi tiết deck (đặt tay / **tạo tự động** / gỡ; hiện 1 lần qua `?pw`). API publish nhận
   thêm field `password`. `src/lib/decks.ts` (setDeckPassword/verifyDeckPassword/generateDeckPassword).
 - **Trang chủ `/` = thư viện deck NỘI BỘ, ĐÃ KHOÁ sau đăng nhập** (middleware gác `/` + `/admin/*`;
