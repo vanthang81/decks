@@ -25,7 +25,9 @@ export type AccessEvent =
   | 'view'
   | 'slide'
   | 'denied'
-  | 'revoked_hit';
+  | 'revoked_hit'
+  | 'pw_ok'
+  | 'pw_fail';
 
 export async function logEvent(e: {
   event: AccessEvent;

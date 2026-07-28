@@ -3,7 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import { upsertDeck, getDeckById, updateDeckContent, type Visibility } from '@/lib/decks';
+import {
+  upsertDeck, getDeckById, updateDeckContent,
+  setDeckPassword, generateDeckPassword, type Visibility,
+} from '@/lib/decks';
 import { upsertViewer } from '@/lib/viewers';
 import { issueGrant, revokeGrant, revokeGroupOnDeck } from '@/lib/grants';
 import { getAdmin, addAdmin, setAdminActive, setAdminRole, removeAdmin, countActiveAdmins, type AdminRole } from '@/lib/admins';
@@ -195,5 +198,36 @@ export async function revokeLinkAction(formData: FormData) {
   const grantId = String(formData.get('grant_id') ?? '');
   const deckId = String(formData.get('deck_id') ?? '');
   if (grantId) await revokeGrant(grantId);
+  revalidatePath(`/admin/decks/${deckId}`);
+}
+
+// ---- Mật khẩu deck ----
+// Đặt mật khẩu tay: hiện lại 1 lần qua ?pw để admin copy (chỉ lưu hash).
+export async function setDeckPasswordAction(formData: FormData) {
+  await requireAdminEmail();
+  const deckId = String(formData.get('deck_id') ?? '');
+  const pw = String(formData.get('password') ?? '').trim();
+  if (!deckId || pw.length < 4) return;
+  await setDeckPassword(deckId, pw);
+  revalidatePath(`/admin/decks/${deckId}`);
+  redirect(`/admin/decks/${deckId}?pw=${encodeURIComponent(pw)}`);
+}
+
+// Tạo mật khẩu tự động (dễ đọc) rồi hiện 1 lần.
+export async function generateDeckPasswordAction(formData: FormData) {
+  await requireAdminEmail();
+  const deckId = String(formData.get('deck_id') ?? '');
+  if (!deckId) return;
+  const pw = generateDeckPassword();
+  await setDeckPassword(deckId, pw);
+  revalidatePath(`/admin/decks/${deckId}`);
+  redirect(`/admin/decks/${deckId}?pw=${encodeURIComponent(pw)}`);
+}
+
+export async function clearDeckPasswordAction(formData: FormData) {
+  await requireAdminEmail();
+  const deckId = String(formData.get('deck_id') ?? '');
+  if (!deckId) return;
+  await setDeckPassword(deckId, null);
   revalidatePath(`/admin/decks/${deckId}`);
 }

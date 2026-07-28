@@ -51,3 +51,40 @@ export const viewerCookieOptions = {
   path: '/',
   maxAge: TTL_SECONDS,
 };
+
+// ---- Phiên MẬT KHẨU deck (đã nhập đúng pass → mở khoá deck đó, không cần link cá nhân) ----
+const PW_TTL_SECONDS = 12 * 60 * 60; // 12h
+
+// Cookie riêng theo deck để mở nhiều deck có mật khẩu cùng lúc không đè nhau.
+export function deckPwCookieName(deckId: string): string {
+  return `dpw_${deckId.slice(0, 8)}`;
+}
+
+export async function signDeckPwSession(deckId: string): Promise<string> {
+  return new SignJWT({ d: deckId })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(`${PW_TTL_SECONDS}s`)
+    .sign(secret());
+}
+
+export async function verifyDeckPwSession(
+  token: string | undefined,
+  deckId: string,
+): Promise<boolean> {
+  if (!token) return false;
+  try {
+    const { payload } = await jwtVerify(token, secret());
+    return payload.d === deckId;
+  } catch {
+    return false;
+  }
+}
+
+export const deckPwCookieOptions = {
+  httpOnly: true,
+  secure: true,
+  sameSite: 'lax' as const,
+  path: '/',
+  maxAge: PW_TTL_SECONDS,
+};

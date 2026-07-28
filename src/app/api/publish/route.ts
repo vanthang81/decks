@@ -1,12 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
-import { upsertDeck } from '@/lib/decks';
+import { upsertDeck, setDeckPassword } from '@/lib/decks';
 import { isValidSlug } from '@/lib/content';
 
 export const dynamic = 'force-dynamic';
 
 // API publish deck cho máy/Claude: xác thực bằng header x-publish-key (secret trong .env).
-// Body JSON: { slug, title, html, description?, visibility?, require_otp?, is_published? }
+// Body JSON: { slug, title, html, description?, visibility?, require_otp?, is_published?, password? }
+// password: chuỗi = đặt/đổi mật khẩu deck; '' hoặc null = gỡ mật khẩu; bỏ trống = giữ nguyên.
 const Body = z.object({
   slug: z.string(),
   title: z.string().min(1),
@@ -15,6 +16,7 @@ const Body = z.object({
   visibility: z.enum(['public', 'protected']).optional().default('protected'),
   require_otp: z.boolean().optional().default(false),
   is_published: z.boolean().optional().default(true),
+  password: z.string().nullish(),
 });
 
 export async function POST(req: NextRequest) {
@@ -52,6 +54,12 @@ export async function POST(req: NextRequest) {
     createdBy: 'api',
   });
 
+  // password: chỉ đụng khi field có mặt trong body (undefined = giữ nguyên).
+  if (d.password !== undefined) {
+    const pw = (d.password ?? '').trim();
+    await setDeckPassword(deck.id, pw.length >= 4 ? pw : null);
+  }
+
   const url = `${process.env.APP_URL ?? ''}/d/${slug}`;
-  return NextResponse.json({ ok: true, slug, id: deck.id, url });
+  return NextResponse.json({ ok: true, slug, id: deck.id, url, has_password: deck.has_password || (d.password ? d.password.trim().length >= 4 : false) });
 }

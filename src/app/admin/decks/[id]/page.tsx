@@ -3,7 +3,7 @@ import { getDeckById, hasDeckContent } from '@/lib/decks';
 import { listGrantsForDeck } from '@/lib/grants';
 import { listGroups, grantedGroupsForDeck } from '@/lib/groups';
 import { listDeckLog } from '@/lib/log';
-import { issueLinkAction, revokeLinkAction, updateContentAction, grantDeckToGroupAction, revokeGroupOnDeckAction } from '../../actions';
+import { issueLinkAction, revokeLinkAction, updateContentAction, grantDeckToGroupAction, revokeGroupOnDeckAction, setDeckPasswordAction, generateDeckPasswordAction, clearDeckPasswordAction } from '../../actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +17,7 @@ export default async function DeckDetailPage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { link?: string };
+  searchParams: { link?: string; pw?: string };
 }) {
   const deck = await getDeckById(params.id);
   if (!deck) notFound();
@@ -34,7 +34,8 @@ export default async function DeckDetailPage({
       <p className="muted">
         slug <code>{deck.slug}</code> ·{' '}
         {deck.visibility === 'public' ? 'Công khai' : 'Bảo mật'}
-        {deck.require_otp ? ' · OTP' : ''} · {deck.is_published ? 'Đã xuất bản' : 'Nháp'}
+        {deck.require_otp ? ' · OTP' : ''}
+        {deck.has_password ? ' · 🔒 Có mật khẩu' : ''} · {deck.is_published ? 'Đã xuất bản' : 'Nháp'}
       </p>
 
       {searchParams.link && (
@@ -44,6 +45,42 @@ export default async function DeckDetailPage({
           <input readOnly value={searchParams.link} onFocus={undefined} />
         </div>
       )}
+
+      {searchParams.pw && (
+        <div className="card" style={{ marginBottom: 20 }}>
+          <span className="tag">Mật khẩu deck vừa đặt</span>
+          <p className="muted">Chỉ hiện <b>1 lần</b> (hệ chỉ lưu bản băm). Gửi kèm link deck cho người xem:</p>
+          <input readOnly value={searchParams.pw} style={{ fontFamily: 'ui-monospace, monospace', fontSize: 15 }} />
+          <p className="muted" style={{ marginTop: 8 }}>Link xem: <code>{`/d/${deck.slug}`}</code> → nhập mật khẩu trên.</p>
+        </div>
+      )}
+
+      <h2 style={{ marginTop: 8 }}>Mật khẩu deck</h2>
+      <p className="muted">
+        Khoá deck bằng <b>một mật khẩu chung</b>: ai có link <code>/d/{deck.slug}</code> + mật khẩu là xem được,
+        không cần cấp link cá nhân. {deck.visibility === 'protected' && 'Deck bảo mật vẫn cần thêm link cá nhân sau khi qua mật khẩu.'} Trạng thái:{' '}
+        {deck.has_password ? <span className="pill ok">Đang bật</span> : <span className="pill">Chưa đặt</span>}
+      </p>
+      <div className="row" style={{ maxWidth: 560, marginBottom: 32, alignItems: 'flex-end' }}>
+        <form action={setDeckPasswordAction} className="row" style={{ flex: 1, alignItems: 'flex-end' }}>
+          <input type="hidden" name="deck_id" value={deck.id} />
+          <div style={{ flex: 1 }}>
+            <label htmlFor="password">Đặt mật khẩu (tối thiểu 4 ký tự)</label>
+            <input id="password" name="password" type="text" placeholder="mật khẩu tự chọn" minLength={4} />
+          </div>
+          <button className="btn primary" type="submit">Đặt</button>
+        </form>
+        <form action={generateDeckPasswordAction}>
+          <input type="hidden" name="deck_id" value={deck.id} />
+          <button className="btn" type="submit">Tạo tự động</button>
+        </form>
+        {deck.has_password && (
+          <form action={clearDeckPasswordAction}>
+            <input type="hidden" name="deck_id" value={deck.id} />
+            <button className="btn" type="submit">Gỡ mật khẩu</button>
+          </form>
+        )}
+      </div>
 
       <h2 style={{ marginTop: 8 }}>Nội dung deck</h2>
       <p className="muted">
