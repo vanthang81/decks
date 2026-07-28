@@ -1,13 +1,14 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
-import { upsertDeck, setDeckPassword } from '@/lib/decks';
+import { upsertDeck, setDeckPassword, generateDeckPassword, getDeckBySlug } from '@/lib/decks';
 import { isValidSlug } from '@/lib/content';
 
 export const dynamic = 'force-dynamic';
 
 // API publish deck cho máy/Claude: xác thực bằng header x-publish-key (secret trong .env).
-// Body JSON: { slug, title, html, description?, visibility?, require_otp?, is_published?, password? }
-// password: chuỗi = đặt/đổi mật khẩu deck; '' hoặc null = gỡ mật khẩu; bỏ trống = giữ nguyên.
+// Body JSON: { slug, title, html, description?, visibility?, require_otp?, is_published?, password?, generate_password? }
+// password: chuỗi(>=4) = đặt/đổi; '' hoặc null = gỡ; bỏ trống = giữ nguyên.
+// generate_password: true (khi không truyền password) = tự sinh mật khẩu, trả về trong response.
 const Body = z.object({
   slug: z.string(),
   title: z.string().min(1),
@@ -17,6 +18,7 @@ const Body = z.object({
   require_otp: z.boolean().optional().default(false),
   is_published: z.boolean().optional().default(true),
   password: z.string().nullish(),
+  generate_password: z.boolean().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -54,12 +56,24 @@ export async function POST(req: NextRequest) {
     createdBy: 'api',
   });
 
-  // password: chỉ đụng khi field có mặt trong body (undefined = giữ nguyên).
+  // Xử lý mật khẩu. newPw = plaintext vừa đặt/sinh (trả về 1 lần cho người gọi); null = không đổi/gỡ.
+  let newPw: string | null = null;
+  let hasPassword: boolean;
   if (d.password !== undefined) {
     const pw = (d.password ?? '').trim();
-    await setDeckPassword(deck.id, pw.length >= 4 ? pw : null);
+    if (pw.length >= 4) { await setDeckPassword(deck.id, pw); newPw = pw; hasPassword = true; }
+    else { await setDeckPassword(deck.id, null); hasPassword = false; } // '' hoặc <4 = gỡ
+  } else if (d.generate_password) {
+    newPw = generateDeckPassword();
+    await setDeckPassword(deck.id, newPw);
+    hasPassword = true;
+  } else {
+    hasPassword = (await getDeckBySlug(slug))?.has_password ?? false; // giữ nguyên
   }
 
   const url = `${process.env.APP_URL ?? ''}/d/${slug}`;
-  return NextResponse.json({ ok: true, slug, id: deck.id, url, has_password: deck.has_password || (d.password ? d.password.trim().length >= 4 : false) });
+  return NextResponse.json({
+    ok: true, slug, id: deck.id, url, has_password: hasPassword,
+    ...(newPw ? { password: newPw } : {}),
+  });
 }

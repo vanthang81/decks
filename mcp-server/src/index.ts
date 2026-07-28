@@ -31,6 +31,9 @@ function buildServer(): McpServer {
 Truyền HTML self-contained (1 file, không CDN/webfont nặng). Deck 'public' hiện ở gallery công khai;
 deck 'protected' KHÔNG công khai — chỉ xem được qua link cá nhân do admin cấp (có watermark + log).
 
+Kiểm soát truy cập bằng MẬT KHẨU (tùy chọn): đặt 'password' hoặc bật 'generate_password' để khoá deck
+bằng một mật khẩu chung — ai có link + mật khẩu là xem được ngay (không cần cấp link cá nhân).
+
 Args:
   - slug (string): định danh URL, chỉ a-z 0-9 và gạch nối, vd 'btmh-investor-2026'
   - title (string): tiêu đề deck
@@ -38,10 +41,12 @@ Args:
   - visibility ('public' | 'protected'): mặc định 'protected'
   - require_otp (boolean): bắt OTP email khi xem (chỉ áp dụng deck protected), mặc định false
   - description (string, tùy chọn): mô tả ngắn
+  - password (string, tùy chọn): đặt mật khẩu chung cho deck (>=4 ký tự). '' = gỡ mật khẩu. Bỏ trống = giữ nguyên.
+  - generate_password (boolean, tùy chọn): TỰ SINH mật khẩu ngẫu nhiên dễ đọc (dùng thay 'password'). Mật khẩu sinh ra được trả về trong kết quả để gửi cho người xem.
 
-Returns JSON: { "ok": true, "slug": string, "url": string }
+Returns JSON: { "ok": true, "slug": string, "url": string, "has_password": boolean, "password"?: string }
 
-Lưu ý: gọi lại cùng slug = cập nhật (ghi đè nội dung) deck đó.`,
+Lưu ý: gọi lại cùng slug = cập nhật (ghi đè nội dung) deck đó. Mật khẩu chỉ trả về 1 lần khi vừa đặt/sinh.`,
       inputSchema: {
         slug: z
           .string()
@@ -52,6 +57,14 @@ Lưu ý: gọi lại cùng slug = cập nhật (ghi đè nội dung) deck đó.`
         visibility: z.enum(['public', 'protected']).default('protected').describe("'public' hoặc 'protected'"),
         require_otp: z.boolean().default(false).describe('Bắt OTP email (chỉ deck protected)'),
         description: z.string().optional().describe('Mô tả ngắn (tùy chọn)'),
+        password: z
+          .string()
+          .optional()
+          .describe('Đặt mật khẩu chung cho deck (>=4 ký tự); "" = gỡ; bỏ trống = giữ nguyên'),
+        generate_password: z
+          .boolean()
+          .optional()
+          .describe('Tự sinh mật khẩu ngẫu nhiên dễ đọc (thay cho password). Mật khẩu sinh ra trả về trong kết quả'),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     },
@@ -70,9 +83,18 @@ Lưu ý: gọi lại cùng slug = cập nhật (ghi đè nội dung) deck đó.`
             isError: true,
           };
         }
-        const d = data as { slug: string; url: string };
-        const out = { ok: true as const, slug: d.slug, url: d.url };
-        return { content: [{ type: 'text', text: `Đã publish deck: ${d.url}` }], structuredContent: out };
+        const d = data as { slug: string; url: string; has_password?: boolean; password?: string };
+        const out = {
+          ok: true as const,
+          slug: d.slug,
+          url: d.url,
+          has_password: !!d.has_password,
+          ...(d.password ? { password: d.password } : {}),
+        };
+        const text = d.password
+          ? `Đã publish deck: ${d.url}\nMật khẩu deck (gửi kèm link cho người xem): ${d.password}`
+          : `Đã publish deck: ${d.url}${d.has_password ? ' (deck có mật khẩu)' : ''}`;
+        return { content: [{ type: 'text', text }], structuredContent: out };
       } catch (e) {
         return {
           content: [{ type: 'text', text: `Lỗi kết nối portal: ${e instanceof Error ? e.message : String(e)}` }],
