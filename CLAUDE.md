@@ -22,7 +22,8 @@ phục vụ + chèn watermark/log.
 - DB Postgres `btmh_data`, bảng prefix `deck_` (admins/decks/viewers/grants/access_log/otp).
   Schema `db/001_deck_access.sql` (+ `002_deck_content.sql` cột content, `003_admin_groups.sql`
   bảng deck_groups/deck_group_members + cột deck_grants.group_id, `004_group_decks.sql` bảng
-  deck_group_decks = entitlement nhóm↔deck, `005_deck_password.sql` cột deck_decks.password_hash)
+  deck_group_decks = entitlement nhóm↔deck, `005_deck_password.sql` cột deck_decks.password_hash,
+  `006_deck_meta.sql` cột category/tags(text[])/company(default BTMH)/thumbnail = thư viện phân loại)
   — chạy bằng superuser postgres qua
   `docker exec` (hoặc n8n admin cred); app dùng user `btmh_app` (đã GRANT). Typecheck: `npm run build`.
 - **`mcp-server/` là project RIÊNG** (deps riêng, image Docker riêng `decks-mcp`) → ĐÃ loại khỏi
@@ -64,6 +65,19 @@ phục vụ + chèn watermark/log.
   trang quản trị deck. `src/app/page.tsx` + `auth()` guard (defense-in-depth). KHÔNG để lộ danh sách deck ra ngoài.
 - **Deck public**: `/d/<slug>` vẫn mở tự do qua link trực tiếp (không watermark) — nhưng KHÔNG còn liệt kê
   công khai ở `/` nữa (muốn khoá luôn cả xem-qua-link thì đổi route `/d`).
+- **Thư viện phân loại (nhiều deck)**: mỗi deck có **category** (danh mục), **tags** (`text[]`), **company**
+  (mặc định BTMH) + **thumbnail** (ảnh preview slide đầu). Trang chủ dùng `src/components/DeckGallery.tsx`
+  ('use client'): ô tìm kiếm + chip lọc theo danh mục + **nút đổi kiểu hiển thị Lưới/Danh sách** (giống
+  Google Drive, nhớ lựa chọn ở localStorage `deckView`). Card hiện thumbnail (hoặc ô placeholder màu theo
+  hash + chữ cái đầu) + badge. **Ảnh preview TỰ CHỤP slide đầu qua browserless**: `src/lib/thumbnail.ts`
+  `generateDeckThumbnail` POST `${BROWSERLESS_URL}/chrome/screenshot?token=…` (env VPS
+  `BROWSERLESS_URL=http://host.docker.internal:8090` + `BROWSERLESS_TOKEN`, đọc từ container `browserless-shot`)
+  → JPEG 1000×563 → lưu data-URI vào `deck_decks.thumbnail`. Tự chạy sau khi publish/sửa nội dung (API + action),
+  best-effort (lỗi không chặn publish). Ảnh phục vụ qua route **`/api/thumb/[id]`** (gác admin `auth()`+`getAdmin`,
+  trả bytes, `cache-control: private`). Đặt/sửa phân loại ở trang chi tiết deck (mục "Phân loại") + form Thêm deck.
+  `src/lib/decks.ts`: `updateDeckMeta`/`setDeckThumbnail`/`getDeckThumbnail`/`listCategories`/`listCompanies`.
+  API publish + tool MCP `deck_publish` nhận thêm `company`/`category`/`tags` (đổi schema MCP → rebuild `decks-mcp`
+  + reconnect connector claude.ai để nạp schema mới).
 - Chặn tải/in: render qua route (không URL file rời) + chặn menu/in + watermark. KHÔNG chặn được chụp màn hình.
 
 ## Hạ tầng & deploy (ĐÃ LIVE 26/07/2026)
