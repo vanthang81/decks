@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { listDecks } from '@/lib/decks';
@@ -19,6 +20,12 @@ export default async function GalleryPage() {
   } catch {
     dbErr = true;
   }
+
+  // URL gốc tuyệt đối để dựng link "mở deck" đầy đủ (kể cả khi APP_URL chưa set — lấy từ header nginx).
+  const h = headers();
+  const proto = h.get('x-forwarded-proto') ?? 'https';
+  const host = h.get('x-forwarded-host') ?? h.get('host') ?? '';
+  const baseUrl = process.env.APP_URL || (host ? `${proto}://${host}` : '');
 
   const lite: DeckLite[] = decks.map((d) => ({
     id: d.id,
@@ -57,7 +64,7 @@ export default async function GalleryPage() {
         ) : decks.length === 0 ? (
           <div className="notice">Chưa có deck nào. Vào <Link href="/admin">Quản trị</Link> để thêm.</div>
         ) : (
-          <DeckGallery decks={lite} />
+          <DeckGallery decks={lite} baseUrl={baseUrl} />
         )}
       </main>
     </>

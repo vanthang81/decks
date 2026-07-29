@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type MouseEvent } from 'react';
 
 export type DeckLite = {
   id: string;
@@ -40,6 +40,39 @@ function Thumb({ d }: { d: DeckLite }) {
   );
 }
 
+// Thanh link "mở deck" (URL đầy đủ) + nút copy — để gửi/xem ngay không cần vào trang quản trị deck.
+function UrlBar({ url }: { url: string }) {
+  const [copied, setCopied] = useState(false);
+  async function copy(e: MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch { /* ignore */ }
+      ta.remove();
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1400);
+  }
+  return (
+    <div className="deck-url-bar">
+      <a className="deck-url" href={url} target="_blank" rel="noreferrer" title={`Mở deck trong tab mới: ${url}`}>
+        ↗ {url.replace(/^https?:\/\//, '')}
+      </a>
+      <button type="button" className="deck-copy" onClick={copy} title="Copy link để gửi">
+        {copied ? '✓ Đã copy' : 'Copy'}
+      </button>
+    </div>
+  );
+}
+
 function Badges({ d }: { d: DeckLite }) {
   return (
     <span className="row" style={{ gap: 5 }}>
@@ -53,7 +86,7 @@ function Badges({ d }: { d: DeckLite }) {
   );
 }
 
-export default function DeckGallery({ decks }: { decks: DeckLite[] }) {
+export default function DeckGallery({ decks, baseUrl = '' }: { decks: DeckLite[]; baseUrl?: string }) {
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [q, setQ] = useState('');
   const [cat, setCat] = useState<string>('');
@@ -117,41 +150,47 @@ export default function DeckGallery({ decks }: { decks: DeckLite[] }) {
       ) : view === 'grid' ? (
         <div className="deck-grid">
           {filtered.map((d) => (
-            <Link key={d.id} className="deck-card" href={`/admin/decks/${d.id}`}>
-              <div className="thumb"><Thumb d={d} /></div>
-              <div className="deck-card-body">
-                <div className="deck-meta-line">
-                  <span className="deck-company">{d.company}</span>
-                  {d.category && <span className="deck-cat">{d.category}</span>}
+            <div key={d.id} className="deck-card">
+              <Link className="deck-card-link" href={`/admin/decks/${d.id}`}>
+                <div className="thumb"><Thumb d={d} /></div>
+                <div className="deck-card-body">
+                  <div className="deck-meta-line">
+                    <span className="deck-company">{d.company}</span>
+                    {d.category && <span className="deck-cat">{d.category}</span>}
+                  </div>
+                  <h3>{d.title}</h3>
+                  {d.description && <p className="deck-desc">{d.description}</p>}
+                  {d.tags.length > 0 && (
+                    <div className="deck-tags">{d.tags.map((t) => <span key={t} className="deck-tag">#{t}</span>)}</div>
+                  )}
+                  <Badges d={d} />
                 </div>
-                <h3>{d.title}</h3>
-                {d.description && <p className="deck-desc">{d.description}</p>}
-                {d.tags.length > 0 && (
-                  <div className="deck-tags">{d.tags.map((t) => <span key={t} className="deck-tag">#{t}</span>)}</div>
-                )}
-                <Badges d={d} />
-              </div>
-            </Link>
+              </Link>
+              <UrlBar url={`${baseUrl}/d/${d.slug}`} />
+            </div>
           ))}
         </div>
       ) : (
         <div className="deck-list">
           {filtered.map((d) => (
-            <Link key={d.id} className="deck-row" href={`/admin/decks/${d.id}`}>
-              <div className="thumb thumb-sm"><Thumb d={d} /></div>
-              <div className="deck-row-main">
-                <div className="deck-meta-line">
-                  <span className="deck-company">{d.company}</span>
-                  {d.category && <span className="deck-cat">{d.category}</span>}
+            <div key={d.id} className="deck-row">
+              <Link className="deck-row-link" href={`/admin/decks/${d.id}`}>
+                <div className="thumb thumb-sm"><Thumb d={d} /></div>
+                <div className="deck-row-main">
+                  <div className="deck-meta-line">
+                    <span className="deck-company">{d.company}</span>
+                    {d.category && <span className="deck-cat">{d.category}</span>}
+                  </div>
+                  <h3>{d.title}</h3>
+                  {d.description && <p className="deck-desc">{d.description}</p>}
+                  {d.tags.length > 0 && (
+                    <div className="deck-tags">{d.tags.map((t) => <span key={t} className="deck-tag">#{t}</span>)}</div>
+                  )}
                 </div>
-                <h3>{d.title}</h3>
-                {d.description && <p className="deck-desc">{d.description}</p>}
-                {d.tags.length > 0 && (
-                  <div className="deck-tags">{d.tags.map((t) => <span key={t} className="deck-tag">#{t}</span>)}</div>
-                )}
-              </div>
+              </Link>
               <div className="deck-row-badges"><Badges d={d} /></div>
-            </Link>
+              <div className="deck-row-urlbar"><UrlBar url={`${baseUrl}/d/${d.slug}`} /></div>
+            </div>
           ))}
         </div>
       )}
