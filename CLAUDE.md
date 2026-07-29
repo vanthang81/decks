@@ -65,6 +65,12 @@ phục vụ + chèn watermark/log.
   trang quản trị deck. `src/app/page.tsx` + `auth()` guard (defense-in-depth). KHÔNG để lộ danh sách deck ra ngoài.
 - **Deck public**: `/d/<slug>` vẫn mở tự do qua link trực tiếp (không watermark) — nhưng KHÔNG còn liệt kê
   công khai ở `/` nữa (muốn khoá luôn cả xem-qua-link thì đổi route `/d`).
+- **Lưu trữ (ẩn) & xoá deck** (trang chi tiết deck): **Ẩn/lưu trữ** = tắt `is_published` (`setDeckPublished`) →
+  `/d/<slug>` trả 404, ẩn khỏi người xem, GIỮ nội dung + link đã cấp, khôi phục lại bất cứ lúc nào (badge
+  "đã ẩn" ở thư viện/list admin). **Xoá vĩnh viễn** = `deleteDeck` (`DELETE FROM deck_decks`) — phải gõ đúng
+  slug để xác nhận (details "Vùng nguy hiểm"); FK cascade tự dọn `deck_grants` + `deck_group_decks`,
+  `deck_access_log` giữ lại (deck_id→NULL). Actions `setDeckPublishedAction`/`deleteDeckAction` (redirect
+  `/admin?deleted=<slug>`; gõ sai slug → `?del=mismatch`).
 - **Thư viện phân loại (nhiều deck)**: mỗi deck có **category** (danh mục), **tags** (`text[]`), **company**
   (mặc định BTMH) + **thumbnail** (ảnh preview slide đầu). Trang chủ dùng `src/components/DeckGallery.tsx`
   ('use client'): ô tìm kiếm + chip lọc theo danh mục + **nút đổi kiểu hiển thị Lưới/Danh sách** (giống
