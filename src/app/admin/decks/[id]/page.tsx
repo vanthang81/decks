@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation';
-import { getDeckById, hasDeckContent } from '@/lib/decks';
+import { getDeckById, hasDeckContent, listCategories, listCompanies } from '@/lib/decks';
 import { listGrantsForDeck } from '@/lib/grants';
 import { listGroups, grantedGroupsForDeck } from '@/lib/groups';
 import { listDeckLog } from '@/lib/log';
-import { issueLinkAction, revokeLinkAction, updateContentAction, grantDeckToGroupAction, revokeGroupOnDeckAction, setDeckPasswordAction, generateDeckPasswordAction, clearDeckPasswordAction } from '../../actions';
+import { issueLinkAction, revokeLinkAction, updateContentAction, grantDeckToGroupAction, revokeGroupOnDeckAction, setDeckPasswordAction, generateDeckPasswordAction, clearDeckPasswordAction, updateDeckMetaAction, generateThumbnailAction } from '../../actions';
 import CopyField from '@/components/CopyField';
 
 export const dynamic = 'force-dynamic';
@@ -18,7 +18,7 @@ export default async function DeckDetailPage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { link?: string; pw?: string };
+  searchParams: { link?: string; pw?: string; thumb?: string };
 }) {
   const deck = await getDeckById(params.id);
   if (!deck) notFound();
@@ -31,6 +31,8 @@ export default async function DeckDetailPage({
   const hasContent = await hasDeckContent(deck.id).catch(() => false);
   const groups = await listGroups().catch(() => []);
   const grantedGroups = await grantedGroupsForDeck(deck.id).catch(() => []);
+  const categories = await listCategories().catch(() => []);
+  const companies = await listCompanies().catch(() => []);
 
   return (
     <div>
@@ -60,6 +62,51 @@ export default async function DeckDetailPage({
           </div>
         </div>
       )}
+
+      {searchParams.thumb && (
+        <p className="muted" style={{ color: searchParams.thumb === 'ok' ? 'var(--ok)' : 'var(--bad)' }}>
+          {searchParams.thumb === 'ok'
+            ? '✓ Đã tạo ảnh preview.'
+            : '✗ Không tạo được ảnh preview (kiểm tra nội dung deck / browserless).'}
+        </p>
+      )}
+
+      <h2 style={{ marginTop: 8 }}>Phân loại</h2>
+      <form action={updateDeckMetaAction} style={{ maxWidth: 560, marginBottom: 24 }}>
+        <input type="hidden" name="deck_id" value={deck.id} />
+        <div className="row">
+          <div style={{ flex: 1 }}>
+            <label htmlFor="company">Công ty</label>
+            <input id="company" name="company" list="companies" defaultValue={deck.company} />
+            <datalist id="companies">{companies.map((c) => <option key={c} value={c} />)}</datalist>
+          </div>
+          <div style={{ flex: 1 }}>
+            <label htmlFor="category">Danh mục</label>
+            <input id="category" name="category" list="categories" defaultValue={deck.category ?? ''} placeholder="vd: Nhà đầu tư" />
+            <datalist id="categories">{categories.map((c) => <option key={c} value={c} />)}</datalist>
+          </div>
+        </div>
+        <label htmlFor="tags">Thẻ (tags) — cách nhau bằng dấu phẩy</label>
+        <input id="tags" name="tags" defaultValue={deck.tags.join(', ')} placeholder="vd: 2026, chiến lược, vàng" />
+        <div style={{ marginTop: 12 }}><button className="btn primary" type="submit">Lưu phân loại</button></div>
+      </form>
+
+      <h2 style={{ marginTop: 8 }}>Ảnh preview</h2>
+      <p className="muted">Ảnh chụp slide đầu, hiện ở trang chủ để dễ nhận. Tự tạo lại khi cập nhật nội dung; hoặc bấm nút bên dưới.</p>
+      <div className="row" style={{ marginBottom: 32, alignItems: 'flex-start', gap: 16 }}>
+        <div className="thumb" style={{ width: 240, flex: '0 0 240px', border: '1px solid var(--line)' }}>
+          {deck.has_thumbnail ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="thumb-img" src={`/api/thumb/${deck.id}?t=${Date.now()}`} alt="preview" />
+          ) : (
+            <div className="thumb-ph" style={{ background: 'var(--paper)' }}><span style={{ color: 'var(--faint)' }}>—</span></div>
+          )}
+        </div>
+        <form action={generateThumbnailAction}>
+          <input type="hidden" name="deck_id" value={deck.id} />
+          <button className="btn" type="submit">{deck.has_thumbnail ? 'Tạo lại ảnh preview' : 'Tạo ảnh preview'}</button>
+        </form>
+      </div>
 
       <h2 style={{ marginTop: 8 }}>Mật khẩu deck</h2>
       <p className="muted">

@@ -1,12 +1,14 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
-import { upsertDeck, setDeckPassword, generateDeckPassword, getDeckBySlug } from '@/lib/decks';
+import { upsertDeck, setDeckPassword, generateDeckPassword, getDeckBySlug, updateDeckMeta } from '@/lib/decks';
+import { generateDeckThumbnail } from '@/lib/thumbnail';
 import { isValidSlug } from '@/lib/content';
 
 export const dynamic = 'force-dynamic';
 
 // API publish deck cho máy/Claude: xác thực bằng header x-publish-key (secret trong .env).
-// Body JSON: { slug, title, html, description?, visibility?, require_otp?, is_published?, password?, generate_password? }
+// Body: { slug, title, html, description?, visibility?, require_otp?, is_published?, password?,
+//         generate_password?, category?, tags?, company? }
 // password: chuỗi(>=4) = đặt/đổi; '' hoặc null = gỡ; bỏ trống = giữ nguyên.
 // generate_password: true (khi không truyền password) = tự sinh mật khẩu, trả về trong response.
 const Body = z.object({
@@ -19,6 +21,9 @@ const Body = z.object({
   is_published: z.boolean().optional().default(true),
   password: z.string().nullish(),
   generate_password: z.boolean().optional(),
+  category: z.string().nullish(),
+  tags: z.array(z.string()).optional(),
+  company: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -70,6 +75,18 @@ export async function POST(req: NextRequest) {
   } else {
     hasPassword = (await getDeckBySlug(slug))?.has_password ?? false; // giữ nguyên
   }
+
+  // Metadata phân loại (chỉ cập nhật field được truyền).
+  if (d.category !== undefined || d.tags !== undefined || d.company !== undefined) {
+    await updateDeckMeta(deck.id, {
+      ...(d.category !== undefined ? { category: d.category ?? null } : {}),
+      ...(d.tags !== undefined ? { tags: d.tags } : {}),
+      ...(d.company !== undefined ? { company: d.company } : {}),
+    });
+  }
+
+  // Ảnh preview: tự chụp slide đầu (best-effort, không chặn kết quả nếu lỗi).
+  await generateDeckThumbnail({ id: deck.id, slug }).catch(() => false);
 
   const url = `${process.env.APP_URL ?? ''}/d/${slug}`;
   return NextResponse.json({

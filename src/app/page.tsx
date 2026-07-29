@@ -3,12 +3,12 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { listDecks } from '@/lib/decks';
 import SiteHeader from '@/components/SiteHeader';
+import DeckGallery, { type DeckLite } from '@/components/DeckGallery';
 
 export const dynamic = 'force-dynamic';
 
 export default async function GalleryPage() {
   // Trang chủ = thư viện deck NỘI BỘ, chỉ admin đã đăng nhập mới xem được danh sách.
-  // Middleware đã gác `/`; kiểm tra lại ở đây cho chắc (defense-in-depth).
   const session = await auth();
   if (!session?.user) redirect('/login');
 
@@ -19,6 +19,21 @@ export default async function GalleryPage() {
   } catch {
     dbErr = true;
   }
+
+  const lite: DeckLite[] = decks.map((d) => ({
+    id: d.id,
+    slug: d.slug,
+    title: d.title,
+    description: d.description,
+    visibility: d.visibility,
+    require_otp: d.require_otp,
+    is_published: d.is_published,
+    has_password: d.has_password,
+    has_thumbnail: d.has_thumbnail,
+    category: d.category,
+    tags: d.tags,
+    company: d.company,
+  }));
 
   return (
     <>
@@ -32,8 +47,8 @@ export default async function GalleryPage() {
           <div className="brand">Bảo Tín Mạnh Hải · ConsultX</div>
           <h1 style={{ marginBottom: 0 }}>Thư viện Slide Deck</h1>
           <p className="sub" style={{ margin: '8px 0 0' }}>
-            Danh sách deck nội bộ — chỉ hiện sau khi đăng nhập. Người xem ngoài chỉ vào từng deck
-            qua link cá nhân được cấp (có watermark &amp; thu hồi được).
+            {decks.length} deck nội bộ — lọc theo danh mục, đổi kiểu hiển thị lưới/danh sách. Người xem ngoài
+            chỉ vào từng deck qua link cá nhân được cấp.
           </p>
         </div>
 
@@ -42,19 +57,7 @@ export default async function GalleryPage() {
         ) : decks.length === 0 ? (
           <div className="notice">Chưa có deck nào. Vào <Link href="/admin">Quản trị</Link> để thêm.</div>
         ) : (
-          <div className="grid">
-            {decks.map((d) => (
-              <Link key={d.id} className="card" href={`/admin/decks/${d.id}`}>
-                <span className={`tag ${d.visibility === 'public' ? '' : 'protected'}`}>
-                  {d.visibility === 'public' ? 'Công khai' : 'Bảo mật'}
-                  {d.require_otp ? ' · OTP' : ''}
-                  {d.is_published ? '' : ' · nháp'}
-                </span>
-                <h3>{d.title}</h3>
-                {d.description && <p>{d.description}</p>}
-              </Link>
-            ))}
-          </div>
+          <DeckGallery decks={lite} />
         )}
       </main>
     </>

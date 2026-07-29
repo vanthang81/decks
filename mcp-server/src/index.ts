@@ -43,6 +43,11 @@ Args:
   - description (string, tùy chọn): mô tả ngắn
   - password (string, tùy chọn): đặt mật khẩu chung cho deck (>=4 ký tự). '' = gỡ mật khẩu. Bỏ trống = giữ nguyên.
   - generate_password (boolean, tùy chọn): TỰ SINH mật khẩu ngẫu nhiên dễ đọc (dùng thay 'password'). Mật khẩu sinh ra được trả về trong kết quả để gửi cho người xem.
+  - company (string, tùy chọn): tên công ty, mặc định BTMH — để phân loại ở thư viện
+  - category (string, tùy chọn): danh mục deck (vd 'Nhà đầu tư', 'Đối tác', 'Nội bộ')
+  - tags (string[], tùy chọn): danh sách thẻ để lọc/tìm ở thư viện
+
+Ảnh preview (chụp slide đầu) được TỰ ĐỘNG tạo sau khi publish.
 
 Returns JSON: { "ok": true, "slug": string, "url": string, "has_password": boolean, "password"?: string }
 
@@ -65,6 +70,9 @@ Lưu ý: gọi lại cùng slug = cập nhật (ghi đè nội dung) deck đó. 
           .boolean()
           .optional()
           .describe('Tự sinh mật khẩu ngẫu nhiên dễ đọc (thay cho password). Mật khẩu sinh ra trả về trong kết quả'),
+        company: z.string().optional().describe('Tên công ty (mặc định BTMH) — để phân loại ở thư viện'),
+        category: z.string().optional().describe("Danh mục deck, vd 'Nhà đầu tư', 'Đối tác', 'Nội bộ'"),
+        tags: z.array(z.string()).optional().describe('Danh sách thẻ (tags) để lọc/tìm, vd ["2026","chiến lược"]'),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     },

@@ -4,9 +4,10 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import {
-  upsertDeck, getDeckById, updateDeckContent,
+  upsertDeck, getDeckById, updateDeckContent, updateDeckMeta,
   setDeckPassword, generateDeckPassword, type Visibility,
 } from '@/lib/decks';
+import { generateDeckThumbnail } from '@/lib/thumbnail';
 import { upsertViewer } from '@/lib/viewers';
 import { issueGrant, revokeGrant, revokeGroupOnDeck } from '@/lib/grants';
 import { getAdmin, addAdmin, setAdminActive, setAdminRole, removeAdmin, countActiveAdmins, type AdminRole } from '@/lib/admins';
@@ -124,6 +125,42 @@ export async function revokeGroupOnDeckAction(formData: FormData) {
   revalidatePath(`/admin/decks/${deckId}`);
 }
 
+// Chuỗi tags "a, b, c" -> mảng đã trim/dedupe (tối đa 12 thẻ).
+function parseTags(s: string): string[] {
+  return Array.from(
+    new Set(
+      s.split(',').map((t) => t.trim()).filter((t) => t.length > 0 && t.length <= 40),
+    ),
+  ).slice(0, 12);
+}
+
+// Cập nhật metadata phân loại (danh mục / thẻ / công ty) cho deck.
+export async function updateDeckMetaAction(formData: FormData) {
+  await requireAdminEmail();
+  const deckId = String(formData.get('deck_id') ?? '');
+  if (!deckId) return;
+  await updateDeckMeta(deckId, {
+    category: String(formData.get('category') ?? '').trim() || null,
+    tags: parseTags(String(formData.get('tags') ?? '')),
+    company: String(formData.get('company') ?? '').trim() || 'BTMH',
+  });
+  revalidatePath(`/admin/decks/${deckId}`);
+  revalidatePath('/');
+}
+
+// Tạo/làm mới ảnh preview (chụp slide đầu bằng browserless).
+export async function generateThumbnailAction(formData: FormData) {
+  await requireAdminEmail();
+  const deckId = String(formData.get('deck_id') ?? '');
+  if (!deckId) return;
+  const deck = await getDeckById(deckId);
+  if (!deck) return;
+  const ok = await generateDeckThumbnail({ id: deck.id, slug: deck.slug });
+  revalidatePath(`/admin/decks/${deckId}`);
+  revalidatePath('/');
+  redirect(`/admin/decks/${deckId}?thumb=${ok ? 'ok' : 'fail'}`);
+}
+
 // Lấy nội dung HTML từ form: ưu tiên file upload 'htmlfile', rồi textarea 'content'. null nếu không có.
 async function extractContent(formData: FormData): Promise<string | null> {
   const file = formData.get('htmlfile');
@@ -141,7 +178,7 @@ export async function createDeckAction(formData: FormData) {
   const title = String(formData.get('title') ?? '').trim();
   if (!/^[a-z0-9][a-z0-9-]{0,80}$/.test(slug) || !title) return;
   const content = await extractContent(formData);
-  await upsertDeck({
+  const deck = await upsertDeck({
     slug,
     title,
     description: (String(formData.get('description') ?? '').trim() || null),
@@ -151,7 +188,14 @@ export async function createDeckAction(formData: FormData) {
     content,
     createdBy: by,
   });
+  await updateDeckMeta(deck.id, {
+    category: String(formData.get('category') ?? '').trim() || null,
+    tags: parseTags(String(formData.get('tags') ?? '')),
+    company: String(formData.get('company') ?? '').trim() || 'BTMH',
+  });
+  if (content) await generateDeckThumbnail({ id: deck.id, slug: deck.slug }).catch(() => false);
   revalidatePath('/admin');
+  revalidatePath('/');
 }
 
 export async function updateContentAction(formData: FormData) {
@@ -159,8 +203,13 @@ export async function updateContentAction(formData: FormData) {
   const deckId = String(formData.get('deck_id') ?? '');
   if (!deckId) return;
   const content = await extractContent(formData);
-  if (content) await updateDeckContent(deckId, content);
+  if (content) {
+    await updateDeckContent(deckId, content);
+    const deck = await getDeckById(deckId);
+    if (deck) await generateDeckThumbnail({ id: deck.id, slug: deck.slug }).catch(() => false);
+  }
   revalidatePath(`/admin/decks/${deckId}`);
+  revalidatePath('/');
 }
 
 export async function issueLinkAction(formData: FormData) {

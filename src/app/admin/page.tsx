@@ -52,6 +52,18 @@ export default async function AdminDecksPage() {
         <input id="title" name="title" required />
         <label htmlFor="description">Mô tả</label>
         <input id="description" name="description" />
+        <div className="row">
+          <div style={{ flex: 1 }}>
+            <label htmlFor="company">Công ty</label>
+            <input id="company" name="company" defaultValue="BTMH" />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label htmlFor="category">Danh mục</label>
+            <input id="category" name="category" placeholder="vd: Nhà đầu tư" />
+          </div>
+        </div>
+        <label htmlFor="tags">Thẻ (tags) — cách nhau bằng dấu phẩy</label>
+        <input id="tags" name="tags" placeholder="vd: 2026, chiến lược" />
         <label htmlFor="htmlfile">Nội dung deck — tải file .html <span className="muted">(hoặc dán HTML bên dưới)</span></label>
         <input id="htmlfile" name="htmlfile" type="file" accept=".html,text/html" />
         <label htmlFor="content">…hoặc dán HTML self-contained</label>
