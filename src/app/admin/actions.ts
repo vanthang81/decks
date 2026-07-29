@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import {
   upsertDeck, getDeckById, updateDeckContent, updateDeckMeta,
-  setDeckPassword, generateDeckPassword, type Visibility,
+  setDeckPassword, generateDeckPassword, setDeckPublished, deleteDeck, type Visibility,
 } from '@/lib/decks';
 import { generateDeckThumbnail } from '@/lib/thumbnail';
 import { upsertViewer } from '@/lib/viewers';
@@ -196,6 +196,34 @@ export async function createDeckAction(formData: FormData) {
   if (content) await generateDeckThumbnail({ id: deck.id, slug: deck.slug }).catch(() => false);
   revalidatePath('/admin');
   revalidatePath('/');
+}
+
+// ---- Lưu trữ (ẩn/hiện) & xoá deck ----
+// Ẩn = is_published false: deck không phục vụ qua /d/<slug> (404), ẩn khỏi thư viện người xem. Khôi phục được.
+export async function setDeckPublishedAction(formData: FormData) {
+  await requireAdminEmail();
+  const deckId = String(formData.get('deck_id') ?? '');
+  const published = String(formData.get('published') ?? '') === 'true';
+  if (!deckId) return;
+  await setDeckPublished(deckId, published);
+  revalidatePath(`/admin/decks/${deckId}`);
+  revalidatePath('/admin');
+  revalidatePath('/');
+}
+
+// Xoá vĩnh viễn — yêu cầu gõ đúng slug để xác nhận (tránh xoá nhầm). Cascade dọn link đã cấp + quyền nhóm.
+export async function deleteDeckAction(formData: FormData) {
+  await requireAdminEmail();
+  const deckId = String(formData.get('deck_id') ?? '');
+  if (!deckId) return;
+  const deck = await getDeckById(deckId);
+  if (!deck) redirect('/admin');
+  const confirm = String(formData.get('confirm_slug') ?? '').trim();
+  if (confirm !== deck!.slug) redirect(`/admin/decks/${deckId}?del=mismatch`);
+  await deleteDeck(deckId);
+  revalidatePath('/admin');
+  revalidatePath('/');
+  redirect(`/admin?deleted=${encodeURIComponent(deck!.slug)}`);
 }
 
 export async function updateContentAction(formData: FormData) {

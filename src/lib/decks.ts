@@ -139,6 +139,16 @@ export async function listCompanies(): Promise<string[]> {
   return rows.map((r) => r.company);
 }
 
+// Lưu trữ / khôi phục: bật-tắt is_published. Deck ẩn (false) → /d/<slug> trả 404, không hiện cho người xem.
+export async function setDeckPublished(id: string, published: boolean): Promise<void> {
+  await query('UPDATE deck_decks SET is_published=$2, updated_at=now() WHERE id=$1', [id, published]);
+}
+
+// Xoá vĩnh viễn deck. FK cascade dọn deck_grants + deck_group_decks; deck_access_log giữ lại (deck_id → NULL).
+export async function deleteDeck(id: string): Promise<void> {
+  await query('DELETE FROM deck_decks WHERE id=$1', [id]);
+}
+
 export async function upsertDeck(d: {
   slug: string;
   title: string;

@@ -4,7 +4,11 @@ import { createDeckAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminDecksPage() {
+export default async function AdminDecksPage({
+  searchParams,
+}: {
+  searchParams: { deleted?: string };
+}) {
   let decks: Awaited<ReturnType<typeof listDecks>> = [];
   let dbErr = false;
   try {
@@ -16,6 +20,9 @@ export default async function AdminDecksPage() {
   return (
     <div>
       <h2>Decks</h2>
+      {searchParams.deleted && (
+        <div className="notice" style={{ marginBottom: 16 }}>✓ Đã xoá vĩnh viễn deck <code>{searchParams.deleted}</code>.</div>
+      )}
       {dbErr && <p style={{ color: '#b04a32' }}>Chưa kết nối được DB (kiểm tra DATABASE_URL / đã chạy schema chưa).</p>}
 
       <table style={{ marginBottom: 32 }}>
@@ -33,7 +40,7 @@ export default async function AdminDecksPage() {
                 </span>
                 {d.require_otp && <span className="pill" style={{ marginLeft: 6 }}>OTP</span>}
               </td>
-              <td>{d.is_published ? 'Đã xuất bản' : 'Nháp'}</td>
+              <td>{d.is_published ? 'Đã xuất bản' : <span className="pill bad">Đã ẩn</span>}</td>
               <td><Link className="btn" href={`/admin/decks/${d.id}`}>Quản lý</Link></td>
             </tr>
           ))}

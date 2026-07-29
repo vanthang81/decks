@@ -3,7 +3,7 @@ import { getDeckById, hasDeckContent, listCategories, listCompanies } from '@/li
 import { listGrantsForDeck } from '@/lib/grants';
 import { listGroups, grantedGroupsForDeck } from '@/lib/groups';
 import { listDeckLog } from '@/lib/log';
-import { issueLinkAction, revokeLinkAction, updateContentAction, grantDeckToGroupAction, revokeGroupOnDeckAction, setDeckPasswordAction, generateDeckPasswordAction, clearDeckPasswordAction, updateDeckMetaAction, generateThumbnailAction } from '../../actions';
+import { issueLinkAction, revokeLinkAction, updateContentAction, grantDeckToGroupAction, revokeGroupOnDeckAction, setDeckPasswordAction, generateDeckPasswordAction, clearDeckPasswordAction, updateDeckMetaAction, generateThumbnailAction, setDeckPublishedAction, deleteDeckAction } from '../../actions';
 import CopyField from '@/components/CopyField';
 
 export const dynamic = 'force-dynamic';
@@ -18,7 +18,7 @@ export default async function DeckDetailPage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { link?: string; pw?: string; thumb?: string };
+  searchParams: { link?: string; pw?: string; thumb?: string; del?: string };
 }) {
   const deck = await getDeckById(params.id);
   if (!deck) notFound();
@@ -41,8 +41,26 @@ export default async function DeckDetailPage({
         slug <code>{deck.slug}</code> ·{' '}
         {deck.visibility === 'public' ? 'Công khai' : 'Bảo mật'}
         {deck.require_otp ? ' · OTP' : ''}
-        {deck.has_password ? ' · 🔒 Có mật khẩu' : ''} · {deck.is_published ? 'Đã xuất bản' : 'Nháp'}
+        {deck.has_password ? ' · 🔒 Có mật khẩu' : ''} ·{' '}
+        {deck.is_published ? 'Đã xuất bản' : <b style={{ color: 'var(--bad)' }}>Đã ẩn (lưu trữ)</b>}
       </p>
+
+      {!deck.is_published && (
+        <div className="notice" style={{ marginBottom: 16 }}>
+          Deck đang <b>ẩn</b>: link <code>{viewUrl}</code> trả 404, không ai xem được cho tới khi bạn khôi phục.
+        </div>
+      )}
+
+      <form action={setDeckPublishedAction} style={{ marginBottom: 24 }}>
+        <input type="hidden" name="deck_id" value={deck.id} />
+        <input type="hidden" name="published" value={deck.is_published ? 'false' : 'true'} />
+        <button className={`btn ${deck.is_published ? '' : 'primary'}`} type="submit">
+          {deck.is_published ? '📥 Ẩn / lưu trữ deck' : '↩︎ Khôi phục (xuất bản lại)'}
+        </button>
+        <span className="muted" style={{ marginLeft: 10, fontSize: 13 }}>
+          {deck.is_published ? 'Tạm ẩn khỏi người xem, giữ nguyên nội dung + link đã cấp. Khôi phục lại bất cứ lúc nào.' : ''}
+        </span>
+      </form>
 
       {searchParams.link && (
         <div className="card" style={{ marginBottom: 20 }}>
@@ -262,6 +280,27 @@ export default async function DeckDetailPage({
           {log.length === 0 && <tr><td colSpan={4} className="muted">Chưa có lượt truy cập.</td></tr>}
         </tbody>
       </table>
+
+      <h2 style={{ marginTop: 40, color: 'var(--bad)' }}>Vùng nguy hiểm — Xoá deck</h2>
+      <p className="muted">
+        Xoá <b>vĩnh viễn</b> deck này khỏi hệ thống: mất nội dung, ảnh preview, mọi link cá nhân đã cấp và quyền nhóm
+        (nhật ký truy cập vẫn giữ, ẩn danh deck). <b>Không khôi phục được.</b> Nếu chỉ muốn tạm ẩn, hãy dùng
+        “Ẩn / lưu trữ deck” ở trên.
+      </p>
+      {searchParams.del === 'mismatch' && (
+        <p className="muted" style={{ color: 'var(--bad)' }}>✗ Bạn gõ chưa đúng slug — chưa xoá gì cả.</p>
+      )}
+      <details style={{ maxWidth: 560, border: '1px solid var(--bad)', borderRadius: 8, padding: 14 }}>
+        <summary style={{ cursor: 'pointer', color: 'var(--bad)', fontWeight: 600 }}>Tôi muốn xoá vĩnh viễn deck này</summary>
+        <form action={deleteDeckAction} style={{ marginTop: 12 }}>
+          <input type="hidden" name="deck_id" value={deck.id} />
+          <label htmlFor="confirm_slug">Gõ đúng slug <code>{deck.slug}</code> để xác nhận</label>
+          <input id="confirm_slug" name="confirm_slug" autoComplete="off" placeholder={deck.slug} />
+          <div style={{ marginTop: 12 }}>
+            <button className="btn danger" type="submit">Xoá vĩnh viễn</button>
+          </div>
+        </form>
+      </details>
     </div>
   );
 }

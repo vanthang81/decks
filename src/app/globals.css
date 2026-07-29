@@ -96,6 +96,8 @@ a.card:hover { text-decoration: none; transform: translateY(-2px); box-shadow: v
 .btn:hover { border-color: var(--brand); color: var(--brand); text-decoration: none; }
 .btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
 .btn.primary:hover { background: var(--brand-strong); border-color: var(--brand-strong); color: #fff; }
+.btn.danger { background: var(--bad); border-color: var(--bad); color: #fff; }
+.btn.danger:hover { background: var(--bad); border-color: var(--bad); color: #fff; filter: brightness(.92); }
 
 /* ---------- Forms ---------- */
 input, select, textarea { font: inherit; padding: 9px 11px; border: 1px solid var(--line-strong);

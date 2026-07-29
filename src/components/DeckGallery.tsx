@@ -48,7 +48,7 @@ function Badges({ d }: { d: DeckLite }) {
       </span>
       {d.has_password && <span className="pill" style={{ fontSize: 10 }}>🔒 mật khẩu</span>}
       {d.require_otp && <span className="pill" style={{ fontSize: 10 }}>OTP</span>}
-      {!d.is_published && <span className="pill bad" style={{ fontSize: 10 }}>nháp</span>}
+      {!d.is_published && <span className="pill bad" style={{ fontSize: 10 }}>đã ẩn</span>}
     </span>
   );
 }
