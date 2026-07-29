@@ -75,7 +75,11 @@ phục vụ + chèn watermark/log.
   (mặc định BTMH) + **thumbnail** (ảnh preview slide đầu). Trang chủ dùng `src/components/DeckGallery.tsx`
   ('use client'): ô tìm kiếm + chip lọc theo danh mục + **nút đổi kiểu hiển thị Lưới/Danh sách** (giống
   Google Drive, nhớ lựa chọn ở localStorage `deckView`). Card hiện thumbnail (hoặc ô placeholder màu theo
-  hash + chữ cái đầu) + badge. **Ảnh preview TỰ CHỤP slide đầu qua browserless**: `src/lib/thumbnail.ts`
+  hash + chữ cái đầu) + badge. **Mỗi card có thanh URL ở chân** (`UrlBar` trong DeckGallery): link **URL
+  đầy đủ** mở deck (`/d/<slug>`, tab mới) + nút **Copy** để gửi ngay — KHÔNG cần vào trang quản trị deck.
+  Thân card (thumb+nội dung) vẫn link vào `/admin/decks/<id>`; thanh URL tách RIÊNG (tránh lồng `<a>`).
+  `baseUrl` dựng URL tuyệt đối = `APP_URL` (fallback header nginx `x-forwarded-proto`/`x-forwarded-host`),
+  truyền từ `src/app/page.tsx` xuống DeckGallery. **Ảnh preview TỰ CHỤP slide đầu qua browserless**: `src/lib/thumbnail.ts`
   `generateDeckThumbnail` POST `${BROWSERLESS_URL}/chrome/screenshot?token=…` (env VPS
   `BROWSERLESS_URL=http://host.docker.internal:8090` + `BROWSERLESS_TOKEN`, đọc từ container `browserless-shot`)
   → JPEG 1000×563 → lưu data-URI vào `deck_decks.thumbnail`. Tự chạy sau khi publish/sửa nội dung (API + action),
