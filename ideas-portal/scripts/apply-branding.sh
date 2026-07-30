@@ -5,7 +5,7 @@
 #   - Tên trang, CSS gỡ thương hiệu Fider + bản quyền BTMH
 #   - Chỉ cho đăng nhập bằng Google (tắt email auth)
 #   - Bật provider Google (_google) cho tenant
-#   - Đặt locale mặc định (giao diện đã Việt hóa qua overlay locale/en)
+#   - Logo BTMH (blob + logo_bkey) thay og:image/header/favicon Fider
 # ==========================================================================
 set -euo pipefail
 
@@ -31,5 +31,21 @@ docker exec "$PGC" psql -U postgres -d "$DB" -v ON_ERROR_STOP=1 -c "
   INSERT INTO tenant_providers (tenant_id, provider, is_enabled)
   VALUES ($TENANT_ID, '_google', true)
   ON CONFLICT (tenant_id, provider) DO UPDATE SET is_enabled = true;"
+
+# Logo BTMH: upsert blob + trỏ logo_bkey (thay og:image/header/favicon Fider mặc định)
+LOGO_FILE="$DIR/branding/logo.png.b64"
+LOGO_KEY="logos/btmh-logo.png"
+if [ -f "$LOGO_FILE" ]; then
+  LOGO_B64="$(tr -d '\n' < "$LOGO_FILE")"
+  LOGO_SIZE="$(base64 -d "$LOGO_FILE" | wc -c)"
+  docker exec "$PGC" psql -U postgres -d "$DB" -v ON_ERROR_STOP=1 -c "
+    INSERT INTO blobs (key, tenant_id, size, content_type, file, created_at, modified_at)
+    VALUES ('$LOGO_KEY', $TENANT_ID, $LOGO_SIZE, 'image/png', decode('$LOGO_B64','base64'), now(), now())
+    ON CONFLICT (tenant_id, key) DO UPDATE
+      SET file = EXCLUDED.file, size = EXCLUDED.size,
+          content_type = EXCLUDED.content_type, modified_at = now();"
+  docker exec "$PGC" psql -U postgres -d "$DB" -v ON_ERROR_STOP=1 -c "
+    UPDATE tenants SET logo_bkey = '$LOGO_KEY' WHERE id = $TENANT_ID;"
+fi
 
 echo "apply-branding: done"
