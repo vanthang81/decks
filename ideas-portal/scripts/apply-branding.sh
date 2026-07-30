@@ -5,7 +5,7 @@
 #   - Tên trang, CSS gỡ thương hiệu Fider + bản quyền BTMH
 #   - Chỉ cho đăng nhập bằng Google (tắt email auth)
 #   - Bật provider Google (_google) cho tenant
-#   - Logo BTMH (blob + logo_bkey) thay og:image/header/favicon Fider
+#   - Logo BTMH (sinh trên VPS) -> blob + logo_bkey
 # ==========================================================================
 set -euo pipefail
 
@@ -32,12 +32,17 @@ docker exec "$PGC" psql -U postgres -d "$DB" -v ON_ERROR_STOP=1 -c "
   VALUES ($TENANT_ID, '_google', true)
   ON CONFLICT (tenant_id, provider) DO UPDATE SET is_enabled = true;"
 
-# Logo BTMH: upsert blob + trỏ logo_bkey (thay og:image/header/favicon Fider mặc định)
-LOGO_FILE="$DIR/branding/logo.png.b64"
+# Logo BTMH: sinh xác định trên VPS (tránh lỗi truyền base64) rồi upsert blob + logo_bkey
+# (thay og:image/header/favicon Fider mặc định). Logo được cache tại branding/logo.png.
+LOGO_PNG="$DIR/branding/logo.png"
 LOGO_KEY="logos/btmh-logo.png"
-if [ -f "$LOGO_FILE" ]; then
-  LOGO_B64="$(tr -d '\n' < "$LOGO_FILE")"
-  LOGO_SIZE="$(base64 -d "$LOGO_FILE" | wc -c)"
+if [ ! -f "$LOGO_PNG" ]; then
+  docker run --rm -v "$DIR:/w" python:3-slim bash -c \
+    "apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq fonts-dejavu-core >/dev/null 2>&1 && pip install -q Pillow >/dev/null 2>&1 && python /w/scripts/gen-logo.py /w/branding/logo.png" || true
+fi
+if [ -f "$LOGO_PNG" ]; then
+  LOGO_B64="$(base64 -w0 "$LOGO_PNG")"
+  LOGO_SIZE="$(wc -c < "$LOGO_PNG")"
   docker exec "$PGC" psql -U postgres -d "$DB" -v ON_ERROR_STOP=1 -c "
     INSERT INTO blobs (key, tenant_id, size, content_type, file, created_at, modified_at)
     VALUES ('$LOGO_KEY', $TENANT_ID, $LOGO_SIZE, 'image/png', decode('$LOGO_B64','base64'), now(), now())
