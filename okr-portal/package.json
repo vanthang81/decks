@@ -1,0 +1,27 @@
+{
+  "name": "okr-portal",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BTMH OKR Portal — OKR/KPI/action-plan/budget tracking (company → division → department → individual).",
+  "scripts": {
+    "dev": "next dev -p 3010",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "14.2.35",
+    "next-auth": "5.0.0-beta.25",
+    "pg": "^8.13.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.11",
+    "@types/pg": "^8.11.10",
+    "@types/react": "18.3.11",
+    "@types/react-dom": "18.3.0",
+    "typescript": "^5.6.3"
+  }
+}
