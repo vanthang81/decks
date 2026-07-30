@@ -1,0 +1,19 @@
+/* ==========================================================================
+   Ý tưởng BTMH — CSS tùy biến (lưu trong DB: tenants.custom_css)
+   Mục tiêu: gỡ mọi dấu vết thương hiệu Fider + gắn bản quyền Bảo Tín Mạnh Hải.
+   ========================================================================== */
+
+/* 1) Ẩn mọi liên kết "Powered by Fider" / trỏ về fider.io ở chân trang */
+a[href*="fider.io"] { display: none !important; }
+
+/* 2) Dòng bản quyền BTMH ở chân ứng dụng (ổn định vì #root luôn tồn tại) */
+#root::after {
+  content: "© Bảo Tín Mạnh Hải · Bản quyền thuộc Công ty Bảo Tín Mạnh Hải";
+  display: block;
+  text-align: center;
+  padding: 20px 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #98a2b3;
+  border-top: 1px solid #ececec;
+}
