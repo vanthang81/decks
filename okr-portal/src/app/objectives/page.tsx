@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import SiteHeader from '@/components/SiteHeader';
 import ObjectiveTree, { type TreeObjective } from '@/components/ObjectiveTree';
+import PeriodPicker from '@/components/PeriodPicker';
 import { requireUser } from '@/lib/current-user';
 import {
   getCurrentPeriod,
@@ -56,20 +57,16 @@ export default async function ObjectivesPage({
             </p>
           </div>
           <div className="row" style={{ flex: '0 0 auto' }}>
-            <form method="get" style={{ display: 'flex', gap: 8 }}>
-              <select className="i" name="period" defaultValue={period?.id ?? ''}>
-                {orderPeriodsHierarchically(periods).map(({ period: p, depth }) => (
-                  <option key={p.id} value={p.id}>
-                    {'  '.repeat(depth)}
-                    {PERIOD_KIND_LABEL[p.kind]}: {p.name}
-                    {p.is_current ? ' (hiện tại)' : ''}
-                  </option>
-                ))}
-              </select>
-              <button className="btn ghost" type="submit">
-                Xem
-              </button>
-            </form>
+            <PeriodPicker
+              periods={orderPeriodsHierarchically(periods).map(({ period: p, depth }) => ({
+                id: p.id,
+                label: `${PERIOD_KIND_LABEL[p.kind]}: ${p.name}`,
+                depth,
+                isCurrent: p.is_current,
+              }))}
+              currentId={period?.id ?? null}
+              basePath="/objectives"
+            />
             {period && (
               <a className="btn ghost" href={`/api/export?period=${period.id}`} title="Xuất toàn bộ OKR kỳ này ra Excel">
                 ⬇ Xuất Excel

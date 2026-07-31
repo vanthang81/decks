@@ -237,6 +237,39 @@ table.t tr:hover td { background: #FBF7F2; }
 .kb-card-unit { font-size: 11.5px; color: #245b5e; margin-top: 3px; }
 .kb-card-proj { font-size: 11.5px; color: var(--primary); font-weight: 600; margin-top: 2px; }
 
+/* ===== Bộ chọn kỳ (PeriodPicker) — chọn là mở luôn ===== */
+.pp-wrap { position: relative; display: inline-block; }
+.pp-btn {
+  display: inline-flex; align-items: center; gap: 8px; justify-content: space-between;
+  min-width: 190px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px;
+  background: #fff; color: var(--ink); font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer;
+}
+.pp-btn:hover { border-color: #dcd3c9; }
+.pp-btn:disabled { opacity: .6; cursor: default; }
+.pp-btn-label { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp-caret { color: var(--muted); transition: transform .15s ease; flex: 0 0 auto; }
+.pp-caret.open { transform: rotate(180deg); }
+.pp-now {
+  font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 999px;
+  background: var(--primary-tint); color: var(--primary);
+}
+.pp-menu {
+  position: absolute; z-index: 40; top: calc(100% + 4px); right: 0; min-width: 280px; max-width: 360px;
+  max-height: 60vh; overflow-y: auto; background: var(--card); border: 1px solid var(--line);
+  border-radius: 10px; box-shadow: 0 12px 34px rgba(0,0,0,.18); padding: 5px;
+}
+.pp-item {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  border: 0; background: transparent; color: var(--ink); font-size: 13.5px; font-family: inherit;
+  padding: 8px 10px; border-radius: 7px; cursor: pointer; white-space: nowrap;
+}
+.pp-item:hover { background: #FBF7F2; }
+.pp-item.active { background: var(--primary-tint); color: var(--primary); font-weight: 700; }
+@media (max-width: 760px) {
+  .pp-btn { min-width: 0; width: 100%; }
+  .pp-menu { min-width: 240px; }
+}
+
 /* ===== Danh sách thực thi (bấm dòng để sửa) ===== */
 .il-list { margin-top: 2px; }
 .il-row {
