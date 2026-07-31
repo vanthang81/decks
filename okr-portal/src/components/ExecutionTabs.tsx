@@ -53,6 +53,9 @@ export type Card = {
   owner_name: string | null;
   unit_id: string | null;
   unit_name: string | null;
+  project_id: string | null;
+  project_name: string | null;
+  project_code: string | null;
   status: Status;
   priority: 'low' | 'medium' | 'high';
   progress: number;
@@ -64,6 +67,7 @@ export type Card = {
 
 export type PersonOpt = { email: string; name: string };
 export type UnitOpt = { id: string; name: string; type: 'company' | 'division' | 'department' };
+export type ProjectOpt = { id: string; code: string | null; name: string };
 
 type View = 'list' | 'kanban' | 'timeline';
 
@@ -88,9 +92,11 @@ export default function ExecutionTabs({
   save,
   del,
   createChild,
+  createProjectForInit,
   objectiveId,
   users,
   units,
+  projects,
   children,
 }: {
   initiatives: Card[];
@@ -100,9 +106,11 @@ export default function ExecutionTabs({
   save: (fd: FormData) => Promise<void>;
   del: (fd: FormData) => Promise<void>;
   createChild: (fd: FormData) => Promise<void>;
+  createProjectForInit: (fd: FormData) => Promise<void>;
   objectiveId: string;
   users: PersonOpt[];
   units: UnitOpt[];
+  projects: ProjectOpt[];
   children: React.ReactNode;
 }) {
   const [view, setView] = useState<View>('list');
@@ -166,9 +174,11 @@ export default function ExecutionTabs({
           canEdit={canEdit(editing)}
           users={users}
           units={units}
+          projects={projects}
           save={save}
           del={del}
           createChild={createChild}
+          createProjectForInit={createProjectForInit}
           objectiveId={objectiveId}
           onClose={() => setEditing(null)}
         />
@@ -184,9 +194,11 @@ function EditModal({
   canEdit,
   users,
   units,
+  projects,
   save,
   del,
   createChild,
+  createProjectForInit,
   objectiveId,
   onClose,
 }: {
@@ -195,9 +207,11 @@ function EditModal({
   canEdit: boolean;
   users: PersonOpt[];
   units: UnitOpt[];
+  projects: ProjectOpt[];
   save: (fd: FormData) => Promise<void>;
   del: (fd: FormData) => Promise<void>;
   createChild: (fd: FormData) => Promise<void>;
+  createProjectForInit: (fd: FormData) => Promise<void>;
   objectiveId: string;
   onClose: () => void;
 }) {
@@ -206,6 +220,9 @@ function EditModal({
   const [err, setErr] = useState<string | null>(null);
   const [confirmDel, setConfirmDel] = useState(false);
   const [addKid, setAddKid] = useState(false);
+  const [inProject, setInProject] = useState<boolean>(!!card.project_id);
+  const [newProj, setNewProj] = useState(false);
+  const [newProjName, setNewProjName] = useState('');
   const childKinds = CHILD_KIND[card.kind];
 
   useEffect(() => {
@@ -253,6 +270,13 @@ function EditModal({
     fd.set('id', card.id);
     fd.set('objective_id', objectiveId);
     run(() => del(fd));
+  };
+
+  const createNewProject = () => {
+    const fd = new FormData();
+    fd.set('init_id', card.id);
+    fd.set('name', newProjName.trim());
+    run(() => createProjectForInit(fd));
   };
 
   return (
@@ -325,6 +349,74 @@ function EditModal({
                     ))}
                   </select>
                 </div>
+              </div>
+            )}
+
+            {canManage && (
+              <div style={{ marginTop: 8 }}>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 13.5, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={inProject}
+                    onChange={(e) => {
+                      setInProject(e.target.checked);
+                      if (!e.target.checked) setNewProj(false);
+                    }}
+                  />
+                  🗂 Thuộc dự án
+                </label>
+                {inProject && !newProj && (
+                  <div className="row" style={{ marginTop: 6 }}>
+                    <div style={{ flex: 2 }}>
+                      <select className="i" name="project_id" defaultValue={card.project_id ?? ''}>
+                        <option value="">— Chọn dự án —</option>
+                        {projects.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.code ? `${p.code} · ` : ''}
+                            {p.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                      <button type="button" className="btn ghost sm" onClick={() => setNewProj(true)}>
+                        ＋ Dự án mới
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {inProject && newProj && (
+                  <>
+                    <input type="hidden" name="project_id" value={card.project_id ?? ''} />
+                    <div className="row" style={{ marginTop: 6 }}>
+                      <div style={{ flex: 2 }}>
+                        <input
+                          className="i"
+                          placeholder="Tên dự án mới…"
+                          value={newProjName}
+                          onChange={(e) => setNewProjName(e.target.value)}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
+                        <button
+                          type="button"
+                          className="btn sm"
+                          disabled={pending || !newProjName.trim()}
+                          onClick={createNewProject}
+                        >
+                          {pending ? 'Đang tạo…' : 'Tạo & gắn'}
+                        </button>
+                        <button type="button" className="btn ghost sm" onClick={() => setNewProj(false)}>
+                          Huỷ
+                        </button>
+                      </div>
+                    </div>
+                    <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+                      Tạo dự án rồi gắn việc này vào ngay. Sửa chi tiết dự án ở trang “Dự án”.
+                    </p>
+                  </>
+                )}
+                {!inProject && <input type="hidden" name="project_id" value="" />}
               </div>
             )}
 
@@ -554,6 +646,7 @@ function ListView({
                 <div className="obj-meta">
                   {n.owner_name ? `👤 ${n.owner_name}` : 'Chưa giao'}
                   {n.unit_name ? ` · 🏢 ${n.unit_name}` : ''}
+                  {n.project_name ? ` · 🗂 ${n.project_name}` : ''}
                   {n.due_on ? ` · Hạn ${fmtD(n.due_on)}` : ''}
                 </div>
               </div>
@@ -692,6 +785,7 @@ function KanbanView({
                         <div className="kb-card-parent">↳ {titleById.get(c.parent_id)}</div>
                       )}
                       {c.unit_name && <div className="kb-card-unit">🏢 {c.unit_name}</div>}
+                      {c.project_name && <div className="kb-card-proj">🗂 {c.project_name}</div>}
                       <div className="kb-card-foot">
                         <span>{c.owner_name || 'Chưa giao'}</span>
                         {c.due_on && <span>· {fmtD(c.due_on)}</span>}

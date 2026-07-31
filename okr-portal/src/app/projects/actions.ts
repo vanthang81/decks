@@ -1,0 +1,114 @@
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { requireUser } from '@/lib/current-user';
+import { listUnits } from '@/lib/org';
+import {
+  createProject,
+  updateProject,
+  deleteProject,
+  getProject,
+  setInitiativeProject,
+  canCreateProject,
+  canManageProject,
+  type ProjectStatus,
+} from '@/lib/projects';
+import { getInitiative, canUpdateInitiative } from '@/lib/initiatives';
+import { getObjective } from '@/lib/okr';
+
+function str(fd: FormData, k: string): string {
+  return String(fd.get(k) ?? '').trim();
+}
+function num(fd: FormData, k: string, def = 0): number {
+  const v = Number(String(fd.get(k) ?? '').replace(/,/g, ''));
+  return Number.isFinite(v) ? v : def;
+}
+function orNull(s: string): string | null {
+  return s === '' ? null : s;
+}
+
+export async function createProjectAction(fd: FormData) {
+  const user = await requireUser();
+  if (!canCreateProject(user)) throw new Error('Bạn không có quyền tạo dự án.');
+  const name = str(fd, 'name');
+  if (!name) throw new Error('Thiếu tên dự án.');
+  const id = await createProject({
+    period_id: orNull(str(fd, 'period_id')),
+    name,
+    description: orNull(str(fd, 'description')),
+    owner_email: orNull(str(fd, 'owner_email')) ?? user.email,
+    unit_id: orNull(str(fd, 'unit_id')),
+    status: (str(fd, 'status') || 'active') as ProjectStatus,
+    start_on: orNull(str(fd, 'start_on')),
+    due_on: orNull(str(fd, 'due_on')),
+    budget_planned: num(fd, 'budget_planned'),
+    budget_actual: num(fd, 'budget_actual'),
+    created_by: user.email,
+  });
+  redirect(`/projects/${id}`);
+}
+
+export async function updateProjectAction(fd: FormData) {
+  const user = await requireUser();
+  const units = await listUnits();
+  const id = str(fd, 'id');
+  const p = await getProject(id);
+  if (!p) throw new Error('Không tìm thấy dự án.');
+  if (!canManageProject(user, p, units)) throw new Error('Bạn không có quyền sửa dự án này.');
+  await updateProject(id, {
+    name: str(fd, 'name') || p.name,
+    description: orNull(str(fd, 'description')),
+    owner_email: orNull(str(fd, 'owner_email')),
+    unit_id: orNull(str(fd, 'unit_id')),
+    status: (str(fd, 'status') || 'active') as ProjectStatus,
+    start_on: orNull(str(fd, 'start_on')),
+    due_on: orNull(str(fd, 'due_on')),
+    budget_planned: num(fd, 'budget_planned'),
+    budget_actual: num(fd, 'budget_actual'),
+  });
+  revalidatePath(`/projects/${id}`);
+  revalidatePath('/projects');
+}
+
+export async function deleteProjectAction(fd: FormData) {
+  const user = await requireUser();
+  const units = await listUnits();
+  const id = str(fd, 'id');
+  const p = await getProject(id);
+  if (!p) return;
+  if (!canManageProject(user, p, units)) throw new Error('Bạn không có quyền xoá dự án này.');
+  await deleteProject(id);
+  redirect('/projects');
+}
+
+// Modal edit task: tạo NHANH 1 dự án rồi gắn task vào (khi dự án chưa tồn tại).
+export async function createProjectForInitiativeAction(fd: FormData) {
+  const user = await requireUser();
+  if (!canCreateProject(user)) throw new Error('Bạn không có quyền tạo dự án.');
+  const initId = str(fd, 'init_id');
+  const name = str(fd, 'name');
+  if (!name) throw new Error('Thiếu tên dự án.');
+  const units = await listUnits();
+  const init = await getInitiative(initId);
+  if (!init) throw new Error('Không tìm thấy công việc.');
+  const obj = init.objective_id ? await getObjective(init.objective_id) : null;
+  const perm = canUpdateInitiative(user, init, obj ?? { unit_id: null, owner_email: null, created_by: null }, units);
+  if (!perm.manage && !perm.assignee) throw new Error('Bạn không có quyền gắn dự án cho việc này.');
+  const projectId = await createProject({
+    period_id: obj?.period_id ?? null,
+    name,
+    description: null,
+    owner_email: user.email,
+    unit_id: init.unit_id ?? obj?.unit_id ?? null,
+    status: 'active',
+    start_on: null,
+    due_on: null,
+    budget_planned: 0,
+    budget_actual: 0,
+    created_by: user.email,
+  });
+  await setInitiativeProject(initId, projectId);
+  if (obj) revalidatePath(`/objectives/${obj.id}`);
+  revalidatePath('/projects');
+}

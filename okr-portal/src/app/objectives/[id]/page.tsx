@@ -22,6 +22,7 @@ import {
   listInitiativesForObjective,
   budgetSummaryForObjective,
 } from '@/lib/initiatives';
+import { listProjectOptions } from '@/lib/projects';
 import { listCheckInsForObjective, CONFIDENCE_LABEL, CONFIDENCE_COLOR } from '@/lib/checkins';
 import { listKpiMetrics } from '@/lib/kpi';
 import { fmtMetric, fmtVnd, fmtDate } from '@/lib/format';
@@ -34,6 +35,7 @@ import {
   deleteInitiativeAction,
   moveInitiativeAction,
 } from '../actions';
+import { createProjectForInitiativeAction } from '@/app/projects/actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -88,6 +90,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
   ]);
   const parent = obj.parent_id ? await getObjective(obj.parent_id) : null;
   const kpiSources = listKpiMetrics();
+  const projectOpts = await listProjectOptions(obj.period_id);
 
   // #5 Guardrail + #2 cơ cấu chỉ số.
   const leadingCount = krs.filter((k) => k.indicator === 'leading').length;
@@ -373,9 +376,11 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
             save={editInitiativeAction}
             del={deleteInitiativeAction}
             createChild={createInitiativeAction}
+            createProjectForInit={createProjectForInitiativeAction}
             objectiveId={obj.id}
             users={personOpts}
             units={unitOpts}
+            projects={projectOpts}
           >
             {canManage && (
               <details className="inline" style={{ marginTop: 14 }}>
@@ -404,6 +409,20 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                     </option>
                   ))}
                 </select>
+                {projectOpts.length > 0 && (
+                  <>
+                    <label className="f">🗂 Thuộc dự án (tuỳ chọn)</label>
+                    <select className="i" name="project_id" defaultValue="">
+                      <option value="">— Không thuộc dự án —</option>
+                      {projectOpts.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.code ? `${p.code} · ` : ''}
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                  </>
+                )}
                 <div className="row">
                   <div>
                     <label className="f">Đơn vị phụ trách (Khối / Phòng)</label>

@@ -37,6 +37,13 @@ Dự kiến live tại `okr.consultx.vn`.
   ĐƯỢC GIAO (cá nhân). **`unit_id` (db/120)** = Đơn vị phụ trách (Khối/Phòng), khai báo & liên kết dự án
   với khối/phòng ban độc lập cấp của Objective; con kế thừa unit của dự án cha. Mọi nút mang
   `objective_id` của OKR gốc (con kế thừa `key_result_id` của cha).
+- **`okr_projects` (db/130) — DỰ ÁN độc lập, XUYÊN nhiều OKR**: thực thể riêng (code PRJ-nn, period_id,
+  name, owner_email, unit_id, status active/done/paused/archived, dates, budget). Task trỏ vào dự án qua
+  `okr_initiatives.project_id` (FK ON DELETE SET NULL) → 1 dự án gom việc từ NHIỀU OKR/khối. Lib
+  `src/lib/projects.ts` (list/get/create/update/delete + listProjectTasks gom theo OKR + canManageProject/
+  canCreateProject). Trang `/projects` (list + tạo) & `/projects/[id]` (chi tiết + sửa/xoá + việc gom theo
+  OKR). Gắn việc: popup sửa việc (ExecutionTabs) → tick "Thuộc dự án" + chọn/"＋ Dự án mới" (action
+  `createProjectForInitiativeAction` tạo & gắn). Chỉ hiện tag 🗂 khi việc CÓ project_id. Nav "Dự án".
 - `okr_checkins`: cập nhật tiến độ + `confidence`. `okr_audit_log`: nhật ký.
 - **MÃ UNIQUE (db/110, import/export)**: cột `code` ở objectives/key_results/initiatives — định dạng
   `<KHỐI>-O<n>` / `<obj>.KR<m>` / `<obj>.H<kk>` (prefix = mã đơn vị hoặc 'CTY'). Sinh tự động khi tạo
