@@ -105,9 +105,11 @@ export async function deleteUnitAction(fd: FormData) {
 // ---------- Kỳ OKR ----------
 export async function createPeriodAction(fd: FormData) {
   await requireExec();
+  const parent = str(fd, 'parent_id');
   await createPeriod({
     name: str(fd, 'name'),
-    kind: (str(fd, 'kind') || 'quarter') as 'quarter' | 'year',
+    kind: (str(fd, 'kind') || 'quarter') as 'multiyear' | 'year' | 'quarter' | 'month',
+    parent_id: parent === '' ? null : parent,
     starts_on: str(fd, 'starts_on'),
     ends_on: str(fd, 'ends_on'),
   });

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-07-31.4';
+export const GUIDE_VERSION = '2026-07-31.5';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -206,11 +206,11 @@ export const FEATURES: Feature[] = [
   },
   {
     key: 'periods',
-    title: 'Kỳ OKR',
-    where: 'Quản trị → "Kỳ OKR" (CEO/CFO)',
-    help: 'Mỗi kỳ (quý/năm) là một chu kỳ đặt & chấm OKR. Đặt "kỳ hiện tại" để hệ thống dùng mặc định.',
+    title: 'Kỳ OKR — khung thời gian nhiều cấp',
+    where: 'Quản trị → "Kỳ OKR" (CEO/CFO); chọn kỳ ở trang OKR',
+    help: 'Khung nhiều cấp: Chiến lược 2026–2030 → Năm → Quý → Tháng. Tuần/Ngày ở cấp công việc. Đặt "kỳ hiện tại" làm mặc định.',
     detail:
-      'Tạo kỳ quý/năm, đặt kỳ hiện tại, đóng/mở kỳ. Mốc thời gian kỳ được dùng để tính KPI kế hoạch/thực hiện theo đúng khoảng.',
+      'Kỳ có 4 cấp lồng nhau (gắn "kỳ cha" để tạo cây): Chiến lược nhiều năm (VD 2026–2030) → Năm → Quý → Tháng. Tuần/Ngày không tạo thành kỳ riêng mà nằm ở cấp CÔNG VIỆC (ngày bắt đầu/hạn + Gantt + check-in tuần). Objective có thể đặt ở bất kỳ cấp thời gian nào và liên kết (alignment) lên OKR cấp cao hơn để tạo dòng chảy chiến lược 5 năm → năm → quý. Trang OKR có bộ chọn kỳ (thả xuống theo cây) để xem từng cấp; mốc thời gian kỳ dùng để tính KPI kế hoạch/thực hiện theo đúng khoảng.',
   },
   {
     key: 'okr-type',
@@ -289,6 +289,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '31/07/2026 (khung thời gian nhiều cấp)',
+    items: [
+      'Kỳ OKR nhiều cấp: Chiến lược 2026–2030 → Năm → Quý → Tháng (gắn kỳ cha thành cây).',
+      'Seed sẵn khung 2026–2030: 5 năm + Quý & Tháng của 2026; mặc định xem "Năm 2026".',
+      'Bộ chọn kỳ ở trang OKR hiển thị theo cây; Tuần/Ngày nằm ở cấp công việc.',
+    ],
+  },
   {
     date: '31/07/2026 (quản trị dự án — đợt 2)',
     items: [

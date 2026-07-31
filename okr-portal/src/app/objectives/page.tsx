@@ -2,7 +2,13 @@ import Link from 'next/link';
 import SiteHeader from '@/components/SiteHeader';
 import { ProgressBar, LevelBadge } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
-import { getCurrentPeriod, listPeriods, getPeriod } from '@/lib/periods';
+import {
+  getCurrentPeriod,
+  listPeriods,
+  getPeriod,
+  orderPeriodsHierarchically,
+  PERIOD_KIND_LABEL,
+} from '@/lib/periods';
 import {
   listObjectivesByPeriod,
   ownersOverObjectiveLimit,
@@ -83,9 +89,10 @@ export default async function ObjectivesPage({
           <div className="row" style={{ flex: '0 0 auto' }}>
             <form method="get" style={{ display: 'flex', gap: 8 }}>
               <select className="i" name="period" defaultValue={period?.id ?? ''}>
-                {periods.map((p) => (
+                {orderPeriodsHierarchically(periods).map(({ period: p, depth }) => (
                   <option key={p.id} value={p.id}>
-                    {p.name}
+                    {'  '.repeat(depth)}
+                    {PERIOD_KIND_LABEL[p.kind]}: {p.name}
                     {p.is_current ? ' (hiện tại)' : ''}
                   </option>
                 ))}

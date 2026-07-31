@@ -23,7 +23,11 @@ Dự kiến live tại `okr.consultx.vn`.
 ## Mô hình dữ liệu (db/001_okr_core.sql — idempotent)
 - `okr_units`: cây tổ chức company→division→department (đệ quy `parent_id`).
 - `okr_users`: allowlist Google email + `role` (exec/division_lead/dept_lead/staff) + `unit_id`.
-- `okr_periods`: kỳ quý/năm, `is_current` (chỉ 1 kỳ hiện tại — partial unique index).
+- `okr_periods`: kỳ, `is_current` (chỉ 1 kỳ hiện tại — partial unique index). **KHUNG THỜI GIAN
+  NHIỀU CẤP (db/060 + seed 061)**: `parent_id` + `kind` ('multiyear'|'year'|'quarter'|'month') =
+  Chiến lược 2026–2030 → Năm → Quý → Tháng (Tuần/Ngày ở cấp công việc: initiatives.start_on/due_on +
+  check-in tuần). Seed 061 = 5 năm + Quý/Tháng 2026; mặc định `is_current`='Năm 2026'. `periods.ts`:
+  `PERIOD_KIND_LABEL`, `orderPeriodsHierarchically` (dựng cây + depth cho dropdown/admin).
 - `okr_objectives`: Objective, `level`, `unit_id`/`owner_email`, `parent_id` (alignment/cascade),
   `progress` (cache roll-up).
 - `okr_key_results`: KR (start→current→target, `direction`, `metric_type`, `weight`, `kpi_source`, `progress`).
