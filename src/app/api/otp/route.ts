@@ -3,11 +3,12 @@ import { findGrantByToken } from '@/lib/grants';
 import { verifyOtp } from '@/lib/otp';
 import { signViewerSession, VIEWER_COOKIE, viewerCookieOptions } from '@/lib/session';
 import { logEvent } from '@/lib/log';
+import { reqBaseUrl } from '@/lib/http';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
-  const base = process.env.APP_URL ?? req.url;
+  const base = reqBaseUrl(req);
   const form = await req.formData();
   const token = String(form.get('token') ?? '');
   const code = String(form.get('code') ?? '').trim();

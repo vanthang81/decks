@@ -7,6 +7,7 @@ import {
   deckPwCookieName, verifyDeckPwSession, signDeckPwSession, deckPwCookieOptions,
 } from '@/lib/session';
 import { wrapProtectedDeck } from '@/lib/watermark';
+import { reqBaseUrl } from '@/lib/http';
 import { logEvent } from '@/lib/log';
 import { sendMail } from '@/lib/mail';
 import { auth } from '@/auth';
@@ -222,7 +223,7 @@ export async function POST(req: NextRequest, { params }: { params: { slug: strin
     if (grant) {
       const token = await rotateGrantToken(grant.id);
       if (token) {
-        const base = process.env.APP_URL ?? new URL(req.url).origin;
+        const base = reqBaseUrl(req);
         const link = `${base}/v/${token}`;
         await sendMail({
           to: grant.viewer_email,
@@ -248,7 +249,7 @@ export async function POST(req: NextRequest, { params }: { params: { slug: strin
     return accessGate(deck, { pwErr: 'Mật khẩu không đúng, thử lại.' });
   }
   await logEvent({ event: 'pw_ok', deckId: deck.id, ip, userAgent: ua }).catch(() => {});
-  const base = process.env.APP_URL ?? new URL(req.url).origin;
+  const base = reqBaseUrl(req);
   const token = await signDeckPwSession(deck.id);
   const res = NextResponse.redirect(`${base}/d/${deck.slug}`, 303);
   res.cookies.set(deckPwCookieName(deck.id), token, deckPwCookieOptions);

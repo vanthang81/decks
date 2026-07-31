@@ -4,6 +4,7 @@ import { signViewerSession, VIEWER_COOKIE, viewerCookieOptions } from '@/lib/ses
 import { createOtp } from '@/lib/otp';
 import { sendMail } from '@/lib/mail';
 import { logEvent } from '@/lib/log';
+import { reqBaseUrl } from '@/lib/http';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +20,7 @@ function gate(msg: string): Response {
 }
 
 export async function GET(req: NextRequest, { params }: { params: { token: string } }) {
-  const base = process.env.APP_URL ?? req.url;
+  const base = reqBaseUrl(req);
   const g = await findGrantByToken(params.token);
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null;
   const ua = req.headers.get('user-agent');
