@@ -5,7 +5,7 @@
 #   - Tên trang, CSS gỡ thương hiệu Fider + bản quyền BTMH
 #   - Chỉ cho đăng nhập bằng Google (tắt email auth)
 #   - Bật provider Google (_google) cho tenant
-#   - Logo BTMH (sinh trên VPS) -> blob + logo_bkey
+#   - Đặt locale mặc định (giao diện đã Việt hóa qua overlay locale/en)
 # ==========================================================================
 set -euo pipefail
 
@@ -32,11 +32,21 @@ docker exec "$PGC" psql -U postgres -d "$DB" -v ON_ERROR_STOP=1 -c "
   VALUES ($TENANT_ID, '_google', true)
   ON CONFLICT (tenant_id, provider) DO UPDATE SET is_enabled = true;"
 
-# Logo BTMH: sinh xác định trên VPS (tránh lỗi truyền base64) rồi upsert blob + logo_bkey
-# (thay og:image/header/favicon Fider mặc định). Logo được cache tại branding/logo.png.
+# Logo BTMH: upsert blob + logo_bkey (thay og:image/header/favicon Fider mặc định).
+# Nguồn ưu tiên = branding/logo.parts (logo BTMH THẬT, base64 CHIA PHẦN trong git =
+# truyền byte-chuẩn, không lỗi). Ghép + giải mã ra logo.png mỗi lần deploy.
+# Dự phòng: logo.b64 (1 file) rồi gen-logo.py (sinh logo tạm ngay trên VPS).
 LOGO_PNG="$DIR/branding/logo.png"
+LOGO_PARTS="$DIR/branding/logo.parts"     # logo BTMH thật, base64 CHIA PHẦN (part-00..)
+LOGO_SRC_B64="$DIR/branding/logo.b64"     # (dự phòng) base64 1 file
 LOGO_KEY="logos/btmh-logo.png"
-if [ ! -f "$LOGO_PNG" ]; then
+if [ -d "$LOGO_PARTS" ]; then
+  # Ghép các phần theo thứ tự (glob tự sort part-00..part-NN) rồi giải mã. base64 -d bỏ qua
+  # xuống dòng nên kể cả mỗi phần có \n ở cuối vẫn giải mã đúng.
+  cat "$LOGO_PARTS"/part-* | base64 -d > "$LOGO_PNG"
+elif [ -f "$LOGO_SRC_B64" ]; then
+  base64 -d "$LOGO_SRC_B64" > "$LOGO_PNG"
+elif [ ! -f "$LOGO_PNG" ]; then
   docker run --rm -v "$DIR:/w" python:3-slim bash -c \
     "apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq fonts-dejavu-core >/dev/null 2>&1 && pip install -q Pillow >/dev/null 2>&1 && python /w/scripts/gen-logo.py /w/branding/logo.png" || true
 fi
