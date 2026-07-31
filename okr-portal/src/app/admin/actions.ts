@@ -14,6 +14,8 @@ import { createUnit, updateUnit, deleteUnit, type UnitType } from '@/lib/org';
 import { createPeriod, setCurrentPeriod, setPeriodStatus } from '@/lib/periods';
 import { syncAllKpi } from '@/lib/kpi';
 import { redirect } from 'next/navigation';
+import { setSetting } from '@/lib/settings';
+import { REMINDER_KEY, runCheckinReminders, type ReminderConfig } from '@/lib/reminders';
 
 async function requireExec() {
   const user = await requireUser();
@@ -122,6 +124,31 @@ export async function setPeriodStatusAction(fd: FormData) {
   await requireExec();
   await setPeriodStatus(str(fd, 'id'), str(fd, 'status') as 'planning' | 'active' | 'closed');
   revalidatePath('/admin/periods');
+}
+
+// ---------- #4 Cấu hình nhắc check-in ----------
+export async function saveReminderAction(fd: FormData) {
+  await requireExec();
+  const cfg: ReminderConfig = {
+    enabled: str(fd, 'enabled') === 'on',
+    weekday: Math.max(0, Math.min(6, Number(str(fd, 'weekday')) || 1)),
+    stale_days: Math.max(1, Number(str(fd, 'stale_days')) || 7),
+    audience: (str(fd, 'audience') || 'all_owners') as ReminderConfig['audience'],
+  };
+  await setSetting(REMINDER_KEY, cfg);
+  redirect('/admin/settings?saved=1');
+}
+
+export async function testReminderAction() {
+  await requireExec();
+  let msg: string;
+  try {
+    const r = await runCheckinReminders({ force: true });
+    msg = `sent:${r.sent}`;
+  } catch (e) {
+    msg = `err:${String(e).slice(0, 60)}`;
+  }
+  redirect(`/admin/settings?test=${encodeURIComponent(msg)}`);
 }
 
 // ---------- Đồng bộ KPI (plan+actual từ BigQuery) ----------

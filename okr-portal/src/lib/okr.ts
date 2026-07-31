@@ -6,6 +6,8 @@ export type Level = 'company' | 'division' | 'department' | 'individual';
 export type ObjStatus = 'draft' | 'active' | 'done' | 'archived';
 export type MetricType = 'number' | 'percent' | 'currency' | 'boolean';
 export type Direction = 'increase' | 'decrease';
+export type OkrType = 'committed' | 'aspirational' | 'learning';
+export type Indicator = 'leading' | 'lagging';
 
 export const LEVEL_LABEL: Record<Level, string> = {
   company: 'Công ty',
@@ -13,6 +15,29 @@ export const LEVEL_LABEL: Record<Level, string> = {
   department: 'Phòng ban',
   individual: 'Cá nhân',
 };
+
+// #1 Loại OKR — kỳ vọng điểm khác nhau (best practice: cam kết ~100%, khát vọng ~70%).
+export const OKR_TYPE_LABEL: Record<OkrType, string> = {
+  committed: 'Cam kết',
+  aspirational: 'Khát vọng',
+  learning: 'Học hỏi',
+};
+export const OKR_TYPE_EXPECT: Record<OkrType, string> = {
+  committed: 'Kỳ vọng đạt ~100%; không đạt cần giải trình.',
+  aspirational: 'Mục tiêu đột phá, kỳ vọng ~70%, chấp nhận rủi ro.',
+  learning: 'Ưu tiên học hỏi/khám phá, không ép điểm.',
+};
+
+// #2 Nhãn chỉ số KR — dẫn dắt (hành động) vs kết quả (đầu ra cuối).
+export const INDICATOR_LABEL: Record<Indicator, string> = {
+  leading: 'Dẫn dắt',
+  lagging: 'Kết quả',
+};
+
+// #5 Guardrail số lượng (best practice: tập trung ít mục tiêu ưu tiên).
+export const MAX_KR = 5;
+export const MAX_OBJ_PER_OWNER = 5;
+export const MAX_LEADING = 3;
 
 export type Objective = {
   id: string;
@@ -24,6 +49,7 @@ export type Objective = {
   title: string;
   description: string | null;
   status: ObjStatus;
+  okr_type: OkrType;
   progress: number;
   sort: number;
   created_by: string | null;
@@ -48,6 +74,7 @@ export type KeyResult = {
   current_value: number;
   weight: number;
   kpi_source: string | null;
+  indicator: Indicator;
   progress: number;
   sort: number;
 };
@@ -78,7 +105,7 @@ export function computeKrProgress(kr: {
 
 const OBJ_SELECT = `
   SELECT o.id, o.period_id, o.parent_id, o.level, o.unit_id, o.owner_email,
-         o.title, o.description, o.status, o.progress::float8 AS progress, o.sort, o.created_by,
+         o.title, o.description, o.status, o.okr_type, o.progress::float8 AS progress, o.sort, o.created_by,
          n.name AS unit_name, n.code AS unit_code,
          u.display_name AS owner_name,
          (SELECT count(*)::int FROM okr_key_results k WHERE k.objective_id=o.id) AS kr_count
@@ -113,12 +140,27 @@ export async function listObjectivesForOwner(
   );
 }
 
+// #5 Guardrail: người chủ trì có > MAX_OBJ_PER_OWNER OKR trong kỳ (cảnh báo, không chặn).
+export async function ownersOverObjectiveLimit(
+  periodId: string,
+): Promise<{ owner_email: string; owner_name: string | null; n: number }[]> {
+  return query(
+    `SELECT o.owner_email, u.display_name AS owner_name, count(*)::int AS n
+       FROM okr_objectives o LEFT JOIN okr_users u ON u.email=o.owner_email
+      WHERE o.period_id=$1 AND o.owner_email IS NOT NULL
+      GROUP BY o.owner_email, u.display_name
+      HAVING count(*) > $2
+      ORDER BY n DESC`,
+    [periodId, MAX_OBJ_PER_OWNER],
+  );
+}
+
 export async function listKeyResults(objectiveId: string): Promise<KeyResult[]> {
   return query<KeyResult>(
     `SELECT id, objective_id, title, metric_type, direction, unit_label,
             start_value::float8 AS start_value, target_value::float8 AS target_value,
             current_value::float8 AS current_value, weight::float8 AS weight,
-            kpi_source, progress::float8 AS progress, sort
+            kpi_source, indicator, progress::float8 AS progress, sort
        FROM okr_key_results WHERE objective_id=$1 ORDER BY sort, created_at`,
     [objectiveId],
   );
@@ -129,7 +171,7 @@ export async function getKeyResult(id: string): Promise<KeyResult | null> {
     `SELECT id, objective_id, title, metric_type, direction, unit_label,
             start_value::float8 AS start_value, target_value::float8 AS target_value,
             current_value::float8 AS current_value, weight::float8 AS weight,
-            kpi_source, progress::float8 AS progress, sort
+            kpi_source, indicator, progress::float8 AS progress, sort
        FROM okr_key_results WHERE id=$1`,
     [id],
   );
@@ -146,12 +188,13 @@ export async function createObjective(input: {
   title: string;
   description: string | null;
   status: ObjStatus;
+  okr_type: OkrType;
   created_by: string;
 }): Promise<string> {
   const row = await queryOne<{ id: string }>(
     `INSERT INTO okr_objectives (period_id, level, unit_id, owner_email, parent_id,
-                                 title, description, status, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,
+                                 title, description, status, okr_type, created_by)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
     [
       input.period_id,
       input.level,
@@ -161,6 +204,7 @@ export async function createObjective(input: {
       input.title,
       input.description,
       input.status,
+      input.okr_type,
       input.created_by,
     ],
   );
@@ -193,12 +237,13 @@ export async function createKeyResult(input: {
   current_value: number;
   weight: number;
   kpi_source: string | null;
+  indicator: Indicator;
 }): Promise<string> {
   const progress = computeKrProgress(input);
   const row = await queryOne<{ id: string }>(
     `INSERT INTO okr_key_results (objective_id, title, metric_type, direction, unit_label,
-        start_value, target_value, current_value, weight, kpi_source, progress)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id`,
+        start_value, target_value, current_value, weight, kpi_source, indicator, progress)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
     [
       input.objective_id,
       input.title,
@@ -210,6 +255,7 @@ export async function createKeyResult(input: {
       input.current_value,
       input.weight,
       input.kpi_source,
+      input.indicator,
       progress,
     ],
   );

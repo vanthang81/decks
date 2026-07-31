@@ -11,6 +11,11 @@ import {
   listKeyResults,
   listChildObjectives,
   canManageObjective,
+  OKR_TYPE_LABEL,
+  OKR_TYPE_EXPECT,
+  INDICATOR_LABEL,
+  MAX_KR,
+  MAX_LEADING,
 } from '@/lib/okr';
 import {
   listInitiativesForObjective,
@@ -50,6 +55,16 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
   const parent = obj.parent_id ? await getObjective(obj.parent_id) : null;
   const kpiSources = listKpiMetrics();
 
+  // #5 Guardrail + #2 cơ cấu chỉ số.
+  const leadingCount = krs.filter((k) => k.indicator === 'leading').length;
+  const laggingCount = krs.length - leadingCount;
+  const krWarnings: string[] = [];
+  if (krs.length > MAX_KR) krWarnings.push(`Có ${krs.length} KR — nên ≤ ${MAX_KR} để tập trung.`);
+  if (leadingCount > MAX_LEADING)
+    krWarnings.push(`Có ${leadingCount} chỉ số dẫn dắt — nên ≤ ${MAX_LEADING}.`);
+  if (krs.length > 0 && laggingCount === 0)
+    krWarnings.push('Chưa có chỉ số KẾT QUẢ (lagging) — nên có ít nhất 1.');
+
   return (
     <>
       <SiteHeader active="okr" />
@@ -68,7 +83,13 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
           <div className="flexbtw">
             <div>
               <div style={{ marginBottom: 6 }}>
-                <LevelBadge level={obj.level} /> <StatusBadge status={obj.status} />
+                <LevelBadge level={obj.level} /> <StatusBadge status={obj.status} />{' '}
+                <span
+                  className={`badge ${obj.okr_type === 'aspirational' ? 'amber' : obj.okr_type === 'learning' ? 'gray' : 'blue'}`}
+                  title={OKR_TYPE_EXPECT[obj.okr_type]}
+                >
+                  {OKR_TYPE_LABEL[obj.okr_type]}
+                </span>
               </div>
               <div className="pagetitle" style={{ margin: 0 }}>
                 {obj.title}
@@ -91,12 +112,33 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
         {/* ---------- Key Results ---------- */}
         <div className="card">
           <h3 style={{ marginTop: 0 }}>Kết quả then chốt (Key Results)<HelpTip k="key-result" /></h3>
+          {krs.length > 0 && (
+            <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
+              {krs.length} KR · {laggingCount} kết quả · {leadingCount} dẫn dắt
+            </p>
+          )}
+          {krWarnings.length > 0 && (
+            <div
+              className="gnote"
+              style={{ background: '#fef3c7', borderColor: '#d97706', color: '#92400e' }}
+            >
+              ⚠️ {krWarnings.join(' ')}
+            </div>
+          )}
           {krs.length === 0 && <p className="muted">Chưa có KR nào.</p>}
           {krs.map((kr) => (
             <div key={kr.id} style={{ padding: '10px 0', borderBottom: '1px solid var(--line)' }}>
               <div className="flexbtw">
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 600 }}>{kr.title}</div>
+                  <div style={{ fontWeight: 600 }}>
+                    {kr.title}{' '}
+                    <span
+                      className={`badge ${kr.indicator === 'leading' ? 'blue' : 'gray'}`}
+                      style={{ fontSize: 11 }}
+                    >
+                      {INDICATOR_LABEL[kr.indicator]}
+                    </span>
+                  </div>
                   <div className="obj-meta">
                     {fmtMetric(kr.start_value, kr.metric_type, kr.unit_label)} →{' '}
                     <b>{fmtMetric(kr.current_value, kr.metric_type, kr.unit_label)}</b> / mục tiêu{' '}
@@ -172,6 +214,13 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                     <select className="i" name="direction" defaultValue="increase">
                       <option value="increase">Càng cao càng tốt</option>
                       <option value="decrease">Càng thấp càng tốt</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="f">Loại chỉ số</label>
+                    <select className="i" name="indicator" defaultValue="lagging">
+                      <option value="lagging">Kết quả (lagging)</option>
+                      <option value="leading">Dẫn dắt (leading)</option>
                     </select>
                   </div>
                   <div>

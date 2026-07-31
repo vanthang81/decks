@@ -17,6 +17,8 @@ import {
   type MetricType,
   type Direction,
   type ObjStatus,
+  type OkrType,
+  type Indicator,
 } from '@/lib/okr';
 import {
   createInitiative,
@@ -62,6 +64,7 @@ export async function createObjectiveAction(fd: FormData) {
     title,
     description: orNull(str(fd, 'description')),
     status: (str(fd, 'status') || 'active') as ObjStatus,
+    okr_type: (str(fd, 'okr_type') || 'committed') as OkrType,
     created_by: user.email,
   });
   redirect(`/objectives/${id}`);
@@ -93,6 +96,8 @@ export async function createKeyResultAction(fd: FormData) {
     current_value: num(fd, 'current_value'),
     weight: num(fd, 'weight', 1),
     kpi_source: kpiSource,
+    // KPI actual là chỉ số kết quả (lagging); KR thủ công mặc định theo lựa chọn.
+    indicator: isAuto ? 'lagging' : ((str(fd, 'indicator') || 'lagging') as Indicator),
   });
   if (isAuto) {
     try {

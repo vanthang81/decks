@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-07-31';
+export const GUIDE_VERSION = '2026-07-31.1';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -206,35 +206,52 @@ export const FEATURES: Feature[] = [
     detail:
       'Tạo kỳ quý/năm, đặt kỳ hiện tại, đóng/mở kỳ. Mốc thời gian kỳ được dùng để tính KPI kế hoạch/thực hiện theo đúng khoảng.',
   },
+  {
+    key: 'okr-type',
+    title: 'Loại OKR: Cam kết / Khát vọng / Học hỏi',
+    where: 'Tạo OKR → "Loại OKR"',
+    help: 'Cam kết kỳ vọng ~100%; Khát vọng ~70% (đột phá); Học hỏi không ép điểm. Hiện badge trên OKR.',
+    detail:
+      'Đặt kỳ vọng đúng với bản chất mục tiêu. OKR cam kết là việc phải đạt; khát vọng là mục tiêu đột phá chấp nhận rủi ro; học hỏi ưu tiên khám phá. Loại OKR hiện dưới dạng nhãn màu ở trang chi tiết.',
+  },
+  {
+    key: 'indicator',
+    title: 'Nhãn chỉ số KR: Dẫn dắt / Kết quả',
+    where: 'Thêm Key Result → "Loại chỉ số"',
+    help: 'Kết quả (lagging) = đầu ra cuối; Dẫn dắt (leading) = hành động tạo ra kết quả. Nên 1 lagging + ≤3 leading.',
+    detail:
+      'Mỗi KR gắn nhãn Dẫn dắt hoặc Kết quả. Best practice: mỗi mục tiêu có 1 chỉ số kết quả + tối đa 3 chỉ số dẫn dắt. Trang chi tiết hiện cơ cấu (X kết quả · Y dẫn dắt) và cảnh báo nếu thiếu chỉ số kết quả hoặc quá nhiều dẫn dắt.',
+  },
+  {
+    key: 'guardrail',
+    title: 'Guardrail tập trung',
+    where: 'Trang chi tiết OKR & danh sách OKR',
+    help: 'Cảnh báo khi >5 KR/mục tiêu hoặc >5 OKR/người — nhắc giữ tập trung (không chặn).',
+    detail:
+      'Hệ thống nhắc nhẹ khi vượt ngưỡng khuyến nghị (≤5 KR mỗi Objective, ≤5 Objective mỗi người/kỳ) để tránh dàn trải. Đây là cảnh báo, không chặn thao tác.',
+  },
+  {
+    key: 'reminder',
+    title: 'Nhắc check-in tự động (email)',
+    where: 'Quản trị → "Cài đặt · Nhắc check-in" (CEO/CFO)',
+    help: 'Bật/tắt, chọn thứ gửi · ngưỡng ngày chưa check-in · người nhận. Có nút "Gửi thử ngay".',
+    detail:
+      'CEO/CFO cấu hình email nhắc: bật/tắt, gửi vào thứ mấy, ngưỡng số ngày KR chưa check-in, và người nhận (mọi người chủ trì hoặc từ trưởng phòng trở lên). Cron chạy 08:00 hằng ngày (giờ VN) và chỉ gửi vào đúng thứ đã chọn; người có KR trễ nhận email kèm danh sách + link. Nút "Gửi thử ngay" để kiểm tra ngay.',
+  },
 ];
 
 // ---- Lộ trình đề xuất (từ research best practice — chưa có, chờ CFO duyệt) ----
 export type Roadmap = { title: string; why: string; ref: string };
 export const ROADMAP: Roadmap[] = [
   {
-    title: 'Phân loại OKR: Cam kết / Khát vọng / Học hỏi',
-    why: 'Đặt kỳ vọng điểm khác nhau (cam kết ~100%, khát vọng ~70%), tránh quá tải hoặc mất trách nhiệm.',
-    ref: 'Google/What Matters, Mooncamp',
-  },
-  {
-    title: 'Gắn nhãn KR: chỉ số dẫn dắt (leading) / kết quả (lagging)',
-    why: 'Mỗi mục tiêu 1 lagging + ≤3 leading; cấp thấp thiên về leading để hành động sớm.',
-    ref: 'OKR Institute, Culture Amp',
-  },
-  {
-    title: 'Điểm tự tin dạng số + biểu đồ xu hướng tự tin/tiến độ',
+    title: 'Điểm tự tin dạng số (1–10) + biểu đồ xu hướng tự tin/tiến độ',
     why: 'Tách "độ tự tin" khỏi "% tiến độ"; xu hướng giúp phát hiện KR sắp chệch để can thiệp sớm.',
     ref: 'Weekdone, Quantive',
   },
   {
-    title: 'Nhắc check-in hàng tuần qua email + digest lãnh đạo',
-    why: 'Giữ nhịp tuần — yếu tố sống còn của OKR; giảm việc quên cập nhật.',
-    ref: 'Weekdone (weekly built-in)',
-  },
-  {
-    title: 'Guardrail số lượng (cảnh báo >5 Objective hoặc >5 KR)',
-    why: 'Ép tập trung vào ít mục tiêu ưu tiên.',
-    ref: 'OKR rollout best practices',
+    title: 'Digest lãnh đạo hằng tuần (tổng hợp trạng thái OKR toàn khối)',
+    why: 'Lãnh đạo nắm nhanh KR rủi ro/chệch mà không cần mở từng OKR.',
+    ref: 'Weekdone, WorkBoard',
   },
   {
     title: 'CFR nhẹ: bình luận & ghi nhận (recognition) trên OKR',
@@ -266,6 +283,15 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '31/07/2026 (cập nhật)',
+    items: [
+      'Loại OKR: Cam kết / Khát vọng / Học hỏi (kỳ vọng điểm khác nhau).',
+      'Nhãn chỉ số KR: Dẫn dắt (leading) / Kết quả (lagging) + cảnh báo cơ cấu.',
+      'Guardrail tập trung: cảnh báo khi >5 KR/mục tiêu hoặc >5 OKR/người.',
+      'Nhắc check-in tự động qua email — cấu hình ở Quản trị → Cài đặt.',
+    ],
+  },
   {
     date: '31/07/2026',
     items: [

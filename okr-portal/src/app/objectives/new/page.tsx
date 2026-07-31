@@ -4,7 +4,7 @@ import { requireUser } from '@/lib/current-user';
 import { listUnits, manageScope } from '@/lib/org';
 import { listUsers } from '@/lib/users';
 import { getCurrentPeriod, getPeriod, listPeriods } from '@/lib/periods';
-import { listObjectivesByPeriod, LEVEL_LABEL } from '@/lib/okr';
+import { listObjectivesByPeriod, LEVEL_LABEL, OKR_TYPE_LABEL, OKR_TYPE_EXPECT } from '@/lib/okr';
 import { createObjectiveAction } from '../actions';
 
 export const dynamic = 'force-dynamic';
@@ -84,6 +84,15 @@ export default async function NewObjectivePage({
                 {objectives.map((o) => (
                   <option key={o.id} value={o.id}>
                     [{LEVEL_LABEL[o.level]}] {o.title}
+                  </option>
+                ))}
+              </select>
+
+              <label className="f">Loại OKR</label>
+              <select className="i" name="okr_type" defaultValue="committed">
+                {(['committed', 'aspirational', 'learning'] as const).map((t) => (
+                  <option key={t} value={t}>
+                    {OKR_TYPE_LABEL[t]} — {OKR_TYPE_EXPECT[t]}
                   </option>
                 ))}
               </select>

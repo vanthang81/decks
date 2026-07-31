@@ -45,6 +45,12 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
               {periods.length} kỳ · đặt kỳ hiện tại, đóng/mở kỳ.
             </p>
           </Link>
+          <Link className="card" href="/admin/settings" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <h3 style={{ marginTop: 0 }}>Cài đặt · Nhắc check-in</h3>
+            <p className="muted" style={{ marginBottom: 0 }}>
+              Bật/tắt email nhắc check-in, chọn thứ gửi · ngưỡng ngày · người nhận.
+            </p>
+          </Link>
           <div className="card">
             <h3 style={{ marginTop: 0 }}>Đồng bộ KPI (BigQuery)</h3>
             <p className="muted" style={{ marginTop: 0 }}>

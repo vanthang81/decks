@@ -3,7 +3,12 @@ import SiteHeader from '@/components/SiteHeader';
 import { ProgressBar, LevelBadge } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
 import { getCurrentPeriod, listPeriods, getPeriod } from '@/lib/periods';
-import { listObjectivesByPeriod, type ObjectiveRow } from '@/lib/okr';
+import {
+  listObjectivesByPeriod,
+  ownersOverObjectiveLimit,
+  MAX_OBJ_PER_OWNER,
+  type ObjectiveRow,
+} from '@/lib/okr';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +24,7 @@ export default async function ObjectivesPage({
     : (await getCurrentPeriod()) ?? periods[0] ?? null;
 
   const objectives = period ? await listObjectivesByPeriod(period.id) : [];
+  const overLimit = period ? await ownersOverObjectiveLimit(period.id) : [];
 
   // Dựng cây theo parent_id (alignment). Gốc = objective không có parent trong tập.
   const byId = new Map(objectives.map((o) => [o.id, o]));
@@ -95,6 +101,16 @@ export default async function ObjectivesPage({
             )}
           </div>
         </div>
+
+        {overLimit.length > 0 && (
+          <div
+            className="card"
+            style={{ background: '#fef3c7', borderColor: '#d97706', color: '#92400e' }}
+          >
+            ⚠️ Nên tập trung ≤ {MAX_OBJ_PER_OWNER} OKR/người mỗi kỳ. Đang vượt:{' '}
+            {overLimit.map((o) => `${o.owner_name || o.owner_email} (${o.n})`).join(', ')}.
+          </div>
+        )}
 
         <div className="card">
           {!period && <p className="muted">Chưa có kỳ OKR.</p>}
