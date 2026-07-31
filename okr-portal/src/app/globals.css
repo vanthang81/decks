@@ -28,7 +28,9 @@ body {
 a { color: var(--primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-.wrap { max-width: var(--maxw); margin: 0 auto; padding: 20px 18px 64px; }
+/* width:100% BẮT BUỘC — vì body là flex column, .wrap là flex-item; nếu chỉ có
+   margin:auto thì auto-margin làm item co vừa nội dung (không giãn tới max-width). */
+.wrap { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 20px 18px 64px; }
 
 /* Header — thanh maroon thương hiệu BTMH + viền gold */
 .site-header {
