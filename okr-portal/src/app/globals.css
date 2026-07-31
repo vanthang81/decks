@@ -26,24 +26,33 @@ a:hover { text-decoration: underline; }
 
 .wrap { max-width: 1120px; margin: 0 auto; padding: 20px 18px 64px; }
 
-/* Header */
+/* Header — thanh maroon thương hiệu BTMH + viền gold */
 .site-header {
-  background: var(--card);
-  border-bottom: 1px solid var(--line);
+  background: var(--primary);
+  border-bottom: 3px solid var(--accent);
   position: sticky; top: 0; z-index: 30;
 }
 .site-header .inner {
-  max-width: 1120px; margin: 0 auto; padding: 10px 18px;
+  max-width: 1120px; margin: 0 auto; padding: 9px 18px;
   display: flex; align-items: center; gap: 14px;
 }
-.brand { display: flex; align-items: center; gap: 9px; font-weight: 800; color: var(--primary); letter-spacing: .2px; }
-.brand img { width: 30px; height: 30px; border-radius: 7px; }
-.nav { display: flex; gap: 4px; margin-left: 8px; flex-wrap: wrap; }
-.nav a { padding: 6px 11px; border-radius: 8px; color: var(--muted); font-weight: 500; }
-.nav a:hover { background: var(--primary-tint); color: var(--primary); text-decoration: none; }
-.nav a.active { background: var(--primary-tint); color: var(--primary); }
+.brand { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+.brand:hover { text-decoration: none; }
+.brand-logo { height: 26px; width: auto; display: block; }
+.brand-sub {
+  color: var(--accent); font-weight: 800; font-size: 15px; letter-spacing: 1px;
+  padding-left: 8px; border-left: 1px solid rgba(255,255,255,.3);
+}
+.nav { display: flex; gap: 3px; margin-left: 10px; flex-wrap: wrap; }
+.nav a { padding: 6px 11px; border-radius: 8px; color: rgba(255,255,255,.82); font-weight: 500; }
+.nav a:hover { background: rgba(255,255,255,.14); color: #fff; text-decoration: none; }
+.nav a.active { background: rgba(255,255,255,.18); color: #fff; }
 .spacer { flex: 1; }
-.userchip { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.userchip { font-size: 13px; color: rgba(255,255,255,.85); display: flex; align-items: center; gap: 8px; }
+.site-header .btn.ghost {
+  background: transparent; color: #fff; border-color: rgba(255,255,255,.5);
+}
+.site-header .btn.ghost:hover { background: rgba(255,255,255,.15); color: #fff; }
 
 .card {
   background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);

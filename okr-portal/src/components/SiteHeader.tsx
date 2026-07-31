@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { auth, signOut } from '@/auth';
-import { FAVICON, BRAND } from '@/lib/brand';
+import { LOGO_WORDMARK } from '@/lib/brand';
 import { ROLE_LABEL, canAdmin, type Role } from '@/lib/rbac';
 
 export default async function SiteHeader({ active }: { active?: string }) {
@@ -19,8 +19,8 @@ export default async function SiteHeader({ active }: { active?: string }) {
       <div className="inner">
         <Link href="/" className="brand">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={FAVICON} alt="" />
-          {BRAND.name}
+          <img src={LOGO_WORDMARK} alt="Bảo Tín Mạnh Hải" className="brand-logo" />
+          <span className="brand-sub">OKR</span>
         </Link>
         <nav className="nav">
           {link('/', 'Bảng điều khiển', 'home')}
