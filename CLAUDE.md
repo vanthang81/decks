@@ -128,6 +128,9 @@ phục vụ + chèn watermark/log.
   `content/decks/<slug>.html`** (fallback).
 - **Qua repo (file)**: tạo `content/decks/<slug>.html` (copy `template.html`) → push `main` → deploy
   (rebuild) → `/admin` Thêm deck với slug trùng tên file.
+- **Chuẩn hoá text khi lưu**: `upsertDeck`/`updateDeckMeta` chạy `decodeEntities` cho title/description/
+  category/company/tags → tránh lưu literal `&amp;`/`&lt;` (nguồn HTML tự-chứa hay bị encode) rồi hiện sai
+  ở UI (React tự-escape → "&amp;" hiện nguyên chữ). Idempotent, an toàn chạy lại trên dữ liệu sạch.
 - **Qua API (cho Claude/máy tự publish)**: `POST https://deck.consultx.vn/api/publish` header
   `x-publish-key: <PUBLISH_KEY>` (đọc từ `.env` VPS qua SSH relay), body JSON
   `{slug,title,html,visibility('public'|'protected'),require_otp?,description?}` → upsert vào DB, trả
