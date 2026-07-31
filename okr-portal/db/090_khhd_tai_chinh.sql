@@ -22,7 +22,7 @@ BEGIN
     VALUES(y26,parent,'division',tc,own,
       '2026 — Khối Tài chính kế toán: Quản trị KQKD & Kiểm soát chi phí (chuẩn IPO)',
       'Nâng độ chính xác dự báo (chi phí, LNT ±10%), quản lý hiệu quả đầu tư cửa hàng theo FS/Target và kiểm soát tổng chi phí trong ngân sách phê duyệt — nền tảng số liệu chuẩn IPO.',
-      'active','committed',own,'seed_khhd_TC') RETURNING id INTO obj;
+      'active','committed','seed_khhd_TC') RETURNING id INTO obj;
 
   -- KR (M-01..M-04)
   INSERT INTO okr_key_results(objective_id,title,metric_type,direction,unit_label,start_value,target_value,current_value,indicator) VALUES
