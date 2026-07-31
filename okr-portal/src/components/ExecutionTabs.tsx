@@ -686,7 +686,6 @@ function ListView({
                     {KIND_LABEL[n.kind]}
                   </span>
                   {n.code && <span className="okr-code">{n.code}</span>}
-                  <ContextChips c={n} context={context} />
                   <b>{n.title}</b>
                   <span className={`badge ${STATUS_CLS[n.status]}`} style={{ fontSize: 10.5 }}>
                     {STATUS_LABEL[n.status]}
@@ -697,10 +696,13 @@ function ListView({
                     </span>
                   )}
                 </div>
-                <div className="obj-meta">
-                  {n.owner_name ? `👤 ${n.owner_name}` : 'Chưa giao'}
-                  {n.unit_name ? ` · 🏢 ${n.unit_name}` : ''}
-                  {n.due_on ? ` · Hạn ${fmtD(n.due_on)}` : ''}
+                <div className="il-meta">
+                  <span className="il-metatext">
+                    {n.owner_name ? `👤 ${n.owner_name}` : 'Chưa giao'}
+                    {n.unit_name ? ` · 🏢 ${n.unit_name}` : ''}
+                    {n.due_on ? ` · Hạn ${fmtD(n.due_on)}` : ''}
+                  </span>
+                  <ContextChips c={n} context={context} />
                 </div>
               </div>
               <div className="il-prog">

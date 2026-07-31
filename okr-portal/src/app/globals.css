@@ -308,6 +308,8 @@ a.ctx-chip:hover { text-decoration: underline; }
 .il-row:hover { background: #FBF7F2; border-color: var(--line); border-left-color: var(--primary); }
 .il-main { flex: 1; min-width: 0; }
 .il-ttl { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; line-height: 1.35; }
+.il-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 3px; }
+.il-metatext { color: var(--muted); font-size: 12.5px; }
 .il-prog { flex: 0 0 auto; width: 150px; display: flex; align-items: center; gap: 10px; }
 .il-prog .pbar { flex: 1; }
 .il-prog .mono { font-size: 12px; color: var(--muted); width: 34px; text-align: right; }

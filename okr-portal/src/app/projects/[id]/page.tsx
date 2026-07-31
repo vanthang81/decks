@@ -4,7 +4,9 @@ import SiteHeader from '@/components/SiteHeader';
 import { ProgressBar } from '@/components/ui';
 import ExecutionTabs from '@/components/ExecutionTabs';
 import ProjectEditButton from '@/components/ProjectEditButton';
+import AddTaskToProject from '@/components/AddTaskToProject';
 import { requireUser } from '@/lib/current-user';
+import { listObjectivesWithKrs } from '@/lib/okr';
 import { listUnits } from '@/lib/org';
 import { listUsers } from '@/lib/users';
 import {
@@ -38,6 +40,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
   ]);
   const canManage = canManageProject(user, p, units);
   const projectOpts = p.period_id ? await listProjectOptions(p.period_id) : [];
+  const objectiveOpts = p.period_id ? await listObjectivesWithKrs(p.period_id) : [];
   const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email }));
   const unitOpts = units.filter((u) => u.type !== 'company').map((u) => ({ id: u.id, name: u.name, type: u.type }));
 
@@ -107,10 +110,21 @@ export default async function ProjectDetail({ params }: { params: { id: string }
 
         {/* ---- Việc thuộc dự án: List / Kanban / Dòng thời gian + bấm để sửa ---- */}
         <div className="card">
-          <h3 style={{ marginTop: 0 }}>Công việc thuộc dự án ({tasks.length})</h3>
+          <div className="flexbtw" style={{ alignItems: 'flex-start', gap: 10 }}>
+            <h3 style={{ marginTop: 0 }}>Công việc thuộc dự án ({tasks.length})</h3>
+            {canManage && (
+              <AddTaskToProject
+                projectId={p.id}
+                objectives={objectiveOpts}
+                users={personOpts}
+                units={unitOpts}
+                create={createInitiativeAction}
+              />
+            )}
+          </div>
           <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
             Gom từ nhiều OKR/khối. Bấm một việc để mở &amp; sửa (đổi trạng thái/tiến độ/người giao…).
-            Chip <b>🎯</b> là OKR gốc — mở việc để nhảy sâu hơn.
+            Chip <b>🎯</b> là OKR gốc — mở việc để nhảy sâu hơn. Thêm việc sẽ gắn vào OKR/KR bộ phận đã chọn.
           </p>
           {tasks.length === 0 ? (
             <p className="muted">

@@ -4,6 +4,34 @@ import { manageScope, type Unit } from './org';
 import { nextObjectiveCode, nextKrCode } from './codes';
 
 export type Level = 'company' | 'division' | 'department' | 'individual';
+
+// Objective + KR của nó (cho bộ chọn khi thêm việc vào dự án — việc gắn vào O/KR nào
+// của bộ phận thì hiện luôn ở action plan của bộ phận đó).
+export type ObjectiveWithKrs = {
+  id: string;
+  code: string | null;
+  title: string;
+  unit_name: string | null;
+  krs: { id: string; code: string | null; title: string }[];
+};
+
+export async function listObjectivesWithKrs(periodId: string): Promise<ObjectiveWithKrs[]> {
+  return query<ObjectiveWithKrs>(
+    `SELECT o.id, o.code, o.title, u.name AS unit_name,
+            COALESCE(
+              json_agg(json_build_object('id', k.id, 'code', k.code, 'title', k.title)
+                       ORDER BY k.code) FILTER (WHERE k.id IS NOT NULL),
+              '[]'
+            ) AS krs
+       FROM okr_objectives o
+       LEFT JOIN okr_units u ON u.id = o.unit_id
+       LEFT JOIN okr_key_results k ON k.objective_id = o.id
+      WHERE o.period_id = $1
+      GROUP BY o.id, o.code, o.title, u.name, u.code, o.sort
+      ORDER BY u.code NULLS FIRST, o.code`,
+    [periodId],
+  );
+}
 export type ObjStatus = 'draft' | 'active' | 'done' | 'archived';
 export type MetricType = 'number' | 'percent' | 'currency' | 'boolean';
 export type Direction = 'increase' | 'decrease';
