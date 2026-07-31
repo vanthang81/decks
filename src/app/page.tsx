@@ -29,11 +29,12 @@ export default async function GalleryPage() {
     dbErr = true;
   }
 
-  // URL gốc tuyệt đối để dựng link "mở deck" đầy đủ (kể cả khi APP_URL chưa set — lấy từ header nginx).
+  // URL gốc tuyệt đối để dựng link "mở deck" đầy đủ — ƯU TIÊN domain đang truy cập (đa domain:
+  // consultx.vn / vanthang.io) để link card khớp trang đang xem; fallback APP_URL.
   const h = headers();
   const proto = h.get('x-forwarded-proto') ?? 'https';
   const host = h.get('x-forwarded-host') ?? h.get('host') ?? '';
-  const baseUrl = process.env.APP_URL || (host ? `${proto}://${host}` : '');
+  const baseUrl = (host ? `${proto}://${host}` : '') || process.env.APP_URL || '';
 
   const lite: DeckLite[] = decks.map((d) => ({
     id: d.id,
