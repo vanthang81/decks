@@ -30,6 +30,24 @@ Dự kiến live tại `okr.consultx.vn`.
 - `okr_initiatives`: kế hoạch hành động gắn KR/Objective + `budget_planned`/`budget_actual`/`budget_source`.
 - `okr_checkins`: cập nhật tiến độ + `confidence`. `okr_audit_log`: nhật ký.
 
+## KPI tự động từ BigQuery (ĐÃ NỐI 31/07)
+- Cây tổ chức thật: `db/020_org_btmh.sql` (13 khối + 36 phòng theo sơ đồ CCTC). Exec home = công ty BTMH.
+- `src/lib/bigquery.ts`: query BigQuery qua **Metabase** — config `{url,api_key}` đọc từ Postgres
+  `pe_pricing_config` key `metabase` (tái dùng price-engine), POST `{url}/api/dataset` `database:5`.
+  btmh_app đã GRANT SELECT `pe_pricing_config` (`db/030_grants_kpi.sql`). Metabase = `report.consultx.vn`.
+- `src/lib/kpi.ts`: `KPI_METRICS` = revenue/gross_profit. KR gắn `kpi_source=metric` → `syncKrKpi`
+  điền **target = kế hoạch cả kỳ** (`btmh-dwh-485609.dwh_fact.f_ke_hoach_kinh_doanh_2`, `version='ĐHCĐ'`,
+  cột doanh_thu/loi_nhuan_gop) + **current = thực hiện tới hôm nay** (`op_finance.v_flatten_sales`,
+  cột line_income_vnd/gross_profit_vnd, scope bán lẻ `is_revenue_recognized AND internal_sales=false
+  AND company_code NOT IN ('SX','BN','HD')`) theo kỳ (okr_periods.starts_on/ends_on). `setKrAutoValues`
+  cập nhật target+current+progress. Tạo KR gắn metric → ép currency + tự sync ngay.
+  ⚠️ Scope kế hoạch (mọi kênh/pháp nhân) vs thực hiện (chỉ bán lẻ) có thể lệch — cần BI chốt bộ lọc
+  đồng nhất nếu muốn so sánh chuẩn từng đồng.
+- Route `POST/GET /api/kpi/sync` gác bằng session exec HOẶC header `x-sync-key=SYNC_KEY` (env, trên VPS).
+  Middleware ĐÃ loại `/api` (route tự gác). Nút "Đồng bộ ngay" ở `/admin`.
+- **Cron n8n "OKR KPI Sync — cron đồng bộ KPI BigQuery" (id `xOxOrwj80MPNSJqx`, ACTIVE, `0 7-22 * * *`
+  giờ VN)**: SSH VPS đọc SYNC_KEY từ .env → `curl POST 127.0.0.1:8640/api/kpi/sync`. Key không rời VPS.
+
 ## Logic quan trọng (src/lib/)
 - `okr.ts`: `computeKrProgress` (theo hướng tăng/giảm, clamp 0..100), `recomputeUp` (lan tiến độ
   KR→Objective→cha, bình quân theo weight; không KR thì bình quân con). `canManageObjective`/`canCreateAt`.
