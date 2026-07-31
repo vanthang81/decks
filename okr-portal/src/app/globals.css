@@ -20,6 +20,9 @@ body {
   background: var(--bg);
   font-size: 15px;
   line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 a { color: var(--primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -197,3 +200,26 @@ details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 
 .guide .feat { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
 .guide .feat .where { color: var(--muted); font-size: 12.5px; }
 .guide .anchor { scroll-margin-top: 70px; }
+
+/* Footer */
+.site-footer {
+  margin-top: auto;
+  background: var(--card);
+  border-top: 1px solid var(--line);
+  box-shadow: inset 0 3px 0 -1px var(--accent);
+}
+.site-footer .inner {
+  max-width: 1120px; margin: 0 auto; padding: 14px 18px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.site-footer .copy { color: var(--muted); font-size: 13px; }
+.site-footer .footer-cta {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  padding: 7px 13px; border-radius: 999px; font-size: 13px; font-weight: 600;
+  color: var(--primary); background: var(--primary-tint); border: 1px solid transparent; text-decoration: none;
+}
+.site-footer .footer-cta:hover { background: #fff; border-color: var(--primary); text-decoration: none; }
+@media (max-width: 760px) {
+  .site-footer .inner { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px; }
+  .site-footer .footer-cta { width: 100%; justify-content: center; padding: 10px 13px; }
+}

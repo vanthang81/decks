@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-07-31.1';
+export const GUIDE_VERSION = '2026-07-31.2';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -290,6 +290,8 @@ export const CHANGELOG: ChangeLog[] = [
       'Nhãn chỉ số KR: Dẫn dắt (leading) / Kết quả (lagging) + cảnh báo cơ cấu.',
       'Guardrail tập trung: cảnh báo khi >5 KR/mục tiêu hoặc >5 OKR/người.',
       'Nhắc check-in tự động qua email — cấu hình ở Quản trị → Cài đặt.',
+      'Giao diện thương hiệu BTMH (maroon/gold) + tối ưu mobile (menu hamburger).',
+      'Footer bản quyền + link "Góp ý & đề xuất tính năng" (ideas.vanthang.io).',
     ],
   },
   {

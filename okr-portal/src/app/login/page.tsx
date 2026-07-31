@@ -14,7 +14,7 @@ export default async function LoginPage({
   const denied = searchParams.error === 'AccessDenied';
 
   return (
-    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 20 }}>
+    <div style={{ flex: 1, display: 'grid', placeItems: 'center', padding: 20 }}>
       <div className="card" style={{ maxWidth: 380, width: '100%', textAlign: 'center' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={FAVICON} alt="" width={48} height={48} style={{ marginBottom: 8 }} />
