@@ -23,6 +23,7 @@ import {
 import {
   createInitiative,
   updateInitiative,
+  editInitiative,
   setInitiativeProgress,
   setInitiativeStatus,
   deleteInitiative,
@@ -164,6 +165,7 @@ export async function createInitiativeAction(fd: FormData) {
     title: str(fd, 'title'),
     description: orNull(str(fd, 'description')),
     owner_email: orNull(str(fd, 'owner_email')),
+    unit_id: orNull(str(fd, 'unit_id')),
     status: (str(fd, 'status') || 'todo') as InitStatus,
     priority: (str(fd, 'priority') || 'medium') as Priority,
     start_on: orNull(str(fd, 'start_on')),
@@ -192,7 +194,43 @@ export async function updateInitiativeAction(fd: FormData) {
       status: (str(fd, 'status') || 'todo') as InitStatus,
       progress: num(fd, 'progress'),
       owner_email: orNull(str(fd, 'owner_email')),
+      unit_id: orNull(str(fd, 'unit_id')),
       priority: (str(fd, 'priority') || 'medium') as Priority,
+      due_on: orNull(str(fd, 'due_on')),
+      budget_planned: num(fd, 'budget_planned'),
+      budget_actual: num(fd, 'budget_actual'),
+    });
+  } else {
+    await setInitiativeProgress(id, {
+      status: (str(fd, 'status') || 'todo') as InitStatus,
+      progress: num(fd, 'progress'),
+    });
+  }
+  revalidatePath(`/objectives/${obj.id}`);
+}
+
+// Sửa đầy đủ 1 dự án/công việc từ popup edit (Kanban). Quản lý sửa mọi trường;
+// người được giao chỉ đổi trạng thái + tiến độ việc của mình.
+export async function editInitiativeAction(fd: FormData) {
+  const user = await requireUser();
+  const units = await listUnits();
+  const id = str(fd, 'id');
+  const init = await getInitiative(id);
+  if (!init) throw new Error('Không tìm thấy công việc.');
+  const obj = init.objective_id ? await getObjective(init.objective_id) : null;
+  if (!obj) throw new Error('Công việc chưa gắn OKR.');
+  const perm = canUpdateInitiative(user, init, obj, units);
+  if (!perm.manage && !perm.assignee) throw new Error('Bạn không có quyền cập nhật việc này.');
+  if (perm.manage) {
+    await editInitiative(id, {
+      title: str(fd, 'title') || init.title,
+      description: orNull(str(fd, 'description')),
+      unit_id: orNull(str(fd, 'unit_id')),
+      owner_email: orNull(str(fd, 'owner_email')),
+      status: (str(fd, 'status') || 'todo') as InitStatus,
+      progress: num(fd, 'progress'),
+      priority: (str(fd, 'priority') || 'medium') as Priority,
+      start_on: orNull(str(fd, 'start_on')),
       due_on: orNull(str(fd, 'due_on')),
       budget_planned: num(fd, 'budget_planned'),
       budget_actual: num(fd, 'budget_actual'),

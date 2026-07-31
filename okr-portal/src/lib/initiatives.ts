@@ -41,6 +41,8 @@ export type Initiative = {
   description: string | null;
   owner_email: string | null;
   owner_name: string | null;
+  unit_id: string | null;
+  unit_name: string | null;
   status: InitStatus;
   priority: Priority;
   progress: number;
@@ -58,12 +60,14 @@ export type InitiativeNode = Initiative & { children: InitiativeNode[]; depth: n
 
 const SELECT = `
   SELECT i.id, i.code, i.objective_id, i.key_result_id, i.parent_id, i.kind, i.title, i.description,
-         i.owner_email, u.display_name AS owner_name, i.status, i.priority,
+         i.owner_email, u.display_name AS owner_name, i.unit_id, un.name AS unit_name,
+         i.status, i.priority,
          i.progress::float8 AS progress, i.start_on::text, i.due_on::text, i.done_on::text,
          i.budget_planned::float8 AS budget_planned, i.budget_actual::float8 AS budget_actual,
          i.budget_currency, i.budget_source
     FROM okr_initiatives i
-    LEFT JOIN okr_users u ON u.email = i.owner_email`;
+    LEFT JOIN okr_users u ON u.email = i.owner_email
+    LEFT JOIN okr_units un ON un.id = i.unit_id`;
 
 /** Toàn bộ initiative (mọi cấp) gắn với 1 objective (gồm KR con). Phẳng — dựng cây bằng buildInitiativeTree. */
 export async function listInitiativesForObjective(objectiveId: string): Promise<Initiative[]> {
@@ -127,6 +131,7 @@ export async function createInitiative(input: {
   title: string;
   description: string | null;
   owner_email: string | null;
+  unit_id: string | null;
   status: InitStatus;
   priority: Priority;
   start_on: string | null;
@@ -139,8 +144,8 @@ export async function createInitiative(input: {
   const code = await nextInitCode(input.objective_id);
   const row = await queryOne<{ id: string }>(
     `INSERT INTO okr_initiatives (objective_id, key_result_id, parent_id, kind, title, description,
-        owner_email, status, priority, start_on, due_on, budget_planned, budget_actual, budget_source, created_by, code)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING id`,
+        owner_email, unit_id, status, priority, start_on, due_on, budget_planned, budget_actual, budget_source, created_by, code)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) RETURNING id`,
     [
       input.objective_id,
       input.key_result_id,
@@ -149,6 +154,7 @@ export async function createInitiative(input: {
       input.title,
       input.description,
       input.owner_email,
+      input.unit_id,
       input.status,
       input.priority,
       input.start_on,
@@ -200,6 +206,7 @@ export async function updateInitiative(
     status: InitStatus;
     progress: number;
     owner_email: string | null;
+    unit_id: string | null;
     priority: Priority;
     due_on: string | null;
     budget_planned: number;
@@ -209,12 +216,47 @@ export async function updateInitiative(
   const prog = input.status === 'done' ? 100 : Math.max(0, Math.min(100, input.progress));
   await query(
     `UPDATE okr_initiatives SET status=$2, progress=$3, owner_email=$4, priority=$5, due_on=$6,
-        budget_planned=$7, budget_actual=$8,
+        budget_planned=$7, budget_actual=$8, unit_id=$9,
         done_on = CASE WHEN $2='done' AND done_on IS NULL THEN now()::date
                        WHEN $2<>'done' THEN NULL ELSE done_on END,
         updated_at=now() WHERE id=$1`,
     [id, input.status, prog, input.owner_email, input.priority, input.due_on,
-     input.budget_planned, input.budget_actual],
+     input.budget_planned, input.budget_actual, input.unit_id],
+  );
+  await recomputeInitiativeUp(id);
+}
+
+/**
+ * Sửa ĐẦY ĐỦ 1 dự án/công việc (dùng cho popup edit trên Kanban — quyền quản lý):
+ * tên, mô tả, đơn vị phụ trách (khối/phòng), người được giao, ưu tiên, trạng thái, tiến độ,
+ * ngày bắt đầu/hạn, ngân sách. Rồi roll-up tiến độ lên cha.
+ */
+export async function editInitiative(
+  id: string,
+  input: {
+    title: string;
+    description: string | null;
+    unit_id: string | null;
+    owner_email: string | null;
+    status: InitStatus;
+    progress: number;
+    priority: Priority;
+    start_on: string | null;
+    due_on: string | null;
+    budget_planned: number;
+    budget_actual: number;
+  },
+): Promise<void> {
+  const prog = input.status === 'done' ? 100 : Math.max(0, Math.min(100, input.progress));
+  await query(
+    `UPDATE okr_initiatives SET title=$2, description=$3, unit_id=$4, owner_email=$5,
+        status=$6, progress=$7, priority=$8, start_on=$9, due_on=$10,
+        budget_planned=$11, budget_actual=$12,
+        done_on = CASE WHEN $6='done' AND done_on IS NULL THEN now()::date
+                       WHEN $6<>'done' THEN NULL ELSE done_on END,
+        updated_at=now() WHERE id=$1`,
+    [id, input.title, input.description, input.unit_id, input.owner_email, input.status, prog,
+     input.priority, input.start_on, input.due_on, input.budget_planned, input.budget_actual],
   );
   await recomputeInitiativeUp(id);
 }

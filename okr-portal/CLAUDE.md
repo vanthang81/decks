@@ -34,7 +34,9 @@ Dự kiến live tại `okr.consultx.vn`.
 - `okr_initiatives`: kế hoạch hành động/thực thi gắn KR/Objective + `budget_planned`/`budget_actual`/
   `budget_source`. **CÂY PHÂN CẤP (db/050)**: `parent_id` (tự tham chiếu, ON DELETE CASCADE) +
   `kind` ('project'|'subproject'|'action') = Dự án → Tiểu dự án → Công việc. `owner_email` = người
-  ĐƯỢC GIAO. Mọi nút mang `objective_id` của OKR gốc (con kế thừa `key_result_id` của cha).
+  ĐƯỢC GIAO (cá nhân). **`unit_id` (db/120)** = Đơn vị phụ trách (Khối/Phòng), khai báo & liên kết dự án
+  với khối/phòng ban độc lập cấp của Objective; con kế thừa unit của dự án cha. Mọi nút mang
+  `objective_id` của OKR gốc (con kế thừa `key_result_id` của cha).
 - `okr_checkins`: cập nhật tiến độ + `confidence`. `okr_audit_log`: nhật ký.
 - **MÃ UNIQUE (db/110, import/export)**: cột `code` ở objectives/key_results/initiatives — định dạng
   `<KHỐI>-O<n>` / `<obj>.KR<m>` / `<obj>.H<kk>` (prefix = mã đơn vị hoặc 'CTY'). Sinh tự động khi tạo

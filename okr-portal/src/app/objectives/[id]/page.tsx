@@ -36,6 +36,7 @@ import {
   deleteKeyResultAction,
   createInitiativeAction,
   updateInitiativeAction,
+  editInitiativeAction,
   deleteInitiativeAction,
   moveInitiativeAction,
 } from '../actions';
@@ -50,6 +51,39 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
   const units = await listUnits();
   const users = await listUsers();
   const canManage = canManageObjective(user, obj, units);
+
+  // Options cho popup edit (client): người (cá nhân) + đơn vị (khối/phòng).
+  const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email }));
+  const unitOpts = units
+    .filter((u) => u.type !== 'company')
+    .map((u) => ({ id: u.id, name: u.name, type: u.type }));
+  const divisionUnits = units.filter((u) => u.type === 'division');
+  const deptUnits = units.filter((u) => u.type === 'department');
+
+  // Bộ chọn Đơn vị phụ trách (Khối/Phòng) dùng lại ở các form thêm/sửa dự án.
+  const unitSelect = (defaultValue: string) => (
+    <select className="i" name="unit_id" defaultValue={defaultValue}>
+      <option value="">— Không gắn đơn vị —</option>
+      {divisionUnits.length > 0 && (
+        <optgroup label="Khối">
+          {divisionUnits.map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.name}
+            </option>
+          ))}
+        </optgroup>
+      )}
+      {deptUnits.length > 0 && (
+        <optgroup label="Phòng ban">
+          {deptUnits.map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.name}
+            </option>
+          ))}
+        </optgroup>
+      )}
+    </select>
+  );
 
   const [krs, children, initiatives, budget, checkins] = await Promise.all([
     listKeyResults(obj.id),
@@ -109,6 +143,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
             </div>
             <div className="obj-meta">
               {n.owner_name ? `👤 ${n.owner_name}` : 'Chưa giao'}
+              {n.unit_name ? ` · 🏢 ${n.unit_name}` : ''}
               {n.due_on ? ` · Hạn ${fmtDate(n.due_on)}` : ''}
               {n.budget_planned > 0 || n.budget_actual > 0
                 ? ` · NS ${fmtVnd(n.budget_actual)}/${fmtVnd(n.budget_planned)}`
@@ -142,6 +177,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
             >
               <input type="hidden" name="id" value={n.id} />
               <input type="hidden" name="owner_email" value={n.owner_email ?? ''} />
+              <input type="hidden" name="unit_id" value={n.unit_id ?? ''} />
               <input type="hidden" name="priority" value={n.priority} />
               <input type="hidden" name="due_on" value={n.due_on ?? ''} />
               <input type="hidden" name="budget_planned" value={n.budget_planned} />
@@ -179,6 +215,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                 <form action={createInitiativeAction} style={{ marginTop: 8, maxWidth: 540 }}>
                   <input type="hidden" name="objective_id" value={obj.id} />
                   <input type="hidden" name="parent_id" value={n.id} />
+                  <input type="hidden" name="unit_id" value={n.unit_id ?? ''} />
                   <div className="row">
                     <div style={{ maxWidth: 150 }}>
                       <label className="f">Loại</label>
@@ -232,7 +269,11 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                   <input type="hidden" name="id" value={n.id} />
                   <div className="row">
                     <div>
-                      <label className="f">Giao cho</label>
+                      <label className="f">Đơn vị phụ trách (Khối / Phòng)</label>
+                      {unitSelect(n.unit_id ?? '')}
+                    </div>
+                    <div>
+                      <label className="f">Giao cho (cá nhân)</label>
                       <select className="i" name="owner_email" defaultValue={n.owner_email ?? ''}>
                         <option value="">— Chưa giao —</option>
                         {users.map((u) => (
@@ -571,6 +612,9 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
             canManage={canManage}
             currentEmail={user.email}
             move={moveInitiativeAction}
+            save={editInitiativeAction}
+            users={personOpts}
+            units={unitOpts}
           >
             {orderedInits.length === 0 && <p className="muted">Chưa có dự án hay công việc nào.</p>}
             {orderedInits.map((n) => renderInitRow(n))}
@@ -604,7 +648,11 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                 </select>
                 <div className="row">
                   <div>
-                    <label className="f">Giao cho</label>
+                    <label className="f">Đơn vị phụ trách (Khối / Phòng)</label>
+                    {unitSelect('')}
+                  </div>
+                  <div>
+                    <label className="f">Giao cho (cá nhân)</label>
                     <select className="i" name="owner_email" defaultValue="">
                       <option value="">— Chưa giao —</option>
                       {users.map((u) => (
@@ -614,6 +662,8 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                       ))}
                     </select>
                   </div>
+                </div>
+                <div className="row">
                   <div>
                     <label className="f">Ưu tiên</label>
                     <select className="i" name="priority" defaultValue="medium">
