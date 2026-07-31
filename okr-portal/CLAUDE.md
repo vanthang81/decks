@@ -48,6 +48,18 @@ Dự kiến live tại `okr.consultx.vn`.
 - **Cron n8n "OKR KPI Sync — cron đồng bộ KPI BigQuery" (id `xOxOrwj80MPNSJqx`, ACTIVE, `0 7-22 * * *`
   giờ VN)**: SSH VPS đọc SYNC_KEY từ .env → `curl POST 127.0.0.1:8640/api/kpi/sync`. Key không rời VPS.
 
+## Nâng cấp best-practice (31/07 batch 2) — #1/#2/#5/#4
+- `db/040`: cột `okr_objectives.okr_type` (committed/aspirational/learning), `okr_key_results.indicator`
+  (leading/lagging), bảng `okr_settings` (key→jsonb, GRANT btmh_app).
+- #1 Loại OKR: chọn khi tạo, badge + kỳ vọng điểm (`OKR_TYPE_LABEL/EXPECT` trong okr.ts).
+- #2 Nhãn KR leading/lagging: chọn khi thêm KR, badge, cơ cấu + cảnh báo (`MAX_LEADING`=3, cần ≥1 lagging).
+- #5 Guardrail: `MAX_KR`=5 (chi tiết OKR), `MAX_OBJ_PER_OWNER`=5 (`ownersOverObjectiveLimit`, banner ở /objectives).
+- #4 Nhắc check-in: `/admin/settings` cấu hình (enabled/weekday/stale_days/audience) lưu `okr_settings`
+  key `checkin_reminder`. Route `POST /api/reminders/checkin` (gác x-sync-key/admin, `?force=1` bỏ gate
+  ngày). `src/lib/reminders.ts` tính KR chưa check-in > stale_days → email qua **Deck Mail webhook**
+  (`N8N_MAIL_WEBHOOK` trong .env VPS). **Cron n8n "OKR Check-in Reminder" (id `p0cAn5ghp8ZU0Sfw`, ACTIVE,
+  `0 8 * * *` giờ VN)** — app tự gác theo weekday cấu hình. Đã test `sent:1` tới vanthang81@gmail.com.
+
 ## Hướng dẫn sử dụng trong app + QUY TẮC CẬP NHẬT TÀI LIỆU (BẮT BUỘC)
 - Trang **`/guide`** (`src/app/guide/page.tsx`) = hướng dẫn chi tiết: phương pháp luận OKR/KPI/Action
   Plan (best practice) + tính năng + lộ trình đề xuất + thuật ngữ + nhật ký. Vào từ menu "Hướng dẫn".
