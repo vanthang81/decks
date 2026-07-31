@@ -8,7 +8,7 @@ a[href*="fider.io"] { display: none !important; }
 
 /* 2) Dòng bản quyền BTMH ở chân ứng dụng (ổn định vì #root luôn tồn tại) */
 #root::after {
-  content: "© Bảo Tín Mạnh Hải · Bản quyền thuộc Công ty Bảo Tín Mạnh Hải";
+  content: "Hệ thống do Thắng Nguyễn thiết kế & quản trị · © Thắng Nguyễn · Bảo Tín Mạnh Hải";
   display: block;
   text-align: center;
   padding: 20px 12px;
