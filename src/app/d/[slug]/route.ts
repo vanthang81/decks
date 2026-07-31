@@ -35,7 +35,20 @@ function accessGate(
 ): Response {
   const showPw = deck.has_password;
   const showEmail = deck.visibility === 'protected';
+  const showGoogle = deck.visibility === 'protected'; // Google login: admin + viewer được cấp
   const esc = (s: string) => s.replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]!));
+  const cb = encodeURIComponent(`/d/${deck.slug}`);
+
+  const googleSection = showGoogle
+    ? `<div class="sec">
+         <label>Đăng nhập bằng Google</label>
+         <a class="gbtn" href="/login?callbackUrl=${cb}">
+           <svg width="17" height="17" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 8.1 29.3 6 24 6 14.1 6 6 14.1 6 24s8.1 18 18 18c9.9 0 18-8.1 18-18 0-1.2-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M8.3 14.7l6.6 4.8C16.7 15.1 20 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 8.1 29.3 6 24 6 16.3 6 9.7 10.3 6.3 16.7l2-2z"/><path fill="#4CAF50" d="M24 42c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 33 26.7 34 24 34c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.6 37.6 16.2 42 24 42z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.1 5.6l6.2 5.2C41.4 35.5 44 30.2 44 24c0-1.2-.1-2.3-.4-3.5z"/></svg>
+           Tiếp tục với Google
+         </a>
+         <p class="note">Dùng nếu email Google của bạn đã được cấp quyền (hoặc bạn là quản trị viên).</p>
+       </div>`
+    : '';
 
   const pwSection = showPw
     ? `<form class="sec" method="post" action="/d/${deck.slug}">
@@ -50,7 +63,7 @@ function accessGate(
   const emailSection = showEmail
     ? `<form class="sec" method="post" action="/d/${deck.slug}">
          <input type="hidden" name="mode" value="email" />
-         <label>Đăng nhập bằng email được cấp</label>
+         <label>Gửi lại link qua email được cấp</label>
          <input type="email" name="email" placeholder="email@congty.com" autocomplete="email" required />
          <button type="submit" class="ghost">Gửi link vào email của tôi</button>
          ${opts.emailErr ? `<div class="err">${esc(opts.emailErr)}</div>` : ''}
@@ -58,9 +71,10 @@ function accessGate(
        </form>`
     : '';
 
-  const divider = showPw && showEmail ? `<div class="or"><span>hoặc</span></div>` : '';
+  const sections = [googleSection, pwSection, emailSection].filter(Boolean);
+  const body = sections.join(`<div class="or"><span>hoặc</span></div>`);
   const help = showEmail && !showPw
-    ? `<p class="hint">Bạn cần link cá nhân được cấp. Nhập email để nhận lại link, hoặc liên hệ người gửi.</p>`
+    ? `<p class="hint">Bạn cần được cấp quyền để xem. Đăng nhập Google (nếu email đã được cấp), hoặc nhập email để nhận lại link.</p>`
     : '';
 
   return htmlResponse(
@@ -82,6 +96,9 @@ function accessGate(
        button:hover{background:#2478B8}
        button.ghost{background:transparent;border:1px solid #33414F;color:#EAF0F6}
        button.ghost:hover{border-color:#52A8E6;background:#12283b}
+       .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:4px;width:100%;padding:11px;border-radius:9px;background:#fff;color:#1F2937;font-weight:700;font-size:15px;text-decoration:none}
+       .gbtn:hover{background:#F1F3F5}
+       .note{color:#7A8794;font-size:12px;margin:6px 0 0;text-align:center}
        .err{color:#E27a63;font-size:13px} .info{color:#7FD1A6;font-size:13px}
        .hint{color:#9EAAB8;font-size:12.5px;text-align:center;margin:2px 0 16px}
        .or{display:flex;align-items:center;gap:12px;color:#5C6B7A;font-size:12px;margin:18px 0}
@@ -91,7 +108,7 @@ function accessGate(
        <div class="tag">deck.consultx.vn</div>
        <h2>${esc(deck.title)}</h2>
        <p class="sub">Deck bảo mật — chọn cách bạn được cấp quyền để xem.</p>
-       ${help}${pwSection}${divider}${emailSection}
+       ${help}${body}
      </div></body></html>`,
     opts.pwErr || opts.emailErr ? 401 : 200,
   );
@@ -107,27 +124,38 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null;
   const ua = req.headers.get('user-agent');
 
-  // Admin đăng nhập Google → xem được MỌI deck (công khai + bảo mật) không cần link cấp.
-  // Deck bảo mật vẫn bọc watermark định danh admin + chặn tải; công khai trả raw.
+  // Phiên Google (Auth.js): admin xem MỌI deck; viewer được cấp xem deck có grant khớp email.
   try {
-    const adminEmail = (await auth())?.user?.email;
-    if (adminEmail) {
-      const admin = await getAdmin(adminEmail);
+    const gEmail = (await auth())?.user?.email?.toLowerCase();
+    if (gEmail) {
+      // (a) Admin → xem được mọi deck (công khai raw; bảo mật bọc watermark định danh admin).
+      const admin = await getAdmin(gEmail);
       if (admin?.is_active) {
         await logEvent({ event: 'view', deckId: deck.id, ip, userAgent: ua }).catch(() => {});
         return htmlResponse(
           deck.visibility === 'public'
             ? html
             : wrapProtectedDeck(html, {
-                email: adminEmail,
+                email: gEmail,
                 name: admin.display_name ?? 'Quản trị viên',
                 deckSlug: deck.slug,
               }),
         );
       }
+      // (b) Viewer đăng nhập Google + có grant còn hiệu lực cho deck này → xem watermark định danh.
+      //     Google đã xác thực chủ email nên bỏ qua OTP (tương đương/tốt hơn OTP-email).
+      const grant = await findActiveGrantByDeckEmail(deck.id, gEmail);
+      if (grant) {
+        await logEvent({ event: 'view', deckId: deck.id, viewerId: grant.viewer_id, grantId: grant.id, ip, userAgent: ua }).catch(() => {});
+        return htmlResponse(
+          deck.visibility === 'public'
+            ? html
+            : wrapProtectedDeck(html, { email: grant.viewer_email, name: grant.viewer_name, deckSlug: deck.slug }),
+        );
+      }
     }
   } catch {
-    // Không có phiên admin hợp lệ → tiếp tục luồng viewer bên dưới.
+    // Không có phiên Google hợp lệ → tiếp tục luồng viewer (link/mật khẩu) bên dưới.
   }
 
   // Các đường vào hợp lệ (HOẶC): (1) link cá nhân còn hiệu lực, (2) mật khẩu chung đã mở khoá,

@@ -10,7 +10,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await auth();
   if (!session?.user?.email) redirect('/login');
   const me = await getAdmin(session.user.email).catch(() => null);
-  const isOwner = me?.role === 'admin';
+  // Chỉ admin allowlist (đang hoạt động) mới vào khu quản trị. Viewer đăng nhập Google (không phải admin)
+  // có phiên nhưng bị chặn ở đây → về /login (họ chỉ xem được deck qua /d, không thấy khu quản trị).
+  if (!me || !me.is_active) redirect('/login?error=AccessDenied');
+  const isOwner = me.role === 'admin';
 
   return (
     <>

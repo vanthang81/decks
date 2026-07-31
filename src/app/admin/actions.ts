@@ -14,10 +14,14 @@ import { getAdmin, addAdmin, setAdminActive, setAdminRole, removeAdmin, countAct
 import { createGroup, deleteGroup, addMember, removeMember, grantDeckToGroup } from '@/lib/groups';
 import { sendMail } from '@/lib/mail';
 
+// Bắt buộc là admin allowlist ĐANG hoạt động. Viewer đăng nhập Google có phiên nhưng KHÔNG phải admin
+// → KHÔNG được gọi các server action quản trị (chặn ở đây, không chỉ dựa vào việc "có phiên").
 async function requireAdminEmail(): Promise<string> {
   const session = await auth();
   const email = session?.user?.email;
   if (!email) redirect('/login');
+  const me = await getAdmin(email).catch(() => null);
+  if (!me || !me.is_active) redirect('/login?error=AccessDenied');
   return email;
 }
 

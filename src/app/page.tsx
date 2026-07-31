@@ -4,15 +4,20 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { listDecks } from '@/lib/decks';
 import { groupNamesByDeck } from '@/lib/groups';
+import { getAdmin } from '@/lib/admins';
 import SiteHeader from '@/components/SiteHeader';
 import DeckGallery, { type DeckLite } from '@/components/DeckGallery';
 
 export const dynamic = 'force-dynamic';
 
 export default async function GalleryPage() {
-  // Trang chủ = thư viện deck NỘI BỘ, chỉ admin đã đăng nhập mới xem được danh sách.
+  // Trang chủ = thư viện deck NỘI BỘ, chỉ admin allowlist (đang hoạt động) mới xem được danh sách.
+  // Viewer đăng nhập Google có phiên nhưng KHÔNG phải admin → chặn (không lộ danh sách deck).
   const session = await auth();
-  if (!session?.user) redirect('/login');
+  const email = session?.user?.email;
+  if (!email) redirect('/login');
+  const me = await getAdmin(email).catch(() => null);
+  if (!me || !me.is_active) redirect('/login?error=AccessDenied');
 
   let decks: Awaited<ReturnType<typeof listDecks>> = [];
   let groupMap: Record<string, string[]> = {};

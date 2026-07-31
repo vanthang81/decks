@@ -115,6 +115,19 @@ export async function findActiveGrantByDeckEmail(
   );
 }
 
+// Email có ÍT NHẤT một grant còn hiệu lực (bất kỳ deck nào)? — dùng để cho phép viewer đăng nhập Google.
+export async function hasAnyActiveGrant(email: string): Promise<boolean> {
+  const r = await queryOne<{ ok: boolean }>(
+    `SELECT EXISTS(
+       SELECT 1 FROM deck_grants g JOIN deck_viewers v ON v.id = g.viewer_id
+       WHERE lower(v.email) = lower($1) AND g.status = 'active'
+         AND (g.expires_at IS NULL OR g.expires_at > now())
+     ) AS ok`,
+    [email],
+  );
+  return r?.ok ?? false;
+}
+
 // Cấp lại token cho 1 grant ĐANG active (KHÔNG đổi trạng thái — tránh reactivate grant đã thu hồi).
 // Trả token thô để dựng link; null nếu grant không còn active.
 export async function rotateGrantToken(grantId: string): Promise<string | null> {
