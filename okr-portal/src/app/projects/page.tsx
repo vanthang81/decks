@@ -52,7 +52,7 @@ export default async function ProjectsPage({
               Dự án độc lập, xuyên nhiều OKR/khối. Gắn công việc từ các OKR vào một dự án để quản trị tập trung.
             </p>
           </div>
-          <div className="row" style={{ flex: '0 0 auto' }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', flex: '0 0 auto' }}>
             <PeriodPicker
               periods={orderPeriodsHierarchically(periods).map(({ period: p, depth }) => ({
                 id: p.id,

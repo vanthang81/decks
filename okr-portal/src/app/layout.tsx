@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { FAVICON, BRAND } from '@/lib/brand';
 import SiteFooter from '@/components/SiteFooter';
+import BackToTop from '@/components/BackToTop';
 
 export const metadata: Metadata = {
   title: `${BRAND.full}`,
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {children}
         <SiteFooter />
+        <BackToTop />
       </body>
     </html>
   );

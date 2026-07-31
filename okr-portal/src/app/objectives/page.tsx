@@ -56,7 +56,7 @@ export default async function ObjectivesPage({
               Cây mục tiêu theo alignment: Công ty → Khối → Phòng ban → Cá nhân.
             </p>
           </div>
-          <div className="row" style={{ flex: '0 0 auto' }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', flex: '0 0 auto' }}>
             <PeriodPicker
               periods={orderPeriodsHierarchically(periods).map(({ period: p, depth }) => ({
                 id: p.id,

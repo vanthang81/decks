@@ -237,8 +237,24 @@ table.t tr:hover td { background: #FBF7F2; }
 .kb-card-unit { font-size: 11.5px; color: #245b5e; margin-top: 3px; }
 .kb-card-proj { font-size: 11.5px; color: var(--primary); font-weight: 600; margin-top: 2px; }
 
+/* ===== Nút nổi "Lên đầu trang" ===== */
+.backtop {
+  position: fixed; right: 22px; bottom: 22px; z-index: 55;
+  width: 46px; height: 46px; border-radius: 50%; border: 0;
+  background: var(--primary); color: #fff; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 20px rgba(124, 3, 18, .35);
+  opacity: 0; transform: translateY(12px) scale(.9); pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease, background .15s;
+}
+.backtop.show { opacity: 1; transform: none; pointer-events: auto; }
+.backtop:hover { background: var(--primary-dark); box-shadow: 0 8px 24px rgba(124, 3, 18, .45); }
+.backtop:active { transform: scale(.94); }
+@media (max-width: 760px) { .backtop { right: 14px; bottom: 14px; width: 42px; height: 42px; } }
+
 /* ===== Bộ chọn kỳ (PeriodPicker) — chọn là mở luôn ===== */
-.pp-wrap { position: relative; display: inline-block; }
+/* flex: 0 0 auto — không để .row (flex:1) bóp nhỏ wrap khiến nút 190px tràn đè phần tử kế bên */
+.pp-wrap { position: relative; display: inline-block; flex: 0 0 auto; }
 .pp-btn {
   display: inline-flex; align-items: center; gap: 8px; justify-content: space-between;
   min-width: 190px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px;
