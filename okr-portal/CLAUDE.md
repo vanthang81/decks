@@ -103,17 +103,29 @@ Dự kiến live tại `okr.consultx.vn`.
 - nginx vhost `/etc/nginx/sites-available/okr.consultx.vn.conf` → `127.0.0.1:8640`, cert Let's Encrypt
   `okr.consultx.vn` (certbot --nginx). Google OAuth redirect URI đã whitelist:
   `https://okr.consultx.vn/api/auth/callback/google`.
-- **Domain thứ 2 (31/07)**: `https://okr.vanthang.io` cùng trỏ container `:8640` (vhost
-  `/etc/nginx/sites-available/okr.vanthang.io`, cert riêng `okr.vanthang.io`). DNS *.vanthang.io đã trỏ
-  VPS sẵn. **AUTH_URL vẫn = okr.consultx.vn (canonical)** → mở qua vanthang.io xem được, nhưng ĐĂNG NHẬP
-  funnel về consultx.vn (vì Google chỉ whitelist callback consultx). Muốn login NATIVE trên vanthang.io:
-  (1) thêm `https://okr.vanthang.io/api/auth/callback/google` vào Google OAuth client; (2) BỎ AUTH_URL
-  khỏi .env để Auth.js dùng host theo request (trustHost=true + nginx forward Host) — làm cả 2 mới bật.
+- **Domain thứ 2 = `https://okr.vanthang.io` — LOGIN GỐC (31/07, kiến trúc 2-container)**: DNS
+  *.vanthang.io đã trỏ VPS, vhost `/etc/nginx/sites-available/okr.vanthang.io` (cert riêng), forward
+  `X-Forwarded-Host $host`. **QUAN TRỌNG — vì sao 2 container**: Auth.js v5 build này KHÔNG dựng
+  redirect_uri từ header dù đã `trustHost:true` (có sẵn từ commit nền tảng) + `AUTH_TRUST_HOST=true` +
+  nginx forward `Host`/`X-Forwarded-Host` → redirect_uri rớt về `https://0.0.0.0:3000/...` (đúng lỗi
+  stack này luôn phải đặt `AUTH_URL` như deck/price-engine). ⇒ Giải pháp CHẮC CHẮN: **mỗi domain 1
+  container, mỗi container 1 `AUTH_URL` riêng** (cùng image `okr-portal:latest`, cùng DB):
+  - `okr-portal` (:8640) = domain **consultx**: `--env-file .env` (client CŨ `655980…` +
+    `AUTH_URL=https://okr.consultx.vn`). Callback đã whitelist sẵn.
+  - `okr-portal-vt` (:8641) = domain **vanthang**: `--env-file .env` + override
+    `-e AUTH_URL=https://okr.vanthang.io -e GOOGLE_CLIENT_ID=717726…apps.googleusercontent.com
+    -e GOOGLE_CLIENT_SECRET=…` (client MỚI, redirect URI `https://okr.vanthang.io/api/auth/callback/google`
+    phải whitelist trong Google client mới). vhost vanthang `proxy_pass 127.0.0.1:8641`.
+  - Đã verify redirect_uri đúng theo từng domain (không còn 0.0.0.0), `/login`=200 cả 2. Client mới +
+    secret KHÔNG nằm trong .env (chỉ truyền qua `-e` lúc `docker run` container vt).
 - **Deploy/redeploy = chạy tay workflow n8n "OKR Deploy — manual (SSH VPS)" (id `S2sxTDJOSjQ3Yd39`)**:
   node SSH (cred "SSH - VPS deploy") — fetch nhánh + `git reset --hard` worktree + `docker build` +
-  chạy lại container + migrate (idempotent). Đổi command của node cho từng bước (build vs nginx). Thao
-  tác root (nginx/certbot) qua container privileged: `docker run --rm --privileged --pid=host
-  --network host -v /:/host nginx:latest ...` (BẮT BUỘC `--pid=host` để `nginx -s reload` gửi được tín hiệu).
+  chạy lại container + migrate (idempotent). Đổi command của node cho từng bước (build vs nginx).
+  **⚠ Khi redeploy (build image mới) PHẢI recreate CẢ 2 container** `okr-portal` (:8640, env-file) VÀ
+  `okr-portal-vt` (:8641, thêm `-e AUTH_URL/GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET` client vanthang) —
+  nếu chỉ recreate 1 thì container kia chạy image cũ. Thao tác root (nginx/certbot) qua container
+  privileged: `docker run --rm --privileged --pid=host --network host -v /:/host nginx:latest ...`
+  (BẮT BUỘC `--pid=host` để `nginx -s reload` gửi được tín hiệu).
 - Migration đã chạy: `db/001_okr_core.sql` + `002_grants.sql` + `010_seed_example.sql` bằng superuser
   (`docker exec wg8owogscc4ogog8ccgw0ok8 psql -U postgres -d btmh_data`). Seed exec = `vanthang81@gmail.com`.
 
