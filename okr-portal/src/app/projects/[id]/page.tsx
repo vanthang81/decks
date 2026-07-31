@@ -131,6 +131,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
               units={unitOpts}
               projects={projectOpts}
               manageStructure={false}
+              context="project"
             >
               <></>
             </ExecutionTabs>

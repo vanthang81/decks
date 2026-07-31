@@ -166,7 +166,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
           )}
           {krs.length === 0 && <p className="muted">Chưa có KR nào.</p>}
           {krs.map((kr) => (
-            <div key={kr.id} style={{ padding: '10px 0', borderBottom: '1px solid var(--line)' }}>
+            <div key={kr.id} id={`kr-${kr.id}`} style={{ padding: '10px 0', borderBottom: '1px solid var(--line)', scrollMarginTop: 80 }}>
               <div className="flexbtw">
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600 }}>

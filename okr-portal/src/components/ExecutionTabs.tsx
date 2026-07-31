@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 // Hằng số lặp lại từ lib (KHÔNG import initiatives.ts để tránh kéo pg vào client bundle).
 type Status = 'todo' | 'in_progress' | 'blocked' | 'done' | 'canceled';
@@ -56,7 +57,10 @@ export type Card = {
   project_id: string | null;
   project_name: string | null;
   project_code: string | null;
+  objective_id?: string | null;
   objective_code?: string | null;
+  key_result_id?: string | null;
+  key_result_code?: string | null;
   status: Status;
   priority: 'low' | 'medium' | 'high';
   progress: number;
@@ -85,6 +89,44 @@ function dayDiff(a: Date, b: Date): number {
   return Math.round((b.getTime() - a.getTime()) / 86400000);
 }
 
+type Ctx = 'objective' | 'project';
+
+// Chip ngữ cảnh: hiện thông tin CÓ Ý NGHĨA theo nơi đang xem, ẩn cái hiển nhiên.
+// - Trong DỰ ÁN: hiện Objective + Key Result gốc (link) — ẩn tên dự án (đang ở trong nó).
+// - Trong OKR: Objective là hiển nhiên → ẩn; hiện Key Result gắn việc + Dự án (link).
+function ContextChips({ c, context }: { c: Card; context: Ctx }) {
+  const stop = (e: React.MouseEvent) => e.stopPropagation();
+  const oLink = c.objective_id ? `/objectives/${c.objective_id}` : null;
+  if (context === 'project') {
+    return (
+      <>
+        {oLink && c.objective_code && (
+          <Link href={oLink} className="ctx-chip ctx-o" onClick={stop} title="Mở Objective gốc">
+            🎯 {c.objective_code}
+          </Link>
+        )}
+        {oLink && c.key_result_code && (
+          <Link href={`${oLink}#kr-${c.key_result_id ?? ''}`} className="ctx-chip ctx-kr" onClick={stop} title="Mở Key Result gốc">
+            🔑 {c.key_result_code}
+          </Link>
+        )}
+      </>
+    );
+  }
+  return (
+    <>
+      {c.key_result_code && (
+        <span className="ctx-chip ctx-kr" title="Key Result gắn việc">🔑 {c.key_result_code}</span>
+      )}
+      {c.project_id && c.project_name && (
+        <Link href={`/projects/${c.project_id}`} className="ctx-chip ctx-proj" onClick={stop} title="Mở dự án">
+          🗂 {c.project_name}
+        </Link>
+      )}
+    </>
+  );
+}
+
 export default function ExecutionTabs({
   initiatives,
   canManage,
@@ -99,6 +141,7 @@ export default function ExecutionTabs({
   units,
   projects,
   manageStructure = true,
+  context = 'objective',
   children,
 }: {
   initiatives: Card[];
@@ -114,6 +157,7 @@ export default function ExecutionTabs({
   units: UnitOpt[];
   projects: ProjectOpt[];
   manageStructure?: boolean;
+  context?: Ctx;
   children: React.ReactNode;
 }) {
   const [view, setView] = useState<View>('list');
@@ -154,7 +198,7 @@ export default function ExecutionTabs({
 
       {view === 'list' && (
         <div>
-          <ListView initiatives={initiatives} canEdit={canEdit} onOpen={(c) => setEditing(c)} />
+          <ListView initiatives={initiatives} canEdit={canEdit} context={context} onOpen={(c) => setEditing(c)} />
           {children}
         </div>
       )}
@@ -162,6 +206,7 @@ export default function ExecutionTabs({
         <KanbanView
           initiatives={initiatives}
           canEdit={canEdit}
+          context={context}
           move={move}
           onOpen={(c) => setEditing(c)}
         />
@@ -608,10 +653,12 @@ function orderTree(cards: Card[]): ListNode[] {
 function ListView({
   initiatives,
   canEdit,
+  context,
   onOpen,
 }: {
   initiatives: Card[];
   canEdit: (c: Card) => boolean;
+  context: Ctx;
   onOpen: (c: Card) => void;
 }) {
   const rows = useMemo(() => orderTree(initiatives), [initiatives]);
@@ -639,7 +686,7 @@ function ListView({
                     {KIND_LABEL[n.kind]}
                   </span>
                   {n.code && <span className="okr-code">{n.code}</span>}
-                  {n.objective_code && <span className="il-okr">🎯 {n.objective_code}</span>}
+                  <ContextChips c={n} context={context} />
                   <b>{n.title}</b>
                   <span className={`badge ${STATUS_CLS[n.status]}`} style={{ fontSize: 10.5 }}>
                     {STATUS_LABEL[n.status]}
@@ -653,7 +700,6 @@ function ListView({
                 <div className="obj-meta">
                   {n.owner_name ? `👤 ${n.owner_name}` : 'Chưa giao'}
                   {n.unit_name ? ` · 🏢 ${n.unit_name}` : ''}
-                  {n.project_name ? ` · 🗂 ${n.project_name}` : ''}
                   {n.due_on ? ` · Hạn ${fmtD(n.due_on)}` : ''}
                 </div>
               </div>
@@ -680,11 +726,13 @@ function ListView({
 function KanbanView({
   initiatives,
   canEdit,
+  context,
   move,
   onOpen,
 }: {
   initiatives: Card[];
   canEdit: (c: Card) => boolean;
+  context: Ctx;
   move: (id: string, status: Status) => Promise<void>;
   onOpen: (c: Card) => void;
 }) {
@@ -791,9 +839,10 @@ function KanbanView({
                       {c.parent_id && titleById.get(c.parent_id) && (
                         <div className="kb-card-parent">↳ {titleById.get(c.parent_id)}</div>
                       )}
-                      {c.objective_code && <div className="kb-card-okr">🎯 {c.objective_code}</div>}
                       {c.unit_name && <div className="kb-card-unit">🏢 {c.unit_name}</div>}
-                      {c.project_name && <div className="kb-card-proj">🗂 {c.project_name}</div>}
+                      <div className="kb-card-ctx">
+                        <ContextChips c={c} context={context} />
+                      </div>
                       <div className="kb-card-foot">
                         <span>{c.owner_name || 'Chưa giao'}</span>
                         {c.due_on && <span>· {fmtD(c.due_on)}</span>}

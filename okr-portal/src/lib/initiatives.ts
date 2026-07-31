@@ -47,6 +47,7 @@ export type Initiative = {
   project_name: string | null;
   project_code: string | null;
   objective_code: string | null;
+  key_result_code: string | null;
   status: InitStatus;
   priority: Priority;
   progress: number;
@@ -66,7 +67,7 @@ const SELECT = `
   SELECT i.id, i.code, i.objective_id, i.key_result_id, i.parent_id, i.kind, i.title, i.description,
          i.owner_email, u.display_name AS owner_name, i.unit_id, un.name AS unit_name,
          i.project_id, pr.name AS project_name, pr.code AS project_code,
-         obj.code AS objective_code,
+         obj.code AS objective_code, kr.code AS key_result_code,
          i.status, i.priority,
          i.progress::float8 AS progress, i.start_on::text, i.due_on::text, i.done_on::text,
          i.budget_planned::float8 AS budget_planned, i.budget_actual::float8 AS budget_actual,
@@ -75,7 +76,8 @@ const SELECT = `
     LEFT JOIN okr_users u ON u.email = i.owner_email
     LEFT JOIN okr_units un ON un.id = i.unit_id
     LEFT JOIN okr_projects pr ON pr.id = i.project_id
-    LEFT JOIN okr_objectives obj ON obj.id = i.objective_id`;
+    LEFT JOIN okr_objectives obj ON obj.id = i.objective_id
+    LEFT JOIN okr_key_results kr ON kr.id = i.key_result_id`;
 
 /** Toàn bộ initiative (mọi cấp) gắn với 1 objective (gồm KR con). Phẳng — dựng cây bằng buildInitiativeTree. */
 export async function listInitiativesForObjective(objectiveId: string): Promise<Initiative[]> {
