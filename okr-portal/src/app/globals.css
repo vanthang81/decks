@@ -236,6 +236,11 @@ table.t tr:hover td { background: #FBF7F2; }
 }
 .kb-card-unit { font-size: 11.5px; color: #245b5e; margin-top: 3px; }
 .kb-card-proj { font-size: 11.5px; color: var(--primary); font-weight: 600; margin-top: 2px; }
+.kb-card-okr { font-size: 11px; color: #8a6d1a; font-weight: 700; margin-top: 2px; }
+.il-okr {
+  display: inline-block; font-size: 10.5px; font-weight: 700; color: #8a6d1a;
+  background: var(--gold-tint); border-radius: 5px; padding: 1px 6px;
+}
 
 /* ===== Nút nổi "Lên đầu trang" ===== */
 .backtop {

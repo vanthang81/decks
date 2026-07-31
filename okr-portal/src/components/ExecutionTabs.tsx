@@ -56,6 +56,7 @@ export type Card = {
   project_id: string | null;
   project_name: string | null;
   project_code: string | null;
+  objective_code?: string | null;
   status: Status;
   priority: 'low' | 'medium' | 'high';
   progress: number;
@@ -97,6 +98,7 @@ export default function ExecutionTabs({
   users,
   units,
   projects,
+  manageStructure = true,
   children,
 }: {
   initiatives: Card[];
@@ -111,6 +113,7 @@ export default function ExecutionTabs({
   users: PersonOpt[];
   units: UnitOpt[];
   projects: ProjectOpt[];
+  manageStructure?: boolean;
   children: React.ReactNode;
 }) {
   const [view, setView] = useState<View>('list');
@@ -180,6 +183,7 @@ export default function ExecutionTabs({
           createChild={createChild}
           createProjectForInit={createProjectForInit}
           objectiveId={objectiveId}
+          manageStructure={manageStructure}
           onClose={() => setEditing(null)}
         />
       )}
@@ -200,6 +204,7 @@ function EditModal({
   createChild,
   createProjectForInit,
   objectiveId,
+  manageStructure,
   onClose,
 }: {
   card: Card;
@@ -213,6 +218,7 @@ function EditModal({
   createChild: (fd: FormData) => Promise<void>;
   createProjectForInit: (fd: FormData) => Promise<void>;
   objectiveId: string;
+  manageStructure: boolean;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -495,7 +501,7 @@ function EditModal({
             </div>
           </form>
 
-          {canManage && (
+          {canManage && manageStructure && (
             <div className="okr-modal-manage">
               {childKinds.length > 0 &&
                 (addKid ? (
@@ -633,6 +639,7 @@ function ListView({
                     {KIND_LABEL[n.kind]}
                   </span>
                   {n.code && <span className="okr-code">{n.code}</span>}
+                  {n.objective_code && <span className="il-okr">🎯 {n.objective_code}</span>}
                   <b>{n.title}</b>
                   <span className={`badge ${STATUS_CLS[n.status]}`} style={{ fontSize: 10.5 }}>
                     {STATUS_LABEL[n.status]}
@@ -784,6 +791,7 @@ function KanbanView({
                       {c.parent_id && titleById.get(c.parent_id) && (
                         <div className="kb-card-parent">↳ {titleById.get(c.parent_id)}</div>
                       )}
+                      {c.objective_code && <div className="kb-card-okr">🎯 {c.objective_code}</div>}
                       {c.unit_name && <div className="kb-card-unit">🏢 {c.unit_name}</div>}
                       {c.project_name && <div className="kb-card-proj">🗂 {c.project_name}</div>}
                       <div className="kb-card-foot">

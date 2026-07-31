@@ -46,6 +46,7 @@ export type Initiative = {
   project_id: string | null;
   project_name: string | null;
   project_code: string | null;
+  objective_code: string | null;
   status: InitStatus;
   priority: Priority;
   progress: number;
@@ -65,6 +66,7 @@ const SELECT = `
   SELECT i.id, i.code, i.objective_id, i.key_result_id, i.parent_id, i.kind, i.title, i.description,
          i.owner_email, u.display_name AS owner_name, i.unit_id, un.name AS unit_name,
          i.project_id, pr.name AS project_name, pr.code AS project_code,
+         obj.code AS objective_code,
          i.status, i.priority,
          i.progress::float8 AS progress, i.start_on::text, i.due_on::text, i.done_on::text,
          i.budget_planned::float8 AS budget_planned, i.budget_actual::float8 AS budget_actual,
@@ -72,7 +74,8 @@ const SELECT = `
     FROM okr_initiatives i
     LEFT JOIN okr_users u ON u.email = i.owner_email
     LEFT JOIN okr_units un ON un.id = i.unit_id
-    LEFT JOIN okr_projects pr ON pr.id = i.project_id`;
+    LEFT JOIN okr_projects pr ON pr.id = i.project_id
+    LEFT JOIN okr_objectives obj ON obj.id = i.objective_id`;
 
 /** Toàn bộ initiative (mọi cấp) gắn với 1 objective (gồm KR con). Phẳng — dựng cây bằng buildInitiativeTree. */
 export async function listInitiativesForObjective(objectiveId: string): Promise<Initiative[]> {
@@ -82,6 +85,16 @@ export async function listInitiativesForObjective(objectiveId: string): Promise<
      ORDER BY CASE i.kind WHEN 'project' THEN 0 WHEN 'subproject' THEN 1 ELSE 2 END,
               i.due_on NULLS LAST, i.sort, i.created_at`,
     [objectiveId],
+  );
+}
+
+/** Toàn bộ task thuộc 1 DỰ ÁN (xuyên nhiều OKR) — phẳng, dựng cây bằng buildInitiativeTree. */
+export async function listInitiativesForProject(projectId: string): Promise<Initiative[]> {
+  return query<Initiative>(
+    `${SELECT} WHERE i.project_id=$1
+     ORDER BY CASE i.kind WHEN 'project' THEN 0 WHEN 'subproject' THEN 1 ELSE 2 END,
+              i.due_on NULLS LAST, i.sort, i.created_at`,
+    [projectId],
   );
 }
 
