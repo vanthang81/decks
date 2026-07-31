@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-07-31.17';
+export const GUIDE_VERSION = '2026-07-31.18';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -277,6 +277,22 @@ export const FEATURES: Feature[] = [
       'Mỗi mục có mã unique tự sinh: Objective <KHỐI>-O<n>, Key Result <obj>.KR<m>, Công việc <obj>.H<kk>, Dự án PRJ-<nn>. Mã cấp theo BỘ ĐẾM BỀN (sequence) cho từng phạm vi, tăng đơn điệu và KHÔNG tái sử dụng số đã cấp — kể cả khi bạn xoá một mục (tránh trùng nghĩa trong báo cáo/Excel đã gửi). Nhờ vậy một mã luôn trỏ về đúng một mục duy nhất theo thời gian. Mã dùng để import/export Excel khớp theo cột Mã.',
   },
   {
+    key: 'comment',
+    title: 'Thảo luận & @nhắc tên',
+    where: 'Mỗi Objective / Key Result / Công việc → "💬 Thảo luận"',
+    help: 'Bình luận, trả lời, @gắn thẻ đồng nghiệp. Người được nhắc nhận thông báo + email (tuỳ chọn).',
+    detail:
+      'Mỗi Objective, Key Result và Công việc đều có khu thảo luận: viết bình luận, trả lời theo luồng, sửa/xoá bình luận của mình. Gõ tên vào ô "Gắn thẻ" để @nhắc đồng nghiệp — người được nhắc (và người có bình luận được trả lời) sẽ nhận thông báo trong chuông 🔔 và email (nếu bật). Giúp trao đổi bám sát ngay tại mục tiêu/việc, không tản mát qua chat.',
+  },
+  {
+    key: 'notifications',
+    title: 'Thông báo (chuông 🔔)',
+    where: 'Biểu tượng 🔔 góc phải · trang "Thông báo"',
+    help: 'Số chưa đọc ở chuông; bấm xem danh sách, mở tới đúng mục. Bật/tắt email khi được nhắc.',
+    detail:
+      'Chuông 🔔 cạnh tên bạn hiện số thông báo chưa đọc (tự làm mới). Trang Thông báo liệt kê ai đã nhắc/trả lời bạn, bấm vào để mở đúng Objective/KR/Công việc và tự đánh dấu đã đọc. Có nút "Đánh dấu tất cả đã đọc" và tuỳ chọn "Nhận email khi có người nhắc/trả lời" (mỗi người tự bật/tắt).',
+  },
+  {
     key: 'admin',
     title: 'Quản trị hệ thống',
     where: 'Menu "Quản trị" (chỉ CEO/CFO)',
@@ -329,6 +345,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '31/07/2026 (bình luận @nhắc + trung tâm thông báo)',
+    items: [
+      'Mỗi Objective/KR/Công việc có khu "💬 Thảo luận": bình luận, trả lời theo luồng, sửa/xoá của mình, @gắn thẻ đồng nghiệp.',
+      'Được @nhắc hoặc bị trả lời → thông báo ở chuông 🔔 (số chưa đọc, tự làm mới) + email (tuỳ chọn bật/tắt mỗi người).',
+      'Trang "Thông báo": xem, bấm mở đúng mục & tự đánh dấu đã đọc, "đánh dấu tất cả đã đọc".',
+    ],
+  },
   {
     date: '31/07/2026 (check-in theo KR + link dự án mở tab mới)',
     items: [

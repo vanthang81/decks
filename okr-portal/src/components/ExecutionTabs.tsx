@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import CommentThread from '@/components/CommentThread';
 
 // Hằng số lặp lại từ lib (KHÔNG import initiatives.ts để tránh kéo pg vào client bundle).
 type Status = 'todo' | 'in_progress' | 'blocked' | 'done' | 'canceled';
@@ -639,6 +640,10 @@ function EditModal({
           )}
           </>
         )}
+
+        <div className="okr-modal-cmt">
+          <CommentThread entityType="initiative" entityId={card.id} users={users} defaultOpen />
+        </div>
       </div>
     </div>
   );

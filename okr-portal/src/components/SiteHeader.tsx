@@ -2,12 +2,16 @@ import Link from 'next/link';
 import { auth, signOut } from '@/auth';
 import { LOGO_WORDMARK } from '@/lib/brand';
 import { ROLE_LABEL, canAdmin, type Role } from '@/lib/rbac';
+import NotifBell from '@/components/NotifBell';
+import { unreadCount } from '@/lib/notifications';
 
 export default async function SiteHeader({ active }: { active?: string }) {
   const session = await auth();
   const role = session?.user?.role as Role | undefined;
+  const email = session?.user?.email ?? undefined;
   const name = session?.user?.displayName || session?.user?.name || session?.user?.email;
   const who = `${name ?? ''}${role ? ` · ${ROLE_LABEL[role]}` : ''}`;
+  const notifCount = email ? await unreadCount(email).catch(() => 0) : 0;
 
   const links = [
     { href: '/', label: 'Bảng điều khiển', key: 'home', show: true },
@@ -36,6 +40,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
           ))}
         </nav>
         <div className="spacer" />
+        {email && <NotifBell initialCount={notifCount} />}
         <div className="userchip userchip-desktop">
           <span>{who}</span>
           <form

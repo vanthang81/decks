@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import HelpTip from '@/components/HelpTip';
 import ExecutionTabs from '@/components/ExecutionTabs';
+import CommentThread from '@/components/CommentThread';
 import { ProgressBar, LevelBadge, StatusBadge } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
 import { listUnits } from '@/lib/org';
@@ -308,6 +309,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
               )}
 
               {renderKrCheckins(kr.id, kr.metric_type, kr.unit_label)}
+              <CommentThread entityType="key_result" entityId={kr.id} users={personOpts} />
             </div>
           ))}
 
@@ -552,6 +554,12 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
               </details>
             )}
           </ExecutionTabs>
+        </div>
+
+        {/* ---------- Thảo luận Objective ---------- */}
+        <div className="card">
+          <h3 style={{ marginTop: 0 }}>Thảo luận<HelpTip k="comment" /></h3>
+          <CommentThread entityType="objective" entityId={obj.id} users={personOpts} defaultOpen />
         </div>
 
         {/* ---------- Check-in cấp Objective (KR check-in hiện tại từng KR ở trên) ---------- */}

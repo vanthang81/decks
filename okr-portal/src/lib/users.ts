@@ -8,6 +8,7 @@ export type OkrUser = {
   role: Role;
   unit_id: string | null;
   is_active: boolean;
+  notify_email: boolean;
 };
 
 // Cache ngắn allowlist (jwt callback gọi mỗi lần auth()).
@@ -24,7 +25,7 @@ export async function getUser(email: string): Promise<OkrUser | null> {
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < TTL) return hit.user;
   const user = await queryOne<OkrUser>(
-    `SELECT email, display_name, title, role, unit_id, is_active
+    `SELECT email, display_name, title, role, unit_id, is_active, notify_email
        FROM okr_users WHERE lower(email) = lower($1)`,
     [email],
   );
@@ -36,7 +37,7 @@ export async function listUsers(): Promise<
   (OkrUser & { unit_name: string | null; unit_code: string | null })[]
 > {
   return query(
-    `SELECT u.email, u.display_name, u.title, u.role, u.unit_id, u.is_active,
+    `SELECT u.email, u.display_name, u.title, u.role, u.unit_id, u.is_active, u.notify_email,
             n.name AS unit_name, n.code AS unit_code
        FROM okr_users u
        LEFT JOIN okr_units n ON n.id = u.unit_id
