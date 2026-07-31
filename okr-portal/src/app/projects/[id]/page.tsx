@@ -5,6 +5,7 @@ import { ProgressBar } from '@/components/ui';
 import ExecutionTabs from '@/components/ExecutionTabs';
 import ProjectEditButton from '@/components/ProjectEditButton';
 import AddTaskToProject from '@/components/AddTaskToProject';
+import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
 import { listObjectivesWithKrs } from '@/lib/okr';
 import { listUnits } from '@/lib/org';
@@ -61,7 +62,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
                   {PROJECT_STATUS_LABEL[p.status]}
                 </span>
               </div>
-              <div className="pagetitle" style={{ margin: 0 }}>{p.name}</div>
+              <div className="pagetitle" style={{ margin: 0 }}>{p.name}<HelpTip k="projects" /></div>
               <div className="obj-meta" style={{ marginTop: 4 }}>
                 {p.unit_name ? `🏢 ${p.unit_name} · ` : ''}
                 {p.owner_name ? `Chủ trì: ${p.owner_name} · ` : ''}

@@ -1,20 +1,22 @@
 import { query, queryOne } from './db';
 
-// Sinh mã unique cho Objective/KR/Initiative theo định dạng:
+// Sinh mã unique cho Objective/KeyResult/Initiative/Project theo BỘ ĐẾM BỀN
+// (bảng okr_code_seq) — tăng đơn điệu, atomic (an toàn khi tạo đồng thời) và
+// KHÔNG TÁI DÙNG số đã cấp, kể cả sau khi xoá mục (mã luôn trỏ về đúng 1 mục).
 //   Objective:  <PREFIX>-O<n>     (PREFIX = mã đơn vị, hoặc 'CTY' cho công ty/chiến lược)
 //   KeyResult:  <objCode>.KR<m>
 //   Initiative: <objCode>.H<kk>   (kk = 2 chữ số)
+//   Project:    PRJ-<nn>          (nn = 2 chữ số, toàn cục)
 
-function escapeRe(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-function maxNum(codes: (string | null)[], re: RegExp): number {
-  let m = 0;
-  for (const c of codes) {
-    const x = c?.match(re);
-    if (x) m = Math.max(m, Number(x[1]));
-  }
-  return m;
+/** Tăng bộ đếm của 1 phạm vi (atomic) và trả về giá trị mới. */
+async function bumpSeq(scopeKey: string): Promise<number> {
+  const r = await queryOne<{ last_val: number }>(
+    `INSERT INTO okr_code_seq (scope_key, last_val) VALUES ($1, 1)
+       ON CONFLICT (scope_key) DO UPDATE SET last_val = okr_code_seq.last_val + 1
+     RETURNING last_val`,
+    [scopeKey],
+  );
+  return r!.last_val;
 }
 
 export async function objPrefix(unitId: string | null): Promise<string> {
@@ -23,37 +25,33 @@ export async function objPrefix(unitId: string | null): Promise<string> {
   return r?.code ?? 'CTY';
 }
 
+async function objCode(objectiveId: string): Promise<string | null> {
+  const o = await queryOne<{ code: string | null }>('SELECT code FROM okr_objectives WHERE id=$1', [objectiveId]);
+  return o?.code ?? null;
+}
+
 export async function nextObjectiveCode(unitId: string | null): Promise<string> {
   const p = await objPrefix(unitId);
-  const rows = await query<{ code: string | null }>(
-    `SELECT code FROM okr_objectives WHERE code LIKE $1`,
-    [p + '-O%'],
-  );
-  const n = maxNum(rows.map((r) => r.code), new RegExp('^' + escapeRe(p) + '-O(\\d+)$')) + 1;
+  const n = await bumpSeq(`O:${p}`);
   return `${p}-O${n}`;
 }
 
 export async function nextKrCode(objectiveId: string): Promise<string | null> {
-  const o = await queryOne<{ code: string | null }>('SELECT code FROM okr_objectives WHERE id=$1', [objectiveId]);
-  const oc = o?.code;
+  const oc = await objCode(objectiveId);
   if (!oc) return null;
-  const rows = await query<{ code: string | null }>(
-    `SELECT code FROM okr_key_results WHERE objective_id=$1 AND code LIKE $2`,
-    [objectiveId, oc + '.KR%'],
-  );
-  const n = maxNum(rows.map((r) => r.code), new RegExp('\\.KR(\\d+)$')) + 1;
-  return `${oc}.KR${n}`;
+  const m = await bumpSeq(`KR:${oc}`);
+  return `${oc}.KR${m}`;
 }
 
 export async function nextInitCode(objectiveId: string | null): Promise<string | null> {
   if (!objectiveId) return null;
-  const o = await queryOne<{ code: string | null }>('SELECT code FROM okr_objectives WHERE id=$1', [objectiveId]);
-  const oc = o?.code;
+  const oc = await objCode(objectiveId);
   if (!oc) return null;
-  const rows = await query<{ code: string | null }>(
-    `SELECT code FROM okr_initiatives WHERE objective_id=$1 AND code LIKE $2`,
-    [objectiveId, oc + '.H%'],
-  );
-  const n = maxNum(rows.map((r) => r.code), new RegExp('\\.H(\\d+)$')) + 1;
+  const n = await bumpSeq(`H:${oc}`);
   return `${oc}.H${String(n).padStart(2, '0')}`;
+}
+
+export async function nextProjectCode(): Promise<string> {
+  const n = await bumpSeq('PRJ');
+  return `PRJ-${String(n).padStart(2, '0')}`;
 }

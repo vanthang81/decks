@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import HelpTip from '@/components/HelpTip';
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import { requireUser } from '@/lib/current-user';
@@ -29,7 +30,7 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
     <>
       <SiteHeader active="admin" />
       <div className="wrap">
-        <div className="pagetitle">Quản trị hệ thống</div>
+        <div className="pagetitle">Quản trị hệ thống<HelpTip k="admin" /></div>
         <p className="subtitle">Chỉ CEO/CFO. Thiết lập cây tổ chức, người dùng và kỳ OKR.</p>
 
         <div className="grid two">

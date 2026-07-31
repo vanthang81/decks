@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import HelpTip from '@/components/HelpTip';
 import SiteHeader from '@/components/SiteHeader';
 import { ProgressBar } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
@@ -27,7 +28,7 @@ export default async function Dashboard() {
       <div className="wrap">
         <div className="flexbtw">
           <div>
-            <div className="pagetitle">Bảng điều khiển OKR</div>
+            <div className="pagetitle">Bảng điều khiển OKR<HelpTip k="dashboard" /></div>
             <p className="subtitle">
               {period ? (
                 <>

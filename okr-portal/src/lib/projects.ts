@@ -1,6 +1,7 @@
 import { query, queryOne } from './db';
 import type { OkrUser } from './users';
 import { manageScope, type Unit } from './org';
+import { nextProjectCode } from './codes';
 
 // DỰ ÁN độc lập, xuyên nhiều OKR. Task (okr_initiatives.project_id) trỏ vào 1 dự án.
 export type ProjectStatus = 'active' | 'done' | 'paused' | 'archived';
@@ -116,17 +117,6 @@ export async function listProjectTasks(projectId: string): Promise<ProjectTask[]
   );
 }
 
-async function nextProjectCode(): Promise<string> {
-  const rows = await query<{ code: string | null }>(
-    `SELECT code FROM okr_projects WHERE code LIKE 'PRJ-%'`,
-  );
-  let m = 0;
-  for (const r of rows) {
-    const x = r.code?.match(/^PRJ-(\d+)$/);
-    if (x) m = Math.max(m, Number(x[1]));
-  }
-  return `PRJ-${String(m + 1).padStart(2, '0')}`;
-}
 
 export async function createProject(input: {
   period_id: string | null;

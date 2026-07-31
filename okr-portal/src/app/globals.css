@@ -353,14 +353,22 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
 details.inline { margin-top: 10px; }
 details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 600; font-size: 14px; }
 
-/* Help tooltip */
+/* Help tooltip (nút bấm mở popup hướng dẫn) */
 .helptip {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 16px; height: 16px; margin-left: 5px; border-radius: 999px;
+  width: 17px; height: 17px; margin-left: 5px; padding: 0; border: 0; border-radius: 999px;
   font-size: 11px; line-height: 1; color: var(--primary); background: var(--primary-tint);
-  text-decoration: none; vertical-align: middle; cursor: help; font-weight: 700;
+  text-decoration: none; vertical-align: middle; cursor: pointer; font-weight: 700; font-family: inherit;
 }
 .helptip:hover { background: var(--primary); color: #fff; text-decoration: none; }
+
+/* Popup hướng dẫn chi tiết */
+.help-modal { max-width: 560px; }
+.help-where {
+  display: inline-block; font-size: 12px; color: var(--muted); background: #F4EFE8;
+  border-radius: 6px; padding: 3px 9px; margin: 2px 0 10px;
+}
+.help-detail { margin: 0; line-height: 1.6; color: var(--ink); font-size: 14px; }
 
 /* Guide page */
 .guide h2 { margin: 26px 0 8px; font-size: 19px; }

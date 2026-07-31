@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import HelpTip from '@/components/HelpTip';
 import SiteHeader from '@/components/SiteHeader';
 import { ProgressBar } from '@/components/ui';
 import PeriodPicker from '@/components/PeriodPicker';
@@ -47,7 +48,7 @@ export default async function ProjectsPage({
       <div className="wrap">
         <div className="flexbtw">
           <div>
-            <div className="pagetitle">Dự án</div>
+            <div className="pagetitle">Dự án<HelpTip k="projects" /></div>
             <p className="subtitle">
               Dự án độc lập, xuyên nhiều OKR/khối. Gắn công việc từ các OKR vào một dự án để quản trị tập trung.
             </p>

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-07-31.15';
+export const GUIDE_VERSION = '2026-07-31.16';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -260,6 +260,30 @@ export const FEATURES: Feature[] = [
     detail:
       'CEO/CFO cấu hình email nhắc: bật/tắt, gửi vào thứ mấy, ngưỡng số ngày KR chưa check-in, và người nhận (mọi người chủ trì hoặc từ trưởng phòng trở lên). Cron chạy 08:00 hằng ngày (giờ VN) và chỉ gửi vào đúng thứ đã chọn; người có KR trễ nhận email kèm danh sách + link. Nút "Gửi thử ngay" để kiểm tra ngay.',
   },
+  {
+    key: 'dashboard',
+    title: 'Bảng điều khiển',
+    where: 'Menu "Bảng điều khiển"',
+    help: 'Tổng quan tiến độ công ty + OKR cấp công ty/khối trong kỳ hiện tại.',
+    detail:
+      'Trang chủ tóm tắt sức khỏe OKR toàn công ty theo kỳ hiện tại: tiến độ chung, các Objective cấp công ty và cấp khối, để lãnh đạo nắm nhanh bức tranh tổng thể trước khi đi sâu vào từng OKR/dự án.',
+  },
+  {
+    key: 'codes',
+    title: 'Mã tự sinh (O / KR / H / Dự án)',
+    where: 'Mọi Objective/Key Result/Công việc/Dự án',
+    help: 'Mã tự sinh theo thứ tự, tự gán, unique và KHÔNG BAO GIỜ dùng lại (kể cả sau khi xoá).',
+    detail:
+      'Mỗi mục có mã unique tự sinh: Objective <KHỐI>-O<n>, Key Result <obj>.KR<m>, Công việc <obj>.H<kk>, Dự án PRJ-<nn>. Mã cấp theo BỘ ĐẾM BỀN (sequence) cho từng phạm vi, tăng đơn điệu và KHÔNG tái sử dụng số đã cấp — kể cả khi bạn xoá một mục (tránh trùng nghĩa trong báo cáo/Excel đã gửi). Nhờ vậy một mã luôn trỏ về đúng một mục duy nhất theo thời gian. Mã dùng để import/export Excel khớp theo cột Mã.',
+  },
+  {
+    key: 'admin',
+    title: 'Quản trị hệ thống',
+    where: 'Menu "Quản trị" (chỉ CEO/CFO)',
+    help: 'Cây tổ chức, người dùng & phân quyền, kỳ OKR, đồng bộ KPI, import/export, nhắc check-in.',
+    detail:
+      'Khu vực dành cho CEO/CFO: quản lý cây tổ chức (Khối/Phòng), người dùng & vai trò, kỳ OKR (khung thời gian nhiều cấp), đồng bộ KPI từ BigQuery, Import/Export Excel và cấu hình nhắc check-in. Các thao tác thay đổi cấu trúc hệ thống đều nằm ở đây.',
+  },
 ];
 
 // ---- Lộ trình đề xuất (từ research best practice — chưa có, chờ CFO duyệt) ----
@@ -305,6 +329,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '31/07/2026 (tooltip bấm mở popup + mã không tái dùng)',
+    items: [
+      'Chấm ⓘ mọi màn hình: bấm mở popup hướng dẫn chi tiết (nội dung quy hoạch ở trang Hướng dẫn).',
+      'Mã O/KR/H/Dự án chuyển sang BỘ ĐẾM BỀN: tự sinh theo thứ tự, atomic, KHÔNG tái dùng số đã cấp (kể cả sau khi xoá).',
+    ],
+  },
   {
     date: '31/07/2026 (thêm việc từ dự án + chip dự án xuống dòng meta)',
     items: [

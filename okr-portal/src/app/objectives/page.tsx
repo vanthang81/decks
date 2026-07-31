@@ -2,6 +2,7 @@ import Link from 'next/link';
 import SiteHeader from '@/components/SiteHeader';
 import ObjectiveTree, { type TreeObjective } from '@/components/ObjectiveTree';
 import PeriodPicker from '@/components/PeriodPicker';
+import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
 import {
   getCurrentPeriod,
@@ -51,7 +52,7 @@ export default async function ObjectivesPage({
       <div className="wrap">
         <div className="flexbtw">
           <div>
-            <div className="pagetitle">Toàn bộ OKR</div>
+            <div className="pagetitle">Toàn bộ OKR<HelpTip k="okr-cascade" /></div>
             <p className="subtitle">
               Cây mục tiêu theo alignment: Công ty → Khối → Phòng ban → Cá nhân.
             </p>

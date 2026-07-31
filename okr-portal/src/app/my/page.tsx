@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import HelpTip from '@/components/HelpTip';
 import SiteHeader from '@/components/SiteHeader';
 import { ProgressBar, StatusBadge } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
@@ -21,7 +22,7 @@ export default async function MyPage() {
       <div className="wrap">
         <div className="flexbtw">
           <div>
-            <div className="pagetitle">OKR & việc của tôi</div>
+            <div className="pagetitle">OKR & việc của tôi<HelpTip k="my" /></div>
             <p className="subtitle">
               {user.display_name || user.email}
               {period ? ` · kỳ ${period.name}` : ''}
