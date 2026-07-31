@@ -1,4 +1,5 @@
 import { query, queryOne } from './db';
+import { sendMail } from './mail';
 
 export type Notification = {
   id: string;
@@ -80,10 +81,8 @@ export async function notify(input: {
     );
   }
 
-  // Email best-effort cho ai bật notify_email.
-  const webhook = process.env.N8N_MAIL_WEBHOOK;
+  // Email best-effort cho ai bật notify_email (qua webhook Deck Mail).
   const appUrl = process.env.AUTH_URL || 'https://okr.consultx.vn';
-  if (!webhook) return;
   const verb = input.type === 'reply' ? 'đã trả lời bình luận của bạn' : 'đã nhắc bạn';
   for (const u of active) {
     if (!u.notify_email) continue;
@@ -92,14 +91,6 @@ export async function notify(input: {
       `<p><b>${input.actorName || input.actorEmail}</b> ${verb} tại <b>${input.entityLabel}</b>:</p>` +
       `<blockquote style="border-left:3px solid #7C0312;padding-left:10px;color:#333">${input.preview}</blockquote>` +
       `<p><a href="${appUrl}${input.link}">Mở để xem &amp; phản hồi →</a></p>`;
-    try {
-      await fetch(webhook, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ to: u.email, subject, html, kind: 'okr-notify' }),
-      });
-    } catch {
-      /* best-effort: lỗi email không chặn tạo comment */
-    }
+    await sendMail({ to: u.email, subject, html }); // best-effort, tự nuốt lỗi
   }
 }
