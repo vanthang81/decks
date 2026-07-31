@@ -103,6 +103,12 @@ Dự kiến live tại `okr.consultx.vn`.
 - nginx vhost `/etc/nginx/sites-available/okr.consultx.vn.conf` → `127.0.0.1:8640`, cert Let's Encrypt
   `okr.consultx.vn` (certbot --nginx). Google OAuth redirect URI đã whitelist:
   `https://okr.consultx.vn/api/auth/callback/google`.
+- **Domain thứ 2 (31/07)**: `https://okr.vanthang.io` cùng trỏ container `:8640` (vhost
+  `/etc/nginx/sites-available/okr.vanthang.io`, cert riêng `okr.vanthang.io`). DNS *.vanthang.io đã trỏ
+  VPS sẵn. **AUTH_URL vẫn = okr.consultx.vn (canonical)** → mở qua vanthang.io xem được, nhưng ĐĂNG NHẬP
+  funnel về consultx.vn (vì Google chỉ whitelist callback consultx). Muốn login NATIVE trên vanthang.io:
+  (1) thêm `https://okr.vanthang.io/api/auth/callback/google` vào Google OAuth client; (2) BỎ AUTH_URL
+  khỏi .env để Auth.js dùng host theo request (trustHost=true + nginx forward Host) — làm cả 2 mới bật.
 - **Deploy/redeploy = chạy tay workflow n8n "OKR Deploy — manual (SSH VPS)" (id `S2sxTDJOSjQ3Yd39`)**:
   node SSH (cred "SSH - VPS deploy") — fetch nhánh + `git reset --hard` worktree + `docker build` +
   chạy lại container + migrate (idempotent). Đổi command của node cho từng bước (build vs nginx). Thao
