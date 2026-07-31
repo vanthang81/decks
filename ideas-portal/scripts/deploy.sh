@@ -1,20 +1,19 @@
 #!/usr/bin/env bash
 # ==========================================================================
-# deploy.sh — Build & triển khai "Ý tưởng BTMH" (Fider Việt hóa) trên VPS.
+# deploy.sh — Build & triển khai cổng đề xuất BTMH (Fider Việt hóa) trên VPS.
 #
 # Việt hóa client là do webpack BIÊN DỊCH lúc build (chunk locale-*-client-json),
 # nên KHÔNG thể overlay file lúc chạy — phải BUILD LẠI TỪ SOURCE với locale tiếng Việt.
 # Script này:
 #   1) Cập nhật source Fider (fider-src) tại commit ghim (FIDER_REF)
 #   2) Ghi đè locale mặc định en bằng bản dịch tiếng Việt trong repo này
-#   2b) Áp patch source (tự lấy avatar Google)
 #   3) docker build bằng Dockerfile CHÍNH CHỦ của Fider  ->  ideas-portal:latest
-#   4) Recreate container(s) (giữ .env ngoài git)
-#   5) Áp lại tùy biến cấp DB (tên/logo/CSS gỡ-Fider/bản quyền/Google-only)
+#   4) Recreate container (giữ .env ngoài git)
+#   5) Áp lại tùy biến cấp DB (logo/CSS gỡ-Fider/bản quyền/Google-only)
 #
 # Tùy biến được BẢO TOÀN qua mỗi update:
-#   - Việt hóa + patch: overlay/patch lại trước khi build
-#   - Tên/logo/CSS/bản quyền/Google: nằm ở Postgres (không đụng khi update)
+#   - Việt hóa: locale/en/*.json trong repo, luôn overlay lại trước khi build
+#   - Logo/CSS/bản quyền/Google: nằm ở Postgres (không đụng khi update)
 # ==========================================================================
 set -euo pipefail
 export PATH=/usr/local/bin:/usr/bin:/bin:$PATH
@@ -40,6 +39,10 @@ git reset --hard -q "$FIDER_REF"
 echo "[2/5] Việt hóa (overlay locale en)..."
 cp "$APP_DIR/locale/en/client.json" "$SRC_DIR/locale/en/client.json"
 cp "$APP_DIR/locale/en/server.json" "$SRC_DIR/locale/en/server.json"
+# Thống nhất thuật ngữ: dùng "đề xuất" thay cho "ý tưởng" trên toàn giao diện
+# (làm ở bước build để tránh phải đẩy lại file locale lớn qua git — an toàn byte).
+sed -i 's/ý tưởng/đề xuất/g; s/Ý tưởng/Đề xuất/g' \
+  "$SRC_DIR/locale/en/client.json" "$SRC_DIR/locale/en/server.json"
 
 echo "[2b] Áp patch source (tự lấy avatar Google)..."
 bash "$APP_DIR/scripts/apply-source-patches.sh" "$SRC_DIR"

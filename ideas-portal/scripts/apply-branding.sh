@@ -1,31 +1,39 @@
 #!/usr/bin/env bash
 # ==========================================================================
-# apply-branding.sh — Áp tùy biến cấp DB cho "Ý tưởng BTMH" (idempotent).
+# apply-branding.sh — Áp tùy biến cấp DB cho cổng đề xuất BTMH (idempotent).
 # Chạy sau mỗi lần deploy. An toàn khi chạy lại nhiều lần.
-#   - Tên trang, CSS gỡ thương hiệu Fider + bản quyền BTMH
+#   - CSS gỡ thương hiệu Fider + bản quyền BTMH
 #   - Chỉ cho đăng nhập bằng Google (tắt email auth)
 #   - Bật provider Google (_google) cho tenant
 #   - Đặt locale mặc định (giao diện đã Việt hóa qua overlay locale/en)
+#   - Logo BTMH -> blob + logo_bkey
+#   - Tên bảng: chỉ đặt khi chưa có (giữ tên CFO tự đặt trong Admin)
 # ==========================================================================
 set -euo pipefail
 
 PGC="${PGC:-wg8owogscc4ogog8ccgw0ok8}"     # container Postgres BTMH
 DB="${FIDER_DB:-fider}"
 TENANT_ID="${TENANT_ID:-1}"
-SITE_NAME="${SITE_NAME:-Ý tưởng BTMH}"
+SITE_NAME="${SITE_NAME:-Đề xuất Cải tiến}"
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 CSS_B64="$(base64 -w0 "$DIR/branding/custom.css")"
 NAME_B64="$(printf '%s' "$SITE_NAME" | base64 -w0)"
 
+# Bắt buộc (thương hiệu + bảo mật): CSS gỡ-Fider/bản quyền, chỉ Google-login, công khai, locale VN.
 docker exec "$PGC" psql -U postgres -d "$DB" -v ON_ERROR_STOP=1 -c "
   UPDATE tenants SET
-    name                  = convert_from(decode('$NAME_B64','base64'),'UTF8'),
     custom_css            = convert_from(decode('$CSS_B64','base64'),'UTF8'),
     is_email_auth_allowed = false,
     is_private            = false,
     locale                = 'en'
   WHERE id = $TENANT_ID;"
+
+# Tên bảng: CHỈ đặt khi chưa có (init lần đầu / mặc định Fider) — để CFO tự đổi trong
+# Admin -> General mà KHÔNG bị deploy ghi đè. Tên hiện tại (nếu CFO đã đặt) được giữ nguyên.
+docker exec "$PGC" psql -U postgres -d "$DB" -v ON_ERROR_STOP=1 -c "
+  UPDATE tenants SET name = convert_from(decode('$NAME_B64','base64'),'UTF8')
+  WHERE id = $TENANT_ID AND (name IS NULL OR name = '' OR name = 'Fider');"
 
 docker exec "$PGC" psql -U postgres -d "$DB" -v ON_ERROR_STOP=1 -c "
   INSERT INTO tenant_providers (tenant_id, provider, is_enabled)
@@ -34,8 +42,7 @@ docker exec "$PGC" psql -U postgres -d "$DB" -v ON_ERROR_STOP=1 -c "
 
 # Logo BTMH: upsert blob + logo_bkey (thay og:image/header/favicon Fider mặc định).
 # Nguồn ưu tiên = branding/logo.parts (logo BTMH THẬT, base64 CHIA PHẦN trong git =
-# truyền byte-chuẩn, không lỗi). Ghép + giải mã ra logo.png mỗi lần deploy.
-# Dự phòng: logo.b64 (1 file) rồi gen-logo.py (sinh logo tạm ngay trên VPS).
+# truyền byte-chuẩn). Ghép + giải mã ra logo.png mỗi lần deploy. Fallback: gen-logo.py.
 LOGO_PNG="$DIR/branding/logo.png"
 LOGO_PARTS="$DIR/branding/logo.parts"     # logo BTMH thật, base64 CHIA PHẦN (part-00..)
 LOGO_SRC_B64="$DIR/branding/logo.b64"     # (dự phòng) base64 1 file
