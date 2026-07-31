@@ -229,6 +229,24 @@ export async function setKeyResultValue(krId: string, current: number): Promise<
   await recomputeUp(kr.objective_id);
 }
 
+/** Cập nhật đồng thời target (kế hoạch) + current (thực hiện) — dùng cho auto-sync KPI. */
+export async function setKrAutoValues(
+  krId: string,
+  target: number | null,
+  current: number | null,
+): Promise<void> {
+  const kr = await getKeyResult(krId);
+  if (!kr) return;
+  const t = target ?? kr.target_value;
+  const c = current ?? kr.current_value;
+  const progress = computeKrProgress({ ...kr, target_value: t, current_value: c });
+  await query(
+    'UPDATE okr_key_results SET target_value=$2, current_value=$3, progress=$4, updated_at=now() WHERE id=$1',
+    [krId, t, c, progress],
+  );
+  await recomputeUp(kr.objective_id);
+}
+
 export async function deleteKeyResult(krId: string): Promise<void> {
   const kr = await getKeyResult(krId);
   await query('DELETE FROM okr_key_results WHERE id=$1', [krId]);

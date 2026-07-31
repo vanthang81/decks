@@ -12,6 +12,8 @@ import {
 } from '@/lib/users';
 import { createUnit, updateUnit, deleteUnit, type UnitType } from '@/lib/org';
 import { createPeriod, setCurrentPeriod, setPeriodStatus } from '@/lib/periods';
+import { syncAllKpi } from '@/lib/kpi';
+import { redirect } from 'next/navigation';
 
 async function requireExec() {
   const user = await requireUser();
@@ -120,4 +122,17 @@ export async function setPeriodStatusAction(fd: FormData) {
   await requireExec();
   await setPeriodStatus(str(fd, 'id'), str(fd, 'status') as 'planning' | 'active' | 'closed');
   revalidatePath('/admin/periods');
+}
+
+// ---------- Đồng bộ KPI (plan+actual từ BigQuery) ----------
+export async function syncKpiAction() {
+  await requireExec();
+  let msg: string;
+  try {
+    const r = await syncAllKpi();
+    msg = `ok:${r.updated}/${r.total}`;
+  } catch (e) {
+    msg = `err:${String(e).slice(0, 60)}`;
+  }
+  redirect(`/admin?kpi=${encodeURIComponent(msg)}`);
 }

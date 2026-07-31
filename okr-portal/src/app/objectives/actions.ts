@@ -26,6 +26,7 @@ import {
   type Priority,
 } from '@/lib/initiatives';
 import { addCheckIn, type Confidence } from '@/lib/checkins';
+import { isKpiMetric, syncKrKpi } from '@/lib/kpi';
 
 function str(fd: FormData, k: string): string {
   return String(fd.get(k) ?? '').trim();
@@ -78,18 +79,28 @@ async function assertCanManageObjective(objectiveId: string) {
 export async function createKeyResultAction(fd: FormData) {
   const objectiveId = str(fd, 'objective_id');
   await assertCanManageObjective(objectiveId);
-  await createKeyResult({
+  const kpiSource = orNull(str(fd, 'kpi_source'));
+  const isAuto = isKpiMetric(kpiSource);
+  const id = await createKeyResult({
     objective_id: objectiveId,
     title: str(fd, 'title'),
-    metric_type: (str(fd, 'metric_type') || 'number') as MetricType,
+    // KR gắn KPI tự động = tiền tệ (VND), target/current sẽ do sync điền.
+    metric_type: isAuto ? 'currency' : ((str(fd, 'metric_type') || 'number') as MetricType),
     direction: (str(fd, 'direction') || 'increase') as Direction,
-    unit_label: orNull(str(fd, 'unit_label')),
+    unit_label: isAuto ? 'tỷ' : orNull(str(fd, 'unit_label')),
     start_value: num(fd, 'start_value'),
     target_value: num(fd, 'target_value', 100),
     current_value: num(fd, 'current_value'),
     weight: num(fd, 'weight', 1),
-    kpi_source: orNull(str(fd, 'kpi_source')),
+    kpi_source: kpiSource,
   });
+  if (isAuto) {
+    try {
+      await syncKrKpi(id);
+    } catch {
+      /* best-effort: BigQuery lỗi không chặn tạo KR */
+    }
+  }
   revalidatePath(`/objectives/${objectiveId}`);
 }
 

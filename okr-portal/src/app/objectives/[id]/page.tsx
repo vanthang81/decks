@@ -17,7 +17,7 @@ import {
   INIT_STATUS_LABEL,
 } from '@/lib/initiatives';
 import { listCheckInsForObjective, CONFIDENCE_LABEL, CONFIDENCE_COLOR } from '@/lib/checkins';
-import { listKpiSources } from '@/lib/kpi';
+import { listKpiMetrics } from '@/lib/kpi';
 import { fmtMetric, fmtVnd, fmtDate } from '@/lib/format';
 import {
   createKeyResultAction,
@@ -47,7 +47,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
     listCheckInsForObjective(obj.id),
   ]);
   const parent = obj.parent_id ? await getObjective(obj.parent_id) : null;
-  const kpiSources = listKpiSources();
+  const kpiSources = listKpiMetrics();
 
   return (
     <>
