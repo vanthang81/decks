@@ -27,7 +27,8 @@ export type AccessEvent =
   | 'denied'
   | 'revoked_hit'
   | 'pw_ok'
-  | 'pw_fail';
+  | 'pw_fail'
+  | 'link_resend';
 
 export async function logEvent(e: {
   event: AccessEvent;

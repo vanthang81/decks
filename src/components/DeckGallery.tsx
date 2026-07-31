@@ -16,6 +16,7 @@ export type DeckLite = {
   category: string | null;
   tags: string[];
   company: string;
+  groups: string[]; // tên các nhóm được cấp deck này
 };
 
 function hueFor(s: string): number {
@@ -83,6 +84,18 @@ function Badges({ d }: { d: DeckLite }) {
       {d.require_otp && <span className="pill" style={{ fontSize: 10 }}>OTP</span>}
       {!d.is_published && <span className="pill bad" style={{ fontSize: 10 }}>đã ẩn</span>}
     </span>
+  );
+}
+
+// Các nhóm được cấp deck (để dễ nhìn deck nào đang chia sẻ cho nhóm nào).
+function Groups({ d }: { d: DeckLite }) {
+  if (!d.groups.length) return null;
+  return (
+    <div className="deck-groups" title={`Đã cấp cho nhóm: ${d.groups.join(', ')}`}>
+      {d.groups.map((g) => (
+        <span key={g} className="deck-group">👥 {g}</span>
+      ))}
+    </div>
   );
 }
 
@@ -164,6 +177,7 @@ export default function DeckGallery({ decks, baseUrl = '' }: { decks: DeckLite[]
                     <div className="deck-tags">{d.tags.map((t) => <span key={t} className="deck-tag">#{t}</span>)}</div>
                   )}
                   <Badges d={d} />
+                  <Groups d={d} />
                 </div>
               </Link>
               <UrlBar url={`${baseUrl}/d/${d.slug}`} />
@@ -186,6 +200,7 @@ export default function DeckGallery({ decks, baseUrl = '' }: { decks: DeckLite[]
                   {d.tags.length > 0 && (
                     <div className="deck-tags">{d.tags.map((t) => <span key={t} className="deck-tag">#{t}</span>)}</div>
                   )}
+                  <Groups d={d} />
                 </div>
               </Link>
               <div className="deck-row-badges"><Badges d={d} /></div>

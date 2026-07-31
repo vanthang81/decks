@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { listDecks } from '@/lib/decks';
+import { groupNamesByDeck } from '@/lib/groups';
 import SiteHeader from '@/components/SiteHeader';
 import DeckGallery, { type DeckLite } from '@/components/DeckGallery';
 
@@ -14,9 +15,11 @@ export default async function GalleryPage() {
   if (!session?.user) redirect('/login');
 
   let decks: Awaited<ReturnType<typeof listDecks>> = [];
+  let groupMap: Record<string, string[]> = {};
   let dbErr = false;
   try {
     decks = await listDecks();
+    groupMap = await groupNamesByDeck().catch(() => ({}));
   } catch {
     dbErr = true;
   }
@@ -40,6 +43,7 @@ export default async function GalleryPage() {
     category: d.category,
     tags: d.tags,
     company: d.company,
+    groups: groupMap[d.id] ?? [],
   }));
 
   return (

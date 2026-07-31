@@ -100,6 +100,32 @@ export async function getActiveGrant(grantId: string): Promise<GrantWithCtx | nu
   return g;
 }
 
+// Tìm grant ĐANG hiệu lực theo (deck, email) — cho luồng tự gửi lại link cá nhân qua email ở trang gate.
+// Trả kèm email/tên chuẩn hoá của viewer để gửi mail đúng địa chỉ đã lưu.
+export async function findActiveGrantByDeckEmail(
+  deckId: string,
+  email: string,
+): Promise<{ id: string; viewer_id: string; viewer_email: string; viewer_name: string | null } | null> {
+  return queryOne(
+    `SELECT g.id, g.viewer_id, v.email AS viewer_email, v.name AS viewer_name
+     FROM deck_grants g JOIN deck_viewers v ON v.id = g.viewer_id
+     WHERE g.deck_id = $1 AND lower(v.email) = lower($2) AND g.status = 'active'
+       AND (g.expires_at IS NULL OR g.expires_at > now())`,
+    [deckId, email],
+  );
+}
+
+// Cấp lại token cho 1 grant ĐANG active (KHÔNG đổi trạng thái — tránh reactivate grant đã thu hồi).
+// Trả token thô để dựng link; null nếu grant không còn active.
+export async function rotateGrantToken(grantId: string): Promise<string | null> {
+  const token = randomBytes(32).toString('base64url');
+  const r = await queryOne<{ id: string }>(
+    "UPDATE deck_grants SET token_hash=$2 WHERE id=$1 AND status='active' RETURNING id",
+    [grantId, hashToken(token)],
+  );
+  return r ? token : null;
+}
+
 export async function revokeGrant(grantId: string): Promise<void> {
   await query(
     "UPDATE deck_grants SET status='revoked', revoked_at=now() WHERE id=$1",

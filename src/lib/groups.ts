@@ -89,6 +89,18 @@ export async function grantedGroupsForDeck(
   );
 }
 
+// Map deck_id -> tên các nhóm được cấp deck đó (cho trang chủ, hiển thị deck thuộc nhóm nào).
+export async function groupNamesByDeck(): Promise<Record<string, string[]>> {
+  const rows = await query<{ deck_id: string; name: string }>(
+    `SELECT gd.deck_id, g.name
+     FROM deck_group_decks gd JOIN deck_groups g ON g.id = gd.group_id
+     ORDER BY g.name`,
+  );
+  const map: Record<string, string[]> = {};
+  for (const r of rows) (map[r.deck_id] ??= []).push(r.name);
+  return map;
+}
+
 // Cấp 1 deck cho cả nhóm: ghi entitlement (nhóm rỗng vẫn giữ quyền) + fan-out grant cho
 // từng thành viên hiện có (mỗi người link + watermark riêng). Thành viên thêm sau tự nhận.
 export async function grantDeckToGroup(deckId: string, groupId: string, by: string | null): Promise<number> {
