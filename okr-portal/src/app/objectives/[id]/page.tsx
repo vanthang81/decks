@@ -29,6 +29,8 @@ import { fmtMetric, fmtVnd, fmtDate } from '@/lib/format';
 import {
   createKeyResultAction,
   checkInAction,
+  editCheckInAction,
+  deleteCheckInAction,
   deleteKeyResultAction,
   createInitiativeAction,
   editInitiativeAction,
@@ -91,6 +93,81 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
   const parent = obj.parent_id ? await getObjective(obj.parent_id) : null;
   const kpiSources = listKpiMetrics();
   const projectOpts = await listProjectOptions(obj.period_id);
+
+  // Check-in gom theo KR để hiện NGAY tại từng KR; check-in cấp Objective để ở mục lịch sử.
+  const emailLc = user.email.toLowerCase();
+  const checkinsByKr = new Map<string, typeof checkins>();
+  for (const ci of checkins) {
+    if (!ci.key_result_id) continue;
+    const arr = checkinsByKr.get(ci.key_result_id) ?? [];
+    arr.push(ci);
+    checkinsByKr.set(ci.key_result_id, arr);
+  }
+  const objectiveCheckins = checkins.filter((c) => !c.key_result_id);
+
+  const renderKrCheckins = (krId: string, metricType: typeof krs[number]['metric_type'], unitLabel: string | null) => {
+    const list = checkinsByKr.get(krId) ?? [];
+    if (list.length === 0) return null;
+    return (
+      <div className="ci-list">
+        {list.map((ci) => {
+          const canEditCi = canManage || (!!ci.author_email && ci.author_email.toLowerCase() === emailLc);
+          return (
+            <div key={ci.id} className="ci-row">
+              <span className="ci-dot" style={{ background: CONFIDENCE_COLOR[ci.confidence] }} title={CONFIDENCE_LABEL[ci.confidence]} />
+              <div className="ci-body">
+                <div className="ci-line">
+                  {ci.value !== null && <b className="mono">{fmtMetric(ci.value, metricType, unitLabel)}</b>}
+                  <span style={{ color: CONFIDENCE_COLOR[ci.confidence], fontWeight: 600, fontSize: 12.5 }}>
+                    ● {CONFIDENCE_LABEL[ci.confidence]}
+                  </span>
+                  {ci.note && <span className="ci-note">— {ci.note}</span>}
+                </div>
+                <div className="ci-meta">
+                  {ci.author_name || ci.author_email || '—'} · {fmtDate(ci.created_at)}
+                  {canEditCi && (
+                    <>
+                      {' · '}
+                      <details className="inline ci-edit">
+                        <summary>Sửa</summary>
+                        <form action={editCheckInAction} className="row" style={{ marginTop: 6, maxWidth: 560 }}>
+                          <input type="hidden" name="id" value={ci.id} />
+                          <div style={{ maxWidth: 130 }}>
+                            <label className="f">Giá trị</label>
+                            <input className="i" name="value" defaultValue={ci.value ?? ''} />
+                          </div>
+                          <div style={{ maxWidth: 150 }}>
+                            <label className="f">Độ tự tin</label>
+                            <select className="i" name="confidence" defaultValue={ci.confidence}>
+                              <option value="on_track">Đúng tiến độ</option>
+                              <option value="at_risk">Có rủi ro</option>
+                              <option value="off_track">Chệch hướng</option>
+                            </select>
+                          </div>
+                          <div style={{ flex: 2 }}>
+                            <label className="f">Ghi chú</label>
+                            <input className="i" name="note" defaultValue={ci.note ?? ''} />
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                            <button className="btn sm" type="submit">Lưu</button>
+                          </div>
+                        </form>
+                      </details>
+                      {' · '}
+                      <form action={deleteCheckInAction} style={{ display: 'inline' }}>
+                        <input type="hidden" name="id" value={ci.id} />
+                        <button className="linkbtn danger" type="submit">Xoá</button>
+                      </form>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   // #5 Guardrail + #2 cơ cấu chỉ số.
   const leadingCount = krs.filter((k) => k.indicator === 'leading').length;
@@ -229,6 +306,8 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                   </form>
                 </details>
               )}
+
+              {renderKrCheckins(kr.id, kr.metric_type, kr.unit_label)}
             </div>
           ))}
 
@@ -475,25 +554,26 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
           </ExecutionTabs>
         </div>
 
-        {/* ---------- Lịch sử check-in ---------- */}
-        <div className="card">
-          <h3 style={{ marginTop: 0 }}>Lịch sử check-in<HelpTip k="checkin" /></h3>
-          {checkins.length === 0 && <p className="muted">Chưa có check-in.</p>}
-          {checkins.map((c) => (
-            <div key={c.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
-              <span
-                className="badge"
-                style={{ background: 'transparent', color: CONFIDENCE_COLOR[c.confidence], padding: 0 }}
-              >
-                ● {CONFIDENCE_LABEL[c.confidence]}
-              </span>{' '}
-              {c.value !== null && <b className="mono">{c.value}</b>} {c.note}
-              <div className="obj-meta">
-                {c.author_email} · {fmtDate(c.created_at)}
+        {/* ---------- Check-in cấp Objective (KR check-in hiện tại từng KR ở trên) ---------- */}
+        {objectiveCheckins.length > 0 && (
+          <div className="card">
+            <h3 style={{ marginTop: 0 }}>Check-in cấp Objective<HelpTip k="checkin" /></h3>
+            {objectiveCheckins.map((c) => (
+              <div key={c.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
+                <span
+                  className="badge"
+                  style={{ background: 'transparent', color: CONFIDENCE_COLOR[c.confidence], padding: 0 }}
+                >
+                  ● {CONFIDENCE_LABEL[c.confidence]}
+                </span>{' '}
+                {c.value !== null && <b className="mono">{c.value}</b>} {c.note}
+                <div className="obj-meta">
+                  {c.author_name || c.author_email} · {fmtDate(c.created_at)}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </>
   );

@@ -34,7 +34,14 @@ import {
   type Priority,
   type InitKind,
 } from '@/lib/initiatives';
-import { addCheckIn, type Confidence } from '@/lib/checkins';
+import {
+  addCheckIn,
+  getCheckIn,
+  updateCheckIn,
+  deleteCheckIn,
+  latestCheckinValue,
+  type Confidence,
+} from '@/lib/checkins';
 import { isKpiMetric, syncKrKpi } from '@/lib/kpi';
 
 function str(fd: FormData, k: string): string {
@@ -133,6 +140,56 @@ export async function checkInAction(fd: FormData) {
     author_email: user.email,
   });
   revalidatePath(`/objectives/${kr.objective_id}`);
+}
+
+async function resyncKrFromCheckins(krId: string) {
+  const kr = await getKeyResult(krId);
+  if (!kr) return;
+  const latest = await latestCheckinValue(krId);
+  await setKeyResultValue(krId, latest ?? kr.start_value);
+}
+
+// Sửa 1 check-in (tác giả HOẶC người quản lý OKR). Đồng bộ lại giá trị KR theo check-in mới nhất.
+export async function editCheckInAction(fd: FormData) {
+  const user = await requireUser();
+  const id = str(fd, 'id');
+  const ci = await getCheckIn(id);
+  if (!ci) throw new Error('Không tìm thấy check-in.');
+  const objId =
+    ci.objective_id ??
+    (ci.key_result_id ? (await getKeyResult(ci.key_result_id))?.objective_id ?? null : null);
+  const isAuthor = !!ci.author_email && ci.author_email.toLowerCase() === user.email.toLowerCase();
+  if (!isAuthor) {
+    if (!objId) throw new Error('Bạn không có quyền sửa check-in này.');
+    await assertCanManageObjective(objId);
+  }
+  const valueStr = str(fd, 'value');
+  const value = valueStr === '' ? null : num(fd, 'value');
+  await updateCheckIn(id, {
+    value,
+    confidence: (str(fd, 'confidence') || 'on_track') as Confidence,
+    note: orNull(str(fd, 'note')),
+  });
+  if (ci.key_result_id) await resyncKrFromCheckins(ci.key_result_id);
+  if (objId) revalidatePath(`/objectives/${objId}`);
+}
+
+export async function deleteCheckInAction(fd: FormData) {
+  const user = await requireUser();
+  const id = str(fd, 'id');
+  const ci = await getCheckIn(id);
+  if (!ci) return;
+  const objId =
+    ci.objective_id ??
+    (ci.key_result_id ? (await getKeyResult(ci.key_result_id))?.objective_id ?? null : null);
+  const isAuthor = !!ci.author_email && ci.author_email.toLowerCase() === user.email.toLowerCase();
+  if (!isAuthor) {
+    if (!objId) throw new Error('Bạn không có quyền xoá check-in này.');
+    await assertCanManageObjective(objId);
+  }
+  await deleteCheckIn(id);
+  if (ci.key_result_id) await resyncKrFromCheckins(ci.key_result_id);
+  if (objId) revalidatePath(`/objectives/${objId}`);
 }
 
 export async function deleteKeyResultAction(fd: FormData) {

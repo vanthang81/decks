@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-07-31.16';
+export const GUIDE_VERSION = '2026-07-31.17';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -329,6 +329,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '31/07/2026 (check-in theo KR + link dự án mở tab mới)',
+    items: [
+      'Mỗi KR hiện LỊCH SỬ CHECK-IN ngay tại KR (timeline gọn) — tác giả/quản lý sửa/xoá được, tự đồng bộ lại giá trị KR.',
+      'Trong popup sửa việc: nút "↗ Mở" dự án ở tab mới (không ảnh hưởng việc đang sửa).',
+      'Thẻ Kanban: tên dự án dài tự xuống dòng, không tràn thẻ; bấm chip mở ở tab mới.',
+    ],
+  },
   {
     date: '31/07/2026 (tooltip bấm mở popup + mã không tái dùng)',
     items: [

@@ -1,4 +1,4 @@
-import { query } from './db';
+import { query, queryOne } from './db';
 
 export type Confidence = 'on_track' | 'at_risk' | 'off_track';
 
@@ -22,6 +22,7 @@ export type CheckIn = {
   confidence: Confidence;
   note: string | null;
   author_email: string | null;
+  author_name: string | null;
   created_at: string;
 };
 
@@ -47,13 +48,47 @@ export async function addCheckIn(input: {
   );
 }
 
-export async function listCheckInsForObjective(objectiveId: string, limit = 20): Promise<CheckIn[]> {
+const CI_SELECT = `
+  SELECT ci.id, ci.key_result_id, ci.objective_id, ci.value::float8 AS value, ci.confidence, ci.note,
+         ci.author_email, u.display_name AS author_name, ci.created_at::text
+    FROM okr_checkins ci
+    LEFT JOIN okr_users u ON u.email = ci.author_email`;
+
+export async function listCheckInsForObjective(objectiveId: string, limit = 40): Promise<CheckIn[]> {
   return query<CheckIn>(
-    `SELECT id, key_result_id, objective_id, value::float8 AS value, confidence, note,
-            author_email, created_at::text
-       FROM okr_checkins
-      WHERE objective_id=$1 OR key_result_id IN (SELECT id FROM okr_key_results WHERE objective_id=$1)
-      ORDER BY created_at DESC LIMIT $2`,
+    `${CI_SELECT}
+      WHERE ci.objective_id=$1 OR ci.key_result_id IN (SELECT id FROM okr_key_results WHERE objective_id=$1)
+      ORDER BY ci.created_at DESC LIMIT $2`,
     [objectiveId, limit],
   );
+}
+
+export async function getCheckIn(id: string): Promise<CheckIn | null> {
+  return queryOne<CheckIn>(`${CI_SELECT} WHERE ci.id=$1`, [id]);
+}
+
+export async function updateCheckIn(
+  id: string,
+  input: { value: number | null; confidence: Confidence; note: string | null },
+): Promise<void> {
+  await query('UPDATE okr_checkins SET value=$2, confidence=$3, note=$4 WHERE id=$1', [
+    id,
+    input.value,
+    input.confidence,
+    input.note,
+  ]);
+}
+
+export async function deleteCheckIn(id: string): Promise<void> {
+  await query('DELETE FROM okr_checkins WHERE id=$1', [id]);
+}
+
+/** Giá trị check-in mới nhất (có value) của 1 KR — để đồng bộ lại current_value sau khi sửa/xoá. */
+export async function latestCheckinValue(krId: string): Promise<number | null> {
+  const r = await queryOne<{ value: number | null }>(
+    `SELECT value::float8 AS value FROM okr_checkins
+      WHERE key_result_id=$1 AND value IS NOT NULL ORDER BY created_at DESC LIMIT 1`,
+    [krId],
+  );
+  return r ? r.value : null;
 }

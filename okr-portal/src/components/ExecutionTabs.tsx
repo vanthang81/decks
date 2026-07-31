@@ -101,12 +101,12 @@ function ContextChips({ c, context }: { c: Card; context: Ctx }) {
     return (
       <>
         {oLink && c.objective_code && (
-          <Link href={oLink} className="ctx-chip ctx-o" onClick={stop} title="Mở Objective gốc">
+          <Link href={oLink} className="ctx-chip ctx-o" onClick={stop} target="_blank" rel="noopener" title="Mở Objective gốc (tab mới)">
             🎯 {c.objective_code}
           </Link>
         )}
         {oLink && c.key_result_code && (
-          <Link href={`${oLink}#kr-${c.key_result_id ?? ''}`} className="ctx-chip ctx-kr" onClick={stop} title="Mở Key Result gốc">
+          <Link href={`${oLink}#kr-${c.key_result_id ?? ''}`} className="ctx-chip ctx-kr" onClick={stop} target="_blank" rel="noopener" title="Mở Key Result gốc (tab mới)">
             🔑 {c.key_result_code}
           </Link>
         )}
@@ -119,7 +119,7 @@ function ContextChips({ c, context }: { c: Card; context: Ctx }) {
         <span className="ctx-chip ctx-kr" title="Key Result gắn việc">🔑 {c.key_result_code}</span>
       )}
       {c.project_id && c.project_name && (
-        <Link href={`/projects/${c.project_id}`} className="ctx-chip ctx-proj" onClick={stop} title="Mở dự án">
+        <Link href={`/projects/${c.project_id}`} className="ctx-chip ctx-proj" onClick={stop} target="_blank" rel="noopener" title="Mở dự án (tab mới)">
           🗂 {c.project_name}
         </Link>
       )}
@@ -274,6 +274,7 @@ function EditModal({
   const [inProject, setInProject] = useState<boolean>(!!card.project_id);
   const [newProj, setNewProj] = useState(false);
   const [newProjName, setNewProjName] = useState('');
+  const [selProject, setSelProject] = useState<string>(card.project_id ?? '');
   const childKinds = CHILD_KIND[card.kind];
 
   useEffect(() => {
@@ -417,24 +418,42 @@ function EditModal({
                   🗂 Thuộc dự án
                 </label>
                 {inProject && !newProj && (
-                  <div className="row" style={{ marginTop: 6 }}>
-                    <div style={{ flex: 2 }}>
-                      <select className="i" name="project_id" defaultValue={card.project_id ?? ''}>
-                        <option value="">— Chọn dự án —</option>
-                        {projects.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.code ? `${p.code} · ` : ''}
-                            {p.name}
-                          </option>
-                        ))}
-                      </select>
+                  <>
+                    <div className="row" style={{ marginTop: 6 }}>
+                      <div style={{ flex: 2 }}>
+                        <select
+                          className="i"
+                          name="project_id"
+                          value={selProject}
+                          onChange={(e) => setSelProject(e.target.value)}
+                        >
+                          <option value="">— Chọn dự án —</option>
+                          {projects.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.code ? `${p.code} · ` : ''}
+                              {p.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6 }}>
+                        {selProject && (
+                          <Link
+                            className="btn ghost sm"
+                            href={`/projects/${selProject}`}
+                            target="_blank"
+                            rel="noopener"
+                            title="Mở dự án ở tab mới (không ảnh hưởng việc đang sửa)"
+                          >
+                            ↗ Mở
+                          </Link>
+                        )}
+                        <button type="button" className="btn ghost sm" onClick={() => setNewProj(true)}>
+                          ＋ Dự án mới
+                        </button>
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                      <button type="button" className="btn ghost sm" onClick={() => setNewProj(true)}>
-                        ＋ Dự án mới
-                      </button>
-                    </div>
-                  </div>
+                  </>
                 )}
                 {inProject && newProj && (
                   <>
