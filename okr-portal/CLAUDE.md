@@ -48,12 +48,25 @@ Dự kiến live tại `okr.consultx.vn`.
 - Server Actions ở `src/app/objectives/actions.ts` + `src/app/admin/actions.ts` (đều `requireUser`/
   `requireExec` + kiểm quyền trước khi ghi).
 
-## Deploy (chưa dựng — cần thao tác VPS)
-- Docker standalone (`okr-portal/Dockerfile`, build context = thư mục okr-portal), port 3000→host 8630,
-  `--add-host=host.docker.internal:host-gateway` để tới DB `:5435`. `.env` ngoài git (AUTH_URL, GOOGLE_*,
-  AUTH_SECRET, DATABASE_URL). nginx vhost `okr.consultx.vn → 127.0.0.1:8630` + certbot. Google OAuth
-  redirect URI: `https://okr.consultx.vn/api/auth/callback/google`.
-- Migration: chạy `db/001_okr_core.sql` + `002_grants.sql` (+ `010_seed_example.sql`) bằng superuser.
+## Deploy (ĐÃ LIVE 31/07/2026 — https://okr.consultx.vn)
+- VPS `45.77.247.185`, biên host nginx + certbot (giống deck/price/ideas). Container Docker
+  **`okr-portal`** (Dockerfile standalone, build context = thư mục `okr-portal/`), port 3000→host
+  **`127.0.0.1:8640`** (8630 đã bị `ideas-portal` chiếm), `--restart unless-stopped`,
+  `--add-host=host.docker.internal:host-gateway` để tới DB `:5435`.
+- **Nguồn trên VPS = git worktree** `/home/thang/okr-portal-src` (checkout nhánh
+  `claude/okr-kpi-tracking-system-ugv41q` của repo decks, worktree từ `/home/thang/decks-portal`).
+  `.env` ngoài git (DATABASE_URL lấy từ decks `.env` = btmh_app/btmh_data; GOOGLE_*, AUTH_SECRET tự sinh,
+  AUTH_URL=https://okr.consultx.vn).
+- nginx vhost `/etc/nginx/sites-available/okr.consultx.vn.conf` → `127.0.0.1:8640`, cert Let's Encrypt
+  `okr.consultx.vn` (certbot --nginx). Google OAuth redirect URI đã whitelist:
+  `https://okr.consultx.vn/api/auth/callback/google`.
+- **Deploy/redeploy = chạy tay workflow n8n "OKR Deploy — manual (SSH VPS)" (id `S2sxTDJOSjQ3Yd39`)**:
+  node SSH (cred "SSH - VPS deploy") — fetch nhánh + `git reset --hard` worktree + `docker build` +
+  chạy lại container + migrate (idempotent). Đổi command của node cho từng bước (build vs nginx). Thao
+  tác root (nginx/certbot) qua container privileged: `docker run --rm --privileged --pid=host
+  --network host -v /:/host nginx:latest ...` (BẮT BUỘC `--pid=host` để `nginx -s reload` gửi được tín hiệu).
+- Migration đã chạy: `db/001_okr_core.sql` + `002_grants.sql` + `010_seed_example.sql` bằng superuser
+  (`docker exec wg8owogscc4ogog8ccgw0ok8 psql -U postgres -d btmh_data`). Seed exec = `vanthang81@gmail.com`.
 
 ## Nguyên tắc làm việc với CFO
 Tự động làm hết, tự tra mọi nguồn, tự review kỹ vài vòng; xong & chắc mới báo. Chỉ hỏi khi cần
