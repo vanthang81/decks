@@ -105,13 +105,21 @@ phục vụ + chèn watermark/log.
 
 ## Hạ tầng & deploy (ĐÃ LIVE 26/07/2026)
 - VPS `45.77.247.185`. Biên là **host nginx** (`nginx/1.18.0`) + **certbot** (KHÔNG phải Traefik).
-  vhost `deck.consultx.vn` → `proxy_pass 127.0.0.1:8610`; TLS `/etc/letsencrypt/live/deck.consultx.vn/`.
-- App chạy **container Docker `decks-portal-staging`** (Dockerfile standalone, port 3000→host 8610,
-  `--restart unless-stopped`, `--add-host=host.docker.internal:host-gateway` để tới DB `:5435`).
-  Nguồn: `/home/thang/decks-portal` (git checkout). **`.env` ngoài git** (DATABASE_URL, GOOGLE_*,
-  AUTH_SECRET, **`AUTH_URL=https://deck.consultx.vn`** — BẮT BUỘC để Auth.js/redirect không nhảy `0.0.0.0`).
-- **Deploy** (cập nhật app): `cd /home/thang/decks-portal && git fetch && git reset --hard origin/main
-  && docker build -t decks-portal:latest . && docker rm -f decks-portal-staging && docker run -d …`.
+  DNS `consultx.vn` ở Cloudflare?; `vanthang.io` ở **Mắt Bão** (`ns1/ns2.matbao.com`, KHÔNG có wildcard).
+- **ĐA DOMAIN (2 domain, 2 container) — cùng portal, cùng DB `btmh_data`**:
+  - `deck.consultx.vn` → nginx `proxy_pass 127.0.0.1:8610` → container **`decks-portal-staging`** (`--env-file .env`).
+  - `deck.vanthang.io` → nginx `proxy_pass 127.0.0.1:8611` → container **`decks-portal-vanthang`** (`--env-file .env.vanthang`).
+  - `/mcp` (cả 2 vhost) → `127.0.0.1:8620` (decks-mcp). TLS mỗi domain 1 cert Let's Encrypt (`certbot --nginx`).
+  - **Vì sao 2 container**: Auth.js v5 (standalone) KHÔNG suy được host qua `trustHost`/`x-forwarded-host`
+    (ra `redirect_uri=https://0.0.0.0:3000/...` → hỏng OAuth) → BẮT BUỘC mỗi container **ghim `AUTH_URL` riêng**.
+    Bỏ `AUTH_URL` = hỏng cả 2 domain. Mỗi domain 1 **Google OAuth client riêng** (mỗi client đã đăng ký sẵn
+    redirect URI của domain đó — KHÔNG cần đụng Google Console khi deploy): consultx=client `655980…`,
+    vanthang=client `717726…`. Khác biệt duy nhất giữa `.env` và `.env.vanthang` = `AUTH_URL`/`APP_URL`/
+    `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`. Cả hai `.env*` NGOÀI git.
+  - Cookie phiên host-only (không set `domain`) → mỗi domain phiên độc lập; luồng viewer (mật khẩu/email/OTP/
+    `/v`) dùng `reqBaseUrl(req)` (`src/lib/http.ts`) giữ đúng domain đang truy cập (không nhảy domain, mất cookie).
+- **Deploy** (cập nhật app): chạy **`bash deploy.sh`** (trong repo) — build 1 image rồi restart **CẢ HAI**
+  container (staging :8610 + vanthang :8611). **ĐỪNG chỉ restart 1 container** — domain kia sẽ chạy code cũ.
   (App static Coolify cũ uuid `ssh3yybpge1ps0y9poredqwl` trên :8600 đã bị thay — nginx trỏ 8610.)
 - **Email link/OTP**: app POST `N8N_MAIL_WEBHOOK=https://automation.consultx.vn/webhook/deck-mail`
   → workflow n8n **"Deck Mail"** (id `l6RcJ3u6qsdjQ3bu`, active) gửi SMTP ConsultX (from `info@consultx.vn`).

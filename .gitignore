@@ -5,5 +5,7 @@
 next-env.d.ts
 .env
 .env.local
+.env.vanthang
+.env.bak-*
 *.tsbuildinfo
 .DS_Store
