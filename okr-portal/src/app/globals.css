@@ -34,7 +34,7 @@ a:hover { text-decoration: underline; }
 }
 .site-header .inner {
   max-width: 1120px; margin: 0 auto; padding: 9px 18px;
-  display: flex; align-items: center; gap: 14px;
+  display: flex; align-items: center; gap: 14px; position: relative;
 }
 .brand { display: flex; align-items: center; gap: 8px; text-decoration: none; }
 .brand:hover { text-decoration: none; }
@@ -53,6 +53,48 @@ a:hover { text-decoration: underline; }
   background: transparent; color: #fff; border-color: rgba(255,255,255,.5);
 }
 .site-header .btn.ghost:hover { background: rgba(255,255,255,.15); color: #fff; }
+
+/* Mobile menu (hamburger + panel) — ẩn trên desktop */
+.mobile-menu { display: none; }
+.hamburger {
+  list-style: none; cursor: pointer; width: 42px; height: 38px; padding: 0;
+  display: inline-flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px;
+  border-radius: 9px; border: 1px solid rgba(255,255,255,.4); background: transparent;
+}
+.hamburger::-webkit-details-marker { display: none; }
+.hamburger span { display: block; width: 20px; height: 2px; background: #fff; border-radius: 2px; transition: .2s; }
+.mobile-menu[open] .hamburger { background: rgba(255,255,255,.16); }
+.mobile-menu[open] .hamburger span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.mobile-menu[open] .hamburger span:nth-child(2) { opacity: 0; }
+.mobile-menu[open] .hamburger span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+.mobile-panel {
+  position: absolute; top: calc(100% + 8px); right: 0; left: 0;
+  background: #fff; border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 14px 34px rgba(0,0,0,.20); padding: 10px; z-index: 40;
+}
+.mobile-user { color: var(--muted); font-size: 13px; padding: 6px 10px 10px; border-bottom: 1px solid var(--line); }
+.mobile-nav { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
+.mobile-nav a { padding: 12px 12px; border-radius: 9px; color: var(--ink); font-weight: 600; text-decoration: none; }
+.mobile-nav a:active, .mobile-nav a.active { background: var(--primary-tint); color: var(--primary); }
+.mobile-logout { width: 100%; justify-content: center; margin-top: 8px; }
+
+@media (max-width: 760px) {
+  .nav-desktop, .userchip-desktop { display: none; }
+  .mobile-menu { display: block; margin-left: auto; }
+  .site-header .inner { padding: 8px 14px; gap: 8px; }
+  .brand-logo { height: 24px; }
+
+  /* Bố cục chung gọn hơn trên mobile */
+  .wrap { padding: 16px 14px 60px; }
+  .pagetitle { font-size: 19px; }
+  .card { padding: 14px; }
+  .flexbtw { flex-direction: column; align-items: stretch; }
+  .row > * { min-width: 100%; }
+  .stat { gap: 18px 22px; }
+  .stat .n { font-size: 22px; }
+  .obj-prog { width: 116px; }
+  table.t th, table.t td { padding: 8px; }
+}
 
 .card {
   background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
