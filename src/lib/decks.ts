@@ -20,6 +20,18 @@ export type Deck = {
   updated_at?: string;
 };
 
+// Chuẩn hoá text đầu vào (title/description/…): giải mã entity HTML thường gặp để tránh lưu
+// nhầm "&amp;"/"&lt;" (nguồn HTML tự-chứa hay bị encode) → hiện literal ở UI. Giải &amp; SAU cùng.
+export function decodeEntities(s: string): string {
+  return s
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;|&apos;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&');
+}
+
 const DECK_COLS =
   "id, slug, title, description, visibility, require_otp, is_published, category, tags, company, " +
   "(password_hash IS NOT NULL) AS has_password, (thumbnail IS NOT NULL) AS has_thumbnail";
@@ -103,9 +115,9 @@ export async function updateDeckMeta(
   const sets: string[] = [];
   const vals: unknown[] = [];
   let i = 1;
-  if (m.category !== undefined) { sets.push(`category=$${i++}`); vals.push(m.category || null); }
-  if (m.tags !== undefined) { sets.push(`tags=$${i++}`); vals.push(m.tags); }
-  if (m.company !== undefined) { sets.push(`company=$${i++}`); vals.push(m.company || 'BTMH'); }
+  if (m.category !== undefined) { sets.push(`category=$${i++}`); vals.push(m.category ? decodeEntities(m.category) : null); }
+  if (m.tags !== undefined) { sets.push(`tags=$${i++}`); vals.push(m.tags.map(decodeEntities)); }
+  if (m.company !== undefined) { sets.push(`company=$${i++}`); vals.push(m.company ? decodeEntities(m.company) : 'BTMH'); }
   if (!sets.length) return;
   vals.push(id);
   await query(`UPDATE deck_decks SET ${sets.join(', ')}, updated_at=now() WHERE id=$${i}`, vals);
@@ -169,8 +181,8 @@ export async function upsertDeck(d: {
      RETURNING ${DECK_COLS}`,
     [
       d.slug,
-      d.title,
-      d.description ?? null,
+      decodeEntities(d.title),
+      d.description != null ? decodeEntities(d.description) : null,
       d.visibility,
       d.require_otp,
       d.is_published,
