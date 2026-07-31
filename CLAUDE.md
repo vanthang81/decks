@@ -23,7 +23,8 @@ phục vụ + chèn watermark/log.
   Schema `db/001_deck_access.sql` (+ `002_deck_content.sql` cột content, `003_admin_groups.sql`
   bảng deck_groups/deck_group_members + cột deck_grants.group_id, `004_group_decks.sql` bảng
   deck_group_decks = entitlement nhóm↔deck, `005_deck_password.sql` cột deck_decks.password_hash,
-  `006_deck_meta.sql` cột category/tags(text[])/company(default BTMH)/thumbnail = thư viện phân loại)
+  `006_deck_meta.sql` cột category/tags(text[])/company(default BTMH)/thumbnail = thư viện phân loại,
+  `007_access_events.sql` mở rộng CHECK deck_access_log.event thêm pw_ok/pw_fail/link_resend)
   — chạy bằng superuser postgres qua
   `docker exec` (hoặc n8n admin cred); app dùng user `btmh_app` (đã GRANT). Typecheck: `npm run build`.
 - **`mcp-server/` là project RIÊNG** (deps riêng, image Docker riêng `decks-mcp`) → ĐÃ loại khỏi
@@ -53,8 +54,12 @@ phục vụ + chèn watermark/log.
 - **Mật khẩu deck** (tùy chọn, `deck_decks.password_hash` sha256): 1 mật khẩu chung — ai có link
   `/d/<slug>` + mật khẩu là xem được NGAY (không cần link cá nhân). Truy cập là **HOẶC**: link cá nhân
   (grant active, watermark định danh) **HOẶC** mật khẩu đúng (watermark "mật khẩu chung") **HOẶC** public
-  không mật khẩu. Chưa vào được + deck có mật khẩu → form nhập (POST `/d/<slug>` verify → cookie jose
-  `dpw_<id8>` 12h). Admin bỏ qua. (OTP chỉ áp cho luồng link cá nhân, không chặn đường mật khẩu.)
+  không mật khẩu. Chưa vào được → **trang gate hợp nhất** (`accessGate` trong `/d/<slug>/route.ts`) hiện
+  MỌI cách được cấp quyền: ô **mật khẩu chung** (nếu deck có mật khẩu; POST `mode=password` verify → cookie
+  jose `dpw_<id8>` 12h) VÀ/HOẶC ô **đăng nhập bằng email** (mọi deck protected; POST `mode=email` → nếu email
+  có grant còn hiệu lực thì `rotateGrantToken` cấp token mới + gửi lại link `/v/<token>` qua Deck Mail, phản
+  hồi **trung tính** không tiết lộ email nào có quyền; KHÔNG reactivate grant đã thu hồi). Admin bỏ qua.
+  (OTP vẫn áp ở luồng link cá nhân khi click link, không chặn đường mật khẩu.)
   Đặt/gỡ ở trang chi tiết deck (đặt tay / **tạo tự động** / gỡ; hiện 1 lần qua `?pw`, có nút Copy —
   `src/components/CopyField.tsx`). API publish + tool MCP `deck_publish` nhận thêm `password` (đặt/gỡ) và
   `generate_password` (tự sinh, TRẢ VỀ mật khẩu trong response). `src/lib/decks.ts`
@@ -79,7 +84,8 @@ phục vụ + chèn watermark/log.
   đầy đủ** mở deck (`/d/<slug>`, tab mới) + nút **Copy** để gửi ngay — KHÔNG cần vào trang quản trị deck.
   Thân card (thumb+nội dung) vẫn link vào `/admin/decks/<id>`; thanh URL tách RIÊNG (tránh lồng `<a>`).
   `baseUrl` dựng URL tuyệt đối = `APP_URL` (fallback header nginx `x-forwarded-proto`/`x-forwarded-host`),
-  truyền từ `src/app/page.tsx` xuống DeckGallery. **Ảnh preview TỰ CHỤP slide đầu qua browserless**: `src/lib/thumbnail.ts`
+  truyền từ `src/app/page.tsx` xuống DeckGallery. **Card cũng hiện các nhóm được cấp** deck đó (chip
+  👥 tên nhóm) — `groupNamesByDeck()` trong `groups.ts` trả map deck_id→tên nhóm, truyền vào DeckLite. **Ảnh preview TỰ CHỤP slide đầu qua browserless**: `src/lib/thumbnail.ts`
   `generateDeckThumbnail` POST `${BROWSERLESS_URL}/chrome/screenshot?token=…` (env VPS
   `BROWSERLESS_URL=http://host.docker.internal:8090` + `BROWSERLESS_TOKEN`, đọc từ container `browserless-shot`)
   → JPEG 1000×563 → lưu data-URI vào `deck_decks.thumbnail`. Tự chạy sau khi publish/sửa nội dung (API + action),
