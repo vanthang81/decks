@@ -101,6 +101,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
               <span className={`badge ${kindCls}`} style={{ fontSize: 11 }}>
                 {INIT_KIND_LABEL[n.kind]}
               </span>{' '}
+              {n.code && <span className="okr-code" style={{ marginRight: 4 }}>{n.code}</span>}
               <b>{n.title}</b>{' '}
               <span className={`badge ${statusCls}`} style={{ fontSize: 11 }}>
                 {INIT_STATUS_LABEL[n.status]}
@@ -327,6 +328,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                 </span>
               </div>
               <div className="pagetitle" style={{ margin: 0 }}>
+                {obj.code && <span className="okr-code" style={{ fontSize: 14, marginRight: 8 }}>{obj.code}</span>}
                 {obj.title}
               </div>
               <div className="obj-meta" style={{ marginTop: 4 }}>
@@ -366,6 +368,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
               <div className="flexbtw">
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600 }}>
+                    {kr.code && <span className="okr-code" style={{ marginRight: 6 }}>{kr.code}</span>}
                     {kr.title}{' '}
                     <span
                       className={`badge ${kr.indicator === 'leading' ? 'blue' : 'gray'}`}

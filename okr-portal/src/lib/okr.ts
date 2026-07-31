@@ -1,6 +1,7 @@
 import { query, queryOne } from './db';
 import type { OkrUser } from './users';
 import { manageScope, type Unit } from './org';
+import { nextObjectiveCode, nextKrCode } from './codes';
 
 export type Level = 'company' | 'division' | 'department' | 'individual';
 export type ObjStatus = 'draft' | 'active' | 'done' | 'archived';
@@ -41,6 +42,7 @@ export const MAX_LEADING = 3;
 
 export type Objective = {
   id: string;
+  code: string | null;
   period_id: string;
   parent_id: string | null;
   level: Level;
@@ -64,6 +66,7 @@ export type ObjectiveRow = Objective & {
 
 export type KeyResult = {
   id: string;
+  code: string | null;
   objective_id: string;
   title: string;
   metric_type: MetricType;
@@ -104,7 +107,7 @@ export function computeKrProgress(kr: {
 // ---------- Truy vấn ----------
 
 const OBJ_SELECT = `
-  SELECT o.id, o.period_id, o.parent_id, o.level, o.unit_id, o.owner_email,
+  SELECT o.id, o.code, o.period_id, o.parent_id, o.level, o.unit_id, o.owner_email,
          o.title, o.description, o.status, o.okr_type, o.progress::float8 AS progress, o.sort, o.created_by,
          n.name AS unit_name, n.code AS unit_code,
          u.display_name AS owner_name,
@@ -157,7 +160,7 @@ export async function ownersOverObjectiveLimit(
 
 export async function listKeyResults(objectiveId: string): Promise<KeyResult[]> {
   return query<KeyResult>(
-    `SELECT id, objective_id, title, metric_type, direction, unit_label,
+    `SELECT id, code, objective_id, title, metric_type, direction, unit_label,
             start_value::float8 AS start_value, target_value::float8 AS target_value,
             current_value::float8 AS current_value, weight::float8 AS weight,
             kpi_source, indicator, progress::float8 AS progress, sort
@@ -168,7 +171,7 @@ export async function listKeyResults(objectiveId: string): Promise<KeyResult[]> 
 
 export async function getKeyResult(id: string): Promise<KeyResult | null> {
   return queryOne<KeyResult>(
-    `SELECT id, objective_id, title, metric_type, direction, unit_label,
+    `SELECT id, code, objective_id, title, metric_type, direction, unit_label,
             start_value::float8 AS start_value, target_value::float8 AS target_value,
             current_value::float8 AS current_value, weight::float8 AS weight,
             kpi_source, indicator, progress::float8 AS progress, sort
@@ -191,10 +194,11 @@ export async function createObjective(input: {
   okr_type: OkrType;
   created_by: string;
 }): Promise<string> {
+  const code = await nextObjectiveCode(input.unit_id);
   const row = await queryOne<{ id: string }>(
     `INSERT INTO okr_objectives (period_id, level, unit_id, owner_email, parent_id,
-                                 title, description, status, okr_type, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
+                                 title, description, status, okr_type, created_by, code)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id`,
     [
       input.period_id,
       input.level,
@@ -206,6 +210,7 @@ export async function createObjective(input: {
       input.status,
       input.okr_type,
       input.created_by,
+      code,
     ],
   );
   return row!.id;
@@ -240,10 +245,11 @@ export async function createKeyResult(input: {
   indicator: Indicator;
 }): Promise<string> {
   const progress = computeKrProgress(input);
+  const code = await nextKrCode(input.objective_id);
   const row = await queryOne<{ id: string }>(
     `INSERT INTO okr_key_results (objective_id, title, metric_type, direction, unit_label,
-        start_value, target_value, current_value, weight, kpi_source, indicator, progress)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
+        start_value, target_value, current_value, weight, kpi_source, indicator, progress, code)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id`,
     [
       input.objective_id,
       input.title,
@@ -257,6 +263,7 @@ export async function createKeyResult(input: {
       input.kpi_source,
       input.indicator,
       progress,
+      code,
     ],
   );
   await recomputeUp(input.objective_id);

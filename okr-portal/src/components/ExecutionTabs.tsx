@@ -31,6 +31,7 @@ const STATUS_COLOR: Record<Status, string> = {
 
 export type Card = {
   id: string;
+  code: string | null;
   parent_id: string | null;
   kind: Kind;
   title: string;
@@ -218,7 +219,10 @@ function KanbanView({
                           </span>
                         )}
                       </div>
-                      <div className="kb-card-title">{c.title}</div>
+                      <div className="kb-card-title">
+                        {c.code && <span className="okr-code" style={{ fontSize: 10, marginRight: 4 }}>{c.code}</span>}
+                        {c.title}
+                      </div>
                       {c.parent_id && titleById.get(c.parent_id) && (
                         <div className="kb-card-parent">↳ {titleById.get(c.parent_id)}</div>
                       )}
@@ -312,6 +316,7 @@ function TimelineView({ initiatives }: { initiatives: Card[] }) {
                 <span className={`badge ${KIND_CLS[c.kind]}`} style={{ fontSize: 10 }}>
                   {KIND_LABEL[c.kind]}
                 </span>{' '}
+                {c.code && <span className="okr-code" style={{ fontSize: 9.5, marginRight: 3 }}>{c.code}</span>}
                 <span className="gantt-name">{c.title}</span>
               </div>
               <div className="gantt-track">

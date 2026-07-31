@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-07-31.5';
+export const GUIDE_VERSION = '2026-07-31.6';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -181,6 +181,14 @@ export const FEATURES: Feature[] = [
       'Khi tạo KR, chọn Nguồn KPI (Doanh thu / Lợi nhuận gộp). Hệ thống tự điền mục tiêu = kế hoạch cả kỳ (bảng kế hoạch ĐHCĐ trên BigQuery) và giá trị hiện tại = thực hiện tới hôm nay (dữ liệu bán hàng), rồi tính tiến độ. Cron tự đồng bộ mỗi giờ (7–22h); CEO/CFO có thể bấm "Đồng bộ ngay" ở trang Quản trị.',
   },
   {
+    key: 'import-export',
+    title: 'Mã unique & Import/Export Excel',
+    where: 'Trang OKR (Xuất Excel) · Quản trị → Import/Export (CEO/CFO)',
+    help: 'Mỗi Objective/KR/Công việc có mã (BL-O1, BL-O1.KR1, BL-O1.H01). Xuất/nhập Excel theo mã.',
+    detail:
+      'Mọi mục có mã unique gắn mã khối: Objective = <KHỐI>-O<n>, Key Result = <objective>.KR<m>, Công việc = <objective>.H<kk>. Bấm "Xuất Excel" (trang OKR hoặc Quản trị) để tải file .xlsx gồm 3 sheet (Objectives, KeyResults, Initiatives). Sửa trực tiếp trên Excel/Google Sheets rồi CEO/CFO "Nhập Excel" ở Quản trị: hệ thống khớp theo cột Mã để cập nhật (tiêu đề, trạng thái, tiến độ, giá trị KR, ngày, ngân sách…); công việc để trống Mã (kèm Mã Objective) sẽ được tạo mới. Không dòng nào bị xoá khi nhập.',
+  },
+  {
     key: 'my',
     title: 'OKR & việc của tôi',
     where: 'Menu "Của tôi"',
@@ -289,6 +297,15 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '31/07/2026 (mã unique + Import/Export Excel)',
+    items: [
+      'Mã unique theo khối: Objective BL-O1, Key Result BL-O1.KR1, Công việc BL-O1.H01.',
+      'Xuất Excel (.xlsx) toàn bộ/kỳ ở trang OKR & Quản trị — 3 sheet Objectives/KeyResults/Initiatives.',
+      'Nhập Excel (CEO/CFO): khớp theo Mã để cập nhật hàng loạt; công việc trống Mã → tạo mới.',
+      'Điền toàn bộ OKR/KPI/kế hoạch hành động 2026 cho 17 khối từ bộ KHHĐ (Drive).',
+    ],
+  },
   {
     date: '31/07/2026 (khung thời gian nhiều cấp)',
     items: [

@@ -2,6 +2,7 @@ import { query, queryOne } from './db';
 import type { OkrUser } from './users';
 import { manageScope, type Unit } from './org';
 import type { Objective } from './okr';
+import { nextInitCode } from './codes';
 
 export type InitStatus = 'todo' | 'in_progress' | 'blocked' | 'done' | 'canceled';
 export type Priority = 'low' | 'medium' | 'high';
@@ -31,6 +32,7 @@ export const CHILD_KIND: Record<InitKind, InitKind[]> = {
 
 export type Initiative = {
   id: string;
+  code: string | null;
   objective_id: string | null;
   key_result_id: string | null;
   parent_id: string | null;
@@ -55,7 +57,7 @@ export type Initiative = {
 export type InitiativeNode = Initiative & { children: InitiativeNode[]; depth: number };
 
 const SELECT = `
-  SELECT i.id, i.objective_id, i.key_result_id, i.parent_id, i.kind, i.title, i.description,
+  SELECT i.id, i.code, i.objective_id, i.key_result_id, i.parent_id, i.kind, i.title, i.description,
          i.owner_email, u.display_name AS owner_name, i.status, i.priority,
          i.progress::float8 AS progress, i.start_on::text, i.due_on::text, i.done_on::text,
          i.budget_planned::float8 AS budget_planned, i.budget_actual::float8 AS budget_actual,
@@ -85,6 +87,16 @@ export async function listInitiativesForOwner(email: string): Promise<Initiative
 
 export async function getInitiative(id: string): Promise<Initiative | null> {
   return queryOne<Initiative>(`${SELECT} WHERE i.id=$1`, [id]);
+}
+
+/** Tìm id nút cha theo mã (trong cùng objective) — dùng khi import. */
+export async function initIdByCode(objectiveId: string, code: string): Promise<string | null> {
+  if (!code) return null;
+  const r = await queryOne<{ id: string }>(
+    'SELECT id FROM okr_initiatives WHERE objective_id=$1 AND code=$2',
+    [objectiveId, code],
+  );
+  return r?.id ?? null;
 }
 
 /** Dựng cây từ danh sách phẳng (theo parent_id). Trả về các nút gốc (parent_id null). */
@@ -124,10 +136,11 @@ export async function createInitiative(input: {
   budget_source: string | null;
   created_by: string;
 }): Promise<string> {
+  const code = await nextInitCode(input.objective_id);
   const row = await queryOne<{ id: string }>(
     `INSERT INTO okr_initiatives (objective_id, key_result_id, parent_id, kind, title, description,
-        owner_email, status, priority, start_on, due_on, budget_planned, budget_actual, budget_source, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING id`,
+        owner_email, status, priority, start_on, due_on, budget_planned, budget_actual, budget_source, created_by, code)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING id`,
     [
       input.objective_id,
       input.key_result_id,
@@ -144,6 +157,7 @@ export async function createInitiative(input: {
       input.budget_actual,
       input.budget_source,
       input.created_by,
+      code,
     ],
   );
   if (input.parent_id) await recomputeInitiativeUp(input.parent_id);

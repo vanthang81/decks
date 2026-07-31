@@ -11,7 +11,7 @@ BEGIN
 
   INSERT INTO okr_objectives(period_id,parent_id,level,unit_id,owner_email,title,description,status,okr_type,created_by)
     VALUES(y26,parent,'department',u,own,
-      '2026 — Khối Kế hoạch & QLDA: Chuẩn hóa kế hoạch, kiểm soát thực thi & PMO',
+      '2026 — Phòng Kế hoạch & QLDA (Khối Tài chính): Chuẩn hóa kế hoạch, kiểm soát thực thi & PMO',
       'Chuẩn hóa hệ thống lập kế hoạch & KPI (cascade), kiểm soát thực thi chiến lược (IBP/MBR/Action Tracker), quản trị danh mục dự án chiến lược (PMO), phân tích chiến lược & dashboard hỗ trợ ra quyết định.',
       'active','committed','seed_khhd_KH') RETURNING id INTO obj;
 

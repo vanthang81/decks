@@ -5,9 +5,10 @@ import { requireUser } from '@/lib/current-user';
 import { canAdmin } from '@/lib/rbac';
 import { listUsers } from '@/lib/users';
 import { listUnits } from '@/lib/org';
-import { listPeriods } from '@/lib/periods';
+import { listPeriods, getCurrentPeriod } from '@/lib/periods';
 import { listKpiMetrics } from '@/lib/kpi';
 import { syncKpiAction } from './actions';
+import ImportOkr from '@/components/ImportOkr';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +16,12 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
   const user = await requireUser();
   if (!canAdmin(user.role)) redirect('/');
 
-  const [users, units, periods] = await Promise.all([listUsers(), listUnits(), listPeriods()]);
+  const [users, units, periods, curPeriod] = await Promise.all([
+    listUsers(),
+    listUnits(),
+    listPeriods(),
+    getCurrentPeriod(),
+  ]);
   const metrics = listKpiMetrics();
   const kpiMsg = searchParams.kpi;
 
@@ -77,6 +83,22 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
                 )}
               </p>
             )}
+          </div>
+
+          <div className="card">
+            <h3 style={{ marginTop: 0 }}>Import / Export Excel (có mã unique)</h3>
+            <p className="muted" style={{ marginTop: 0 }}>
+              Xuất toàn bộ OKR (mã <b>BL-O1</b>, <b>BL-O1.KR1</b>, <b>BL-O1.H01</b>) ra Excel để chia sẻ,
+              sửa hàng loạt rồi nhập lại theo mã.
+            </p>
+            <a
+              className="btn ghost"
+              href={`/api/export${curPeriod ? `?period=${curPeriod.id}` : ''}`}
+              style={{ marginBottom: 12 }}
+            >
+              ⬇ Xuất Excel {curPeriod ? `(${curPeriod.name})` : '(tất cả)'}
+            </a>
+            <ImportOkr />
           </div>
 
           <div className="card">

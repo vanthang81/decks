@@ -36,6 +36,15 @@ Dự kiến live tại `okr.consultx.vn`.
   `kind` ('project'|'subproject'|'action') = Dự án → Tiểu dự án → Công việc. `owner_email` = người
   ĐƯỢC GIAO. Mọi nút mang `objective_id` của OKR gốc (con kế thừa `key_result_id` của cha).
 - `okr_checkins`: cập nhật tiến độ + `confidence`. `okr_audit_log`: nhật ký.
+- **MÃ UNIQUE (db/110, import/export)**: cột `code` ở objectives/key_results/initiatives — định dạng
+  `<KHỐI>-O<n>` / `<obj>.KR<m>` / `<obj>.H<kk>` (prefix = mã đơn vị hoặc 'CTY'). Sinh tự động khi tạo
+  (`src/lib/codes.ts`: nextObjectiveCode/nextKrCode/nextInitCode); unique index. Hiển thị badge `.okr-code`.
+- **Import/Export Excel** (`src/lib/excel.ts` + xlsx, route `/api/export` GET mọi user · `/api/import`
+  POST chỉ exec): xuất 3 sheet Objectives/KeyResults/Initiatives; nhập KHỚP THEO `code` để cập nhật
+  (công việc trống code + có Mã Objective → tạo mới, sinh code). Nút ở trang OKR + Quản trị (`ImportOkr.tsx`).
+- **DỮ LIỆU 2026 ĐÃ SEED** (db/070 chiến lược + 080 users + 090–104 KHHĐ 17 khối): 27 objective
+  (5 trụ 2026–2030 + 5 công ty 2026 + 17 khối), 158 KR, 255 dự án; 30 user thật khoá đăng nhập
+  (marker `created_by` = 'seed_strategy'/'seed_khhd_<KHOI>'). "Kế hoạch & QLDA" = PHÒNG thuộc TC (unit TC-KH).
 
 ## KPI tự động từ BigQuery (ĐÃ NỐI 31/07)
 - Cây tổ chức thật: `db/020_org_btmh.sql` (13 khối + 36 phòng theo sơ đồ CCTC). Exec home = công ty BTMH.

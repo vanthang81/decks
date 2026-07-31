@@ -55,6 +55,7 @@ export default async function ObjectivesPage({
           <div className="obj-main">
             <div className="ttl">
               <LevelBadge level={o.level} />{' '}
+              {o.code && <span className="okr-code">{o.code}</span>}{' '}
               <Link href={`/objectives/${o.id}`}>{o.title}</Link>
             </div>
             <div className="obj-meta">
@@ -101,6 +102,11 @@ export default async function ObjectivesPage({
                 Xem
               </button>
             </form>
+            {period && (
+              <a className="btn ghost" href={`/api/export?period=${period.id}`} title="Xuất toàn bộ OKR kỳ này ra Excel">
+                ⬇ Xuất Excel
+              </a>
+            )}
             {period && (
               <Link className="btn" href={`/objectives/new?period=${period.id}`}>
                 + Tạo OKR
