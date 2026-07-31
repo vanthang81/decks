@@ -7,12 +7,13 @@
 # Script này:
 #   1) Cập nhật source Fider (fider-src) tại commit ghim (FIDER_REF)
 #   2) Ghi đè locale mặc định en bằng bản dịch tiếng Việt trong repo này
+#   2b) Áp patch source (tự lấy avatar Google)
 #   3) docker build bằng Dockerfile CHÍNH CHỦ của Fider  ->  ideas-portal:latest
-#   4) Recreate container (giữ .env ngoài git)
+#   4) Recreate container(s) (giữ .env ngoài git)
 #   5) Áp lại tùy biến cấp DB (tên/logo/CSS gỡ-Fider/bản quyền/Google-only)
 #
 # Tùy biến được BẢO TOÀN qua mỗi update:
-#   - Việt hóa: locale/en/*.json trong repo, luôn overlay lại trước khi build
+#   - Việt hóa + patch: overlay/patch lại trước khi build
 #   - Tên/logo/CSS/bản quyền/Google: nằm ở Postgres (không đụng khi update)
 # ==========================================================================
 set -euo pipefail
@@ -39,6 +40,9 @@ git reset --hard -q "$FIDER_REF"
 echo "[2/5] Việt hóa (overlay locale en)..."
 cp "$APP_DIR/locale/en/client.json" "$SRC_DIR/locale/en/client.json"
 cp "$APP_DIR/locale/en/server.json" "$SRC_DIR/locale/en/server.json"
+
+echo "[2b] Áp patch source (tự lấy avatar Google)..."
+bash "$APP_DIR/scripts/apply-source-patches.sh" "$SRC_DIR"
 
 echo "[3/5] Build image (Dockerfile chính chủ Fider + locale VN)..."
 docker build -t "$IMAGE" "$SRC_DIR"
