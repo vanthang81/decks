@@ -27,7 +27,10 @@ Dự kiến live tại `okr.consultx.vn`.
 - `okr_objectives`: Objective, `level`, `unit_id`/`owner_email`, `parent_id` (alignment/cascade),
   `progress` (cache roll-up).
 - `okr_key_results`: KR (start→current→target, `direction`, `metric_type`, `weight`, `kpi_source`, `progress`).
-- `okr_initiatives`: kế hoạch hành động gắn KR/Objective + `budget_planned`/`budget_actual`/`budget_source`.
+- `okr_initiatives`: kế hoạch hành động/thực thi gắn KR/Objective + `budget_planned`/`budget_actual`/
+  `budget_source`. **CÂY PHÂN CẤP (db/050)**: `parent_id` (tự tham chiếu, ON DELETE CASCADE) +
+  `kind` ('project'|'subproject'|'action') = Dự án → Tiểu dự án → Công việc. `owner_email` = người
+  ĐƯỢC GIAO. Mọi nút mang `objective_id` của OKR gốc (con kế thừa `key_result_id` của cha).
 - `okr_checkins`: cập nhật tiến độ + `confidence`. `okr_audit_log`: nhật ký.
 
 ## KPI tự động từ BigQuery (ĐÃ NỐI 31/07)
@@ -80,7 +83,15 @@ Dự kiến live tại `okr.consultx.vn`.
 - `kpi.ts`: registry `KPI_SOURCES` (key→fetch từ Postgres, best-effort try/catch) + `syncKpiSources()`.
   Thêm nguồn KPI mới ⇒ thêm entry vào `KPI_SOURCES`. BigQuery (doanh thu/lãi gộp) nối qua API
   price-engine ở phase sau (chưa làm).
-- `initiatives.ts`: `budgetSummaryForObjective` gộp ngân sách theo Objective (gồm KR con).
+- `initiatives.ts` (**QUẢN TRỊ DỰ ÁN gắn OKR — đợt 1**): `buildInitiativeTree` (dựng cây từ danh
+  sách phẳng theo `parent_id`, gán `depth`), `recomputeInitiativeUp` (roll-up: nút có con →
+  progress = bình quân con bỏ 'canceled'; nút lá giữ progress thủ công; cascade lên cha), `createInitiative`
+  (thêm `kind`/`parent_id`), `setInitiativeProgress` (nhân viên: trạng thái+tiến độ, done→100),
+  `updateInitiative` (quản lý: đủ trường), `canUpdateInitiative` (→ `{manage, assignee}`: quản OKR sửa
+  full; người được giao cập nhật việc của mình), `budgetSummaryForObjective` gộp CHỈ **nút lá**
+  (`NOT EXISTS con`) tránh cộng đôi. `CHILD_KIND` = loại con hợp lệ (project→sub/action, sub→action).
+  UI cây ở trang chi tiết OKR (`renderInitRow`, thụt theo depth); "tiến độ THỰC THI" tách khỏi "tiến độ
+  KẾT QUẢ" (Key Result). **Đợt sau: Kanban theo trạng thái + dòng thời gian (Gantt).**
 - Quyền ĐỌC minh bạch (mọi user xem hết OKR); quyền SỬA giới hạn theo `canManageObjective`.
   Admin hệ thống (users/org/periods) chỉ `exec` (`canAdmin`), guard không xoá exec cuối/chính mình.
 
