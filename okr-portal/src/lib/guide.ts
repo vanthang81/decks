@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-07-31.6';
+export const GUIDE_VERSION = '2026-07-31.7';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -136,9 +136,9 @@ export const FEATURES: Feature[] = [
     key: 'okr-cascade',
     title: 'OKR & liên kết (cascade)',
     where: 'Menu "OKR"',
-    help: 'Cây mục tiêu Công ty → Khối → Phòng → Cá nhân. Liên kết OKR con lên OKR cấp trên để đồng bộ hướng đi.',
+    help: 'Cây mục tiêu Công ty → Khối → Phòng → Cá nhân, thu gọn/mở rộng từng cấp. Liên kết OKR con lên OKR cấp trên để đồng bộ hướng đi.',
     detail:
-      'Trang OKR hiển thị toàn bộ mục tiêu trong kỳ dạng cây theo alignment. Khi tạo OKR, chọn cấp (Công ty/Khối/Phòng/Cá nhân), đơn vị, người chủ trì và "Liên kết lên" một OKR cấp trên để tạo dòng chảy chiến lược.',
+      'Trang OKR hiển thị toàn bộ mục tiêu trong kỳ dạng cây theo alignment. Mỗi nút CÓ cấp con hiện mũi tên ▸ để thu gọn/mở rộng (kèm số OKR con); có nút "Mở rộng tất cả / Thu gọn tất cả". Mặc định mở tới cấp Khối, thu gọn từ Phòng trở xuống cho dễ nhìn tổng thể. Mỗi cấp có màu viền + nhãn riêng (Công ty/Khối/Phòng/Cá nhân). Khi tạo OKR, chọn cấp, đơn vị, người chủ trì và "Liên kết lên" một OKR cấp trên để tạo dòng chảy chiến lược.',
   },
   {
     key: 'key-result',
@@ -297,6 +297,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '31/07/2026 (cây OKR thu gọn/mở rộng)',
+    items: [
+      'Cây OKR ở trang "OKR" nay thu gọn/mở rộng được từng cấp (mũi tên ▸, kèm số OKR con).',
+      'Nút "Mở rộng tất cả / Thu gọn tất cả"; mặc định mở tới cấp Khối, thu gọn Phòng trở xuống.',
+      'Chuẩn hoá hiển thị mỗi dòng: nhãn + viền màu theo cấp (Công ty/Khối/Phòng/Cá nhân), mã, tiến độ.',
+    ],
+  },
   {
     date: '31/07/2026 (mã unique + Import/Export Excel)',
     items: [

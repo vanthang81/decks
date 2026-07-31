@@ -148,6 +148,69 @@ table.t tr:hover td { background: #FBF7F2; }
 .indent-2 { padding-left: 38px; }
 .indent-3 { padding-left: 58px; }
 
+/* ===== Cây OKR có thu gọn/mở rộng (ObjectiveTree) ===== */
+.ot-toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.ot-tbtn {
+  display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line);
+  background: #fff; color: var(--muted); font-size: 12.5px; font-weight: 600;
+  padding: 6px 12px; border-radius: 8px; cursor: pointer;
+}
+.ot-tbtn:hover:not(:disabled) { color: var(--ink); border-color: #dcd3c9; background: #FBF7F2; }
+.ot-tbtn:disabled { opacity: .4; cursor: default; }
+
+.ot-row {
+  display: flex; align-items: center; gap: 10px; padding: 9px 12px 9px 9px;
+  border-radius: 9px; border: 1px solid transparent; border-left: 3px solid var(--line);
+  transition: background .12s, border-color .12s;
+}
+.ot-row:hover { background: #FBF7F2; border-color: var(--line); }
+.ot-row[data-level="company"]    { border-left-color: var(--primary); }
+.ot-row[data-level="division"]   { border-left-color: #B8860B; }
+.ot-row[data-level="department"] { border-left-color: #2E6F72; }
+.ot-row[data-level="individual"] { border-left-color: #9aa0a6; }
+
+.ot-caret {
+  flex: 0 0 auto; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 6px; background: #F1EBE3; color: var(--muted); cursor: pointer; padding: 0;
+  transition: transform .15s ease, background .12s, color .12s;
+}
+.ot-caret:hover { background: #E7DFD4; color: var(--ink); }
+.ot-caret.open { transform: rotate(90deg); }
+.ot-dot {
+  flex: 0 0 auto; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
+}
+.ot-dot::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #d9cfc4; }
+
+.ot-main { flex: 1; min-width: 0; }
+.ot-ttl { font-weight: 600; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; line-height: 1.35; }
+.ot-ttl a { color: var(--ink); text-decoration: none; }
+.ot-ttl a:hover { color: var(--primary); text-decoration: underline; }
+.ot-lvl {
+  display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 999px;
+  background: #f1f5f9; color: var(--muted); white-space: nowrap;
+}
+.ot-lvl.lvl-company    { background: var(--primary-tint); color: var(--primary); }
+.ot-lvl.lvl-division   { background: var(--gold-tint); color: #8a6d1a; }
+.ot-lvl.lvl-department { background: #e2f1f1; color: #245b5e; }
+.ot-lvl.lvl-individual { background: #f1f5f9; color: var(--muted); }
+.ot-kids {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px;
+  padding: 0 5px; border-radius: 999px; background: #E7DFD4; color: var(--muted); font-size: 11px; font-weight: 700;
+}
+.ot-meta { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
+
+.ot-prog { flex: 0 0 auto; width: 168px; display: flex; align-items: center; gap: 10px; }
+.ot-prog .pbar { flex: 1; }
+.ot-pct { font-size: 12px; color: var(--muted); width: 34px; text-align: right; }
+
+.ot-children { margin-left: 21px; padding-left: 12px; border-left: 1px dashed #e2d9cd; }
+
+@media (max-width: 760px) {
+  .ot-prog { width: 92px; }
+  .ot-prog .ot-pct { width: 30px; }
+  .ot-children { margin-left: 12px; padding-left: 9px; }
+}
+
 /* Forms */
 label.f { display: block; font-size: 13px; color: var(--muted); font-weight: 600; margin: 10px 0 4px; }
 input.i, select.i, textarea.i {

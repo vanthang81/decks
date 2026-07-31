@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import SiteHeader from '@/components/SiteHeader';
-import { ProgressBar, LevelBadge } from '@/components/ui';
+import ObjectiveTree, { type TreeObjective } from '@/components/ObjectiveTree';
 import { requireUser } from '@/lib/current-user';
 import {
   getCurrentPeriod,
@@ -13,7 +13,6 @@ import {
   listObjectivesByPeriod,
   ownersOverObjectiveLimit,
   MAX_OBJ_PER_OWNER,
-  type ObjectiveRow,
 } from '@/lib/okr';
 
 export const dynamic = 'force-dynamic';
@@ -32,49 +31,18 @@ export default async function ObjectivesPage({
   const objectives = period ? await listObjectivesByPeriod(period.id) : [];
   const overLimit = period ? await ownersOverObjectiveLimit(period.id) : [];
 
-  // Dựng cây theo parent_id (alignment). Gốc = objective không có parent trong tập.
-  const byId = new Map(objectives.map((o) => [o.id, o]));
-  const childrenOf = new Map<string, ObjectiveRow[]>();
-  const roots: ObjectiveRow[] = [];
-  for (const o of objectives) {
-    if (o.parent_id && byId.has(o.parent_id)) {
-      const arr = childrenOf.get(o.parent_id) ?? [];
-      arr.push(o);
-      childrenOf.set(o.parent_id, arr);
-    } else {
-      roots.push(o);
-    }
-  }
-
-  const render = (o: ObjectiveRow, depth: number): React.ReactNode => {
-    const kids = childrenOf.get(o.id) ?? [];
-    const indent = depth > 0 ? `indent-${Math.min(depth, 3)}` : '';
-    return (
-      <div key={o.id}>
-        <div className={`obj-row ${indent}`}>
-          <div className="obj-main">
-            <div className="ttl">
-              <LevelBadge level={o.level} />{' '}
-              {o.code && <span className="okr-code">{o.code}</span>}{' '}
-              <Link href={`/objectives/${o.id}`}>{o.title}</Link>
-            </div>
-            <div className="obj-meta">
-              {o.unit_name ? `${o.unit_name} · ` : ''}
-              {o.owner_name ? `Chủ trì: ${o.owner_name} · ` : ''}
-              {o.kr_count} KR
-            </div>
-          </div>
-          <div className="obj-prog">
-            <ProgressBar value={o.progress} />
-            <div className="right muted mono" style={{ fontSize: 12 }}>
-              {o.progress.toFixed(0)}%
-            </div>
-          </div>
-        </div>
-        {kids.map((k) => render(k, depth + 1))}
-      </div>
-    );
-  };
+  // Chỉ truyền field cần cho cây (serializable) sang client component.
+  const treeData: TreeObjective[] = objectives.map((o) => ({
+    id: o.id,
+    code: o.code,
+    parent_id: o.parent_id,
+    level: o.level,
+    title: o.title,
+    unit_name: o.unit_name,
+    owner_name: o.owner_name,
+    kr_count: o.kr_count,
+    progress: o.progress,
+  }));
 
   return (
     <>
@@ -130,7 +98,7 @@ export default async function ObjectivesPage({
           {period && objectives.length === 0 && (
             <p className="muted">Kỳ này chưa có OKR nào. Bấm “+ Tạo OKR”.</p>
           )}
-          {roots.map((o) => render(o, 0))}
+          {period && objectives.length > 0 && <ObjectiveTree objectives={treeData} />}
         </div>
       </div>
     </>
