@@ -43,7 +43,8 @@ cp "$APP_DIR/locale/en/server.json" "$SRC_DIR/locale/en/server.json"
 echo "[3/5] Build image (Dockerfile chính chủ Fider + locale VN)..."
 docker build -t "$IMAGE" "$SRC_DIR"
 
-echo "[4/5] Recreate container..."
+echo "[4/5] Recreate container(s)..."
+# Container chính: ideas.consultx.vn (chứa migrate)
 docker rm -f "$CONTAINER" 2>/dev/null || true
 docker run -d --name "$CONTAINER" \
   --env-file "$APP_DIR/.env" \
@@ -51,6 +52,18 @@ docker run -d --name "$CONTAINER" \
   -p "${PORT}:3000" \
   --restart unless-stopped \
   "$IMAGE"
+
+# Container phụ (tùy chọn): ideas.vanthang.io — CHUNG database, BASE_URL riêng, client Google riêng.
+# Bỏ qua migrate (dùng "./fider") vì container chính đã migrate DB dùng chung.
+if [ -f "$APP_DIR/.env.vanthang" ]; then
+  docker rm -f ideas-portal-vanthang 2>/dev/null || true
+  docker run -d --name ideas-portal-vanthang \
+    --env-file "$APP_DIR/.env.vanthang" \
+    --add-host=host.docker.internal:host-gateway \
+    -p 127.0.0.1:8631:3000 \
+    --restart unless-stopped \
+    "$IMAGE" ./fider
+fi
 docker image prune -f >/dev/null 2>&1 || true
 
 echo "[5/5] Áp lại tùy biến cấp DB..."
