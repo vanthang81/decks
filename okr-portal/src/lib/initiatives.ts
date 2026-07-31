@@ -166,6 +166,19 @@ export async function setInitiativeProgress(
   await recomputeInitiativeUp(id);
 }
 
+/** Chỉ đổi trạng thái (dùng cho kéo-thả Kanban) — giữ nguyên progress, trừ done→100. Roll-up lên cha. */
+export async function setInitiativeStatus(id: string, status: InitStatus): Promise<void> {
+  await query(
+    `UPDATE okr_initiatives SET status=$2,
+        progress = CASE WHEN $2='done' THEN 100 ELSE progress END,
+        done_on = CASE WHEN $2='done' AND done_on IS NULL THEN now()::date
+                       WHEN $2<>'done' THEN NULL ELSE done_on END,
+        updated_at=now() WHERE id=$1`,
+    [id, status],
+  );
+  await recomputeInitiativeUp(id);
+}
+
 /** Cập nhật đầy đủ (quản lý): trạng thái, tiến độ, ngân sách, người phụ trách, hạn. */
 export async function updateInitiative(
   id: string,

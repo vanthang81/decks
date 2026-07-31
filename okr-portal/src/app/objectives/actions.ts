@@ -24,6 +24,7 @@ import {
   createInitiative,
   updateInitiative,
   setInitiativeProgress,
+  setInitiativeStatus,
   deleteInitiative,
   getInitiative,
   canUpdateInitiative,
@@ -210,4 +211,18 @@ export async function deleteInitiativeAction(fd: FormData) {
   await assertCanManageObjective(objectiveId);
   await deleteInitiative(str(fd, 'id'));
   revalidatePath(`/objectives/${objectiveId}`);
+}
+
+// Kéo-thả Kanban: đổi trạng thái 1 việc. Kiểm quyền (quản lý HOẶC người được giao).
+export async function moveInitiativeAction(id: string, status: InitStatus) {
+  const user = await requireUser();
+  const units = await listUnits();
+  const init = await getInitiative(id);
+  if (!init) throw new Error('Không tìm thấy công việc.');
+  const obj = init.objective_id ? await getObjective(init.objective_id) : null;
+  if (!obj) throw new Error('Công việc chưa gắn OKR.');
+  const perm = canUpdateInitiative(user, init, obj, units);
+  if (!perm.manage && !perm.assignee) throw new Error('Bạn không có quyền cập nhật việc này.');
+  await setInitiativeStatus(id, status);
+  revalidatePath(`/objectives/${obj.id}`);
 }

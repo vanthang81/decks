@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import HelpTip from '@/components/HelpTip';
+import ExecutionTabs from '@/components/ExecutionTabs';
 import { ProgressBar, LevelBadge, StatusBadge } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
 import { listUnits } from '@/lib/org';
@@ -36,6 +37,7 @@ import {
   createInitiativeAction,
   updateInitiativeAction,
   deleteInitiativeAction,
+  moveInitiativeAction,
 } from '../actions';
 
 export const dynamic = 'force-dynamic';
@@ -561,12 +563,18 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
             Cây thực thi: <b>Dự án → Tiểu dự án → Công việc</b>. Tiến độ công việc tự cuộn lên dự án.
             (Đây là tiến độ THỰC THI — khác tiến độ KẾT QUẢ đo bằng Key Result ở trên.)
           </p>
-          {orderedInits.length === 0 && <p className="muted">Chưa có dự án hay công việc nào.</p>}
-          {orderedInits.map((n) => renderInitRow(n))}
+          <ExecutionTabs
+            initiatives={initiatives}
+            canManage={canManage}
+            currentEmail={user.email}
+            move={moveInitiativeAction}
+          >
+            {orderedInits.length === 0 && <p className="muted">Chưa có dự án hay công việc nào.</p>}
+            {orderedInits.map((n) => renderInitRow(n))}
 
-          {canManage && (
-            <details className="inline" style={{ marginTop: 14 }}>
-              <summary>+ Thêm dự án / công việc</summary>
+            {canManage && (
+              <details className="inline" style={{ marginTop: 14 }}>
+                <summary>+ Thêm dự án / công việc</summary>
               <form action={createInitiativeAction} style={{ marginTop: 10 }}>
                 <input type="hidden" name="objective_id" value={obj.id} />
                 <div className="row">
@@ -632,8 +640,9 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                   </button>
                 </div>
               </form>
-            </details>
-          )}
+              </details>
+            )}
+          </ExecutionTabs>
         </div>
 
         {/* ---------- Lịch sử check-in ---------- */}

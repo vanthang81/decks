@@ -91,7 +91,13 @@ Dự kiến live tại `okr.consultx.vn`.
   full; người được giao cập nhật việc của mình), `budgetSummaryForObjective` gộp CHỈ **nút lá**
   (`NOT EXISTS con`) tránh cộng đôi. `CHILD_KIND` = loại con hợp lệ (project→sub/action, sub→action).
   UI cây ở trang chi tiết OKR (`renderInitRow`, thụt theo depth); "tiến độ THỰC THI" tách khỏi "tiến độ
-  KẾT QUẢ" (Key Result). **Đợt sau: Kanban theo trạng thái + dòng thời gian (Gantt).**
+  KẾT QUẢ" (Key Result). `setInitiativeStatus` (đổi trạng thái đơn, done→100) + action `moveInitiativeAction(id,status)`.
+- **`src/components/ExecutionTabs.tsx` ('use client') — Đợt 2**: bộ chuyển 3 view (Danh sách/Kanban/Gantt,
+  nhớ ở localStorage `okrExecView`). **KANBAN kéo–thả native HTML5** (draggable + onDrop, optimistic +
+  `router.refresh()`; chỉ kéo được nếu `canManage` HOẶC là người được giao — server re-check qua
+  `moveInitiativeAction`). **GANTT read-only**: bar start→due theo % ngày, vạch hôm nay, màu theo trạng
+  thái. KHÔNG import `initiatives.ts` (tránh kéo `pg` vào client bundle) → hằng số nhãn khai lại trong file.
+  List view = children server-render (giữ form thêm/sửa/giao). CSS `.exec-tabs/.kb-*/.gantt-*` ở globals.css.
 - Quyền ĐỌC minh bạch (mọi user xem hết OKR); quyền SỬA giới hạn theo `canManageObjective`.
   Admin hệ thống (users/org/periods) chỉ `exec` (`canAdmin`), guard không xoá exec cuối/chính mình.
 
