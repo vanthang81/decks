@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
+import HelpTip from '@/components/HelpTip';
 import { ProgressBar, LevelBadge, StatusBadge } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
 import { listUnits } from '@/lib/org';
@@ -89,7 +90,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
 
         {/* ---------- Key Results ---------- */}
         <div className="card">
-          <h3 style={{ marginTop: 0 }}>Kết quả then chốt (Key Results)</h3>
+          <h3 style={{ marginTop: 0 }}>Kết quả then chốt (Key Results)<HelpTip k="key-result" /></h3>
           {krs.length === 0 && <p className="muted">Chưa có KR nào.</p>}
           {krs.map((kr) => (
             <div key={kr.id} style={{ padding: '10px 0', borderBottom: '1px solid var(--line)' }}>
@@ -196,7 +197,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                     <input className="i" name="weight" defaultValue="1" />
                   </div>
                 </div>
-                <label className="f">Nguồn KPI tự động (tuỳ chọn)</label>
+                <label className="f">Nguồn KPI tự động (tuỳ chọn)<HelpTip k="kpi-auto" /></label>
                 <select className="i" name="kpi_source" defaultValue="">
                   <option value="">— Nhập tay —</option>
                   {kpiSources.map((s) => (
@@ -218,7 +219,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
         {/* ---------- Ngân sách ---------- */}
         <div className="grid two">
           <div className="card">
-            <h3 style={{ marginTop: 0 }}>Ngân sách gắn OKR</h3>
+            <h3 style={{ marginTop: 0 }}>Ngân sách gắn OKR<HelpTip k="budget" /></h3>
             <div className="stat">
               <div>
                 <div className="n">{fmtVnd(budget.planned)}</div>
@@ -271,7 +272,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
 
         {/* ---------- Kế hoạch hành động ---------- */}
         <div className="card">
-          <h3 style={{ marginTop: 0 }}>Kế hoạch hành động (Initiatives)</h3>
+          <h3 style={{ marginTop: 0 }}>Kế hoạch hành động (Initiatives)<HelpTip k="initiative" /></h3>
           <div className="table-scroll">
             <table className="t">
               <thead>
@@ -413,7 +414,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
 
         {/* ---------- Lịch sử check-in ---------- */}
         <div className="card">
-          <h3 style={{ marginTop: 0 }}>Lịch sử check-in</h3>
+          <h3 style={{ marginTop: 0 }}>Lịch sử check-in<HelpTip k="checkin" /></h3>
           {checkins.length === 0 && <p className="muted">Chưa có check-in.</p>}
           {checkins.map((c) => (
             <div key={c.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--line)' }}>

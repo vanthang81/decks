@@ -48,6 +48,19 @@ Dự kiến live tại `okr.consultx.vn`.
 - **Cron n8n "OKR KPI Sync — cron đồng bộ KPI BigQuery" (id `xOxOrwj80MPNSJqx`, ACTIVE, `0 7-22 * * *`
   giờ VN)**: SSH VPS đọc SYNC_KEY từ .env → `curl POST 127.0.0.1:8640/api/kpi/sync`. Key không rời VPS.
 
+## Hướng dẫn sử dụng trong app + QUY TẮC CẬP NHẬT TÀI LIỆU (BẮT BUỘC)
+- Trang **`/guide`** (`src/app/guide/page.tsx`) = hướng dẫn chi tiết: phương pháp luận OKR/KPI/Action
+  Plan (best practice) + tính năng + lộ trình đề xuất + thuật ngữ + nhật ký. Vào từ menu "Hướng dẫn".
+- **NGUỒN DUY NHẤT = `src/lib/guide.ts`** (METHODOLOGY, FEATURES, ROADMAP, GLOSSARY, CHANGELOG).
+  Component **`HelpTip`** (`<HelpTip k="..." />`) đọc CÙNG registry `FEATURES` → tooltip + link tới
+  `/guide#feat-<key>`. Đã gắn ở: nav, chi tiết OKR (key-result/budget/initiative/checkin/kpi-auto).
+- Trang `/guide` render ĐỘNG phần cấu trúc (vai trò từ `rbac`, cấp từ `okr`, KPI metric từ `kpi`, kỳ
+  hiện tại + số khối/phòng/OKR từ DB) → **tự phản ánh trạng thái hệ thống**, không cần sửa tay.
+- **QUY TẮC (áp cho MỌI session sau)**: mỗi khi THÊM/ĐỔI tính năng ⇒ (1) cập nhật `FEATURES`
+  (thêm/sửa mục + `help` tooltip) và/hoặc `METHODOLOGY`; (2) thêm 1 dòng vào `CHANGELOG` + đổi
+  `GUIDE_VERSION`; (3) gắn `<HelpTip k="..."/>` tại UI tính năng đó. Nhờ vậy tài liệu + tooltip luôn
+  đồng bộ với hệ thống một cách tự động.
+
 ## Logic quan trọng (src/lib/)
 - `okr.ts`: `computeKrProgress` (theo hướng tăng/giảm, clamp 0..100), `recomputeUp` (lan tiến độ
   KR→Objective→cha, bình quân theo weight; không KR thì bình quân con). `canManageObjective`/`canCreateAt`.

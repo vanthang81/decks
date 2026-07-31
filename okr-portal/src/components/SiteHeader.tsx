@@ -26,6 +26,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
           {link('/', 'Bảng điều khiển', 'home')}
           {link('/objectives', 'OKR', 'okr')}
           {link('/my', 'Của tôi', 'my')}
+          {link('/guide', 'Hướng dẫn', 'guide')}
           {canAdmin(role) && link('/admin', 'Quản trị', 'admin')}
         </nav>
         <div className="spacer" />
