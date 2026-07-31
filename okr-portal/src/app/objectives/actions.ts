@@ -23,9 +23,14 @@ import {
 import {
   createInitiative,
   updateInitiative,
+  setInitiativeProgress,
   deleteInitiative,
+  getInitiative,
+  canUpdateInitiative,
+  CHILD_KIND,
   type InitStatus,
   type Priority,
+  type InitKind,
 } from '@/lib/initiatives';
 import { addCheckIn, type Confidence } from '@/lib/checkins';
 import { isKpiMetric, syncKrKpi } from '@/lib/kpi';
@@ -141,9 +146,20 @@ export async function createInitiativeAction(fd: FormData) {
   const user = await requireUser();
   const objectiveId = str(fd, 'objective_id');
   await assertCanManageObjective(objectiveId);
+  const parentId = orNull(str(fd, 'parent_id'));
+  let kind = (str(fd, 'kind') || 'action') as InitKind;
+  let keyResultId = orNull(str(fd, 'key_result_id'));
+  if (parentId) {
+    const parent = await getInitiative(parentId);
+    if (!parent || parent.objective_id !== objectiveId) throw new Error('Nút cha không hợp lệ.');
+    if (!CHILD_KIND[parent.kind].includes(kind)) kind = CHILD_KIND[parent.kind][0] ?? 'action';
+    keyResultId = parent.key_result_id; // con kế thừa gắn KR của cha
+  }
   await createInitiative({
     objective_id: objectiveId,
-    key_result_id: orNull(str(fd, 'key_result_id')),
+    key_result_id: keyResultId,
+    parent_id: parentId,
+    kind,
     title: str(fd, 'title'),
     description: orNull(str(fd, 'description')),
     owner_email: orNull(str(fd, 'owner_email')),
@@ -159,16 +175,34 @@ export async function createInitiativeAction(fd: FormData) {
   revalidatePath(`/objectives/${objectiveId}`);
 }
 
+// Cập nhật: quản lý sửa đầy đủ; người được giao chỉ đổi trạng thái + tiến độ việc của mình.
 export async function updateInitiativeAction(fd: FormData) {
-  const objectiveId = str(fd, 'objective_id');
-  await assertCanManageObjective(objectiveId);
-  await updateInitiative(str(fd, 'id'), {
-    status: (str(fd, 'status') || 'todo') as InitStatus,
-    progress: num(fd, 'progress'),
-    budget_actual: num(fd, 'budget_actual'),
-    budget_planned: num(fd, 'budget_planned'),
-  });
-  revalidatePath(`/objectives/${objectiveId}`);
+  const user = await requireUser();
+  const units = await listUnits();
+  const id = str(fd, 'id');
+  const init = await getInitiative(id);
+  if (!init) throw new Error('Không tìm thấy công việc.');
+  const obj = init.objective_id ? await getObjective(init.objective_id) : null;
+  if (!obj) throw new Error('Công việc chưa gắn OKR.');
+  const perm = canUpdateInitiative(user, init, obj, units);
+  if (!perm.manage && !perm.assignee) throw new Error('Bạn không có quyền cập nhật việc này.');
+  if (perm.manage) {
+    await updateInitiative(id, {
+      status: (str(fd, 'status') || 'todo') as InitStatus,
+      progress: num(fd, 'progress'),
+      owner_email: orNull(str(fd, 'owner_email')),
+      priority: (str(fd, 'priority') || 'medium') as Priority,
+      due_on: orNull(str(fd, 'due_on')),
+      budget_planned: num(fd, 'budget_planned'),
+      budget_actual: num(fd, 'budget_actual'),
+    });
+  } else {
+    await setInitiativeProgress(id, {
+      status: (str(fd, 'status') || 'todo') as InitStatus,
+      progress: num(fd, 'progress'),
+    });
+  }
+  revalidatePath(`/objectives/${obj.id}`);
 }
 
 export async function deleteInitiativeAction(fd: FormData) {

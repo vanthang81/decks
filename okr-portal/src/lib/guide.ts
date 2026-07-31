@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-07-31.2';
+export const GUIDE_VERSION = '2026-07-31.3';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -98,10 +98,16 @@ export const METHODOLOGY: GuideSection[] = [
   },
   {
     id: 'hanh-dong',
-    title: '7. Kế hoạch hành động & Ngân sách',
+    title: '7. Dự án, Kế hoạch hành động & Ngân sách',
     blocks: [
       {
-        p: 'Kế hoạch hành động (Initiatives) là VIỆC CỤ THỂ để đạt KR: có người chủ trì, hạn, trạng thái, % hoàn thành. Mỗi việc có thể gắn ngân sách kế hoạch vs thực chi; hệ thống tổng hợp giải ngân theo từng Objective.',
+        p: 'Thực thi OKR bằng cây công việc: một Objective/KR có thể triển khai bằng công việc đơn, hoặc cả một DỰ ÁN có TIỂU DỰ ÁN và nhiều CÔNG VIỆC con. Mỗi nút có người phụ trách, hạn, ưu tiên, trạng thái, % hoàn thành và ngân sách.',
+      },
+      {
+        p: 'Trưởng phòng (trở lên) tạo & giao việc; nhân viên tự cập nhật trạng thái/tiến độ việc được giao. Tiến độ công việc tự cuộn lên tiểu dự án → dự án. Đây là tiến độ THỰC THI (đã làm gì) — tách khỏi tiến độ KẾT QUẢ đo bằng Key Result (đạt được gì).',
+      },
+      {
+        note: 'Ngân sách khai ở từng việc (kế hoạch vs thực chi); hệ thống tổng hợp giải ngân theo Objective, chỉ cộng nút lá để tránh trùng.',
       },
     ],
   },
@@ -152,11 +158,11 @@ export const FEATURES: Feature[] = [
   },
   {
     key: 'initiative',
-    title: 'Kế hoạch hành động (Initiatives)',
-    where: 'Trang chi tiết OKR → "Kế hoạch hành động"',
-    help: 'Việc cụ thể để đạt KR: chủ trì, hạn, trạng thái, % hoàn thành.',
+    title: 'Dự án & Kế hoạch hành động (thực thi)',
+    where: 'Trang chi tiết OKR → "Dự án & Kế hoạch hành động"',
+    help: 'Cây Dự án → Tiểu dự án → Công việc, gắn KR. Trưởng phòng giao, nhân viên cập nhật; tiến độ tự cuộn lên.',
     detail:
-      'Gắn các đầu việc vào KR hoặc Objective. Theo dõi trạng thái (Chưa làm/Đang làm/Vướng/Xong/Huỷ), % hoàn thành và hạn. Cập nhật trạng thái ngay trên bảng.',
+      'Một Objective/KR có thể được thực thi bằng công việc đơn HOẶC cả một dự án có cấu trúc. Cấu trúc 3 tầng: Dự án → Tiểu dự án → Công việc. Mỗi nút có người phụ trách, hạn, ưu tiên, trạng thái (Chưa làm/Đang làm/Vướng/Xong/Huỷ), % hoàn thành và ngân sách. Tiến độ công việc TỰ CUỘN lên tiểu dự án → dự án. Phân quyền: người quản OKR (trưởng phòng trở lên trong phạm vi) tạo/giao/sửa/xoá; người ĐƯỢC GIAO tự cập nhật trạng thái + tiến độ việc của mình. Đây là tiến độ THỰC THI (output), tách khỏi tiến độ KẾT QUẢ đo bằng Key Result (outcome). Kanban & dòng thời gian (Gantt) sẽ bổ sung ở đợt sau.',
   },
   {
     key: 'budget',
@@ -273,7 +279,7 @@ export const ROADMAP: Roadmap[] = [
 export const GLOSSARY: { term: string; def: string }[] = [
   { term: 'Objective', def: 'Mục tiêu định tính, truyền cảm hứng, cho một kỳ.' },
   { term: 'Key Result (KR)', def: 'Kết quả then chốt — số đo được cho biết Objective đã đạt hay chưa.' },
-  { term: 'Initiative', def: 'Kế hoạch hành động — việc cụ thể để đạt KR.' },
+  { term: 'Initiative', def: 'Kế hoạch hành động — có thể là công việc đơn hoặc cây Dự án → Tiểu dự án → Công việc để đạt KR.' },
   { term: 'Cascade / Alignment', def: 'Liên kết OKR cấp dưới lên OKR cấp trên để đồng bộ chiến lược.' },
   { term: 'Leading / Lagging', def: 'Chỉ số dẫn dắt (hành động) vs chỉ số kết quả (đầu ra cuối).' },
   { term: 'Confidence', def: 'Mức độ tự tin sẽ đạt KR — khác với % tiến độ hiện tại.' },
@@ -283,6 +289,16 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '31/07/2026 (quản trị dự án — đợt 1)',
+    items: [
+      'Quản trị dự án gắn OKR: cây Dự án → Tiểu dự án → Công việc (thay bảng kế hoạch phẳng cũ).',
+      'Tiến độ công việc tự cuộn lên tiểu dự án → dự án; ngân sách gộp theo nút lá (không cộng đôi).',
+      'Phân quyền thực thi: trưởng phòng trở lên giao việc; nhân viên tự cập nhật trạng thái/tiến độ việc được giao.',
+      'Đăng nhập gốc trên cả okr.consultx.vn và okr.vanthang.io.',
+      '(Sắp tới) Bảng Kanban theo trạng thái + dòng thời gian (Gantt).',
+    ],
+  },
   {
     date: '31/07/2026 (cập nhật)',
     items: [

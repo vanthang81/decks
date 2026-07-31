@@ -1,7 +1,12 @@
 import { query, queryOne } from './db';
+import type { OkrUser } from './users';
+import { manageScope, type Unit } from './org';
+import type { Objective } from './okr';
 
 export type InitStatus = 'todo' | 'in_progress' | 'blocked' | 'done' | 'canceled';
 export type Priority = 'low' | 'medium' | 'high';
+// Loại nút trong cây thực thi: dự án → tiểu dự án → công việc/hành động.
+export type InitKind = 'project' | 'subproject' | 'action';
 
 export const INIT_STATUS_LABEL: Record<InitStatus, string> = {
   todo: 'Chưa làm',
@@ -11,10 +16,25 @@ export const INIT_STATUS_LABEL: Record<InitStatus, string> = {
   canceled: 'Huỷ',
 };
 
+export const INIT_KIND_LABEL: Record<InitKind, string> = {
+  project: 'Dự án',
+  subproject: 'Tiểu dự án',
+  action: 'Công việc',
+};
+
+// Loại con hợp lệ khi thêm dưới 1 nút (project→subproject/action, subproject→action).
+export const CHILD_KIND: Record<InitKind, InitKind[]> = {
+  project: ['subproject', 'action'],
+  subproject: ['action'],
+  action: [],
+};
+
 export type Initiative = {
   id: string;
   objective_id: string | null;
   key_result_id: string | null;
+  parent_id: string | null;
+  kind: InitKind;
   title: string;
   description: string | null;
   owner_email: string | null;
@@ -31,25 +51,30 @@ export type Initiative = {
   budget_source: string | null;
 };
 
+// Nút cây (có con) — dùng để render phân cấp.
+export type InitiativeNode = Initiative & { children: InitiativeNode[]; depth: number };
+
 const SELECT = `
-  SELECT i.id, i.objective_id, i.key_result_id, i.title, i.description, i.owner_email,
-         u.display_name AS owner_name, i.status, i.priority, i.progress::float8 AS progress,
-         i.start_on::text, i.due_on::text, i.done_on::text,
+  SELECT i.id, i.objective_id, i.key_result_id, i.parent_id, i.kind, i.title, i.description,
+         i.owner_email, u.display_name AS owner_name, i.status, i.priority,
+         i.progress::float8 AS progress, i.start_on::text, i.due_on::text, i.done_on::text,
          i.budget_planned::float8 AS budget_planned, i.budget_actual::float8 AS budget_actual,
          i.budget_currency, i.budget_source
     FROM okr_initiatives i
     LEFT JOIN okr_users u ON u.email = i.owner_email`;
 
+/** Toàn bộ initiative (mọi cấp) gắn với 1 objective (gồm KR con). Phẳng — dựng cây bằng buildInitiativeTree. */
 export async function listInitiativesForObjective(objectiveId: string): Promise<Initiative[]> {
   return query<Initiative>(
     `${SELECT} WHERE i.objective_id=$1 OR i.key_result_id IN
        (SELECT id FROM okr_key_results WHERE objective_id=$1)
-     ORDER BY CASE i.status WHEN 'blocked' THEN 0 WHEN 'in_progress' THEN 1 WHEN 'todo' THEN 2
-                            WHEN 'done' THEN 3 ELSE 4 END, i.due_on NULLS LAST, i.sort`,
+     ORDER BY CASE i.kind WHEN 'project' THEN 0 WHEN 'subproject' THEN 1 ELSE 2 END,
+              i.due_on NULLS LAST, i.sort, i.created_at`,
     [objectiveId],
   );
 }
 
+/** Việc được giao cho 1 người (mọi cấp, còn mở). */
 export async function listInitiativesForOwner(email: string): Promise<Initiative[]> {
   return query<Initiative>(
     `${SELECT} WHERE lower(i.owner_email)=lower($1) AND i.status NOT IN ('done','canceled')
@@ -58,9 +83,35 @@ export async function listInitiativesForOwner(email: string): Promise<Initiative
   );
 }
 
+export async function getInitiative(id: string): Promise<Initiative | null> {
+  return queryOne<Initiative>(`${SELECT} WHERE i.id=$1`, [id]);
+}
+
+/** Dựng cây từ danh sách phẳng (theo parent_id). Trả về các nút gốc (parent_id null). */
+export function buildInitiativeTree(flat: Initiative[]): InitiativeNode[] {
+  const byId = new Map<string, InitiativeNode>();
+  flat.forEach((i) => byId.set(i.id, { ...i, children: [], depth: 0 }));
+  const roots: InitiativeNode[] = [];
+  byId.forEach((node) => {
+    if (node.parent_id && byId.has(node.parent_id)) {
+      byId.get(node.parent_id)!.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  });
+  const setDepth = (n: InitiativeNode, d: number) => {
+    n.depth = d;
+    n.children.forEach((c) => setDepth(c, d + 1));
+  };
+  roots.forEach((r) => setDepth(r, 0));
+  return roots;
+}
+
 export async function createInitiative(input: {
   objective_id: string | null;
   key_result_id: string | null;
+  parent_id: string | null;
+  kind: InitKind;
   title: string;
   description: string | null;
   owner_email: string | null;
@@ -72,14 +123,16 @@ export async function createInitiative(input: {
   budget_actual: number;
   budget_source: string | null;
   created_by: string;
-}): Promise<void> {
-  await query(
-    `INSERT INTO okr_initiatives (objective_id, key_result_id, title, description, owner_email,
-        status, priority, start_on, due_on, budget_planned, budget_actual, budget_source, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+}): Promise<string> {
+  const row = await queryOne<{ id: string }>(
+    `INSERT INTO okr_initiatives (objective_id, key_result_id, parent_id, kind, title, description,
+        owner_email, status, priority, start_on, due_on, budget_planned, budget_actual, budget_source, created_by)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING id`,
     [
       input.objective_id,
       input.key_result_id,
+      input.parent_id,
+      input.kind,
       input.title,
       input.description,
       input.owner_email,
@@ -93,31 +146,118 @@ export async function createInitiative(input: {
       input.created_by,
     ],
   );
+  if (input.parent_id) await recomputeInitiativeUp(input.parent_id);
+  return row!.id;
 }
 
+/** Cập nhật trạng thái + tiến độ (nút lá). done → progress 100. Rồi roll-up lên cha. */
+export async function setInitiativeProgress(
+  id: string,
+  input: { status: InitStatus; progress: number },
+): Promise<void> {
+  const prog = input.status === 'done' ? 100 : Math.max(0, Math.min(100, input.progress));
+  await query(
+    `UPDATE okr_initiatives SET status=$2, progress=$3,
+        done_on = CASE WHEN $2='done' AND done_on IS NULL THEN now()::date
+                       WHEN $2<>'done' THEN NULL ELSE done_on END,
+        updated_at=now() WHERE id=$1`,
+    [id, input.status, prog],
+  );
+  await recomputeInitiativeUp(id);
+}
+
+/** Cập nhật đầy đủ (quản lý): trạng thái, tiến độ, ngân sách, người phụ trách, hạn. */
 export async function updateInitiative(
   id: string,
   input: {
     status: InitStatus;
     progress: number;
-    budget_actual: number;
+    owner_email: string | null;
+    priority: Priority;
+    due_on: string | null;
     budget_planned: number;
+    budget_actual: number;
   },
 ): Promise<void> {
+  const prog = input.status === 'done' ? 100 : Math.max(0, Math.min(100, input.progress));
   await query(
-    `UPDATE okr_initiatives SET status=$2, progress=$3, budget_actual=$4, budget_planned=$5,
+    `UPDATE okr_initiatives SET status=$2, progress=$3, owner_email=$4, priority=$5, due_on=$6,
+        budget_planned=$7, budget_actual=$8,
         done_on = CASE WHEN $2='done' AND done_on IS NULL THEN now()::date
                        WHEN $2<>'done' THEN NULL ELSE done_on END,
         updated_at=now() WHERE id=$1`,
-    [id, input.status, input.progress, input.budget_actual, input.budget_planned],
+    [id, input.status, prog, input.owner_email, input.priority, input.due_on,
+     input.budget_planned, input.budget_actual],
   );
+  await recomputeInitiativeUp(id);
 }
 
 export async function deleteInitiative(id: string): Promise<void> {
-  await query('DELETE FROM okr_initiatives WHERE id=$1', [id]);
+  const init = await getInitiative(id);
+  await query('DELETE FROM okr_initiatives WHERE id=$1', [id]); // FK cascade xoá cả nhánh con
+  if (init?.parent_id) await recomputeInitiativeUp(init.parent_id);
 }
 
-/** Tổng ngân sách kế hoạch vs thực chi cho 1 objective (gồm KR con). */
+/**
+ * Roll-up tiến độ trong cây thực thi: nút có con → progress = bình quân con (bỏ 'canceled').
+ * Nút lá giữ progress thủ công. Bắt đầu từ `id` rồi cascade lên cha.
+ */
+export async function recomputeInitiativeUp(id: string | null): Promise<void> {
+  let cur = id;
+  const guard = new Set<string>();
+  while (cur && !guard.has(cur)) {
+    guard.add(cur);
+    const kids = await query<{ progress: number; status: string }>(
+      `SELECT progress::float8 AS progress, status FROM okr_initiatives WHERE parent_id=$1`,
+      [cur],
+    );
+    const active = kids.filter((k) => k.status !== 'canceled');
+    let parentId: string | null = null;
+    if (active.length) {
+      const p = Math.round((active.reduce((a, k) => a + k.progress, 0) / active.length) * 100) / 100;
+      const row = await queryOne<{ parent_id: string | null }>(
+        'UPDATE okr_initiatives SET progress=$2, updated_at=now() WHERE id=$1 RETURNING parent_id',
+        [cur, p],
+      );
+      parentId = row?.parent_id ?? null;
+    } else {
+      // nút lá — không ghi đè progress, chỉ đi tiếp lên cha.
+      const row = await queryOne<{ parent_id: string | null }>(
+        'SELECT parent_id FROM okr_initiatives WHERE id=$1',
+        [cur],
+      );
+      parentId = row?.parent_id ?? null;
+    }
+    cur = parentId;
+  }
+}
+
+/**
+ * Quyền cập nhật 1 initiative:
+ *  - Quản lý OKR (canManageObjective) → sửa/giao/xoá mọi thứ.
+ *  - Người được giao (owner_email) → cập nhật trạng thái + tiến độ việc CỦA MÌNH.
+ */
+export function canUpdateInitiative(
+  user: OkrUser,
+  init: Pick<Initiative, 'owner_email'>,
+  obj: Pick<Objective, 'unit_id' | 'owner_email' | 'created_by'>,
+  units: Unit[],
+): { manage: boolean; assignee: boolean } {
+  const email = user.email.toLowerCase();
+  let manage = false;
+  if (user.role === 'exec') manage = true;
+  else if (obj.owner_email && obj.owner_email.toLowerCase() === email) manage = true;
+  else if (obj.created_by && obj.created_by.toLowerCase() === email) manage = true;
+  else {
+    const scope = manageScope(user, units);
+    if (scope === null) manage = true;
+    else if (obj.unit_id && scope.has(obj.unit_id)) manage = true;
+  }
+  const assignee = Boolean(init.owner_email && init.owner_email.toLowerCase() === email);
+  return { manage, assignee };
+}
+
+/** Tổng ngân sách kế hoạch vs thực chi cho 1 objective — chỉ tính NÚT LÁ (tránh cộng đôi cha+con). */
 export async function budgetSummaryForObjective(
   objectiveId: string,
 ): Promise<{ planned: number; actual: number; count: number }> {
@@ -125,9 +265,10 @@ export async function budgetSummaryForObjective(
     `SELECT COALESCE(SUM(budget_planned),0)::float8 AS planned,
             COALESCE(SUM(budget_actual),0)::float8 AS actual,
             count(*)::int AS count
-       FROM okr_initiatives
-      WHERE objective_id=$1 OR key_result_id IN
-            (SELECT id FROM okr_key_results WHERE objective_id=$1)`,
+       FROM okr_initiatives i
+      WHERE (i.objective_id=$1 OR i.key_result_id IN
+             (SELECT id FROM okr_key_results WHERE objective_id=$1))
+        AND NOT EXISTS (SELECT 1 FROM okr_initiatives c WHERE c.parent_id = i.id)`,
     [objectiveId],
   );
   return r ?? { planned: 0, actual: 0, count: 0 };
