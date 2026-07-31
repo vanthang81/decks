@@ -1,19 +1,22 @@
 /* ==========================================================================
    Ý tưởng BTMH — CSS tùy biến (lưu trong DB: tenants.custom_css)
-   Mục tiêu: gỡ mọi dấu vết thương hiệu Fider + gắn bản quyền Bảo Tín Mạnh Hải.
+   Mục tiêu: gỡ mọi dấu vết thương hiệu Fider + gắn bản quyền.
    ========================================================================== */
 
 /* 1) Ẩn mọi liên kết "Powered by Fider" / trỏ về fider.io ở chân trang */
 a[href*="fider.io"] { display: none !important; }
 
-/* 2) Dòng bản quyền BTMH ở chân ứng dụng (ổn định vì #root luôn tồn tại) */
+/* 2) Chân trang bản quyền — 2 dòng, phong cách như BTMH Control Tower
+      (dòng 1: ghi công thiết kế & quản trị · dòng 2: bản quyền pháp lý) */
 #root::after {
-  content: "Hệ thống do Thắng Nguyễn thiết kế & quản trị · © Thắng Nguyễn · Bảo Tín Mạnh Hải";
+  content: "Ý tưởng BTMH — thiết kế & quản trị bởi Thắng Nguyễn (CFO · Bảo Tín Mạnh Hải)\A © 2026 Nguyễn Văn Thắng · Bảo lưu mọi quyền · All rights reserved.";
+  white-space: pre-line;
   display: block;
   text-align: center;
-  padding: 20px 12px;
+  padding: 24px 12px;
   margin-top: 8px;
   font-size: 12px;
+  line-height: 1.7;
   color: #98a2b3;
   border-top: 1px solid #ececec;
 }
