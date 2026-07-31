@@ -55,11 +55,18 @@ phục vụ + chèn watermark/log.
   `/d/<slug>` + mật khẩu là xem được NGAY (không cần link cá nhân). Truy cập là **HOẶC**: link cá nhân
   (grant active, watermark định danh) **HOẶC** mật khẩu đúng (watermark "mật khẩu chung") **HOẶC** public
   không mật khẩu. Chưa vào được → **trang gate hợp nhất** (`accessGate` trong `/d/<slug>/route.ts`) hiện
-  MỌI cách được cấp quyền: ô **mật khẩu chung** (nếu deck có mật khẩu; POST `mode=password` verify → cookie
-  jose `dpw_<id8>` 12h) VÀ/HOẶC ô **đăng nhập bằng email** (mọi deck protected; POST `mode=email` → nếu email
-  có grant còn hiệu lực thì `rotateGrantToken` cấp token mới + gửi lại link `/v/<token>` qua Deck Mail, phản
-  hồi **trung tính** không tiết lộ email nào có quyền; KHÔNG reactivate grant đã thu hồi). Admin bỏ qua.
-  (OTP vẫn áp ở luồng link cá nhân khi click link, không chặn đường mật khẩu.)
+  MỌI cách được cấp quyền (deck protected): (a) **Đăng nhập Google** (nút → `/login?callbackUrl=/d/<slug>`);
+  (b) ô **mật khẩu chung** (nếu deck có mật khẩu; POST `mode=password` verify → cookie jose `dpw_<id8>` 12h);
+  (c) ô **đăng nhập bằng email** (POST `mode=email` → nếu email có grant còn hiệu lực thì `rotateGrantToken`
+  cấp token mới + gửi lại link `/v/<token>` qua Deck Mail, phản hồi **trung tính** không tiết lộ email nào có
+  quyền; KHÔNG reactivate grant đã thu hồi). (OTP vẫn áp ở luồng click link cá nhân, không chặn mật khẩu/Google.)
+- **Google login cho VIEWER** (không chỉ admin): `signIn` (auth.ts) cho phép **admin allowlist HOẶC người có
+  grant còn hiệu lực** (`hasAnyActiveGrant`) — viewer đăng nhập Google có phiên nhưng `isActive=false`. `/d/<slug>`
+  GET: phiên Google + admin → xem mọi deck; phiên Google + grant khớp email (`findActiveGrantByDeckEmail`) → xem
+  deck đó (watermark định danh, **bỏ qua OTP** vì Google đã xác thực chủ email). **CHỐT CHẶN admin bằng DB
+  `is_active`** ở 3 chỗ (vì giờ viewer cũng có phiên): trang chủ `/` (page.tsx), `admin/layout.tsx`, và
+  `requireAdminEmail` (mọi server action) → viewer KHÔNG thấy thư viện/khu quản trị, không gọi được action quản trị,
+  `/api/thumb` cũng gác `is_active`. Login page nhận `callbackUrl` (chỉ path nội bộ, chặn open-redirect).
   Đặt/gỡ ở trang chi tiết deck (đặt tay / **tạo tự động** / gỡ; hiện 1 lần qua `?pw`, có nút Copy —
   `src/components/CopyField.tsx`). API publish + tool MCP `deck_publish` nhận thêm `password` (đặt/gỡ) và
   `generate_password` (tự sinh, TRẢ VỀ mật khẩu trong response). `src/lib/decks.ts`
