@@ -21,11 +21,6 @@ import {
 import {
   listInitiativesForObjective,
   budgetSummaryForObjective,
-  buildInitiativeTree,
-  INIT_STATUS_LABEL,
-  INIT_KIND_LABEL,
-  CHILD_KIND,
-  type InitiativeNode,
 } from '@/lib/initiatives';
 import { listCheckInsForObjective, CONFIDENCE_LABEL, CONFIDENCE_COLOR } from '@/lib/checkins';
 import { listKpiMetrics } from '@/lib/kpi';
@@ -35,7 +30,6 @@ import {
   checkInAction,
   deleteKeyResultAction,
   createInitiativeAction,
-  updateInitiativeAction,
   editInitiativeAction,
   deleteInitiativeAction,
   moveInitiativeAction,
@@ -105,242 +99,6 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
   if (krs.length > 0 && laggingCount === 0)
     krWarnings.push('Chưa có chỉ số KẾT QUẢ (lagging) — nên có ít nhất 1.');
 
-  // Cây thực thi: Dự án → Tiểu dự án → Công việc (DFS theo thứ tự hiển thị).
-  const initTree = buildInitiativeTree(initiatives);
-  const orderedInits: InitiativeNode[] = [];
-  const walkInit = (n: InitiativeNode) => {
-    orderedInits.push(n);
-    n.children.forEach(walkInit);
-  };
-  initTree.forEach(walkInit);
-  const emailLc = user.email.toLowerCase();
-
-  const renderInitRow = (n: InitiativeNode) => {
-    const canEdit = canManage || n.owner_email?.toLowerCase() === emailLc;
-    const childKinds = CHILD_KIND[n.kind];
-    const kindCls = n.kind === 'project' ? 'blue' : n.kind === 'subproject' ? 'amber' : 'gray';
-    const statusCls =
-      n.status === 'done'
-        ? 'green'
-        : n.status === 'blocked'
-          ? 'red'
-          : n.status === 'in_progress'
-            ? 'blue'
-            : 'gray';
-    return (
-      <div key={n.id} style={{ borderBottom: '1px solid var(--line)', padding: '10px 0' }}>
-        <div className="flexbtw" style={{ paddingLeft: n.depth * 22, gap: 10 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div>
-              <span className={`badge ${kindCls}`} style={{ fontSize: 11 }}>
-                {INIT_KIND_LABEL[n.kind]}
-              </span>{' '}
-              {n.code && <span className="okr-code" style={{ marginRight: 4 }}>{n.code}</span>}
-              <b>{n.title}</b>{' '}
-              <span className={`badge ${statusCls}`} style={{ fontSize: 11 }}>
-                {INIT_STATUS_LABEL[n.status]}
-              </span>
-            </div>
-            <div className="obj-meta">
-              {n.owner_name ? `👤 ${n.owner_name}` : 'Chưa giao'}
-              {n.unit_name ? ` · 🏢 ${n.unit_name}` : ''}
-              {n.due_on ? ` · Hạn ${fmtDate(n.due_on)}` : ''}
-              {n.budget_planned > 0 || n.budget_actual > 0
-                ? ` · NS ${fmtVnd(n.budget_actual)}/${fmtVnd(n.budget_planned)}`
-                : ''}
-            </div>
-          </div>
-          <div style={{ width: 130 }}>
-            <ProgressBar value={n.progress} />
-            <div className="right muted mono" style={{ fontSize: 12 }}>
-              {n.progress.toFixed(0)}%
-              {n.children.length > 0 ? ' (cuộn)' : ''}
-            </div>
-          </div>
-        </div>
-
-        {canEdit && (
-          <div
-            style={{
-              paddingLeft: n.depth * 22,
-              marginTop: 6,
-              display: 'flex',
-              gap: 10,
-              flexWrap: 'wrap',
-              alignItems: 'center',
-            }}
-          >
-            {/* Cập nhật nhanh: trạng thái + tiến độ (giữ nguyên các trường khác qua hidden). */}
-            <form
-              action={updateInitiativeAction}
-              style={{ display: 'flex', gap: 4, alignItems: 'center' }}
-            >
-              <input type="hidden" name="id" value={n.id} />
-              <input type="hidden" name="owner_email" value={n.owner_email ?? ''} />
-              <input type="hidden" name="unit_id" value={n.unit_id ?? ''} />
-              <input type="hidden" name="priority" value={n.priority} />
-              <input type="hidden" name="due_on" value={n.due_on ?? ''} />
-              <input type="hidden" name="budget_planned" value={n.budget_planned} />
-              <input type="hidden" name="budget_actual" value={n.budget_actual} />
-              <select
-                className="i"
-                name="status"
-                defaultValue={n.status}
-                style={{ padding: '3px 6px', fontSize: 13, width: 'auto' }}
-              >
-                {Object.entries(INIT_STATUS_LABEL).map(([k, v]) => (
-                  <option key={k} value={k}>
-                    {v}
-                  </option>
-                ))}
-              </select>
-              {n.children.length === 0 && (
-                <input
-                  className="i"
-                  name="progress"
-                  defaultValue={n.progress}
-                  title="Tiến độ %"
-                  style={{ width: 60, padding: '3px 6px', fontSize: 13 }}
-                />
-              )}
-              {n.children.length > 0 && <input type="hidden" name="progress" value={n.progress} />}
-              <button className="btn ghost sm" type="submit">
-                Lưu
-              </button>
-            </form>
-
-            {canManage && childKinds.length > 0 && (
-              <details className="inline">
-                <summary>+ mục con</summary>
-                <form action={createInitiativeAction} style={{ marginTop: 8, maxWidth: 540 }}>
-                  <input type="hidden" name="objective_id" value={obj.id} />
-                  <input type="hidden" name="parent_id" value={n.id} />
-                  <input type="hidden" name="unit_id" value={n.unit_id ?? ''} />
-                  <div className="row">
-                    <div style={{ maxWidth: 150 }}>
-                      <label className="f">Loại</label>
-                      <select className="i" name="kind" defaultValue={childKinds[0]}>
-                        {childKinds.map((k) => (
-                          <option key={k} value={k}>
-                            {INIT_KIND_LABEL[k]}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div style={{ flex: 2 }}>
-                      <label className="f">Tên</label>
-                      <input className="i" name="title" required placeholder="Tên tiểu dự án / công việc" />
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div>
-                      <label className="f">Giao cho</label>
-                      <select className="i" name="owner_email" defaultValue={n.owner_email ?? ''}>
-                        <option value="">— Chưa giao —</option>
-                        {users.map((u) => (
-                          <option key={u.email} value={u.email}>
-                            {u.display_name || u.email}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="f">Hạn</label>
-                      <input className="i" type="date" name="due_on" />
-                    </div>
-                    <div>
-                      <label className="f">NS kế hoạch (VND)</label>
-                      <input className="i" name="budget_planned" defaultValue="0" />
-                    </div>
-                  </div>
-                  <div style={{ marginTop: 10 }}>
-                    <button className="btn sm" type="submit">
-                      Thêm
-                    </button>
-                  </div>
-                </form>
-              </details>
-            )}
-
-            {canManage && (
-              <details className="inline">
-                <summary>Sửa / xoá</summary>
-                <form action={updateInitiativeAction} style={{ marginTop: 8, maxWidth: 580 }}>
-                  <input type="hidden" name="id" value={n.id} />
-                  <div className="row">
-                    <div>
-                      <label className="f">Đơn vị phụ trách (Khối / Phòng)</label>
-                      {unitSelect(n.unit_id ?? '')}
-                    </div>
-                    <div>
-                      <label className="f">Giao cho (cá nhân)</label>
-                      <select className="i" name="owner_email" defaultValue={n.owner_email ?? ''}>
-                        <option value="">— Chưa giao —</option>
-                        {users.map((u) => (
-                          <option key={u.email} value={u.email}>
-                            {u.display_name || u.email}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="f">Ưu tiên</label>
-                      <select className="i" name="priority" defaultValue={n.priority}>
-                        <option value="low">Thấp</option>
-                        <option value="medium">Trung bình</option>
-                        <option value="high">Cao</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="f">Trạng thái</label>
-                      <select className="i" name="status" defaultValue={n.status}>
-                        {Object.entries(INIT_STATUS_LABEL).map(([k, v]) => (
-                          <option key={k} value={k}>
-                            {v}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div>
-                      <label className="f">Tiến độ %</label>
-                      <input className="i" name="progress" defaultValue={n.progress} />
-                    </div>
-                    <div>
-                      <label className="f">Hạn</label>
-                      <input className="i" type="date" name="due_on" defaultValue={n.due_on ?? ''} />
-                    </div>
-                    <div>
-                      <label className="f">NS kế hoạch</label>
-                      <input className="i" name="budget_planned" defaultValue={n.budget_planned} />
-                    </div>
-                    <div>
-                      <label className="f">Thực chi</label>
-                      <input className="i" name="budget_actual" defaultValue={n.budget_actual} />
-                    </div>
-                  </div>
-                  <div style={{ marginTop: 10 }}>
-                    <button className="btn sm" type="submit">
-                      Lưu chi tiết
-                    </button>
-                  </div>
-                </form>
-                <form action={deleteInitiativeAction} style={{ marginTop: 6 }}>
-                  <input type="hidden" name="id" value={n.id} />
-                  <input type="hidden" name="objective_id" value={obj.id} />
-                  <button className="btn ghost sm danger" type="submit">
-                    Xoá {INIT_KIND_LABEL[n.kind].toLowerCase()}
-                    {n.children.length > 0 ? ' (cả mục con)' : ''}
-                  </button>
-                </form>
-              </details>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  };
 
   return (
     <>
@@ -613,12 +371,12 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
             currentEmail={user.email}
             move={moveInitiativeAction}
             save={editInitiativeAction}
+            del={deleteInitiativeAction}
+            createChild={createInitiativeAction}
+            objectiveId={obj.id}
             users={personOpts}
             units={unitOpts}
           >
-            {orderedInits.length === 0 && <p className="muted">Chưa có dự án hay công việc nào.</p>}
-            {orderedInits.map((n) => renderInitRow(n))}
-
             {canManage && (
               <details className="inline" style={{ marginTop: 14 }}>
                 <summary>+ Thêm dự án / công việc</summary>

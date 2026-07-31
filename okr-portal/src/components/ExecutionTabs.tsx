@@ -20,6 +20,19 @@ const KIND_LABEL: Record<Kind, string> = {
   action: 'Công việc',
 };
 const KIND_CLS: Record<Kind, string> = { project: 'blue', subproject: 'amber', action: 'gray' };
+// Loại con hợp lệ (đồng bộ CHILD_KIND ở lib) — khai lại để không kéo pg vào client.
+const CHILD_KIND: Record<Kind, Kind[]> = {
+  project: ['subproject', 'action'],
+  subproject: ['action'],
+  action: [],
+};
+const STATUS_CLS: Record<Status, string> = {
+  todo: 'gray',
+  in_progress: 'blue',
+  blocked: 'red',
+  done: 'green',
+  canceled: 'gray',
+};
 const COLUMNS: Status[] = ['todo', 'in_progress', 'blocked', 'done', 'canceled'];
 const STATUS_COLOR: Record<Status, string> = {
   todo: '#94a3b8',
@@ -73,6 +86,9 @@ export default function ExecutionTabs({
   currentEmail,
   move,
   save,
+  del,
+  createChild,
+  objectiveId,
   users,
   units,
   children,
@@ -82,6 +98,9 @@ export default function ExecutionTabs({
   currentEmail: string;
   move: (id: string, status: Status) => Promise<void>;
   save: (fd: FormData) => Promise<void>;
+  del: (fd: FormData) => Promise<void>;
+  createChild: (fd: FormData) => Promise<void>;
+  objectiveId: string;
   users: PersonOpt[];
   units: UnitOpt[];
   children: React.ReactNode;
@@ -122,7 +141,12 @@ export default function ExecutionTabs({
         ))}
       </div>
 
-      {view === 'list' && <div>{children}</div>}
+      {view === 'list' && (
+        <div>
+          <ListView initiatives={initiatives} canEdit={canEdit} onOpen={(c) => setEditing(c)} />
+          {children}
+        </div>
+      )}
       {view === 'kanban' && (
         <KanbanView
           initiatives={initiatives}
@@ -143,6 +167,9 @@ export default function ExecutionTabs({
           users={users}
           units={units}
           save={save}
+          del={del}
+          createChild={createChild}
+          objectiveId={objectiveId}
           onClose={() => setEditing(null)}
         />
       )}
@@ -158,6 +185,9 @@ function EditModal({
   users,
   units,
   save,
+  del,
+  createChild,
+  objectiveId,
   onClose,
 }: {
   card: Card;
@@ -166,11 +196,17 @@ function EditModal({
   users: PersonOpt[];
   units: UnitOpt[];
   save: (fd: FormData) => Promise<void>;
+  del: (fd: FormData) => Promise<void>;
+  createChild: (fd: FormData) => Promise<void>;
+  objectiveId: string;
   onClose: () => void;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [err, setErr] = useState<string | null>(null);
+  const [confirmDel, setConfirmDel] = useState(false);
+  const [addKid, setAddKid] = useState(false);
+  const childKinds = CHILD_KIND[card.kind];
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -183,20 +219,40 @@ function EditModal({
   const divisions = units.filter((u) => u.type === 'division');
   const departments = units.filter((u) => u.type === 'department');
 
-  const submit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    fd.set('id', card.id);
+  const run = (fn: () => Promise<void>) => {
     setErr(null);
     startTransition(async () => {
       try {
-        await save(fd);
+        await fn();
         router.refresh();
         onClose();
       } catch (e2) {
         setErr(e2 instanceof Error ? e2.message : String(e2));
       }
     });
+  };
+
+  const submit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    fd.set('id', card.id);
+    run(() => save(fd));
+  };
+
+  const submitChild = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    fd.set('objective_id', objectiveId);
+    fd.set('parent_id', card.id);
+    if (card.unit_id) fd.set('unit_id', card.unit_id);
+    run(() => createChild(fd));
+  };
+
+  const doDelete = () => {
+    const fd = new FormData();
+    fd.set('id', card.id);
+    fd.set('objective_id', objectiveId);
+    run(() => del(fd));
   };
 
   return (
@@ -227,6 +283,7 @@ function EditModal({
             </div>
           </>
         ) : (
+          <>
           <form onSubmit={submit}>
             <label className="f">Tên</label>
             <input className="i" name="title" defaultValue={card.title} required disabled={!canManage} />
@@ -345,9 +402,177 @@ function EditModal({
               </button>
             </div>
           </form>
+
+          {canManage && (
+            <div className="okr-modal-manage">
+              {childKinds.length > 0 &&
+                (addKid ? (
+                  <form onSubmit={submitChild} style={{ marginTop: 4 }}>
+                    <div className="row">
+                      <div style={{ maxWidth: 150 }}>
+                        <label className="f">Loại mục con</label>
+                        <select className="i" name="kind" defaultValue={childKinds[0]}>
+                          {childKinds.map((k) => (
+                            <option key={k} value={k}>
+                              {KIND_LABEL[k]}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div style={{ flex: 2 }}>
+                        <label className="f">Tên</label>
+                        <input className="i" name="title" required placeholder="Tên tiểu dự án / công việc" />
+                      </div>
+                    </div>
+                    <div className="row">
+                      <div>
+                        <label className="f">Giao cho</label>
+                        <select className="i" name="owner_email" defaultValue={card.owner_email ?? ''}>
+                          <option value="">— Chưa giao —</option>
+                          {users.map((u) => (
+                            <option key={u.email} value={u.email}>
+                              {u.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="f">Hạn</label>
+                        <input className="i" type="date" name="due_on" />
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                      <button className="btn sm" type="submit" disabled={pending}>
+                        {pending ? 'Đang thêm…' : 'Thêm mục con'}
+                      </button>
+                      <button className="btn ghost sm" type="button" onClick={() => setAddKid(false)}>
+                        Huỷ
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <button className="btn ghost sm" type="button" onClick={() => setAddKid(true)}>
+                    ＋ Thêm mục con
+                  </button>
+                ))}
+
+              {confirmDel ? (
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span className="muted" style={{ fontSize: 13 }}>
+                    Xoá {KIND_LABEL[card.kind].toLowerCase()} này{card.parent_id ? '' : ' (và mọi mục con)'}?
+                  </span>
+                  <button className="btn ghost sm danger" type="button" onClick={doDelete} disabled={pending}>
+                    Xoá hẳn
+                  </button>
+                  <button className="btn ghost sm" type="button" onClick={() => setConfirmDel(false)}>
+                    Không
+                  </button>
+                </div>
+              ) : (
+                <button className="btn ghost sm danger" type="button" onClick={() => setConfirmDel(true)}>
+                  🗑 Xoá {KIND_LABEL[card.kind].toLowerCase()}
+                </button>
+              )}
+            </div>
+          )}
+          </>
         )}
       </div>
     </div>
+  );
+}
+
+// ---------------- Danh sách (cây, bấm mở popup sửa) ----------------
+type ListNode = Card & { depth: number };
+
+function orderTree(cards: Card[]): ListNode[] {
+  const childrenOf = new Map<string, Card[]>();
+  const byId = new Map(cards.map((c) => [c.id, c]));
+  const roots: Card[] = [];
+  for (const c of cards) {
+    if (c.parent_id && byId.has(c.parent_id)) {
+      const arr = childrenOf.get(c.parent_id) ?? [];
+      arr.push(c);
+      childrenOf.set(c.parent_id, arr);
+    } else {
+      roots.push(c);
+    }
+  }
+  const out: ListNode[] = [];
+  const walk = (c: Card, depth: number) => {
+    out.push({ ...c, depth });
+    (childrenOf.get(c.id) ?? []).forEach((k) => walk(k, depth + 1));
+  };
+  roots.forEach((r) => walk(r, 0));
+  return out;
+}
+
+function ListView({
+  initiatives,
+  canEdit,
+  onOpen,
+}: {
+  initiatives: Card[];
+  canEdit: (c: Card) => boolean;
+  onOpen: (c: Card) => void;
+}) {
+  const rows = useMemo(() => orderTree(initiatives), [initiatives]);
+  if (initiatives.length === 0)
+    return <p className="muted">Chưa có dự án hay công việc nào.</p>;
+  return (
+    <>
+      <p className="muted" style={{ fontSize: 12.5, marginTop: 0 }}>
+        Bấm vào một dòng để mở &amp; sửa (đổi đơn vị/người giao/trạng thái/tiến độ, thêm mục con, xoá).
+      </p>
+      <div className="il-list">
+        {rows.map((n) => {
+          const editable = canEdit(n);
+          return (
+            <div
+              key={n.id}
+              className="il-row"
+              style={{ paddingLeft: 10 + n.depth * 22 }}
+              onClick={() => onOpen(n)}
+              title={editable ? 'Bấm để sửa' : 'Bấm để xem'}
+            >
+              <div className="il-main">
+                <div className="il-ttl">
+                  <span className={`badge ${KIND_CLS[n.kind]}`} style={{ fontSize: 10.5 }}>
+                    {KIND_LABEL[n.kind]}
+                  </span>
+                  {n.code && <span className="okr-code">{n.code}</span>}
+                  <b>{n.title}</b>
+                  <span className={`badge ${STATUS_CLS[n.status]}`} style={{ fontSize: 10.5 }}>
+                    {STATUS_LABEL[n.status]}
+                  </span>
+                  {n.priority === 'high' && (
+                    <span className="badge red" style={{ fontSize: 10.5 }}>
+                      Ưu tiên
+                    </span>
+                  )}
+                </div>
+                <div className="obj-meta">
+                  {n.owner_name ? `👤 ${n.owner_name}` : 'Chưa giao'}
+                  {n.unit_name ? ` · 🏢 ${n.unit_name}` : ''}
+                  {n.due_on ? ` · Hạn ${fmtD(n.due_on)}` : ''}
+                </div>
+              </div>
+              <div className="il-prog">
+                <div className="pbar">
+                  <span
+                    style={{
+                      width: `${Math.max(0, Math.min(100, n.progress))}%`,
+                      background: n.progress >= 70 ? '#1f9d55' : n.progress >= 40 ? '#d97706' : '#dc2626',
+                    }}
+                  />
+                </div>
+                <span className="mono">{n.progress.toFixed(0)}%</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
   );
 }
 

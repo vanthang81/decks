@@ -230,7 +230,29 @@ table.t tr:hover td { background: #FBF7F2; }
   cursor: pointer; font-size: 15px; line-height: 1; flex: 0 0 auto;
 }
 .okr-modal-x:hover { background: #E7DFD4; color: var(--ink); }
+.okr-modal-manage {
+  margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line);
+  display: flex; flex-direction: column; gap: 10px; align-items: flex-start;
+}
 .kb-card-unit { font-size: 11.5px; color: #245b5e; margin-top: 3px; }
+
+/* ===== Danh sách thực thi (bấm dòng để sửa) ===== */
+.il-list { margin-top: 2px; }
+.il-row {
+  display: flex; align-items: center; gap: 12px; padding: 9px 10px;
+  border-radius: 9px; border: 1px solid transparent; border-left: 3px solid var(--line);
+  cursor: pointer; transition: background .12s, border-color .12s;
+}
+.il-row:hover { background: #FBF7F2; border-color: var(--line); border-left-color: var(--primary); }
+.il-main { flex: 1; min-width: 0; }
+.il-ttl { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; line-height: 1.35; }
+.il-prog { flex: 0 0 auto; width: 150px; display: flex; align-items: center; gap: 10px; }
+.il-prog .pbar { flex: 1; }
+.il-prog .mono { font-size: 12px; color: var(--muted); width: 34px; text-align: right; }
+@media (max-width: 760px) {
+  .il-prog { width: 88px; }
+  .il-prog .mono { width: 30px; }
+}
 
 /* Forms */
 label.f { display: block; font-size: 13px; color: var(--muted); font-weight: 600; margin: 10px 0 4px; }
