@@ -206,7 +206,7 @@ export default function AlignmentMap({
                   const kids = childCount.get(o.id) ?? 0;
                   const open = openId === o.id;
                   return (
-                    <article key={o.id} className={`map-card ${LEVEL_CLS[o.level]} ${drag?.id === o.id ? 'is-dragging' : ''}`}>
+                    <article key={o.id} className={`map-card no-swipe ${LEVEL_CLS[o.level]} ${drag?.id === o.id ? 'is-dragging' : ''}`}>
                       <div className="map-card-top">
                         {canEdit && (
                           <button
