@@ -266,9 +266,11 @@ a.ctx-chip:hover { text-decoration: underline; }
 .ci-body { flex: 1; min-width: 0; }
 .ci-line { font-size: 13.5px; line-height: 1.4; }
 .ci-note { color: var(--ink); }
-.ci-meta { color: var(--muted); font-size: 12px; margin-top: 2px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
-.ci-meta .ci-edit { display: inline; }
-.ci-meta .ci-edit > summary { color: var(--primary); font-size: 12px; cursor: pointer; display: inline; }
+.ci-meta { color: var(--muted); font-size: 12px; margin-top: 2px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.ci-edit { margin-top: 5px; }
+.ci-edit > summary { color: var(--primary); font-size: 12.5px; font-weight: 600; cursor: pointer; list-style: none; display: inline-block; }
+.ci-edit > summary::-webkit-details-marker { display: none; }
+.ci-editform { margin-top: 6px; padding: 10px 12px; background: #FBF7F2; border: 1px solid var(--line); border-radius: 9px; max-width: 620px; }
 .linkbtn { border: 0; background: transparent; padding: 0; font: inherit; font-size: 12px; cursor: pointer; color: var(--primary); }
 .linkbtn.danger { color: #b91c1c; }
 .linkbtn:hover { text-decoration: underline; }

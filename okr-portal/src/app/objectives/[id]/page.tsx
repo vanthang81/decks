@@ -125,43 +125,43 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                   {ci.note && <span className="ci-note">— {ci.note}</span>}
                 </div>
                 <div className="ci-meta">
-                  {ci.author_name || ci.author_email || '—'} · {fmtDate(ci.created_at)}
+                  <span>{ci.author_name || ci.author_email || '—'} · {fmtDate(ci.created_at)}</span>
                   {canEditCi && (
-                    <>
-                      {' · '}
-                      <details className="inline ci-edit">
-                        <summary>Sửa</summary>
-                        <form action={editCheckInAction} className="row" style={{ marginTop: 6, maxWidth: 560 }}>
-                          <input type="hidden" name="id" value={ci.id} />
-                          <div style={{ maxWidth: 130 }}>
-                            <label className="f">Giá trị</label>
-                            <input className="i" name="value" defaultValue={ci.value ?? ''} />
-                          </div>
-                          <div style={{ maxWidth: 150 }}>
-                            <label className="f">Độ tự tin</label>
-                            <select className="i" name="confidence" defaultValue={ci.confidence}>
-                              <option value="on_track">Đúng tiến độ</option>
-                              <option value="at_risk">Có rủi ro</option>
-                              <option value="off_track">Chệch hướng</option>
-                            </select>
-                          </div>
-                          <div style={{ flex: 2 }}>
-                            <label className="f">Ghi chú</label>
-                            <input className="i" name="note" defaultValue={ci.note ?? ''} />
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                            <button className="btn sm" type="submit">Lưu</button>
-                          </div>
-                        </form>
-                      </details>
-                      {' · '}
-                      <form action={deleteCheckInAction} style={{ display: 'inline' }}>
-                        <input type="hidden" name="id" value={ci.id} />
-                        <button className="linkbtn danger" type="submit">Xoá</button>
-                      </form>
-                    </>
+                    <form action={deleteCheckInAction} style={{ display: 'inline' }}>
+                      <input type="hidden" name="id" value={ci.id} />
+                      <button className="linkbtn danger" type="submit">Xoá</button>
+                    </form>
                   )}
                 </div>
+                {canEditCi && (
+                  <details className="ci-edit">
+                    <summary>✏️ Sửa check-in</summary>
+                    <form action={editCheckInAction} className="ci-editform">
+                      <input type="hidden" name="id" value={ci.id} />
+                      <div className="row">
+                        <div style={{ maxWidth: 150 }}>
+                          <label className="f">Giá trị</label>
+                          <input className="i" name="value" defaultValue={ci.value ?? ''} />
+                        </div>
+                        <div style={{ maxWidth: 170 }}>
+                          <label className="f">Độ tự tin</label>
+                          <select className="i" name="confidence" defaultValue={ci.confidence}>
+                            <option value="on_track">Đúng tiến độ</option>
+                            <option value="at_risk">Có rủi ro</option>
+                            <option value="off_track">Chệch hướng</option>
+                          </select>
+                        </div>
+                        <div style={{ flex: 2 }}>
+                          <label className="f">Ghi chú</label>
+                          <input className="i" name="note" defaultValue={ci.note ?? ''} />
+                        </div>
+                      </div>
+                      <div style={{ marginTop: 8 }}>
+                        <button className="btn sm" type="submit">Lưu thay đổi</button>
+                      </div>
+                    </form>
+                  </details>
+                )}
               </div>
             </div>
           );
