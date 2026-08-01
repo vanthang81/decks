@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.7';
+export const GUIDE_VERSION = '2026-08-01.8';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -146,7 +146,7 @@ export const FEATURES: Feature[] = [
     where: 'Trang chi tiết OKR → "Kết quả then chốt"',
     help: 'Số đo của mục tiêu: bắt đầu → hiện tại → mục tiêu. Nhập tay hoặc gắn Nguồn KPI để tự cập nhật.',
     detail:
-      'Mỗi Objective có 2–5 KR. Khai báo loại (số/phần trăm/tiền/có-không), hướng (càng cao/càng thấp càng tốt), mốc bắt đầu–hiện tại–mục tiêu và trọng số. Tiến độ tự tính và roll-up lên Objective.',
+      'Mỗi Objective có 2–5 KR. Khai báo loại (số/phần trăm/tiền/có-không), hướng (càng cao/càng thấp càng tốt), mốc bắt đầu–hiện tại–mục tiêu và trọng số. Tiến độ tự tính và roll-up lên Objective. SỬA/XOÁ KR: ai có quyền Sửa OKR (xem "Phân quyền OKR") sẽ thấy nút "✏️ Sửa KR" cạnh mỗi KR → popup sửa toàn bộ trường + "🗑 Xoá KR" (có xác nhận). KR gắn nguồn KPI tự động thì loại/đơn vị/mốc/giá trị do đồng bộ BigQuery quản (khoá sửa tay).',
   },
   {
     key: 'checkin',
@@ -353,6 +353,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (sửa/xoá Key Result ngay trên màn hình)',
+    items: [
+      'Thêm nút "✏️ Sửa KR" cạnh mỗi Key Result → popup sửa tiêu đề/loại/hướng/đơn vị/mốc/trọng số/chỉ số/nguồn KPI + "🗑 Xoá KR" (có xác nhận).',
+      'Quyền sửa/xoá KR theo cùng phân quyền OKR (ai sửa được OKR thì quản được KR trong đó).',
+      'KR gắn KPI tự động: khoá các trường do BigQuery đồng bộ, tránh sửa nhầm.',
+    ],
+  },
   {
     date: '01/08/2026 (phân quyền OKR + sửa/xoá OKR ngay trên màn hình)',
     items: [

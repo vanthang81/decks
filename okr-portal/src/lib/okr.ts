@@ -306,6 +306,47 @@ export async function createKeyResult(input: {
   return row!.id;
 }
 
+/** Sửa định nghĩa KR (tiêu đề, loại/hướng/đơn vị, mốc, trọng số, chỉ số, nguồn KPI).
+ *  Giá trị HIỆN TẠI giữ nguyên (do check-in quản); progress tính lại theo mốc mới. */
+export async function updateKeyResult(
+  krId: string,
+  input: {
+    title: string;
+    metric_type: MetricType;
+    direction: Direction;
+    unit_label: string | null;
+    start_value: number;
+    target_value: number;
+    weight: number;
+    kpi_source: string | null;
+    indicator: Indicator;
+  },
+): Promise<void> {
+  const kr = await getKeyResult(krId);
+  if (!kr) return;
+  const progress = computeKrProgress({ ...input, current_value: kr.current_value });
+  await query(
+    `UPDATE okr_key_results
+        SET title=$2, metric_type=$3, direction=$4, unit_label=$5, start_value=$6,
+            target_value=$7, weight=$8, kpi_source=$9, indicator=$10, progress=$11, updated_at=now()
+       WHERE id=$1`,
+    [
+      krId,
+      input.title,
+      input.metric_type,
+      input.direction,
+      input.unit_label,
+      input.start_value,
+      input.target_value,
+      input.weight,
+      input.kpi_source,
+      input.indicator,
+      progress,
+    ],
+  );
+  await recomputeUp(kr.objective_id);
+}
+
 export async function setKeyResultValue(krId: string, current: number): Promise<void> {
   const kr = await getKeyResult(krId);
   if (!kr) return;

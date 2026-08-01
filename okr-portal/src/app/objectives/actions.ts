@@ -10,6 +10,7 @@ import {
   updateObjective,
   deleteObjective,
   createKeyResult,
+  updateKeyResult,
   setKeyResultValue,
   deleteKeyResult,
   getKeyResult,
@@ -175,6 +176,37 @@ export async function createKeyResultAction(fd: FormData) {
     }
   }
   revalidatePath(`/objectives/${objectiveId}`);
+}
+
+export async function editKeyResultAction(fd: FormData) {
+  const krId = str(fd, 'key_result_id');
+  const kr = await getKeyResult(krId);
+  if (!kr) throw new Error('Không tìm thấy KR.');
+  await assertCanManageObjective(kr.objective_id);
+  const title = str(fd, 'title');
+  if (!title) throw new Error('Thiếu tiêu đề KR.');
+  const kpiSource = orNull(str(fd, 'kpi_source'));
+  const isAuto = isKpiMetric(kpiSource);
+  await updateKeyResult(krId, {
+    title,
+    metric_type: isAuto ? 'currency' : ((str(fd, 'metric_type') || 'number') as MetricType),
+    direction: (str(fd, 'direction') || 'increase') as Direction,
+    unit_label: isAuto ? 'tỷ' : orNull(str(fd, 'unit_label')),
+    start_value: num(fd, 'start_value'),
+    target_value: num(fd, 'target_value', 100),
+    weight: num(fd, 'weight', 1),
+    kpi_source: kpiSource,
+    indicator: isAuto ? 'lagging' : ((str(fd, 'indicator') || 'lagging') as Indicator),
+  });
+  // KR gắn KPI tự động → đồng bộ lại target/current ngay từ BigQuery.
+  if (isAuto) {
+    try {
+      await syncKrKpi(krId);
+    } catch {
+      /* best-effort */
+    }
+  }
+  revalidatePath(`/objectives/${kr.objective_id}`);
 }
 
 export async function checkInAction(fd: FormData) {

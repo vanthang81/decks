@@ -5,8 +5,8 @@ import HelpTip from '@/components/HelpTip';
 import ExecutionTabs from '@/components/ExecutionTabs';
 import CommentThread from '@/components/CommentThread';
 import CheckinRow from '@/components/CheckinRow';
-import ConfirmButton from '@/components/ConfirmButton';
 import ObjectiveEditButton from '@/components/ObjectiveEditButton';
+import KeyResultEditButton from '@/components/KeyResultEditButton';
 import { ProgressBar, LevelBadge, StatusBadge } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
 import { listUnits } from '@/lib/org';
@@ -33,6 +33,7 @@ import {
   editObjectiveAction,
   deleteObjectiveAction,
   createKeyResultAction,
+  editKeyResultAction,
   checkInAction,
   editCheckInAction,
   deleteCheckInAction,
@@ -269,6 +270,27 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                   <div className="right muted mono" style={{ fontSize: 12 }}>
                     {kr.progress.toFixed(0)}%
                   </div>
+                  {canManage && (
+                    <div style={{ marginTop: 6, textAlign: 'right' }}>
+                      <KeyResultEditButton
+                        kr={{
+                          id: kr.id,
+                          title: kr.title,
+                          metric_type: kr.metric_type,
+                          direction: kr.direction,
+                          unit_label: kr.unit_label,
+                          start_value: kr.start_value,
+                          target_value: kr.target_value,
+                          weight: kr.weight,
+                          indicator: kr.indicator,
+                          kpi_source: kr.kpi_source,
+                        }}
+                        kpiSources={kpiSources}
+                        save={editKeyResultAction}
+                        del={deleteKeyResultAction}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -299,16 +321,6 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                         Lưu
                       </button>
                     </div>
-                  </form>
-                  <form action={deleteKeyResultAction} style={{ marginTop: 6 }}>
-                    <input type="hidden" name="key_result_id" value={kr.id} />
-                    <ConfirmButton
-                      className="btn ghost sm danger"
-                      label="Xoá KR"
-                      title="Xoá kết quả then chốt"
-                      message="Xoá KR này cùng toàn bộ check-in đã ghi? Hành động không thể hoàn tác."
-                      confirmLabel="Xoá hẳn"
-                    />
                   </form>
                 </details>
               )}
