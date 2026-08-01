@@ -3,6 +3,7 @@ import { query, queryOne } from './db';
 import { computeKrProgress, recomputeUp, type MetricType, type Direction, type Indicator, type OkrType, type ObjStatus } from './okr';
 import { recomputeInitiativeUp, initIdByCode } from './initiatives';
 import { nextInitCode } from './codes';
+import { parseNum } from './num';
 
 // ---- Nhãn cột (tiếng Việt) cho 3 sheet ----
 const OBJ_HEAD = ['Mã', 'Kỳ', 'Cấp', 'Khối/Phòng', 'Người chủ trì (email)', 'Tiêu đề', 'Mô tả', 'Loại OKR', 'Trạng thái', 'Tiến độ %', 'Mã OKR cha'];
@@ -59,7 +60,7 @@ export async function buildOkrWorkbook(periodId: string | null, unitId: string |
 export type ImportResult = { objUpdated: number; krUpdated: number; initUpdated: number; initCreated: number; skipped: number; errors: string[] };
 
 function s(v: unknown): string { return v == null ? '' : String(v).trim(); }
-function n(v: unknown): number { const x = Number(String(v ?? '').replace(/,/g, '')); return Number.isFinite(x) ? x : 0; }
+function n(v: unknown): number { return parseNum(v, 0); }
 function normDate(v: unknown): string | null {
   const t = s(v);
   if (!t) return null;

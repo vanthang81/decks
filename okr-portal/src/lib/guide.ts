@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.2';
+export const GUIDE_VERSION = '2026-08-01.3';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -345,6 +345,17 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (rà soát & sửa lỗi toàn diện)',
+    items: [
+      'Nhập số kiểu VN: "1.000.000" hiểu đúng là 1.000.000 (trước bị thành 0). Giữ đúng số thập phân (12,5).',
+      'Check-in bỏ trống "Giá trị mới" = chỉ ghi confidence/ghi chú, KHÔNG đưa KR về 0.',
+      'Sửa/xoá check-in KHÔNG làm sai KR gắn nguồn KPI tự động (giá trị do cron quản lý).',
+      'Tiến độ Objective luôn trong 0–100% (kể cả khi có KR trọng số 0).',
+      'Tiến độ % của Dự án/Tiểu dự án (có mục con) tự cuộn — ô nhập được khoá để tránh sửa nhầm.',
+      'Lỗi tạo thông báo không còn làm hỏng việc lưu bình luận.',
+    ],
+  },
   {
     date: '01/08/2026 (sửa lỗi sửa check-in)',
     items: [

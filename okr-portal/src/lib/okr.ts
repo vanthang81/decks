@@ -350,9 +350,17 @@ export async function recomputeUp(objectiveId: string | null): Promise<void> {
     );
     let progress: number;
     if (krs.length) {
-      const wsum = krs.reduce((a, k) => a + (k.weight || 0), 0) || krs.length;
-      const acc = krs.reduce((a, k) => a + k.progress * (k.weight || 1), 0);
-      progress = acc / (wsum || 1);
+      // Trọng số nhất quán ở TỬ & MẪU (weight 0 = loại khỏi cả hai). Tất cả 0 → bình quân đơn giản.
+      const w = krs.map((k) => (Number.isFinite(k.weight) && k.weight > 0 ? k.weight : 0));
+      let wsum = w.reduce((a, x) => a + x, 0);
+      let acc: number;
+      if (wsum > 0) {
+        acc = krs.reduce((a, k, i) => a + k.progress * w[i], 0);
+      } else {
+        wsum = krs.length;
+        acc = krs.reduce((a, k) => a + k.progress, 0);
+      }
+      progress = acc / wsum;
     } else {
       const kids = await query<{ progress: number }>(
         `SELECT progress::float8 AS progress FROM okr_objectives WHERE parent_id=$1`,
@@ -360,7 +368,7 @@ export async function recomputeUp(objectiveId: string | null): Promise<void> {
       );
       progress = kids.length ? kids.reduce((a, k) => a + k.progress, 0) / kids.length : 0;
     }
-    progress = Math.round(progress * 100) / 100;
+    progress = Math.max(0, Math.min(100, Math.round(progress * 100) / 100));
     const row = await queryOne<{ parent_id: string | null }>(
       'UPDATE okr_objectives SET progress=$2, updated_at=now() WHERE id=$1 RETURNING parent_id',
       [cur, progress],

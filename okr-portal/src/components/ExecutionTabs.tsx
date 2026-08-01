@@ -221,6 +221,7 @@ export default function ExecutionTabs({
           card={editing}
           canManage={canManage}
           canEdit={canEdit(editing)}
+          hasChildren={initiatives.some((i) => i.parent_id === editing.id)}
           users={users}
           units={units}
           projects={projects}
@@ -242,6 +243,7 @@ function EditModal({
   card,
   canManage,
   canEdit,
+  hasChildren,
   users,
   units,
   projects,
@@ -256,6 +258,7 @@ function EditModal({
   card: Card;
   canManage: boolean;
   canEdit: boolean;
+  hasChildren: boolean;
   users: PersonOpt[];
   units: UnitOpt[];
   projects: ProjectOpt[];
@@ -504,7 +507,16 @@ function EditModal({
               </div>
               <div>
                 <label className="f">Tiến độ %</label>
-                <input className="i" name="progress" defaultValue={card.progress} />
+                <input
+                  className="i"
+                  name="progress"
+                  defaultValue={card.progress}
+                  disabled={hasChildren}
+                  title={hasChildren ? 'Tiến độ tự cuộn từ mục con — sửa ở từng công việc con' : undefined}
+                />
+                {hasChildren && (
+                  <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>Tự cuộn từ mục con</div>
+                )}
               </div>
               {canManage && (
                 <div>

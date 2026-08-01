@@ -1,5 +1,6 @@
 'use server';
 
+import { parseNum } from '@/lib/num';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/current-user';
@@ -48,8 +49,7 @@ function str(fd: FormData, k: string): string {
   return String(fd.get(k) ?? '').trim();
 }
 function num(fd: FormData, k: string, def = 0): number {
-  const v = Number(String(fd.get(k) ?? '').replace(/,/g, ''));
-  return Number.isFinite(v) ? v : def;
+  return parseNum(fd.get(k), def);
 }
 function orNull(s: string): string | null {
   return s === '' ? null : s;
@@ -129,7 +129,8 @@ export async function checkInAction(fd: FormData) {
   const kr = await getKeyResult(krId);
   if (!kr) throw new Error('Không tìm thấy KR.');
   await assertCanManageObjective(kr.objective_id);
-  const value = num(fd, 'value', kr.current_value);
+  // Bỏ trống "Giá trị mới" = chỉ cập nhật confidence/ghi chú, GIỮ giá trị KR hiện tại.
+  const value = str(fd, 'value') === '' ? kr.current_value : num(fd, 'value', kr.current_value);
   await setKeyResultValue(krId, value);
   await addCheckIn({
     key_result_id: krId,
@@ -145,6 +146,8 @@ export async function checkInAction(fd: FormData) {
 async function resyncKrFromCheckins(krId: string) {
   const kr = await getKeyResult(krId);
   if (!kr) return;
+  // KR gắn nguồn KPI tự động (BigQuery) → giá trị do cron quản lý, KHÔNG đồng bộ theo check-in tay.
+  if (kr.kpi_source) return;
   const latest = await latestCheckinValue(krId);
   await setKeyResultValue(krId, latest ?? kr.start_value);
 }

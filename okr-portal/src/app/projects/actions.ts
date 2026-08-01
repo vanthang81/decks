@@ -1,5 +1,6 @@
 'use server';
 
+import { parseNum } from '@/lib/num';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/current-user';
@@ -21,8 +22,7 @@ function str(fd: FormData, k: string): string {
   return String(fd.get(k) ?? '').trim();
 }
 function num(fd: FormData, k: string, def = 0): number {
-  const v = Number(String(fd.get(k) ?? '').replace(/,/g, ''));
-  return Number.isFinite(v) ? v : def;
+  return parseNum(fd.get(k), def);
 }
 function orNull(s: string): string | null {
   return s === '' ? null : s;

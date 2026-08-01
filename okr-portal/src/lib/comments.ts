@@ -99,20 +99,25 @@ export async function addComment(input: {
     }
   }
   if (recipients.length > 0) {
-    const ent = await resolveEntity(input.entityType, input.entityId);
-    const preview = input.body.length > 140 ? input.body.slice(0, 140) + '…' : input.body;
-    await notify({
-      recipients,
-      type,
-      actorEmail: input.authorEmail,
-      actorName: input.authorName,
-      entityType: input.entityType,
-      entityId: input.entityId,
-      commentId: id,
-      preview,
-      link: ent?.link ?? '/',
-      entityLabel: ent?.label ?? 'OKR',
-    });
+    // Best-effort: lỗi tạo thông báo KHÔNG được làm hỏng việc lưu bình luận.
+    try {
+      const ent = await resolveEntity(input.entityType, input.entityId);
+      const preview = input.body.length > 140 ? input.body.slice(0, 140) + '…' : input.body;
+      await notify({
+        recipients,
+        type,
+        actorEmail: input.authorEmail,
+        actorName: input.authorName,
+        entityType: input.entityType,
+        entityId: input.entityId,
+        commentId: id,
+        preview,
+        link: ent?.link ?? '/',
+        entityLabel: ent?.label ?? 'OKR',
+      });
+    } catch (e) {
+      console.error('[comments] notify failed', e);
+    }
   }
 
   const created = await getComment(id);
