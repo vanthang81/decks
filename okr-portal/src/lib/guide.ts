@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.17';
+export const GUIDE_VERSION = '2026-08-01.18';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -136,9 +136,9 @@ export const FEATURES: Feature[] = [
     key: 'okr-cascade',
     title: 'OKR & liên kết (cascade)',
     where: 'Menu "OKR"',
-    help: 'Cây mục tiêu Công ty → Khối → Phòng → Cá nhân, thu gọn/mở rộng từng cấp. Liên kết OKR con lên OKR cấp trên để đồng bộ hướng đi.',
+    help: 'Cây mục tiêu Công ty → Khối → Phòng → Cá nhân, thu gọn/mở rộng + BỘ LỌC (khối/phòng, cấp, trạng thái, loại, tìm kiếm).',
     detail:
-      'Trang OKR hiển thị toàn bộ mục tiêu trong kỳ dạng cây theo alignment. Mỗi nút CÓ cấp con hiện mũi tên ▸ để thu gọn/mở rộng (kèm số OKR con); có nút "Mở rộng tất cả / Thu gọn tất cả". Mặc định mở tới cấp Khối, thu gọn từ Phòng trở xuống cho dễ nhìn tổng thể. Mỗi cấp có màu viền + nhãn riêng (Công ty/Khối/Phòng/Cá nhân). Khi tạo OKR, chọn cấp, đơn vị, người chủ trì và "Liên kết lên" một OKR cấp trên để tạo dòng chảy chiến lược.',
+      'Trang OKR hiển thị toàn bộ mục tiêu trong kỳ dạng cây theo alignment. Có THANH LỌC: tìm theo tên/mã/người chủ trì + lọc theo Khối/Phòng, Cấp, Trạng thái, Loại OKR — khi lọc sẽ hiện danh sách kết quả khớp (kèm số lượng), bỏ lọc để về lại cây. Mỗi nút CÓ cấp con hiện mũi tên ▸ để thu gọn/mở rộng (kèm số OKR con); có nút "Mở rộng tất cả / Thu gọn tất cả". Mặc định mở tới cấp Khối, thu gọn từ Phòng trở xuống. Khi tạo OKR, chọn cấp, đơn vị, người chủ trì và "Liên kết lên" một OKR cấp trên để tạo dòng chảy chiến lược.',
   },
   {
     key: 'key-result',
@@ -353,6 +353,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (bộ lọc trang OKR)',
+    items: [
+      'Trang OKR thêm thanh lọc: tìm kiếm + lọc theo Khối/Phòng, Cấp, Trạng thái, Loại OKR. Khi lọc hiện danh sách kết quả khớp; bỏ lọc về lại cây.',
+    ],
+  },
   {
     date: '01/08/2026 (biểu đồ & trực quan hoá insight)',
     items: [

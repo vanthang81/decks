@@ -12,8 +12,12 @@ export type TreeObjective = {
   parent_id: string | null;
   level: string;
   title: string;
+  unit_id: string | null;
   unit_name: string | null;
+  unit_code: string | null;
   owner_name: string | null;
+  status: string;
+  okr_type: string;
   kr_count: number;
   progress: number;
 };
@@ -23,6 +27,17 @@ const LEVEL_LABEL: Record<string, string> = {
   division: 'Khối',
   department: 'Phòng',
   individual: 'Cá nhân',
+};
+const STATUS_LABEL: Record<string, string> = {
+  draft: 'Nháp',
+  active: 'Đang chạy',
+  done: 'Hoàn thành',
+  archived: 'Lưu trữ',
+};
+const TYPE_LABEL: Record<string, string> = {
+  committed: 'Cam kết',
+  aspirational: 'Khát vọng',
+  learning: 'Học hỏi',
 };
 
 type Node = TreeObjective & { depth: number; children: Node[] };
@@ -93,6 +108,76 @@ export default function ObjectiveTree({ objectives }: { objectives: TreeObjectiv
   const allExpanded = collapsed.size === 0;
   const allCollapsed = collapsed.size >= parentIds.size && parentIds.size > 0;
 
+  // ----- Bộ lọc (Khối/Phòng · Cấp · Trạng thái · Loại · tìm) -----
+  const [q, setQ] = useState('');
+  const [fUnit, setFUnit] = useState('');
+  const [fLevel, setFLevel] = useState('');
+  const [fStatus, setFStatus] = useState('');
+  const [fType, setFType] = useState('');
+
+  const units = useMemo(() => {
+    const m = new Map<string, { name: string; code: string | null }>();
+    for (const o of objectives) if (o.unit_id && o.unit_name) m.set(o.unit_id, { name: o.unit_name, code: o.unit_code });
+    return [...m.entries()].map(([id, v]) => ({ id, ...v })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [objectives]);
+  const levels = useMemo(() => [...new Set(objectives.map((o) => o.level))], [objectives]);
+  const statuses = useMemo(() => [...new Set(objectives.map((o) => o.status))], [objectives]);
+  const types = useMemo(() => [...new Set(objectives.map((o) => o.okr_type))], [objectives]);
+
+  const filterActive = !!(q.trim() || fUnit || fLevel || fStatus || fType);
+  const qlc = q.trim().toLowerCase();
+  const matched = useMemo(() => {
+    if (!filterActive) return [];
+    return objectives.filter((o) => {
+      if (fUnit && o.unit_id !== fUnit) return false;
+      if (fLevel && o.level !== fLevel) return false;
+      if (fStatus && o.status !== fStatus) return false;
+      if (fType && o.okr_type !== fType) return false;
+      if (qlc) {
+        const hay = `${o.title} ${o.code ?? ''} ${o.owner_name ?? ''} ${o.unit_name ?? ''}`.toLowerCase();
+        if (!hay.includes(qlc)) return false;
+      }
+      return true;
+    });
+  }, [objectives, filterActive, fUnit, fLevel, fStatus, fType, qlc]);
+  const clearFilter = () => {
+    setQ('');
+    setFUnit('');
+    setFLevel('');
+    setFStatus('');
+    setFType('');
+  };
+
+  // Dòng phẳng (dùng khi đang lọc — bỏ cây thụt cấp, hiện đủ ngữ cảnh).
+  const renderFlat = (o: TreeObjective): React.ReactNode => (
+    <div key={o.id} className="ot-node">
+      <div className="ot-row" data-level={o.level}>
+        <span className="ot-dot" aria-hidden />
+        <div className="ot-main">
+          <div className="ot-ttl">
+            {(o.level === 'division' || o.level === 'department') && o.unit_name && (
+              <span className="unit-ic-sm" title={o.unit_name} aria-hidden>
+                {unitIcon({ code: o.unit_code, name: o.unit_name, type: o.level })}
+              </span>
+            )}
+            <span className={`ot-lvl lvl-${o.level}`}>{LEVEL_LABEL[o.level] ?? o.level}</span>
+            {o.code && <span className="okr-code">{o.code}</span>}
+            <Link href={`/objectives/${o.id}`}>{o.title}</Link>
+          </div>
+          <div className="ot-meta">
+            {o.unit_name ? `${o.unit_name}` : ''}
+            {o.owner_name ? `${o.unit_name ? ' · ' : ''}Chủ trì: ${o.owner_name}` : ''}
+            {` · ${o.kr_count} KR · ${STATUS_LABEL[o.status] ?? o.status}`}
+          </div>
+        </div>
+        <div className="ot-prog">
+          <ProgressBar value={o.progress} />
+          <span className="ot-pct mono">{o.progress.toFixed(0)}%</span>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderNode = (n: Node): React.ReactNode => {
     const hasKids = n.children.length > 0;
     const isCollapsed = collapsed.has(n.id);
@@ -148,19 +233,74 @@ export default function ObjectiveTree({ objectives }: { objectives: TreeObjectiv
 
   return (
     <div className="ot">
-      {parentIds.size > 0 && (
-        <div className="ot-toolbar">
-          <button type="button" className="ot-tbtn" onClick={expandAll} disabled={allExpanded}>
-            <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-            Mở rộng tất cả
+      <div className="filterbar">
+        <input
+          className="i fb-search"
+          placeholder="🔍 Tìm theo tên, mã, người chủ trì…"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+        <select className="i fb-sel" value={fUnit} onChange={(e) => setFUnit(e.target.value)}>
+          <option value="">Khối / Phòng: tất cả</option>
+          {units.map((u) => (
+            <option key={u.id} value={u.id}>
+              {unitIcon({ code: u.code, name: u.name, type: 'division' })} {u.name}
+            </option>
+          ))}
+        </select>
+        <select className="i fb-sel" value={fLevel} onChange={(e) => setFLevel(e.target.value)}>
+          <option value="">Cấp: tất cả</option>
+          {levels.map((l) => (
+            <option key={l} value={l}>{LEVEL_LABEL[l] ?? l}</option>
+          ))}
+        </select>
+        <select className="i fb-sel" value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
+          <option value="">Trạng thái: tất cả</option>
+          {statuses.map((s) => (
+            <option key={s} value={s}>{STATUS_LABEL[s] ?? s}</option>
+          ))}
+        </select>
+        <select className="i fb-sel" value={fType} onChange={(e) => setFType(e.target.value)}>
+          <option value="">Loại: tất cả</option>
+          {types.map((t) => (
+            <option key={t} value={t}>{TYPE_LABEL[t] ?? t}</option>
+          ))}
+        </select>
+        {filterActive && (
+          <button type="button" className="btn ghost sm" onClick={clearFilter}>
+            ✕ Xoá lọc
           </button>
-          <button type="button" className="ot-tbtn" onClick={collapseAll} disabled={allCollapsed}>
-            <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden><path d="M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-            Thu gọn tất cả
-          </button>
-        </div>
+        )}
+      </div>
+
+      {filterActive ? (
+        <>
+          <p className="muted" style={{ fontSize: 13, margin: '2px 0 8px' }}>
+            {matched.length} kết quả khớp bộ lọc.
+          </p>
+          {matched.length === 0 ? (
+            <p className="muted">Không có OKR nào khớp bộ lọc.</p>
+          ) : (
+            <div className="ot-body">{matched.map(renderFlat)}</div>
+          )}
+        </>
+      ) : (
+        <>
+          {parentIds.size > 0 && (
+            <div className="ot-toolbar">
+              <button type="button" className="ot-tbtn" onClick={expandAll} disabled={allExpanded}>
+                <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                Mở rộng tất cả
+              </button>
+              <button type="button" className="ot-tbtn" onClick={collapseAll} disabled={allCollapsed}>
+                <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden><path d="M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                Thu gọn tất cả
+              </button>
+            </div>
+          )}
+          <div className="ot-body">{roots.map(renderNode)}</div>
+        </>
       )}
-      <div className="ot-body">{roots.map(renderNode)}</div>
     </div>
   );
 }

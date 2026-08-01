@@ -40,8 +40,12 @@ export default async function ObjectivesPage({
     parent_id: o.parent_id,
     level: o.level,
     title: o.title,
+    unit_id: o.unit_id,
     unit_name: o.unit_name,
+    unit_code: o.unit_code,
     owner_name: o.owner_name,
+    status: o.status,
+    okr_type: o.okr_type,
     kr_count: o.kr_count,
     progress: o.progress,
   }));
