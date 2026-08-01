@@ -52,6 +52,12 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
               {periods.length} kỳ · đặt kỳ hiện tại, đóng/mở kỳ.
             </p>
           </Link>
+          <Link className="card" href="/admin/permissions" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <h3 style={{ marginTop: 0 }}>Phân quyền OKR</h3>
+            <p className="muted" style={{ marginBottom: 0 }}>
+              Ai được Sửa / Xoá / Tạo OKR (theo vai trò × phạm vi) + danh sách “Quản trị OKR” toàn quyền.
+            </p>
+          </Link>
           <Link className="card" href="/admin/settings" style={{ textDecoration: 'none', color: 'inherit' }}>
             <h3 style={{ marginTop: 0 }}>Cài đặt · Nhắc check-in</h3>
             <p className="muted" style={{ marginBottom: 0 }}>

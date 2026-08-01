@@ -2,8 +2,9 @@
 //  - Quản lý (exec = "admin", hoặc lead quản OKR = "editor"): sửa + xoá bất kỳ lúc nào.
 //  - Người dùng thường: CHỈ được sửa bình luận/check-in của CHÍNH MÌNH trong 3 giờ
 //    kể từ lúc đăng; KHÔNG được xoá.
-import { getObjective, canManageObjective } from './okr';
+import { getObjective } from './okr';
 import { listUnits } from './org';
+import { loadOkrPerms, canEditObjectiveP } from './okr-perms';
 import { objectiveIdOfEntity, type EntityType } from './comments';
 import type { OkrUser } from './users';
 
@@ -23,9 +24,13 @@ export async function canManageObjectiveId(
   objectiveId: string | null,
 ): Promise<boolean> {
   if (!objectiveId) return false;
-  const [obj, units] = await Promise.all([getObjective(objectiveId), listUnits()]);
+  const [obj, units, perms] = await Promise.all([
+    getObjective(objectiveId),
+    listUnits(),
+    loadOkrPerms(),
+  ]);
   if (!obj) return false;
-  return canManageObjective(user, obj, units);
+  return canEditObjectiveP(user, obj, units, perms);
 }
 
 /** User có quyền quản lý bình luận/việc gắn với 1 thực thể không? */

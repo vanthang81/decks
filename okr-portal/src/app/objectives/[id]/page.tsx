@@ -6,6 +6,7 @@ import ExecutionTabs from '@/components/ExecutionTabs';
 import CommentThread from '@/components/CommentThread';
 import CheckinRow from '@/components/CheckinRow';
 import ConfirmButton from '@/components/ConfirmButton';
+import ObjectiveEditButton from '@/components/ObjectiveEditButton';
 import { ProgressBar, LevelBadge, StatusBadge } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
 import { listUnits } from '@/lib/org';
@@ -14,7 +15,6 @@ import {
   getObjective,
   listKeyResults,
   listChildObjectives,
-  canManageObjective,
   OKR_TYPE_LABEL,
   OKR_TYPE_EXPECT,
   INDICATOR_LABEL,
@@ -30,6 +30,8 @@ import { listCheckInsForObjective, CONFIDENCE_LABEL, CONFIDENCE_COLOR } from '@/
 import { listKpiMetrics } from '@/lib/kpi';
 import { fmtMetric, fmtVnd, fmtDate } from '@/lib/format';
 import {
+  editObjectiveAction,
+  deleteObjectiveAction,
   createKeyResultAction,
   checkInAction,
   editCheckInAction,
@@ -42,6 +44,7 @@ import {
 } from '../actions';
 import { createProjectForInitiativeAction } from '@/app/projects/actions';
 import { withinEditWindow } from '@/lib/moderation';
+import { loadOkrPerms, canEditObjectiveP, canDeleteObjectiveP } from '@/lib/okr-perms';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,7 +55,9 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
 
   const units = await listUnits();
   const users = await listUsers();
-  const canManage = canManageObjective(user, obj, units);
+  const perms = await loadOkrPerms();
+  const canManage = canEditObjectiveP(user, obj, units, perms);
+  const canDelete = canDeleteObjectiveP(user, obj, units, perms);
 
   // Options cho popup edit (client): người (cá nhân) + đơn vị (khối/phòng).
   const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url }));
@@ -196,6 +201,27 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                 {obj.progress.toFixed(0)}%
               </div>
               <ProgressBar value={obj.progress} lg />
+              {canManage && (
+                <div style={{ marginTop: 10, display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                  <ObjectiveEditButton
+                    objective={{
+                      id: obj.id,
+                      title: obj.title,
+                      description: obj.description,
+                      status: obj.status,
+                      okr_type: obj.okr_type,
+                      owner_email: obj.owner_email,
+                      unit_id: obj.unit_id,
+                      level: obj.level,
+                    }}
+                    users={personOpts.map((p) => ({ email: p.email, name: p.name }))}
+                    units={unitOpts}
+                    canDelete={canDelete}
+                    save={editObjectiveAction}
+                    del={deleteObjectiveAction}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

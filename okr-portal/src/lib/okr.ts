@@ -246,12 +246,20 @@ export async function createObjective(input: {
 
 export async function updateObjective(
   id: string,
-  input: { title: string; description: string | null; status: ObjStatus; parent_id: string | null },
+  input: {
+    title: string;
+    description: string | null;
+    status: ObjStatus;
+    okr_type: OkrType;
+    owner_email: string | null;
+    unit_id: string | null;
+  },
 ): Promise<void> {
   await query(
-    `UPDATE okr_objectives SET title=$2, description=$3, status=$4, parent_id=$5, updated_at=now()
+    `UPDATE okr_objectives
+        SET title=$2, description=$3, status=$4, okr_type=$5, owner_email=$6, unit_id=$7, updated_at=now()
        WHERE id=$1`,
-    [id, input.title, input.description, input.status, input.parent_id],
+    [id, input.title, input.description, input.status, input.okr_type, input.owner_email, input.unit_id],
   );
 }
 

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.6';
+export const GUIDE_VERSION = '2026-08-01.7';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -300,6 +300,14 @@ export const FEATURES: Feature[] = [
     detail:
       'Khu vực dành cho CEO/CFO: quản lý cây tổ chức (Khối/Phòng), người dùng & vai trò, kỳ OKR (khung thời gian nhiều cấp), đồng bộ KPI từ BigQuery, Import/Export Excel và cấu hình nhắc check-in. Các thao tác thay đổi cấu trúc hệ thống đều nằm ở đây.',
   },
+  {
+    key: 'okr-perms',
+    title: 'Phân quyền OKR (Sửa / Xoá / Tạo)',
+    where: 'Quản trị → "Phân quyền OKR" (CEO/CFO); nút "✏️ Sửa OKR" ở mỗi trang OKR',
+    help: 'Cấu hình vai trò nào được Sửa/Xoá/Tạo OKR (theo phạm vi tổ chức) + danh sách "Quản trị OKR" toàn quyền.',
+    detail:
+      'Mô hình VAI TRÒ × PHẠM VI + Quản trị OKR: (1) CEO/CFO luôn toàn quyền. (2) Ở "Phân quyền OKR" chọn vai trò nào (Giám đốc khối / Trưởng phòng / Nhân viên) được Sửa/Xoá/Tạo — quyền chỉ áp TRONG phạm vi tổ chức của người đó (GĐ khối → nhánh khối; TP → phòng); chủ trì/người tạo luôn sửa được OKR của mình. (3) Danh sách "Quản trị OKR" = vài người được toàn quyền mọi OKR bất kể phạm vi. Mặc định: Sửa/Tạo = GĐ khối + Trưởng phòng; Xoá = chỉ CEO/CFO (+ Quản trị OKR). Ai có quyền Sửa sẽ thấy nút "✏️ Sửa OKR" ngay trên trang OKR để mở popup sửa/xoá; phân quyền áp cả ở giao diện lẫn máy chủ.',
+  },
 ];
 
 // ---- Lộ trình đề xuất (từ research best practice — chưa có, chờ CFO duyệt) ----
@@ -345,6 +353,15 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (phân quyền OKR + sửa/xoá OKR ngay trên màn hình)',
+    items: [
+      'Thêm nút "✏️ Sửa OKR" ngay trên mỗi trang OKR (popup sửa tiêu đề/loại/trạng thái/chủ trì/đơn vị/mô tả), hiện theo quyền.',
+      'Xoá OKR (Objective) — mặc định chỉ CEO/CFO + Quản trị OKR; có popup xác nhận.',
+      'Trang Quản trị → "Phân quyền OKR": cấu hình vai trò nào được Sửa/Xoá/Tạo (theo phạm vi) + danh sách "Quản trị OKR" toàn quyền.',
+      'Phân quyền áp cả ở giao diện (ẩn nút) lẫn máy chủ (chặn thật) — không ai lách được qua URL/API.',
+    ],
+  },
   {
     date: '01/08/2026 (quy tắc sửa/xoá bình luận & check-in)',
     items: [

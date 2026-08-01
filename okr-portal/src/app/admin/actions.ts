@@ -16,6 +16,7 @@ import { syncAllKpi } from '@/lib/kpi';
 import { redirect } from 'next/navigation';
 import { setSetting } from '@/lib/settings';
 import { REMINDER_KEY, runCheckinReminders, type ReminderConfig } from '@/lib/reminders';
+import { OKR_PERM_KEYS } from '@/lib/okr-perms';
 
 async function requireExec() {
   const user = await requireUser();
@@ -139,6 +140,22 @@ export async function saveReminderAction(fd: FormData) {
   };
   await setSetting(REMINDER_KEY, cfg);
   redirect('/admin/settings?saved=1');
+}
+
+// ---------- Phân quyền Sửa/Xoá/Tạo OKR ----------
+export async function savePermissionsAction(fd: FormData) {
+  await requireExec();
+  // Vai trò cấu hình được (CEO/CFO luôn toàn quyền nên không nằm trong ma trận).
+  const roles: Role[] = ['division_lead', 'dept_lead', 'staff'];
+  const pick = (cap: string): Role[] => roles.filter((r) => fd.get(`${cap}_${r}`) === 'on');
+  await setSetting(OKR_PERM_KEYS.edit, pick('edit'));
+  await setSetting(OKR_PERM_KEYS.delete, pick('delete'));
+  await setSetting(OKR_PERM_KEYS.create, pick('create'));
+  const admins = Array.from(
+    new Set(fd.getAll('admins').map((e) => String(e).trim().toLowerCase()).filter(Boolean)),
+  );
+  await setSetting(OKR_PERM_KEYS.admins, admins);
+  redirect('/admin/permissions?saved=1');
 }
 
 export async function testReminderAction() {
