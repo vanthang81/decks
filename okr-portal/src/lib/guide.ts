@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.11';
+export const GUIDE_VERSION = '2026-08-01.12';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -353,6 +353,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (thống nhất mã tự sinh — tiêu đề chỉ còn text)',
+    items: [
+      'Mọi mã O/KR/H do hệ thống TỰ SINH và hiển thị dạng badge (vd CU-01.KR4) — người dùng chỉ viết nội dung (text), không cần gõ mã/tiền tố.',
+      'Đã dọn các tiền tố cũ nhúng trong tiêu đề dữ liệu seed: "2026 —"/"2026:" ở Objective, "M-xx:" ở KR, "H-xx:" ở công việc.',
+    ],
+  },
   {
     date: '01/08/2026 (cảnh báo hạn công việc + icon riêng cho Khối)',
     items: [
