@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.29';
+export const GUIDE_VERSION = '2026-08-01.30';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -460,6 +460,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (Cử chỉ cảm ứng: kéo–làm mới + vuốt chuyển tab)',
+    items: [
+      'Trên điện thoại/máy tính bảng (cảm ứng): KÉO XUỐNG từ đỉnh trang → làm mới dữ liệu (pull-to-refresh) kiểu web iPhone, có con quay iOS.',
+      'VUỐT TRÁI/PHẢI để chuyển sang tab kế/trước trong thanh điều hướng (Bảng điều khiển ↔ OKR ↔ Dự án ↔ Công việc ↔ KPI ↔ Của tôi ↔ Hướng dẫn), có nhãn tab gợi ý.',
+      'Tự bỏ qua khi đang cuộn ngang trong bảng/Kanban/ô nhập và khi vuốt sát mép (nhường back-swipe iOS). Máy tính (chuột) không bị ảnh hưởng.',
+    ],
+  },
   {
     date: '01/08/2026 (KPI: seed 30 + chủ sở hữu + ngưỡng mặc định + auto-fill)',
     items: [

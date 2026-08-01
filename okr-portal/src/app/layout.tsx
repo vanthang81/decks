@@ -3,6 +3,7 @@ import './globals.css';
 import { FAVICON, BRAND } from '@/lib/brand';
 import SiteFooter from '@/components/SiteFooter';
 import BackToTop from '@/components/BackToTop';
+import MobileGestures from '@/components/MobileGestures';
 
 export const metadata: Metadata = {
   title: `${BRAND.full}`,
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <SiteFooter />
         <BackToTop />
+        <MobileGestures />
       </body>
     </html>
   );
