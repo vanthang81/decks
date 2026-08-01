@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.23';
+export const GUIDE_VERSION = '2026-08-01.24';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -29,8 +29,40 @@ export const METHODOLOGY: GuideSection[] = [
     ],
   },
   {
+    id: 'chuoi-lien-ket',
+    title: '2. Khung liên kết chuẩn: Chiến lược → Thực thi',
+    blocks: [
+      {
+        p: 'BTMH quản trị theo MỘT CHUỖI LIÊN KẾT thống nhất — để mọi việc hằng ngày truy ngược được về chiến lược, và mọi mục tiêu chiến lược đo được xuống tới cấp Phòng ban.',
+      },
+      {
+        p: 'Chuỗi chuẩn gồm 6 lớp lồng nhau:',
+        list: [
+          'BSC (4 viễn cảnh): Tài chính · Khách hàng · Quy trình nội bộ · Học hỏi & Phát triển — lăng kính cân bằng của chiến lược.',
+          'Mục tiêu chiến lược (cấp Công ty): điều muốn thắng trong 3–5 năm, gắn một viễn cảnh BSC.',
+          'KRA — Khu vực kết quả trọng yếu: ai / đơn vị chịu trách nhiệm mảng kết quả nào (ở BTMH = các module chức năng, mỗi module một chủ).',
+          'OKR = Objective + Key Results: mục tiêu có thời hạn + kết quả đo được; cascade xuống Khối → Phòng → Cá nhân.',
+          'KPI: chỉ số đo — gắn vào KR để tự đo, hoặc theo dõi thường xuyên (sức khỏe vận hành). Tự động từ BigQuery nơi có sẵn, nhập tay nơi chưa có.',
+          'Projects → Action Plans → Tasks: phần THỰC THI để đạt KR/KPI.',
+        ],
+      },
+      {
+        note: 'Sơ đồ: BSC → Mục tiêu chiến lược → KRA → OKR (Objective + KR) → { KPI · Dự án → Kế hoạch → Công việc }. "Bộ khung chuẩn" này là xương sống; hệ điều hành nội bộ (module chức năng, scorecard có trọng số, ngưỡng cảnh báo) là bản HIỆN THỰC HÓA cụ thể của lớp KRA + KPI cho BTMH.',
+      },
+      {
+        p: 'Đo lường chạy HAI CHIỀU: MỤC TIÊU (target) chảy XUỐNG (Công ty → Khối → Phòng), THỰC HIỆN (actual) cuộn LÊN theo cách gộp của từng chỉ số. Tiến độ Công việc cuộn lên Dự án → KR → Objective.',
+      },
+      {
+        p: 'Phân biệt hai loại "đo": KR đo KẾT QUẢ của một mục tiêu có thời hạn (điều muốn thay đổi); KPI đo SỨC KHỎE lặp lại của vận hành, có ngưỡng xanh/vàng/đỏ. Một KR có thể đặt mục tiêu TRÊN một KPI để không phải nhập số hai lần.',
+      },
+      {
+        note: 'Calibration riêng của BTMH: đo BIÊN thật / lãi thật, KHÔNG đo doanh thu đơn thuần — vì doanh thu bị giá vàng chi phối, biên mỗi chỉ mới phản ánh "công" thật của chuỗi.',
+      },
+    ],
+  },
+  {
     id: 'okr-vs-kpi',
-    title: '2. OKR vs KPI — chỉ số dẫn dắt & chỉ số kết quả',
+    title: '3. OKR vs KPI — chỉ số dẫn dắt & chỉ số kết quả',
     blocks: [
       {
         p: 'KPI là chỉ số đo sức khoẻ vận hành thường xuyên (VD: doanh thu, lãi gộp, tồn kho). OKR là mục tiêu THAY ĐỔI trong một kỳ. KPI cho biết "đang tốt/xấu", OKR cho biết "cần đi đâu".',
@@ -45,7 +77,7 @@ export const METHODOLOGY: GuideSection[] = [
   },
   {
     id: 'cach-viet',
-    title: '3. Cách viết Objective & Key Result tốt',
+    title: '4. Cách viết Objective & Key Result tốt',
     blocks: [
       { p: 'Objective: ngắn, định hướng, có ý nghĩa kinh doanh. Tránh "vận hành như thường lệ" (business-as-usual) — OKR là thứ MUỐN THAY ĐỔI, không phải việc duy trì.' },
       {
@@ -59,7 +91,7 @@ export const METHODOLOGY: GuideSection[] = [
   },
   {
     id: 'cam-ket-khat-vong',
-    title: '4. OKR cam kết vs khát vọng',
+    title: '5. OKR cam kết vs khát vọng',
     blocks: [
       {
         p: 'OKR CAM KẾT (committed): bắt buộc đạt ~100%, không đạt phải giải trình. OKR KHÁT VỌNG (aspirational/moonshot): kỳ vọng đạt ~70%, chấp nhận rủi ro cao để tạo đột phá.',
@@ -71,7 +103,7 @@ export const METHODOLOGY: GuideSection[] = [
   },
   {
     id: 'nhip',
-    title: '5. Nhịp làm việc — check-in tuần, review quý',
+    title: '6. Nhịp làm việc — check-in tuần, review quý',
     blocks: [
       {
         p: 'Check-in hàng tuần (15–30 phút): cập nhật số liệu KR + mức độ tự tin + việc vướng. Cuối kỳ (quý): chấm điểm & rút kinh nghiệm, đặt OKR kỳ sau.',
@@ -88,7 +120,7 @@ export const METHODOLOGY: GuideSection[] = [
   },
   {
     id: 'cham-diem',
-    title: '6. Chấm điểm & tiến độ',
+    title: '7. Chấm điểm & tiến độ',
     blocks: [
       {
         p: 'Tiến độ mỗi KR tính từ (hiện tại − bắt đầu) / (mục tiêu − bắt đầu), kẹp 0–100%. Tiến độ Objective = bình quân theo trọng số các KR; không có KR thì lấy bình quân OKR con. Tiến độ tự "chảy ngược" lên: Cá nhân → Phòng → Khối → Công ty.',
@@ -98,7 +130,7 @@ export const METHODOLOGY: GuideSection[] = [
   },
   {
     id: 'hanh-dong',
-    title: '7. Dự án, Kế hoạch hành động & Ngân sách',
+    title: '8. Dự án, Kế hoạch hành động & Ngân sách',
     blocks: [
       {
         p: 'Thực thi OKR bằng cây công việc: một Objective/KR có thể triển khai bằng công việc đơn, hoặc cả một DỰ ÁN có TIỂU DỰ ÁN và nhiều CÔNG VIỆC con. Mỗi nút có người phụ trách, hạn, ưu tiên, trạng thái, % hoàn thành và ngân sách.',
@@ -113,7 +145,7 @@ export const METHODOLOGY: GuideSection[] = [
   },
   {
     id: 'phan-quyen',
-    title: '8. Phân quyền theo cây tổ chức',
+    title: '9. Phân quyền theo cây tổ chức',
     blocks: [
       {
         p: 'Mọi người đăng nhập đều XEM được toàn bộ OKR (minh bạch). Quyền SỬA giới hạn theo vai trò & đơn vị: lãnh đạo quản OKR trong phạm vi đơn vị mình (gồm cấp dưới); ai cũng tạo/sửa OKR cá nhân của mình. Quản trị hệ thống (người dùng, tổ chức, kỳ) chỉ CEO/CFO.',
@@ -368,6 +400,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (phương pháp luận: chuỗi liên kết chuẩn)',
+    items: [
+      'Hướng dẫn bổ sung mục "Khung liên kết chuẩn: Chiến lược → Thực thi" — chuỗi 6 lớp BSC → Mục tiêu chiến lược → KRA → OKR → { KPI · Dự án→Kế hoạch→Công việc }, cùng nguyên tắc đo 2 chiều (target xuống / actual lên) và phân biệt KR (kết quả) vs KPI (sức khỏe vận hành).',
+    ],
+  },
   {
     date: '01/08/2026 (Công việc: sửa nhanh + tinh chỉnh UI)',
     items: [
