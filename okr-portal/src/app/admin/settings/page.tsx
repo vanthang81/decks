@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import { requireUser } from '@/lib/current-user';
-import { canAdmin } from '@/lib/rbac';
+import { loadAccess, canManageSystem } from '@/lib/access';
 import { getReminderConfig, WEEKDAY_LABEL } from '@/lib/reminders';
 import { saveReminderAction, testReminderAction } from '../actions';
 
@@ -14,7 +14,7 @@ export default async function AdminSettings({
   searchParams: { saved?: string; test?: string };
 }) {
   const me = await requireUser();
-  if (!canAdmin(me.role)) redirect('/');
+  if (!canManageSystem(me, await loadAccess())) redirect('/');
   const cfg = await getReminderConfig();
 
   return (

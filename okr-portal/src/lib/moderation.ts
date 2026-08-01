@@ -4,7 +4,7 @@
 //    kể từ lúc đăng; KHÔNG được xoá.
 import { getObjective } from './okr';
 import { listUnits } from './org';
-import { loadOkrPerms, canEditObjectiveP } from './okr-perms';
+import { loadAccess, canEditObjective } from './access';
 import { objectiveIdOfEntity, type EntityType } from './comments';
 import type { OkrUser } from './users';
 
@@ -24,13 +24,13 @@ export async function canManageObjectiveId(
   objectiveId: string | null,
 ): Promise<boolean> {
   if (!objectiveId) return false;
-  const [obj, units, perms] = await Promise.all([
+  const [obj, units, access] = await Promise.all([
     getObjective(objectiveId),
     listUnits(),
-    loadOkrPerms(),
+    loadAccess(),
   ]);
   if (!obj) return false;
-  return canEditObjectiveP(user, obj, units, perms);
+  return canEditObjective(user, obj, units, access);
 }
 
 /** User có quyền quản lý bình luận/việc gắn với 1 thực thể không? */

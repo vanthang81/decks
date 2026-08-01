@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { auth, signOut } from '@/auth';
 import { LOGO_WORDMARK } from '@/lib/brand';
-import { ROLE_LABEL, canAdmin, type Role } from '@/lib/rbac';
+import { ROLE_LABEL, type Role } from '@/lib/rbac';
 import NotifBell from '@/components/NotifBell';
 import { unreadCount } from '@/lib/notifications';
+import { getUser } from '@/lib/users';
+import { loadAccess, canManageSystem } from '@/lib/access';
 
 export default async function SiteHeader({ active }: { active?: string }) {
   const session = await auth();
@@ -12,6 +14,9 @@ export default async function SiteHeader({ active }: { active?: string }) {
   const name = session?.user?.displayName || session?.user?.name || session?.user?.email;
   const who = `${name ?? ''}${role ? ` · ${ROLE_LABEL[role]}` : ''}`;
   const notifCount = email ? await unreadCount(email).catch(() => 0) : 0;
+  const me = email ? await getUser(email).catch(() => null) : null;
+  const access = await loadAccess();
+  const showAdmin = me ? canManageSystem(me, access) : false;
 
   const links = [
     { href: '/', label: 'Bảng điều khiển', key: 'home', show: true },
@@ -19,7 +24,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
     { href: '/projects', label: 'Dự án', key: 'projects', show: true },
     { href: '/my', label: 'Của tôi', key: 'my', show: true },
     { href: '/guide', label: 'Hướng dẫn', key: 'guide', show: true },
-    { href: '/admin', label: 'Quản trị', key: 'admin', show: canAdmin(role) },
+    { href: '/admin', label: 'Quản trị', key: 'admin', show: showAdmin },
   ].filter((l) => l.show);
 
   return (

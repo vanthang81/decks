@@ -45,7 +45,7 @@ import {
 } from '../actions';
 import { createProjectForInitiativeAction } from '@/app/projects/actions';
 import { withinEditWindow } from '@/lib/moderation';
-import { loadOkrPerms, canEditObjectiveP, canDeleteObjectiveP } from '@/lib/okr-perms';
+import { loadAccess, canEditObjective, canDeleteObjective } from '@/lib/access';
 import { unitIcon } from '@/lib/unit-icons';
 
 export const dynamic = 'force-dynamic';
@@ -57,9 +57,9 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
 
   const units = await listUnits();
   const users = await listUsers();
-  const perms = await loadOkrPerms();
-  const canManage = canEditObjectiveP(user, obj, units, perms);
-  const canDelete = canDeleteObjectiveP(user, obj, units, perms);
+  const access = await loadAccess();
+  const canManage = canEditObjective(user, obj, units, access);
+  const canDelete = canDeleteObjective(user, obj, units, access);
 
   // Options cho popup edit (client): người (cá nhân) + đơn vị (khối/phòng).
   const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url }));

@@ -148,6 +148,17 @@ table.t tr:hover td { background: #FBF7F2; }
   background: var(--primary-tint); line-height: 1;
 }
 .unit-ic-sm { font-size: 15px; margin-right: 4px; vertical-align: middle; line-height: 1; }
+
+/* ===== Trang Phân quyền (Nhóm quyền × Năng lực) ===== */
+.grp-legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.grp-chip { display: flex; gap: 9px; align-items: flex-start; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.grp-ic { font-size: 20px; line-height: 1; flex: 0 0 auto; }
+.perm-matrix { width: 100%; border-collapse: collapse; min-width: 620px; }
+.perm-matrix th, .perm-matrix td { padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.perm-matrix thead th { text-align: center; vertical-align: bottom; }
+.grp-h { font-size: 18px; line-height: 1; }
+.grp-h-l { font-size: 11px; font-weight: 700; color: var(--muted); max-width: 92px; margin: 2px auto 0; line-height: 1.2; }
+.perm-cat td { background: var(--primary-tint); font-weight: 800; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--primary); }
 .obj-row:last-child { border-bottom: 0; }
 .obj-main { flex: 1; min-width: 0; }
 .obj-main .ttl { font-weight: 600; }

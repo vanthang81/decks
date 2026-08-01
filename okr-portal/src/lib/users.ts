@@ -10,6 +10,7 @@ export type OkrUser = {
   is_active: boolean;
   notify_email: boolean;
   avatar_url: string | null;
+  perm_group: string | null;
 };
 
 /** Cập nhật avatar Google (gọi lúc đăng nhập). Best-effort, chỉ ghi khi đổi. */
@@ -35,7 +36,7 @@ export async function getUser(email: string): Promise<OkrUser | null> {
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < TTL) return hit.user;
   const user = await queryOne<OkrUser>(
-    `SELECT email, display_name, title, role, unit_id, is_active, notify_email, avatar_url
+    `SELECT email, display_name, title, role, unit_id, is_active, notify_email, avatar_url, perm_group
        FROM okr_users WHERE lower(email) = lower($1)`,
     [email],
   );
@@ -48,7 +49,7 @@ export async function listUsers(): Promise<
 > {
   return query(
     `SELECT u.email, u.display_name, u.title, u.role, u.unit_id, u.is_active, u.notify_email, u.avatar_url,
-            n.name AS unit_name, n.code AS unit_code
+            u.perm_group, n.name AS unit_name, n.code AS unit_code
        FROM okr_users u
        LEFT JOIN okr_units n ON n.id = u.unit_id
       ORDER BY CASE u.role WHEN 'exec' THEN 0 WHEN 'division_lead' THEN 1
@@ -70,20 +71,31 @@ export async function upsertUser(input: {
   title: string | null;
   role: Role;
   unit_id: string | null;
+  perm_group?: string | null;
 }): Promise<void> {
   await query(
-    `INSERT INTO okr_users (email, display_name, title, role, unit_id)
-       VALUES (lower($1), $2, $3, $4, $5)
+    `INSERT INTO okr_users (email, display_name, title, role, unit_id, perm_group)
+       VALUES (lower($1), $2, $3, $4, $5, $6)
      ON CONFLICT (email) DO UPDATE SET
        display_name = EXCLUDED.display_name,
        title        = EXCLUDED.title,
        role         = EXCLUDED.role,
        unit_id      = EXCLUDED.unit_id,
+       perm_group   = EXCLUDED.perm_group,
        is_active    = true,
        updated_at   = now()`,
-    [input.email, input.display_name, input.title, input.role, input.unit_id],
+    [input.email, input.display_name, input.title, input.role, input.unit_id, input.perm_group ?? null],
   );
   invalidateUser(input.email);
+}
+
+/** Gán Nhóm quyền cho 1 người (null = suy theo vai trò). */
+export async function setUserGroup(email: string, group: string | null): Promise<void> {
+  await query('UPDATE okr_users SET perm_group=$2, updated_at=now() WHERE lower(email)=lower($1)', [
+    email,
+    group,
+  ]);
+  invalidateUser(email);
 }
 
 export async function setUserActive(email: string, active: boolean): Promise<void> {

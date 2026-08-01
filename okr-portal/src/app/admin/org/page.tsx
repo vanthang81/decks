@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import ConfirmButton from '@/components/ConfirmButton';
 import { requireUser } from '@/lib/current-user';
-import { canAdmin } from '@/lib/rbac';
+import { loadAccess, canManageSystem } from '@/lib/access';
 import { listUnits, buildTree, type UnitNode } from '@/lib/org';
 import { createUnitAction, deleteUnitAction } from '../actions';
 
@@ -16,7 +16,7 @@ const TYPE_LABEL: Record<string, string> = {
 
 export default async function AdminOrg() {
   const me = await requireUser();
-  if (!canAdmin(me.role)) redirect('/');
+  if (!canManageSystem(me, await loadAccess())) redirect('/');
   const units = await listUnits();
   const tree = buildTree(units);
 

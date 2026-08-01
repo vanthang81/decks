@@ -47,11 +47,11 @@ import {
 import { isKpiMetric, syncKrKpi } from '@/lib/kpi';
 import { canManageObjectiveId, withinEditWindow } from '@/lib/moderation';
 import {
-  loadOkrPerms,
-  canEditObjectiveP,
-  canDeleteObjectiveP,
-  canCreateWith,
-} from '@/lib/okr-perms';
+  loadAccess,
+  canEditObjective,
+  canDeleteObjective,
+  canCreateObjective,
+} from '@/lib/access';
 
 function str(fd: FormData, k: string): string {
   return String(fd.get(k) ?? '').trim();
@@ -73,8 +73,8 @@ export async function createObjectiveAction(fd: FormData) {
   const title = str(fd, 'title');
 
   if (!title || !periodId) throw new Error('Thiếu tiêu đề hoặc kỳ.');
-  const perms = await loadOkrPerms();
-  if (!canCreateWith(user, level, unitId, units, perms)) {
+  const access = await loadAccess();
+  if (!canCreateObjective(user, level, unitId, units, access)) {
     throw new Error('Bạn không có quyền tạo OKR ở phạm vi này.');
   }
 
@@ -96,13 +96,13 @@ export async function createObjectiveAction(fd: FormData) {
 export async function editObjectiveAction(fd: FormData) {
   const user = await requireUser();
   const id = str(fd, 'id');
-  const [units, obj, perms] = await Promise.all([
+  const [units, obj, access] = await Promise.all([
     listUnits(),
     getObjective(id),
-    loadOkrPerms(),
+    loadAccess(),
   ]);
   if (!obj) throw new Error('Không tìm thấy OKR.');
-  if (!canEditObjectiveP(user, obj, units, perms))
+  if (!canEditObjective(user, obj, units, access))
     throw new Error('Bạn không có quyền sửa OKR này.');
   const title = str(fd, 'title');
   if (!title) throw new Error('Thiếu tiêu đề.');
@@ -123,27 +123,27 @@ export async function editObjectiveAction(fd: FormData) {
 export async function deleteObjectiveAction(fd: FormData) {
   const user = await requireUser();
   const id = str(fd, 'id');
-  const [units, obj, perms] = await Promise.all([
+  const [units, obj, access] = await Promise.all([
     listUnits(),
     getObjective(id),
-    loadOkrPerms(),
+    loadAccess(),
   ]);
   if (!obj) return;
-  if (!canDeleteObjectiveP(user, obj, units, perms))
-    throw new Error('Chỉ CEO/CFO hoặc Quản trị OKR mới được xoá OKR.');
+  if (!canDeleteObjective(user, obj, units, access))
+    throw new Error('Chỉ người có quyền Xoá OKR mới thực hiện được.');
   await deleteObjective(id);
   redirect('/objectives?deleted=1');
 }
 
 async function assertCanManageObjective(objectiveId: string) {
   const user = await requireUser();
-  const [units, obj, perms] = await Promise.all([
+  const [units, obj, access] = await Promise.all([
     listUnits(),
     getObjective(objectiveId),
-    loadOkrPerms(),
+    loadAccess(),
   ]);
   if (!obj) throw new Error('Không tìm thấy OKR.');
-  if (!canEditObjectiveP(user, obj, units, perms))
+  if (!canEditObjective(user, obj, units, access))
     throw new Error('Bạn không có quyền sửa OKR này.');
   return { user, obj };
 }

@@ -2,7 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/current-user';
-import { canAdmin, isRole, type Role } from '@/lib/rbac';
+import { isRole, type Role } from '@/lib/rbac';
+import { loadAccess, canManageSystem, canAssignPerms, invalidateAccess, PERM_GROUPS_KEY } from '@/lib/access';
+import { DEFAULT_GROUPS, CAPABILITIES, type CapKey } from '@/lib/capabilities';
 import {
   upsertUser,
   setUserActive,
@@ -16,11 +18,11 @@ import { syncAllKpi } from '@/lib/kpi';
 import { redirect } from 'next/navigation';
 import { setSetting } from '@/lib/settings';
 import { REMINDER_KEY, runCheckinReminders, type ReminderConfig } from '@/lib/reminders';
-import { OKR_PERM_KEYS } from '@/lib/okr-perms';
 
 async function requireExec() {
   const user = await requireUser();
-  if (!canAdmin(user.role)) throw new Error('Chỉ CEO/CFO được quản trị hệ thống.');
+  const access = await loadAccess();
+  if (!canManageSystem(user, access)) throw new Error('Bạn không có quyền quản trị hệ thống.');
   return user;
 }
 
@@ -33,15 +35,21 @@ function orNull(s: string): string | null {
 
 // ---------- Người dùng ----------
 export async function saveUserAction(fd: FormData) {
-  await requireExec();
+  const me = await requireExec();
+  const access = await loadAccess();
   const role = str(fd, 'role');
+  // Chỉ người có quyền "Phân quyền" mới đặt được Nhóm quyền; người khác giữ nguyên.
+  const grp = orNull(str(fd, 'perm_group'));
+  const permGroup = canAssignPerms(me, access) ? grp : (await getUser(str(fd, 'email')))?.perm_group ?? null;
   await upsertUser({
     email: str(fd, 'email'),
     display_name: orNull(str(fd, 'display_name')),
     title: orNull(str(fd, 'title')),
     role: (isRole(role) ? role : 'staff') as Role,
     unit_id: orNull(str(fd, 'unit_id')),
+    perm_group: permGroup,
   });
+  invalidateAccess();
   revalidatePath('/admin/users');
 }
 
@@ -142,19 +150,23 @@ export async function saveReminderAction(fd: FormData) {
   redirect('/admin/settings?saved=1');
 }
 
-// ---------- Phân quyền Sửa/Xoá/Tạo OKR ----------
+// ---------- Nhóm quyền × Năng lực (Phân quyền) ----------
 export async function savePermissionsAction(fd: FormData) {
-  await requireExec();
-  // Vai trò cấu hình được (CEO/CFO luôn toàn quyền nên không nằm trong ma trận).
-  const roles: Role[] = ['division_lead', 'dept_lead', 'staff'];
-  const pick = (cap: string): Role[] => roles.filter((r) => fd.get(`${cap}_${r}`) === 'on');
-  await setSetting(OKR_PERM_KEYS.edit, pick('edit'));
-  await setSetting(OKR_PERM_KEYS.delete, pick('delete'));
-  await setSetting(OKR_PERM_KEYS.create, pick('create'));
-  const admins = Array.from(
-    new Set(fd.getAll('admins').map((e) => String(e).trim().toLowerCase()).filter(Boolean)),
-  );
-  await setSetting(OKR_PERM_KEYS.admins, admins);
+  const me = await requireUser();
+  const access = await loadAccess();
+  if (!canAssignPerms(me, access)) throw new Error('Bạn không có quyền phân quyền.');
+  const allCaps = CAPABILITIES.map((c) => c.key);
+  const out: Record<string, CapKey[]> = {};
+  for (const g of DEFAULT_GROUPS) {
+    // system_admin cố định toàn quyền — không cho tự khoá (tránh mất quyền quản trị).
+    if (g.key === 'system_admin') {
+      out[g.key] = allCaps;
+      continue;
+    }
+    out[g.key] = allCaps.filter((c) => fd.get(`cap_${g.key}_${c}`) === 'on');
+  }
+  await setSetting(PERM_GROUPS_KEY, out);
+  invalidateAccess();
   redirect('/admin/permissions?saved=1');
 }
 

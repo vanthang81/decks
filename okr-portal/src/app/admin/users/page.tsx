@@ -2,7 +2,9 @@ import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import ConfirmButton from '@/components/ConfirmButton';
 import { requireUser } from '@/lib/current-user';
-import { canAdmin, ROLE_LABEL, ROLES } from '@/lib/rbac';
+import { ROLE_LABEL, ROLES } from '@/lib/rbac';
+import { loadAccess, canManageSystem, canAssignPerms } from '@/lib/access';
+import { DEFAULT_GROUPS, defaultGroupForRole } from '@/lib/capabilities';
 import { listUsers } from '@/lib/users';
 import { listUnits } from '@/lib/org';
 import { saveUserAction, toggleUserAction, removeUserAction } from '../actions';
@@ -11,7 +13,9 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminUsers() {
   const me = await requireUser();
-  if (!canAdmin(me.role)) redirect('/');
+  const access = await loadAccess();
+  if (!canManageSystem(me, access)) redirect('/');
+  const assignPerms = canAssignPerms(me, access);
   const [users, units] = await Promise.all([listUsers(), listUnits()]);
 
   return (
@@ -62,6 +66,20 @@ export default async function AdminUsers() {
                   ))}
                 </select>
               </div>
+              <div>
+                <label className="f">
+                  Nhóm quyền
+                  {!assignPerms && <span className="muted" style={{ fontWeight: 400 }}> (cần quyền phân quyền)</span>}
+                </label>
+                <select className="i" name="perm_group" defaultValue="" disabled={!assignPerms}>
+                  <option value="">— Mặc định theo vai trò —</option>
+                  {DEFAULT_GROUPS.map((g) => (
+                    <option key={g.key} value={g.key}>
+                      {g.icon} {g.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div style={{ display: 'flex', alignItems: 'flex-end' }}>
                 <button className="btn" type="submit">
                   Lưu
@@ -79,6 +97,7 @@ export default async function AdminUsers() {
                   <th>Email</th>
                   <th>Họ tên</th>
                   <th>Vai trò</th>
+                  <th>Nhóm quyền</th>
                   <th>Đơn vị</th>
                   <th>Trạng thái</th>
                   <th></th>
@@ -94,6 +113,20 @@ export default async function AdminUsers() {
                     </td>
                     <td>
                       <span className="badge">{ROLE_LABEL[u.role]}</span>
+                    </td>
+                    <td>
+                      {(() => {
+                        const gkey = u.role === 'exec' ? 'system_admin' : u.perm_group || defaultGroupForRole(u.role);
+                        const g = DEFAULT_GROUPS.find((x) => x.key === gkey);
+                        return (
+                          <span title={g?.desc}>
+                            {g ? `${g.icon} ${g.label}` : gkey}
+                            {!u.perm_group && u.role !== 'exec' && (
+                              <span className="muted" style={{ fontSize: 11 }}> (mặc định)</span>
+                            )}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td>{u.unit_name || <span className="muted">—</span>}</td>
                     <td>

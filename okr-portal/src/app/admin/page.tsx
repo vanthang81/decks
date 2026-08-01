@@ -3,7 +3,7 @@ import HelpTip from '@/components/HelpTip';
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import { requireUser } from '@/lib/current-user';
-import { canAdmin } from '@/lib/rbac';
+import { loadAccess, canManageSystem } from '@/lib/access';
 import { listUsers } from '@/lib/users';
 import { listUnits } from '@/lib/org';
 import { listPeriods, getCurrentPeriod } from '@/lib/periods';
@@ -15,7 +15,8 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminHome({ searchParams }: { searchParams: { kpi?: string } }) {
   const user = await requireUser();
-  if (!canAdmin(user.role)) redirect('/');
+  const access = await loadAccess();
+  if (!canManageSystem(user, access)) redirect('/');
 
   const [users, units, periods, curPeriod] = await Promise.all([
     listUsers(),
@@ -53,9 +54,9 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
             </p>
           </Link>
           <Link className="card" href="/admin/permissions" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <h3 style={{ marginTop: 0 }}>Phân quyền OKR</h3>
+            <h3 style={{ marginTop: 0 }}>Phân quyền (Nhóm quyền × Năng lực)</h3>
             <p className="muted" style={{ marginBottom: 0 }}>
-              Ai được Sửa / Xoá / Tạo OKR (theo vai trò × phạm vi) + danh sách “Quản trị OKR” toàn quyền.
+              Cấu hình Nhóm quyền (Quản trị hệ thống · OKR Admin · Quản lý · Cộng tác · Người xem) từ Sổ năng lực tự cập nhật. Gán nhóm cho user ở Người dùng.
             </p>
           </Link>
           <Link className="card" href="/admin/settings" style={{ textDecoration: 'none', color: 'inherit' }}>

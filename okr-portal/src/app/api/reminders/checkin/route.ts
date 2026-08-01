@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { auth } from '@/auth';
 import { getUser } from '@/lib/users';
-import { canAdmin } from '@/lib/rbac';
+import { loadAccess, canManageSystem } from '@/lib/access';
 import { runCheckinReminders } from '@/lib/reminders';
 
 export const runtime = 'nodejs';
@@ -15,7 +15,7 @@ async function handle(req: NextRequest) {
   if (!viaKey) {
     const s = await auth();
     const u = s?.user?.email ? await getUser(s.user.email) : null;
-    if (!u || !canAdmin(u.role)) {
+    if (!u || !canManageSystem(u, await loadAccess())) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
   }

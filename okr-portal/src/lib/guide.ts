@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.13';
+export const GUIDE_VERSION = '2026-08-01.14';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -302,11 +302,11 @@ export const FEATURES: Feature[] = [
   },
   {
     key: 'okr-perms',
-    title: 'Phân quyền OKR (Sửa / Xoá / Tạo)',
-    where: 'Quản trị → "Phân quyền OKR" (CEO/CFO); nút "✏️ Sửa OKR" ở mỗi trang OKR',
-    help: 'Cấu hình vai trò nào được Sửa/Xoá/Tạo OKR (theo phạm vi tổ chức) + danh sách "Quản trị OKR" toàn quyền.',
+    title: 'Phân quyền: Nhóm quyền × Năng lực',
+    where: 'Quản trị → "Phân quyền"; gán nhóm cho user ở "Người dùng"',
+    help: 'Mỗi Nhóm quyền gồm một bộ Năng lực; gán nhóm cho từng người. Danh sách năng lực tự mở rộng khi thêm tính năng.',
     detail:
-      'Mô hình VAI TRÒ × PHẠM VI + Quản trị OKR: (1) CEO/CFO luôn toàn quyền. (2) Ở "Phân quyền OKR" chọn vai trò nào (Giám đốc khối / Trưởng phòng / Nhân viên) được Sửa/Xoá/Tạo — quyền chỉ áp TRONG phạm vi tổ chức của người đó (GĐ khối → nhánh khối; TP → phòng); chủ trì/người tạo luôn sửa được OKR của mình. (3) Danh sách "Quản trị OKR" = vài người được toàn quyền mọi OKR bất kể phạm vi. Mặc định: Sửa/Tạo = GĐ khối + Trưởng phòng; Xoá = chỉ CEO/CFO (+ Quản trị OKR). Ai có quyền Sửa sẽ thấy nút "✏️ Sửa OKR" ngay trên trang OKR để mở popup sửa/xoá; phân quyền áp cả ở giao diện lẫn máy chủ.',
+      'Hai tầng: (A) VAI TRÒ tổ chức (CEO/CFO · GĐ khối · Trưởng phòng · Nhân viên) quyết định PHẠM VI (đụng OKR đơn vị nào). (B) NHÓM QUYỀN quyết định NĂNG LỰC (được làm gì). 5 nhóm mặc định: 🛡️ Quản trị hệ thống (toàn quyền) · ⭐ Quản trị OKR (mọi OKR, toàn phạm vi) · 👔 Quản lý (tạo/sửa OKR trong phạm vi) · ✍️ Cộng tác (check-in/bình luận của mình, sửa trong 3h; tự quản OKR cá nhân) · 👁️ Người xem. CEO/CFO LUÔN toàn quyền. Năng lực OKR (Tạo/Sửa/Xoá) áp trong phạm vi tổ chức, trừ khi có năng lực "Toàn phạm vi". "Sổ năng lực" là nguồn duy nhất — thêm tính năng cần phân quyền chỉ cần thêm 1 năng lực, trang Phân quyền TỰ hiện toggle cho mọi nhóm. Chỉ người có năng lực "Phân quyền người dùng" (CEO/CFO + Quản trị hệ thống) mới gán được nhóm cho người khác. Phân quyền áp cả ở giao diện lẫn máy chủ.',
   },
 ];
 
@@ -353,6 +353,15 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (Nhóm quyền × Năng lực — phân quyền nâng cao)',
+    items: [
+      'Thêm hệ thống Nhóm quyền: 🛡️ Quản trị hệ thống · ⭐ Quản trị OKR · 👔 Quản lý · ✍️ Cộng tác · 👁️ Người xem — mỗi nhóm gồm bộ Năng lực (capability) cấu hình được.',
+      'Có thể cấp quyền quản trị hệ thống / phân quyền cho người ngoài CEO/CFO (không còn cứng chỉ CEO/CFO).',
+      'Gán Nhóm quyền cho từng người ở trang Người dùng; vai trò tổ chức vẫn quyết định phạm vi.',
+      '"Sổ năng lực" tự cập nhật: thêm tính năng cần phân quyền → trang Phân quyền tự hiện toggle mới cho mọi nhóm.',
+    ],
+  },
   {
     date: '01/08/2026 (tối ưu giao diện mobile trang chi tiết OKR)',
     items: [

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import { requireUser } from '@/lib/current-user';
-import { canAdmin } from '@/lib/rbac';
+import { loadAccess, canManageSystem } from '@/lib/access';
 import { listPeriods, orderPeriodsHierarchically, PERIOD_KIND_LABEL } from '@/lib/periods';
 import { createPeriodAction, setCurrentPeriodAction, setPeriodStatusAction } from '../actions';
 
@@ -21,7 +21,7 @@ const KIND_CLS: Record<string, string> = {
 
 export default async function AdminPeriods() {
   const me = await requireUser();
-  if (!canAdmin(me.role)) redirect('/');
+  if (!canManageSystem(me, await loadAccess())) redirect('/');
   const periods = await listPeriods();
   const ordered = orderPeriodsHierarchically(periods);
 

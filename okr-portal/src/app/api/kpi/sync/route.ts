@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { auth } from '@/auth';
 import { getUser } from '@/lib/users';
-import { canAdmin } from '@/lib/rbac';
+import { loadAccess, canSyncKpi } from '@/lib/access';
 import { syncAllKpi } from '@/lib/kpi';
 
 export const runtime = 'nodejs';
@@ -16,7 +16,7 @@ async function handle(req: NextRequest) {
   if (!viaKey) {
     const s = await auth();
     const u = s?.user?.email ? await getUser(s.user.email) : null;
-    if (!u || !canAdmin(u.role)) {
+    if (!u || !canSyncKpi(u, await loadAccess())) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
   }

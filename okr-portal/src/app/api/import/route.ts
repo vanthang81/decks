@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireUser } from '@/lib/current-user';
-import { canAdmin } from '@/lib/rbac';
+import { loadAccess, canImportData } from '@/lib/access';
 import { importOkrWorkbook } from '@/lib/excel';
 
 export const dynamic = 'force-dynamic';
 
-// Nhập OKR từ Excel (.xlsx) — CHỈ CEO/CFO. Cập nhật theo Mã, tạo mới công việc (Mã trống).
+// Nhập OKR từ Excel (.xlsx) — cần năng lực "Nhập Excel". Cập nhật theo Mã, tạo mới công việc (Mã trống).
 export async function POST(req: NextRequest) {
   const user = await requireUser();
-  if (!canAdmin(user.role)) {
-    return NextResponse.json({ error: 'Chỉ CEO/CFO được nhập dữ liệu.' }, { status: 403 });
+  if (!canImportData(user, await loadAccess())) {
+    return NextResponse.json({ error: 'Bạn không có quyền nhập dữ liệu.' }, { status: 403 });
   }
   const form = await req.formData();
   const file = form.get('file');
