@@ -286,8 +286,15 @@ table.t th.sortable.active { color: var(--primary); }
 .perm-cat td { background: var(--primary-tint); font-weight: 800; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--primary); }
 .obj-row:last-child { border-bottom: 0; }
 .obj-main { flex: 1; min-width: 0; }
-.obj-main .ttl { font-weight: 600; }
+.obj-main .ttl { font-weight: 600; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.obj-main .ttl .ttl-txt { color: var(--primary); }
 .obj-meta { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+/* Cả DÒNG bấm được (không chỉ mỗi tiêu đề) — link phủ toàn hàng bằng lớp trong suốt. */
+.obj-row-link { position: relative; cursor: pointer; border-radius: 8px; transition: background .12s; padding: 10px 8px; margin: 0 -8px; }
+.obj-row-link:hover { background: var(--primary-tint); }
+.obj-row-link .stretch-link { position: absolute; inset: 0; z-index: 2; text-indent: -9999px; overflow: hidden; }
+.obj-row-link .obj-prog { position: relative; z-index: 1; } /* thanh tiến độ nằm trên để vẫn thấy rõ */
+.obj-row-link:hover .ttl-txt { text-decoration: underline; }
 .obj-prog { width: 160px; flex-shrink: 0; }
 /* Mobile: thanh tiến độ xuống dòng full-width dưới tiêu đề (không bóp hẹp tiêu đề) */
 @media (max-width: 640px) {
@@ -950,6 +957,25 @@ details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 
 @media (max-width: 760px) {
   .site-footer .inner { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px; }
   .site-footer .footer-cta { width: 100%; justify-content: center; padding: 10px 13px; }
+}
+
+/* ===== Thanh tiến trình điều hướng (TopLoadingBar) ===== */
+.toploader {
+  position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 100;
+  pointer-events: none; opacity: 0; transition: opacity .2s ease;
+}
+.toploader.on { opacity: 1; }
+.toploader-bar {
+  height: 100%; width: 0;
+  background: linear-gradient(90deg, var(--accent), #f7e7b8);
+  box-shadow: 0 0 8px rgba(200, 169, 81, .8), 0 1px 4px rgba(200, 169, 81, .6);
+  border-radius: 0 3px 3px 0; transition: width .17s ease;
+}
+
+/* ===== Tự ẩn header khi cuộn (AutoHideHeader) — CHỈ mobile ===== */
+@media (max-width: 760px) {
+  .site-header { transition: transform .28s cubic-bezier(.4, 0, .2, 1); will-change: transform; }
+  html.hdr-up .site-header { transform: translateY(-100%); }
 }
 
 /* ===== Cử chỉ cảm ứng (MobileGestures) — chỉ hiện trên thiết bị touch ===== */

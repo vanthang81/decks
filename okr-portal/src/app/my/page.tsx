@@ -39,10 +39,12 @@ export default async function MyPage() {
           <h3 style={{ marginTop: 0 }}>OKR tôi chủ trì</h3>
           {objectives.length === 0 && <p className="muted">Bạn chưa chủ trì OKR nào trong kỳ.</p>}
           {objectives.map((o) => (
-            <div key={o.id} className="obj-row">
+            <div key={o.id} className="obj-row obj-row-link">
+              <Link className="stretch-link" href={`/objectives/${o.id}`} aria-label={o.title} />
               <div className="obj-main">
                 <div className="ttl">
-                  <Link href={`/objectives/${o.id}`}>{o.title}</Link> <StatusBadge status={o.status} />
+                  {o.code && <span className="okr-code">{o.code}</span>}
+                  <span className="ttl-txt">{o.title}</span> <StatusBadge status={o.status} />
                 </div>
                 <div className="obj-meta">{o.kr_count} KR</div>
               </div>
@@ -65,6 +67,7 @@ export default async function MyPage() {
                 {initiatives.map((i) => (
                   <tr key={i.id}>
                     <td>
+                      {i.code && <span className="okr-code" style={{ marginRight: 6 }}>{i.code}</span>}
                       <b>{i.title}</b>
                     </td>
                     <td>
@@ -74,7 +77,11 @@ export default async function MyPage() {
                     <td className="right mono">{fmtVnd(i.budget_actual)}</td>
                     <td>{fmtDate(i.due_on)}</td>
                     <td>
-                      {i.objective_id && <Link href={`/objectives/${i.objective_id}`}>Mở OKR</Link>}
+                      {i.objective_id && (
+                        <Link href={`/objectives/${i.objective_id}`}>
+                          {i.objective_code ? <span className="okr-code">{i.objective_code}</span> : 'Mở OKR'}
+                        </Link>
+                      )}
                     </td>
                   </tr>
                 ))}

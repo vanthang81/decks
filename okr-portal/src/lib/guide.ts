@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.30';
+export const GUIDE_VERSION = '2026-08-01.31';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -460,6 +460,15 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (Trải nghiệm: header tự ẩn + thanh tải + cả dòng bấm được + mã ở mọi nơi)',
+    items: [
+      'MOBILE: thanh menu TỰ ẨN khi cuộn xuống, hiện lại khi cuộn lên → xem được nhiều nội dung hơn (desktop luôn hiện).',
+      'Thanh TIẾN TRÌNH mảnh trên đỉnh khi điều hướng — bấm link phản hồi ngay, hết cảm giác "bấm mà không mở" (best-practice giống Control Tower).',
+      'Cả DÒNG OKR ở Bảng điều khiển / Của tôi đều bấm mở được (không chỉ mỗi tiêu đề) — vùng chạm lớn, dễ bấm trên điện thoại.',
+      'Hiện MÃ (code) cho Objective/KR/Công việc ở Bảng điều khiển & trang Của tôi — đồng nhất với trang OKR.',
+    ],
+  },
   {
     date: '01/08/2026 (Cử chỉ cảm ứng: kéo–làm mới + vuốt chuyển tab)',
     items: [

@@ -318,7 +318,8 @@ export default async function Dashboard() {
 
 function ObjLine({ o, showUnit }: { o: ObjectiveRow; showUnit?: boolean }) {
   return (
-    <div className="obj-row">
+    <div className="obj-row obj-row-link">
+      <Link className="stretch-link" href={`/objectives/${o.id}`} aria-label={o.title} />
       {showUnit && (
         <span className="unit-ic" title={o.unit_name ?? undefined} aria-hidden>
           {unitIcon({ code: o.unit_code, name: o.unit_name, type: 'division' })}
@@ -326,7 +327,8 @@ function ObjLine({ o, showUnit }: { o: ObjectiveRow; showUnit?: boolean }) {
       )}
       <div className="obj-main">
         <div className="ttl">
-          <Link href={`/objectives/${o.id}`}>{o.title}</Link>
+          {o.code && <span className="okr-code">{o.code}</span>}
+          <span className="ttl-txt">{o.title}</span>
         </div>
         <div className="obj-meta">
           {showUnit && o.unit_name ? `${o.unit_name} · ` : ''}

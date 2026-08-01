@@ -4,6 +4,8 @@ import { FAVICON, BRAND } from '@/lib/brand';
 import SiteFooter from '@/components/SiteFooter';
 import BackToTop from '@/components/BackToTop';
 import MobileGestures from '@/components/MobileGestures';
+import AutoHideHeader from '@/components/AutoHideHeader';
+import TopLoadingBar from '@/components/TopLoadingBar';
 
 export const metadata: Metadata = {
   title: `${BRAND.full}`,
@@ -21,10 +23,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="vi">
       <body>
+        <TopLoadingBar />
         {children}
         <SiteFooter />
         <BackToTop />
         <MobileGestures />
+        <AutoHideHeader />
       </body>
     </html>
   );

@@ -94,18 +94,14 @@ export default function MobileGestures() {
       const dx = t.clientX - startX;
       const dy = t.clientY - startY;
 
-      // Xác định "khoá" hướng lần đầu vượt ngưỡng nhỏ.
+      // Xác định "khoá" hướng lần đầu vượt ngưỡng. Ngưỡng đủ lớn để KHÔNG cướp
+      // thao tác chạm/bấm (tap) — link luôn mở bình thường.
       if (lock === null) {
-        if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
-        if (Math.abs(dy) > Math.abs(dx)) {
-          // Dọc: chỉ nhận pull-to-refresh khi đang ở ĐỈNH trang & kéo xuống.
-          if (dy > 0 && window.scrollY <= 2) lock = 'pull';
-          else {
-            lock = 'v';
-            active = false; // nhường cuộn dọc bình thường
-            return;
-          }
-        } else {
+        const ax = Math.abs(dx);
+        const ay = Math.abs(dy);
+        if (ax < 14 && ay < 14) return;
+        // Ngang chỉ khi CHIẾM ƯU THẾ rõ (tránh nhầm với cuộn/tap chệch).
+        if (ax > ay * 1.4) {
           // Ngang: bỏ qua nếu bắt đầu sát mép (back-swipe iOS).
           if (startX < EDGE_GUARD || startX > window.innerWidth - EDGE_GUARD) {
             lock = 'v';
@@ -113,6 +109,13 @@ export default function MobileGestures() {
             return;
           }
           lock = 'h';
+        } else if (dy > 0 && ay > ax && window.scrollY <= 2) {
+          // Dọc xuống từ đỉnh trang → pull-to-refresh.
+          lock = 'pull';
+        } else {
+          lock = 'v';
+          active = false; // nhường cuộn dọc bình thường
+          return;
         }
       }
 
