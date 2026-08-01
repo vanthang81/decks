@@ -177,8 +177,8 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
         </p>
 
         <div className="card">
-          <div className="flexbtw">
-            <div>
+          <div className="flexbtw obj-detail-head">
+            <div style={{ minWidth: 0 }}>
               <div style={{ marginBottom: 6 }}>
                 <LevelBadge level={obj.level} /> <StatusBadge status={obj.status} />{' '}
                 <span
@@ -205,7 +205,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
               </div>
               {obj.description && <p style={{ marginBottom: 0 }}>{obj.description}</p>}
             </div>
-            <div style={{ width: 200, textAlign: 'right' }}>
+            <div className="obj-head-side">
               <div style={{ fontSize: 34, fontWeight: 700, color: 'var(--primary)' }}>
                 {obj.progress.toFixed(0)}%
               </div>
@@ -258,7 +258,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
             const share = totalKrWeight > 0 && kr.weight > 0 ? Math.round((kr.weight / totalKrWeight) * 100) : 0;
             return (
             <div key={kr.id} id={`kr-${kr.id}`} style={{ padding: '10px 0', borderBottom: '1px solid var(--line)', scrollMarginTop: 80 }}>
-              <div className="flexbtw">
+              <div className="flexbtw kr-head">
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600 }}>
                     {kr.code && <span className="okr-code" style={{ marginRight: 6 }}>{kr.code}</span>}
@@ -284,13 +284,13 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                     {kr.kpi_source ? ` · auto: ${kr.kpi_source}` : ''}
                   </div>
                 </div>
-                <div style={{ width: 150 }}>
+                <div className="kr-side">
                   <ProgressBar value={kr.progress} />
-                  <div className="right muted mono" style={{ fontSize: 12 }}>
+                  <div className="right muted mono kr-side-pct" style={{ fontSize: 12 }}>
                     {kr.progress.toFixed(0)}%
                   </div>
                   {canManage && (
-                    <div style={{ marginTop: 6, textAlign: 'right' }}>
+                    <div className="kr-side-act" style={{ marginTop: 6, textAlign: 'right' }}>
                       <KeyResultEditButton
                         kr={{
                           id: kr.id,

@@ -436,6 +436,25 @@ details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 
 }
 .kr-wt-share { font-weight: 600; opacity: .8; }
 
+/* Cột phải (tiến độ + nút Sửa) — desktop */
+.kr-side { width: 150px; flex: 0 0 auto; }
+.obj-head-side { width: 200px; text-align: right; flex: 0 0 auto; }
+
+/* ===== Mobile: trang chi tiết OKR xếp dọc gọn, chuyên nghiệp ===== */
+@media (max-width: 640px) {
+  /* Header Objective: xếp dọc, % nhỏ lại, nút căn trái */
+  .obj-detail-head { flex-direction: column; align-items: stretch; gap: 12px; }
+  .obj-head-side { width: 100%; text-align: left; }
+  .obj-head-side > div:first-child { font-size: 26px; }
+  .obj-head-side > div:last-child { justify-content: flex-start !important; }
+  /* Mỗi KR: tiến độ + % + nút Sửa gọn trên 1 dòng dưới tiêu đề */
+  .kr-head { flex-direction: column; align-items: stretch; gap: 8px; }
+  .kr-side { width: 100%; display: grid; grid-template-columns: 1fr auto auto; align-items: center; column-gap: 8px; }
+  .kr-side .pbar { grid-column: 1; }
+  .kr-side .kr-side-pct { grid-column: 2; margin: 0; text-align: right; }
+  .kr-side-act { grid-column: 3; margin: 0 !important; text-align: right !important; }
+}
+
 /* Help tooltip (nút bấm mở popup hướng dẫn) */
 .helptip {
   display: inline-flex; align-items: center; justify-content: center;

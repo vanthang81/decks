@@ -5,11 +5,16 @@ Phân quyền theo cây tổ chức **CEO/CFO → Giám đốc khối → Trư�
 Dự kiến live tại `okr.consultx.vn`.
 
 ## ⭐ YÊU CẦU THƯỜNG TRỰC VỀ UI/UX (CFO nhấn mạnh — áp cho MỌI thay đổi, KHÔNG cần nhắc lại)
-Mọi tính năng/màn hình phải **đẹp, chuyên nghiệp, gọn gàng (neat), user-friendly**. Cụ thể:
-thông tin quan trọng hiển thị ngay tại chỗ (không bắt mở popup mới thấy); dữ liệu trình bày kèm
-**ý nghĩa/insight** (vd trọng số KR kèm % đóng góp roll-up); thao tác có phản hồi rõ (toast "đã lưu",
-tự đóng form); xoá luôn có popup xác nhận; canh lề/thụt cấp/icon nhất quán; mỗi thao tác sửa mở popup
-gọn, nhãn căn trái. **Tự chủ động rà UI/UX mỗi lần đụng màn hình** — CFO không phải nhắc lại.
+Mọi tính năng/màn hình phải **đẹp, chuyên nghiệp, gọn gàng (neat), user-friendly** — **CẢ trên
+DESKTOP LẪN MOBILE (responsive)**. Cụ thể: thông tin quan trọng hiển thị ngay tại chỗ (không bắt mở
+popup mới thấy); dữ liệu trình bày kèm **ý nghĩa/insight** (vd trọng số KR kèm % đóng góp roll-up);
+thao tác có phản hồi rõ (toast "đã lưu", tự đóng form); xoá luôn có popup xác nhận; canh lề/thụt
+cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trái.
+- **MOBILE (bắt buộc)**: mỗi khi thêm/sửa layout PHẢI kiểm bố cục ở màn hẹp (~390px): tránh cột cố
+  định `width:150/200px` cạnh nhau (dùng class + media query để xếp DỌC hoặc gộp 1 dòng, KHÔNG để nút
+  trôi giữa màn); breakpoint dùng `@media (max-width:640px)` (và 760px cho lưới/row đã có sẵn);
+  `.row > *` tự full-width ≤760px; bảng bọc `.table-scroll`; nút đủ lớn để bấm; header thu gọn hamburger.
+- **Tự chủ động rà UI/UX (desktop + mobile) mỗi lần đụng màn hình** — CFO không phải nhắc lại.
 
 ## Vị trí & lý do
 - App Next.js **độc lập, self-contained** trong thư mục `okr-portal/` của repo `decks` (KHÔNG tạo
