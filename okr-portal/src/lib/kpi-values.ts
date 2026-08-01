@@ -45,21 +45,30 @@ export type ScorecardRow = {
 export function kpiStatus(
   k: Pick<ScorecardRow, 'direction' | 'threshold_watch' | 'threshold_alert' | 'threshold_escalate'>,
   actual: number | null,
+  target?: number | null,
 ): KpiStatus | null {
   if (actual == null) return null;
   const { threshold_watch: w, threshold_alert: a, threshold_escalate: e } = k;
-  if (w == null && a == null && e == null) return null;
-  if (k.direction === 'down') {
-    if (e != null && actual > e) return 'escalate';
-    if (a != null && actual > a) return 'alert';
-    if (w != null && actual > w) return 'watch';
+  if (w != null || a != null || e != null) {
+    // Ngưỡng TUYỆT ĐỐI đã đặt → dùng trực tiếp.
+    if (k.direction === 'down') {
+      if (e != null && actual > e) return 'escalate';
+      if (a != null && actual > a) return 'alert';
+      if (w != null && actual > w) return 'watch';
+      return 'ok';
+    }
+    if (e != null && actual < e) return 'escalate';
+    if (a != null && actual < a) return 'alert';
+    if (w != null && actual < w) return 'watch';
     return 'ok';
   }
-  // up
-  if (e != null && actual < e) return 'escalate';
-  if (a != null && actual < a) return 'alert';
-  if (w != null && actual < w) return 'watch';
-  return 'ok';
+  // Mặc định: theo % ĐẠT so target (khi chưa đặt ngưỡng tuyệt đối). Bands 90/70/50.
+  const at = attainment(k.direction, target ?? null, actual);
+  if (at == null) return null;
+  if (at >= 0.9) return 'ok';
+  if (at >= 0.7) return 'watch';
+  if (at >= 0.5) return 'alert';
+  return 'escalate';
 }
 
 /** Tỷ lệ đạt (0..1, cho phép >1) — 'up': actual/target · 'down': target/actual. Null nếu thiếu số. */
@@ -124,4 +133,21 @@ export async function upsertKpiValue(
 export async function getKpiName(kpiId: string): Promise<string | null> {
   const r = await queryOne<{ name: string }>('SELECT name FROM okr_kpis WHERE id=$1', [kpiId]);
   return r?.name ?? null;
+}
+
+/** CHỈ cập nhật ACTUAL (giữ nguyên target/note) — dùng cho auto-fill từ BigQuery. */
+export async function setKpiActual(
+  kpiId: string,
+  periodId: string,
+  unitId: string,
+  actual: number,
+  updatedBy: string,
+): Promise<void> {
+  await query(
+    `INSERT INTO okr_kpi_values (kpi_id, period_id, unit_id, actual, updated_by)
+     VALUES ($1,$2,$3,$4,$5)
+     ON CONFLICT (kpi_id, period_id, unit_id) DO UPDATE SET
+       actual=EXCLUDED.actual, updated_by=EXCLUDED.updated_by, updated_at=now()`,
+    [kpiId, periodId, unitId, actual, updatedBy],
+  );
 }

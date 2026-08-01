@@ -1,6 +1,7 @@
 import { query, queryOne } from './db';
 import { bqScalar } from './bigquery';
 import { setKrAutoValues } from './okr';
+import { setKpiActual } from './kpi-values';
 
 // ============================================================================
 // KPI tự động — mỗi "metric" gắn CẢ kế hoạch (target) LẪN thực hiện (current):
@@ -77,6 +78,49 @@ export async function syncKrKpi(krId: string): Promise<boolean> {
   if (plan === null && actual === null) return false;
   await setKrAutoValues(kr.id, plan, actual);
   return true;
+}
+
+// ============================================================================
+// Auto-fill ACTUAL cho Scorecard (Thư viện KPI) — CHỈ số thực hiện (không target),
+// cấp CÔNG TY, kỳ hiện tại, dùng scope bán lẻ đã kiểm chứng. Map theo MÃ KPI thư viện.
+// Chỉ những KPI ánh xạ SẠCH sang v_flatten_sales; các KPI khác nhập tay / phase sau.
+// ============================================================================
+const KPI_ACTUAL_SQL: Record<string, (from: string, to: string) => string> = {
+  // T1-01 Lợi nhuận gộp thương mại = SUM(gross_profit_vnd), scope bán lẻ
+  'T1-01': (f, t) =>
+    `SELECT SUM(gross_profit_vnd) v FROM ${SALES_TBL} WHERE ${RETAIL} AND bill_date BETWEEN DATE('${f}') AND DATE('${t}')`,
+  // T1-03 Sản lượng (chỉ quy 24K) = SUM(gold_weight_chi), scope bán lẻ
+  'T1-03': (f, t) =>
+    `SELECT SUM(gold_weight_chi) v FROM ${SALES_TBL} WHERE ${RETAIL} AND bill_date BETWEEN DATE('${f}') AND DATE('${t}')`,
+};
+
+/** Auto-fill ACTUAL cho các KPI nguồn BigQuery (cấp Công ty, kỳ hiện tại). Best-effort. */
+export async function syncKpiScorecardActuals(): Promise<{ updated: number }> {
+  const period = await queryOne<{ id: string; starts_on: string; ends_on: string }>(
+    `SELECT id, starts_on::text AS starts_on, ends_on::text AS ends_on
+       FROM okr_periods ORDER BY is_current DESC LIMIT 1`,
+  );
+  const company = await queryOne<{ id: string }>(`SELECT id FROM okr_units WHERE type='company' LIMIT 1`);
+  if (!period || !company) return { updated: 0 };
+  const today = todayVn();
+  const to = period.ends_on < today ? period.ends_on : today;
+  let updated = 0;
+  for (const [code, sqlFn] of Object.entries(KPI_ACTUAL_SQL)) {
+    try {
+      const kpi = await queryOne<{ id: string }>(
+        `SELECT id FROM okr_kpis WHERE code=$1 AND is_active=true`,
+        [code],
+      );
+      if (!kpi) continue;
+      const actual = await bqScalar(sqlFn(period.starts_on, to));
+      if (actual === null) continue;
+      await setKpiActual(kpi.id, period.id, company.id, actual, 'auto:bigquery');
+      updated++;
+    } catch {
+      /* best-effort: 1 KPI lỗi không chặn KPI khác */
+    }
+  }
+  return { updated };
 }
 
 /** Đồng bộ MỌI KR có kpi_source. Trả về số KR cập nhật / tổng. */

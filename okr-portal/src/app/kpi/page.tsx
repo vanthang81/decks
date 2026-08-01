@@ -124,7 +124,7 @@ export default async function KpiScorecardPage({
                   <tr><td colSpan={canInput ? 11 : 10} className="muted">Chưa có KPI phù hợp. Khai báo ở Quản trị → Thư viện KPI.</td></tr>
                 )}
                 {rows.map((r) => {
-                  const st = kpiStatus(r, r.actual);
+                  const st = kpiStatus(r, r.actual, r.target);
                   const at = attainment(r.direction, r.target, r.actual);
                   return (
                     <tr key={r.id}>

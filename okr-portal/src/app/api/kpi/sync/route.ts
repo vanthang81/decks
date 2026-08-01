@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { auth } from '@/auth';
 import { getUser } from '@/lib/users';
 import { loadAccess, canSyncKpi } from '@/lib/access';
-import { syncAllKpi } from '@/lib/kpi';
+import { syncAllKpi, syncKpiScorecardActuals } from '@/lib/kpi';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -22,7 +22,8 @@ async function handle(req: NextRequest) {
   }
   try {
     const r = await syncAllKpi();
-    return NextResponse.json({ ok: true, ...r });
+    const sc = await syncKpiScorecardActuals().catch(() => ({ updated: 0 }));
+    return NextResponse.json({ ok: true, ...r, scorecardActuals: sc.updated });
   } catch (e) {
     return NextResponse.json({ ok: false, error: String(e) }, { status: 502 });
   }
