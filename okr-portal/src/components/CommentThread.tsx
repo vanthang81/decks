@@ -156,16 +156,26 @@ function Composer({
   );
 }
 
+// Cửa sổ tự sửa cho người dùng thường: 3 giờ (khớp server @/lib/moderation).
+const EDIT_WINDOW_MS = 3 * 60 * 60 * 1000;
+function withinWindow(createdAt: string): boolean {
+  const t = new Date(createdAt).getTime();
+  return Number.isFinite(t) && Date.now() - t <= EDIT_WINDOW_MS;
+}
+
 export default function CommentThread({
   entityType,
   entityId,
   users,
   defaultOpen = false,
+  canModerate = false,
 }: {
   entityType: EntityType;
   entityId: string;
   users: UserOpt[];
   defaultOpen?: boolean;
+  /** Quản lý (admin/editor) của OKR này: sửa + xoá bất kỳ lúc nào. */
+  canModerate?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const [loaded, setLoaded] = useState(false);
@@ -246,6 +256,9 @@ export default function CommentThread({
 
   const renderComment = (c: Comment, isReply: boolean) => {
     const mine = !!c.author_email && c.author_email.toLowerCase() === me.toLowerCase();
+    // Sửa: quản lý bất kỳ lúc nào; tác giả chỉ trong 3 giờ. Xoá: chỉ quản lý.
+    const canEditThis = canModerate || (mine && withinWindow(c.created_at));
+    const canDeleteThis = canModerate;
     return (
       <div key={c.id} className={`cmt ${isReply ? 'cmt-reply' : ''}`}>
         <Avatar url={c.author_avatar} name={c.author_name ?? c.author_email ?? '?'} cls="cmt-avatar" />
@@ -277,19 +290,18 @@ export default function CommentThread({
                     Trả lời
                   </button>
                 )}
-                {mine && (
-                  <>
-                    <button className="linkbtn" type="button" onClick={() => setEditId(c.id)}>Sửa</button>
-                    <ConfirmButton
-                      className="linkbtn danger"
-                      label="Xoá"
-                      title="Xoá bình luận"
-                      message="Xoá bình luận này? Mọi trả lời bên trong cũng bị xoá."
-                      confirmLabel="Xoá hẳn"
-                      onConfirm={() => remove(c.id)}
-                    />
-
-                  </>
+                {canEditThis && (
+                  <button className="linkbtn" type="button" onClick={() => setEditId(c.id)}>Sửa</button>
+                )}
+                {canDeleteThis && (
+                  <ConfirmButton
+                    className="linkbtn danger"
+                    label="Xoá"
+                    title="Xoá bình luận"
+                    message="Xoá bình luận này? Mọi trả lời bên trong cũng bị xoá."
+                    confirmLabel="Xoá hẳn"
+                    onConfirm={() => remove(c.id)}
+                  />
                 )}
               </div>
             </>

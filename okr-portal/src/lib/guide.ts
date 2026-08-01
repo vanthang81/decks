@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.5';
+export const GUIDE_VERSION = '2026-08-01.6';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -154,7 +154,7 @@ export const FEATURES: Feature[] = [
     where: 'Trang chi tiết OKR → mỗi KR → "Check-in / cập nhật"',
     help: 'Cập nhật giá trị KR hàng tuần + mức độ tự tin (xanh/vàng/đỏ) + ghi chú diễn biến.',
     detail:
-      'Check-in định kỳ (khuyến nghị hàng tuần) ghi lại giá trị mới, độ tự tin và ghi chú. Lịch sử check-in lưu ở cuối trang chi tiết OKR để theo dõi xu hướng.',
+      'Check-in định kỳ (khuyến nghị hàng tuần) ghi lại giá trị mới, độ tự tin và ghi chú. Lịch sử check-in lưu ở cuối trang chi tiết OKR để theo dõi xu hướng. QUYỀN sửa/xoá: quản lý (CEO/CFO hoặc lead quản OKR) sửa + xoá bất kỳ lúc nào; người dùng thường chỉ được SỬA của mình trong 3 giờ kể từ lúc đăng và KHÔNG được xoá. Bình luận (Thảo luận) áp cùng quy tắc này.',
   },
   {
     key: 'initiative',
@@ -345,6 +345,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (quy tắc sửa/xoá bình luận & check-in)',
+    items: [
+      'Chỉ quản lý (CEO/CFO hoặc lead quản OKR) mới được XOÁ bình luận/check-in.',
+      'Người dùng thường chỉ được SỬA bình luận/check-in của mình trong vòng 3 giờ kể từ lúc đăng; quá hạn phải nhờ quản lý.',
+      'Quản lý được sửa/xoá bất kỳ lúc nào; áp dụng cả ở giao diện (ẩn nút) lẫn máy chủ (chặn thật).',
+    ],
+  },
   {
     date: '01/08/2026 (tinh chỉnh giao diện thảo luận)',
     items: [

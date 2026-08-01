@@ -44,6 +44,7 @@ import {
   type Confidence,
 } from '@/lib/checkins';
 import { isKpiMetric, syncKrKpi } from '@/lib/kpi';
+import { canManageObjectiveId, withinEditWindow } from '@/lib/moderation';
 
 function str(fd: FormData, k: string): string {
   return String(fd.get(k) ?? '').trim();
@@ -162,9 +163,12 @@ export async function editCheckInAction(fd: FormData) {
     ci.objective_id ??
     (ci.key_result_id ? (await getKeyResult(ci.key_result_id))?.objective_id ?? null : null);
   const isAuthor = !!ci.author_email && ci.author_email.toLowerCase() === user.email.toLowerCase();
-  if (!isAuthor) {
-    if (!objId) throw new Error('Bạn không có quyền sửa check-in này.');
-    await assertCanManageObjective(objId);
+  // Sửa: quản lý (admin/editor) bất kỳ lúc nào; tác giả chỉ trong 3 giờ.
+  const canManage = await canManageObjectiveId(user, objId);
+  if (!canManage) {
+    if (!isAuthor) throw new Error('Bạn không có quyền sửa check-in này.');
+    if (!withinEditWindow(ci.created_at))
+      throw new Error('Quá 3 giờ — chỉ quản lý mới sửa được check-in này.');
   }
   const valueStr = str(fd, 'value');
   const value = valueStr === '' ? null : num(fd, 'value');
@@ -185,11 +189,9 @@ export async function deleteCheckInAction(fd: FormData) {
   const objId =
     ci.objective_id ??
     (ci.key_result_id ? (await getKeyResult(ci.key_result_id))?.objective_id ?? null : null);
-  const isAuthor = !!ci.author_email && ci.author_email.toLowerCase() === user.email.toLowerCase();
-  if (!isAuthor) {
-    if (!objId) throw new Error('Bạn không có quyền xoá check-in này.');
-    await assertCanManageObjective(objId);
-  }
+  // Xoá: CHỈ quản lý (admin/editor) — người dùng thường không được xoá check-in.
+  const canManage = await canManageObjectiveId(user, objId);
+  if (!canManage) throw new Error('Chỉ quản lý (admin/editor) được xoá check-in.');
   await deleteCheckIn(id);
   if (ci.key_result_id) await resyncKrFromCheckins(ci.key_result_id);
   if (objId) revalidatePath(`/objectives/${objId}`);

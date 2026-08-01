@@ -41,6 +41,7 @@ import {
   moveInitiativeAction,
 } from '../actions';
 import { createProjectForInitiativeAction } from '@/app/projects/actions';
+import { withinEditWindow } from '@/lib/moderation';
 
 export const dynamic = 'force-dynamic';
 
@@ -114,11 +115,15 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
     return (
       <div className="ci-list">
         {list.map((ci) => {
-          const canEditCi = canManage || (!!ci.author_email && ci.author_email.toLowerCase() === emailLc);
+          const isAuthor = !!ci.author_email && ci.author_email.toLowerCase() === emailLc;
+          // Quản lý sửa/xoá bất kỳ lúc nào; tác giả chỉ SỬA trong 3 giờ, KHÔNG xoá.
+          const canEditCi = canManage || (isAuthor && withinEditWindow(ci.created_at));
+          const canDeleteCi = canManage;
           return (
             <CheckinRow
               key={ci.id}
               canEdit={canEditCi}
+              canDelete={canDeleteCi}
               editAction={editCheckInAction}
               deleteAction={deleteCheckInAction}
               ci={{
@@ -283,7 +288,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
               )}
 
               {renderKrCheckins(kr.id, kr.metric_type, kr.unit_label)}
-              <CommentThread entityType="key_result" entityId={kr.id} users={personOpts} />
+              <CommentThread entityType="key_result" entityId={kr.id} users={personOpts} canModerate={canManage} />
               </div>
             </div>
           ))}
@@ -534,7 +539,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
         {/* ---------- Thảo luận Objective ---------- */}
         <div className="card">
           <h3 style={{ marginTop: 0 }}>Thảo luận<HelpTip k="comment" /></h3>
-          <CommentThread entityType="objective" entityId={obj.id} users={personOpts} defaultOpen />
+          <CommentThread entityType="objective" entityId={obj.id} users={personOpts} defaultOpen canModerate={canManage} />
         </div>
 
         {/* ---------- Check-in cấp Objective (KR check-in hiện tại từng KR ở trên) ---------- */}

@@ -72,6 +72,26 @@ export async function resolveEntity(
   };
 }
 
+/** Objective mà thực thể (objective/KR/việc) thuộc về — để kiểm quyền quản lý. */
+export async function objectiveIdOfEntity(
+  entityType: EntityType,
+  entityId: string,
+): Promise<string | null> {
+  if (entityType === 'objective') return entityId;
+  if (entityType === 'key_result') {
+    const k = await queryOne<{ objective_id: string | null }>(
+      'SELECT objective_id FROM okr_key_results WHERE id=$1',
+      [entityId],
+    );
+    return k?.objective_id ?? null;
+  }
+  const i = await queryOne<{ objective_id: string | null }>(
+    'SELECT objective_id FROM okr_initiatives WHERE id=$1',
+    [entityId],
+  );
+  return i?.objective_id ?? null;
+}
+
 export async function addComment(input: {
   entityType: EntityType;
   entityId: string;

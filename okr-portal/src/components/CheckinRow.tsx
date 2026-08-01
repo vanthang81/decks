@@ -22,11 +22,13 @@ export type CheckinRowData = {
 export default function CheckinRow({
   ci,
   canEdit,
+  canDelete,
   editAction,
   deleteAction,
 }: {
   ci: CheckinRowData;
   canEdit: boolean;
+  canDelete: boolean;
   editAction: (fd: FormData) => Promise<void>;
   deleteAction: (fd: FormData) => Promise<void>;
 }) {
@@ -70,20 +72,20 @@ export default function CheckinRow({
             {ci.author} · {ci.date}
           </span>
           {canEdit && (
-            <>
-              <button type="button" className="linkbtn" onClick={() => setOpen((v) => !v)}>
-                {open ? 'Đóng' : '✏️ Sửa'}
-              </button>
-              <ConfirmButton
-                className="linkbtn danger"
-                label="Xoá"
-                title="Xoá check-in"
-                message="Xoá check-in này? Hành động không thể hoàn tác."
-                confirmLabel="Xoá hẳn"
-                onConfirm={onDelete}
-                disabled={pending}
-              />
-            </>
+            <button type="button" className="linkbtn" onClick={() => setOpen((v) => !v)}>
+              {open ? 'Đóng' : '✏️ Sửa'}
+            </button>
+          )}
+          {canDelete && (
+            <ConfirmButton
+              className="linkbtn danger"
+              label="Xoá"
+              title="Xoá check-in"
+              message="Xoá check-in này? Hành động không thể hoàn tác."
+              confirmLabel="Xoá hẳn"
+              onConfirm={onDelete}
+              disabled={pending}
+            />
           )}
         </div>
         {canEdit && open && (

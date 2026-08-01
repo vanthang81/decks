@@ -646,7 +646,7 @@ function EditModal({
         )}
 
         <div className="okr-modal-cmt">
-          <CommentThread entityType="initiative" entityId={card.id} users={users} defaultOpen />
+          <CommentThread entityType="initiative" entityId={card.id} users={users} defaultOpen canModerate={canManage} />
         </div>
       </div>
     </div>

@@ -9,6 +9,7 @@ import {
   getComment,
   type EntityType,
 } from '@/lib/comments';
+import { canModerateEntity, withinEditWindow } from '@/lib/moderation';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -65,8 +66,14 @@ export async function PATCH(req: NextRequest) {
   }
   const c = await getComment(String(b.id));
   if (!c) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  if ((c.author_email ?? '').toLowerCase() !== u.email.toLowerCase()) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  // Sửa: quản lý (admin/editor) bất kỳ lúc nào; tác giả chỉ trong 3 giờ.
+  const isAuthor = (c.author_email ?? '').toLowerCase() === u.email.toLowerCase();
+  const canModerate = await canModerateEntity(u, c.entity_type, c.entity_id);
+  if (!canModerate && !(isAuthor && withinEditWindow(c.created_at))) {
+    return NextResponse.json(
+      { error: 'Quá 3 giờ hoặc không đủ quyền — chỉ quản lý mới sửa được bình luận này.' },
+      { status: 403 },
+    );
   }
   const mentions = Array.isArray(b.mentions) ? b.mentions.map(String) : [];
   await editComment(String(b.id), String(b.body).trim(), mentions);
@@ -80,9 +87,13 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: 'Bad request' }, { status: 400 });
   const c = await getComment(id);
   if (!c) return NextResponse.json({ ok: true });
-  const isAuthor = (c.author_email ?? '').toLowerCase() === u.email.toLowerCase();
-  if (!isAuthor && u.role !== 'exec') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  // Xoá: CHỈ quản lý (admin/editor) — người dùng thường không được xoá.
+  const canModerate = await canModerateEntity(u, c.entity_type, c.entity_id);
+  if (!canModerate) {
+    return NextResponse.json(
+      { error: 'Chỉ quản lý (admin/editor) mới được xoá bình luận.' },
+      { status: 403 },
+    );
   }
   await deleteComment(id);
   return NextResponse.json({ ok: true });
