@@ -11,6 +11,7 @@
   --card: #ffffff;
   --radius: 12px;
   --maxw: 1400px;            /* bề rộng nội dung tối đa (desktop) */
+  --hdr: 50px;               /* chiều cao thanh menu (offset cho header bảng dính) */
 }
 
 * { box-sizing: border-box; }
@@ -185,19 +186,14 @@ table.t th { color: var(--muted); font-weight: 600; font-size: 13px; }
 table.t tr:hover td { background: #FBF7F2; }
 .table-scroll { overflow-x: auto; }
 
-/* Bảng dữ liệu có HEADER ĐÓNG BĂNG (floating khi cuộn) + cuộn cả 2 chiều.
-   Khung cuộn riêng (overflow auto) để sticky thead hoạt động chắc chắn kể cả bảng rộng. */
-.table-sticky {
-  overflow: auto;
-  max-height: calc(100dvh - 172px);
-  min-height: 240px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--card);
-}
+/* Bảng dữ liệu với HEADER ĐÓNG BĂNG theo TRANG (không bọc trong box) — cuộn cả trang
+   lên/xuống, tiêu đề cột dính ngay dưới thanh menu. Desktop: khung overflow visible để
+   sticky bám theo trang. Mobile (≤760px): cho cuộn ngang trong khung (sticky tự tắt —
+   chấp nhận, đổi lại bảng thoáng + cả trang cuộn tự do). */
+.table-sticky { overflow: visible; }
 .table-sticky table.t { font-size: 13.5px; }
 .table-sticky table.t thead th {
-  position: sticky; top: 0; z-index: 5;
+  position: sticky; top: var(--hdr); z-index: 6;
   background: var(--card);
   /* viền dưới bằng box-shadow vì border-collapse làm mất border khi sticky */
   box-shadow: inset 0 -1px 0 var(--line);
@@ -208,9 +204,26 @@ table.t th.sortable { cursor: pointer; user-select: none; white-space: nowrap; t
 table.t th.sortable:hover { color: var(--ink); }
 table.t th.sortable.active { color: var(--primary); }
 .sort-ar { font-size: 10px; margin-left: 2px; }
-@media (max-width: 640px) {
-  .table-sticky { max-height: calc(100dvh - 132px); }
+@media (max-width: 760px) {
+  .table-sticky { overflow-x: auto; }
 }
+
+/* Bảng Công việc: cột hẹp GỌN 1 DÒNG (trạng thái/ưu tiên/dự án/OKR/phụ trách/mã/hạn),
+   riêng cột "Công việc" cho xuống nhiều dòng; "Đơn vị" wrap có giới hạn. */
+.task-table th, .task-table td { white-space: nowrap; }
+.task-table th:nth-child(2), .task-table td:nth-child(2) { white-space: normal; min-width: 260px; }
+.task-table th:nth-child(7), .task-table td:nth-child(7) { white-space: normal; min-width: 90px; max-width: 170px; }
+.task-table td:nth-child(2) b { font-weight: 600; }
+.te-row { cursor: pointer; }
+.te-row:hover td { background: #FBF7F2; }
+
+/* Popup sửa/cập nhật/xoá công việc từ trang Công việc */
+.task-edit { max-width: 660px; max-height: 92vh; overflow-y: auto; }
+.te-links { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; }
+.te-links a { text-decoration: none; }
+.te-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+.te-err { color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 8px 10px; margin-top: 10px; font-size: 13px; }
+.te-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
 
 /* Objective rows with level indent */
 .obj-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
@@ -326,6 +339,7 @@ table.t th.sortable.active { color: var(--primary); }
   width: 100%; max-width: 620px; padding: 18px 20px 20px;
   box-shadow: 0 18px 50px rgba(0,0,0,.28); animation: okrPop .14s ease;
   text-align: left; /* reset — modal có thể nằm trong container căn phải (vd cột header) */
+  font-weight: 400; /* reset — modal có thể nằm trong tiêu đề in đậm (.pagetitle) → thừa kế bold */
 }
 .okr-modal label.f { text-align: left; }
 @keyframes okrPop { from { transform: translateY(-6px); opacity: .6; } to { transform: none; opacity: 1; } }
@@ -587,7 +601,14 @@ details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 
   display: inline-block; font-size: 12px; color: var(--muted); background: #F4EFE8;
   border-radius: 6px; padding: 3px 9px; margin: 2px 0 10px;
 }
-.help-detail { margin: 0; line-height: 1.6; color: var(--ink); font-size: 14px; }
+.help-detail { margin: 0; line-height: 1.6; color: var(--ink); font-size: 14px; font-weight: 400; }
+.help-list { margin: 2px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.help-list li { position: relative; padding-left: 20px; line-height: 1.55; color: var(--ink); font-size: 14px; font-weight: 400; }
+.help-list li::before {
+  content: ''; position: absolute; left: 5px; top: 8px; width: 6px; height: 6px;
+  border-radius: 50%; background: var(--accent);
+}
+.help-list li b, .help-list li strong { font-weight: 700; color: var(--primary-dark); }
 
 /* ===== Chuông thông báo ===== */
 .notif-bell {

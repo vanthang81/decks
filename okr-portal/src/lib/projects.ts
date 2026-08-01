@@ -86,6 +86,13 @@ export async function listProjectOptions(
   );
 }
 
+/** Toàn bộ dự án (mọi kỳ) dạng gọn — cho dropdown gắn việc ở trang Công việc. */
+export async function listAllProjectOptions(): Promise<{ id: string; code: string | null; name: string }[]> {
+  return query<{ id: string; code: string | null; name: string }>(
+    `SELECT id, code, name FROM okr_projects WHERE status <> 'archived' ORDER BY name`,
+  );
+}
+
 /** Task/công việc thuộc 1 dự án (xuyên nhiều OKR) — kèm OKR gốc để điều hướng. */
 export type ProjectTask = {
   id: string;

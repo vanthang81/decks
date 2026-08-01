@@ -126,8 +126,10 @@ export type TaskRow = {
   objective_title: string | null;
   objective_owner: string | null;
   objective_unit_id: string | null;
+  objective_created_by: string | null;
   key_result_id: string | null;
   key_result_code: string | null;
+  description: string | null;
   period_id: string | null;
   period_name: string | null;
   budget_planned: number;
@@ -135,13 +137,13 @@ export type TaskRow = {
 };
 
 const TASK_SELECT = `
-  SELECT i.id, i.code, i.kind, i.title, i.status, i.priority,
+  SELECT i.id, i.code, i.kind, i.title, i.status, i.priority, i.description,
          i.progress::float8 AS progress, i.start_on::text, i.due_on::text,
          i.owner_email, u.display_name AS owner_name, u.avatar_url AS owner_avatar, i.created_by,
          i.unit_id, un.name AS unit_name,
          i.project_id, pr.code AS project_code, pr.name AS project_name, pr.owner_email AS project_owner,
          eo.id AS objective_id, eo.code AS objective_code, eo.title AS objective_title,
-         eo.owner_email AS objective_owner, eo.unit_id AS objective_unit_id,
+         eo.owner_email AS objective_owner, eo.unit_id AS objective_unit_id, eo.created_by AS objective_created_by,
          i.key_result_id, kr.code AS key_result_code,
          eo.period_id, per.name AS period_name,
          i.budget_planned::float8 AS budget_planned, i.budget_actual::float8 AS budget_actual

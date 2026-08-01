@@ -4,8 +4,10 @@ import { useMemo, useState, type CSSProperties } from 'react';
 import Link from 'next/link';
 import { ProgressBar } from '@/components/ui';
 import { StackedBar } from '@/components/charts';
+import TaskEditModal from '@/components/TaskEditModal';
 import { fmtDate } from '@/lib/format';
 import type { TaskRow } from '@/lib/initiatives';
+import type { PersonOpt, UnitOpt, ProjectOpt } from '@/components/ExecutionTabs';
 
 // Nhãn/màu khai lại tại chỗ (KHÔNG import runtime từ initiatives.ts → tránh kéo pg vào bundle).
 type Status = 'todo' | 'in_progress' | 'blocked' | 'done' | 'canceled';
@@ -93,12 +95,26 @@ export default function TaskExplorer({
   currentEmail,
   seeAll,
   totalAll,
+  manageIds,
+  users,
+  units,
+  projects,
+  editAction,
+  deleteAction,
 }: {
   tasks: TaskRow[];
   currentEmail: string;
   seeAll: boolean;
   totalAll: number;
+  manageIds: string[];
+  users: PersonOpt[];
+  units: UnitOpt[];
+  projects: ProjectOpt[];
+  editAction: (fd: FormData) => Promise<void>;
+  deleteAction: (fd: FormData) => Promise<void>;
 }) {
+  const manageSet = useMemo(() => new Set(manageIds), [manageIds]);
+  const [editing, setEditing] = useState<TaskRow | null>(null);
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const toggleSort = (k: SortKey) => {
@@ -128,7 +144,7 @@ export default function TaskExplorer({
     for (const t of tasks) if (t.owner_email) m.set(t.owner_email, t.owner_name || t.owner_email);
     return [...m.entries()].map(([email, name]) => ({ email, name })).sort((a, b) => a.name.localeCompare(b.name));
   }, [tasks]);
-  const units = useMemo(() => {
+  const unitChoices = useMemo(() => {
     const m = new Map<string, string>();
     for (const t of tasks) if (t.unit_id && t.unit_name) m.set(t.unit_id, t.unit_name);
     return [...m.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
@@ -138,7 +154,7 @@ export default function TaskExplorer({
     for (const t of tasks) if (t.objective_id && t.objective_title) m.set(t.objective_id, t.objective_title);
     return [...m.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
   }, [tasks]);
-  const projects = useMemo(() => {
+  const projectChoices = useMemo(() => {
     const m = new Map<string, string>();
     for (const t of tasks) if (t.project_id && t.project_name) m.set(t.project_id, t.project_name);
     return [...m.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
@@ -239,7 +255,7 @@ export default function TaskExplorer({
         </select>
         <select className="i fb-sel" value={fUnit} onChange={(e) => setFUnit(e.target.value)}>
           <option value="">Đơn vị: tất cả</option>
-          {units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+          {unitChoices.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
         </select>
         <select className="i fb-sel" value={fObj} onChange={(e) => setFObj(e.target.value)}>
           <option value="">OKR: tất cả</option>
@@ -247,7 +263,7 @@ export default function TaskExplorer({
         </select>
         <select className="i fb-sel" value={fProject} onChange={(e) => setFProject(e.target.value)}>
           <option value="">Dự án: tất cả</option>
-          {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          {projectChoices.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <select className="i fb-sel" value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
           <option value="">Trạng thái: tất cả</option>
@@ -302,7 +318,7 @@ export default function TaskExplorer({
           </thead>
           <tbody>
             {sorted.map((t) => (
-              <tr key={t.id}>
+              <tr key={t.id} className="te-row" onClick={() => setEditing(t)} title="Bấm để cập nhật / sửa / xoá">
                 <td>{t.code && <span className="okr-code">{t.code}</span>}</td>
                 <td>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
@@ -335,14 +351,14 @@ export default function TaskExplorer({
                 <td style={{ fontSize: 12.5 }}>{t.unit_name || <span className="muted">—</span>}</td>
                 <td>
                   {t.objective_id ? (
-                    <Link href={`/objectives/${t.objective_id}`} style={{ fontSize: 12.5 }}>
+                    <Link href={`/objectives/${t.objective_id}`} style={{ fontSize: 12.5 }} onClick={(e) => e.stopPropagation()}>
                       {t.objective_code ? <span className="okr-code">{t.objective_code}</span> : 'Mở OKR'}
                     </Link>
                   ) : <span className="muted">—</span>}
                 </td>
                 <td>
                   {t.project_id ? (
-                    <Link href={`/projects/${t.project_id}`} style={{ fontSize: 12.5 }}>
+                    <Link href={`/projects/${t.project_id}`} style={{ fontSize: 12.5 }} onClick={(e) => e.stopPropagation()}>
                       🗂 {t.project_code || t.project_name}
                     </Link>
                   ) : <span className="muted">—</span>}
@@ -368,6 +384,20 @@ export default function TaskExplorer({
           Bạn đang xem {tasks.length} việc liên quan đến bạn (được giao / bạn giao / OKR bạn chủ trì /
           dự án bạn tham gia / phạm vi đơn vị bạn quản). Người có quyền “Toàn phạm vi” xem toàn bộ {totalAll} việc.
         </p>
+      )}
+
+      {editing && (
+        <TaskEditModal
+          task={editing}
+          canManage={manageSet.has(editing.id)}
+          isAssignee={!!editing.owner_email && editing.owner_email.toLowerCase() === emailLc}
+          users={users}
+          units={units}
+          projects={projects}
+          editAction={editAction}
+          deleteAction={deleteAction}
+          onClose={() => setEditing(null)}
+        />
       )}
     </div>
   );

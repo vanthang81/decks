@@ -363,6 +363,7 @@ export async function updateInitiativeAction(fd: FormData) {
     });
   }
   revalidatePath(`/objectives/${obj.id}`);
+  revalidatePath('/tasks');
 }
 
 // Sửa đầy đủ 1 dự án/công việc từ popup edit (Kanban). Quản lý sửa mọi trường;
@@ -400,6 +401,7 @@ export async function editInitiativeAction(fd: FormData) {
     });
   }
   revalidatePath(`/objectives/${obj.id}`);
+  revalidatePath('/tasks');
 }
 
 export async function deleteInitiativeAction(fd: FormData) {
@@ -407,6 +409,7 @@ export async function deleteInitiativeAction(fd: FormData) {
   await assertCanManageObjective(objectiveId);
   await deleteInitiative(str(fd, 'id'));
   revalidatePath(`/objectives/${objectiveId}`);
+  revalidatePath('/tasks');
 }
 
 // Kéo-thả Kanban: đổi trạng thái 1 việc. Kiểm quyền (quản lý HOẶC người được giao).
@@ -422,4 +425,5 @@ export async function moveInitiativeAction(id: string, status: InitStatus) {
   if (!perm.manage && !perm.assignee) throw new Error('Bạn không có quyền cập nhật việc này.');
   await setInitiativeStatus(id, status);
   revalidatePath(`/objectives/${obj.id}`);
+  revalidatePath('/tasks');
 }

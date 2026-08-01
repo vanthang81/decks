@@ -48,7 +48,15 @@ export default function HelpTip({ k }: { k: string }) {
               </button>
             </div>
             {f.where && <div className="help-where">📍 {f.where}</div>}
-            <p className="help-detail">{f.detail}</p>
+            {Array.isArray(f.detail) ? (
+              <ul className="help-list">
+                {f.detail.map((d, i) => (
+                  <li key={i}>{d}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="help-detail">{f.detail}</p>
+            )}
             <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
               <Link className="btn ghost sm" href={`/guide#feat-${k}`} onClick={() => setOpen(false)}>
                 Mở trang Hướng dẫn đầy đủ →

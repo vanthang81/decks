@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.22';
+export const GUIDE_VERSION = '2026-08-01.23';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -128,7 +128,7 @@ export type Feature = {
   title: string;
   where: string; // vị trí trong app
   help: string; // câu ngắn cho tooltip
-  detail: string; // mô tả đầy đủ cho trang guide
+  detail: string | string[]; // mô tả đầy đủ: chuỗi = 1 đoạn; mảng = danh sách gạch đầu dòng
 };
 
 export const FEATURES: Feature[] = [
@@ -201,8 +201,15 @@ export const FEATURES: Feature[] = [
     title: 'Công việc (toàn hệ thống)',
     where: 'Menu "Công việc"',
     help: 'Liệt kê MỌI dự án/tiểu dự án/công việc từ tất cả OKR & dự án, đầy đủ bộ lọc + sắp xếp theo cột + header đóng băng khi cuộn. Chỉ hiện việc bạn được phép xem.',
-    detail:
-      'Một bảng duy nhất gom toàn bộ công việc (dự án → tiểu dự án → công việc) từ mọi OKR, Key Result và Dự án. Có tổng quan trạng thái + số việc quá hạn và ĐẦY ĐỦ BỘ LỌC: tìm kiếm (tên/mã/OKR/dự án), Phụ trách, Đơn vị, OKR, Dự án, Trạng thái, Ưu tiên, Loại, Kỳ, "⚠ Quá hạn" và "👤 Việc của tôi". Mỗi dòng liên kết thẳng tới OKR/dự án gốc. PHÂN QUYỀN XEM (need-to-know): cây OKR vẫn minh bạch cho mọi người, nhưng bảng công việc chỉ hiện việc bạn CÓ LIÊN QUAN — bạn được giao, bạn giao/tạo, bạn chủ trì OKR chứa việc, bạn là thành viên dự án (chủ trì dự án hoặc có việc trong dự án đó), hoặc việc thuộc phạm vi đơn vị bạn quản lý (Giám đốc khối/Trưởng phòng thấy toàn bộ đơn vị mình + cấp dưới). CEO/CFO và nhóm có năng lực "Toàn phạm vi" (chỉnh ở Phân quyền) xem tất cả.',
+    detail: [
+      'Một bảng duy nhất gom toàn bộ công việc (dự án → tiểu dự án → công việc) từ mọi OKR, Key Result và Dự án.',
+      'Tổng quan đầu trang: cơ cấu trạng thái + số việc quá hạn.',
+      'Đầy đủ bộ lọc: tìm kiếm (tên/mã/OKR/dự án), Phụ trách, Đơn vị, OKR, Dự án, Trạng thái, Ưu tiên, Loại, Kỳ, "⚠ Quá hạn" và "👤 Việc của tôi".',
+      'Bấm tiêu đề cột để sắp xếp (bấm lại đổi chiều); header cột đóng băng khi cuộn cả trang. Mỗi dòng liên kết thẳng tới OKR/dự án gốc.',
+      'Bấm vào một dòng để mở cửa sổ cập nhật / sửa / xoá công việc (theo phân quyền của bạn).',
+      'Phân quyền XEM (need-to-know): cây OKR vẫn minh bạch cho mọi người, nhưng bảng công việc chỉ hiện việc bạn CÓ LIÊN QUAN — bạn được giao, bạn giao/tạo, bạn chủ trì OKR chứa việc, bạn là thành viên dự án (chủ trì hoặc có việc trong dự án đó), hoặc việc thuộc phạm vi đơn vị bạn quản (Giám đốc khối/Trưởng phòng thấy toàn bộ đơn vị mình + cấp dưới).',
+      'CEO/CFO và nhóm có năng lực "Toàn phạm vi" (chỉnh ở Phân quyền) xem tất cả.',
+    ],
   },
   {
     key: 'my',
@@ -361,6 +368,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (Công việc: sửa nhanh + tinh chỉnh UI)',
+    items: [
+      'Bấm một dòng trong bảng Công việc để mở cửa sổ CẬP NHẬT / SỬA / XOÁ (theo phân quyền): quản lý OKR sửa mọi trường + xoá (có xác nhận); người được giao cập nhật trạng thái & tiến độ; người khác chỉ xem.',
+      'Header bảng nay dính theo TRANG (cuộn cả trang lên/xuống, không kẹt trong khung); cột hẹp (trạng thái/ưu tiên/dự án…) gọn 1 dòng, cột "Công việc" cho xuống nhiều dòng.',
+      'Popup hướng dẫn (ⓘ) trình bày lại: bỏ in đậm nguyên khối, dùng gạch đầu dòng dễ đọc.',
+    ],
+  },
   {
     date: '01/08/2026 (Công việc: sắp xếp cột + header đóng băng)',
     items: [

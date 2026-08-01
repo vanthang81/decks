@@ -152,7 +152,15 @@ export default async function GuidePage() {
                   <div className="feat anchor" id={`feat-${f.key}`} key={f.key}>
                     <div className="ftitle">{f.title}</div>
                     <div className="where">📍 {f.where}</div>
-                    <p>{f.detail}</p>
+                    {Array.isArray(f.detail) ? (
+                      <ul className="help-list" style={{ marginTop: 6 }}>
+                        {f.detail.map((d, i) => (
+                          <li key={i}>{d}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>{f.detail}</p>
+                    )}
                   </div>
                 ))}
               </div>
