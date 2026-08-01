@@ -47,7 +47,7 @@ function Composer({
   onCancel,
 }: {
   users: UserOpt[];
-  onSubmit: (body: string, mentions: string[]) => void;
+  onSubmit: (body: string, mentions: string[]) => void | boolean | Promise<void | boolean>;
   busy: boolean;
   autoFocus?: boolean;
   placeholder?: string;
@@ -96,9 +96,15 @@ function Composer({
     }, 0);
   };
 
-  const submit = () => {
+  const submit = async () => {
     const finalMentions = mentions.filter((e) => body.includes(`@${nameOf(e)}`));
-    onSubmit(body.trim(), finalMentions);
+    const ok = await onSubmit(body.trim(), finalMentions);
+    // Gửi thành công → dọn sạch ô soạn (không giữ lại nội dung đã gửi).
+    if (ok !== false) {
+      setBody('');
+      setMentions([]);
+      setQ(null);
+    }
   };
 
   return (
@@ -192,7 +198,7 @@ export default function CommentThread({
   const roots = comments.filter((c) => !c.parent_id);
   const repliesOf = (id: string) => comments.filter((c) => c.parent_id === id);
 
-  const post = async (parentId: string | null, body: string, mentions: string[]) => {
+  const post = async (parentId: string | null, body: string, mentions: string[]): Promise<boolean> => {
     setBusy(true);
     try {
       const r = await fetch('/api/comments', {
@@ -204,12 +210,13 @@ export default function CommentThread({
         setReplyTo(null);
         await load();
       }
+      return r.ok;
     } finally {
       setBusy(false);
     }
   };
 
-  const saveEdit = async (id: string, body: string, mentions: string[]) => {
+  const saveEdit = async (id: string, body: string, mentions: string[]): Promise<boolean> => {
     setBusy(true);
     try {
       const r = await fetch('/api/comments', {
@@ -221,6 +228,7 @@ export default function CommentThread({
         setEditId(null);
         await load();
       }
+      return r.ok;
     } finally {
       setBusy(false);
     }
@@ -310,7 +318,8 @@ export default function CommentThread({
   return (
     <div className="cmt-thread">
       <button type="button" className="cmt-toggle" onClick={() => setOpen((o) => !o)}>
-        💬 Thảo luận{loaded ? ` (${count})` : ''} <span className="cmt-caret">{open ? '▾' : '▸'}</span>
+        <span className="kr-sub-ic">💬</span> Thảo luận{loaded ? ` (${count})` : ''}{' '}
+        <span className="cmt-caret">{open ? '▾' : '▸'}</span>
       </button>
       {open && (
         <div className="cmt-body-wrap">

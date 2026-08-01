@@ -402,6 +402,25 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
 details.inline { margin-top: 10px; }
 details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 600; font-size: 14px; }
 
+/* Chân mỗi KR: gom "Check-in / cập nhật" + "Thảo luận" thành nhóm con —
+   thụt lề + vạch nhấn trái + icon để dễ nhận diện, sắp xếp gọn. */
+.kr-foot {
+  margin-top: 10px; margin-left: 2px; padding-left: 14px;
+  border-left: 2px solid var(--primary-tint);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.kr-sub > summary {
+  list-style: none; cursor: pointer; color: var(--primary); font-weight: 600; font-size: 13.5px;
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 0;
+}
+.kr-sub > summary::-webkit-details-marker { display: none; }
+.kr-sub > summary::after { content: '▸'; color: var(--muted); font-size: 11px; font-weight: 400; }
+.kr-sub[open] > summary::after { content: '▾'; }
+.kr-sub-ic { font-size: 13.5px; line-height: 1; }
+.kr-foot .cmt-thread { margin-top: 2px; }
+.kr-foot .cmt-toggle { font-size: 13.5px; padding: 3px 0; }
+.kr-foot .ci-list { margin-top: 4px; }
+
 /* Help tooltip (nút bấm mở popup hướng dẫn) */
 .helptip {
   display: inline-flex; align-items: center; justify-content: center;

@@ -241,9 +241,10 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                 </div>
               </div>
 
+              <div className="kr-foot">
               {canManage && (
-                <details className="inline">
-                  <summary>Check-in / cập nhật</summary>
+                <details className="kr-sub">
+                  <summary><span className="kr-sub-ic">📈</span> Check-in / cập nhật</summary>
                   <form action={checkInAction} className="row" style={{ marginTop: 8 }}>
                     <input type="hidden" name="key_result_id" value={kr.id} />
                     <div style={{ maxWidth: 140 }}>
@@ -283,6 +284,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
 
               {renderKrCheckins(kr.id, kr.metric_type, kr.unit_label)}
               <CommentThread entityType="key_result" entityId={kr.id} users={personOpts} />
+              </div>
             </div>
           ))}
 

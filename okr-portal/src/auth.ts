@@ -22,7 +22,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return true;
     },
-    async jwt({ token }) {
+    async jwt({ token, user }) {
+      // Ưu tiên ảnh từ profile Google lúc mới đăng nhập; nếu không có thì
+      // dùng picture đã lưu trong JWT (các phiên cũ vẫn mang picture).
+      const pic =
+        (user && typeof user.image === 'string' ? user.image : null) ??
+        (typeof token.picture === 'string' ? token.picture : null);
       const email = token.email?.toLowerCase();
       if (email) {
         const u = await getUser(email);
@@ -30,6 +35,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.isActive = u?.is_active ?? false;
         token.unitId = u?.unit_id ?? null;
         token.displayName = u?.display_name ?? token.name ?? null;
+        // Backfill avatar cho comment/thông báo — không cần đăng nhập lại.
+        if (pic && u && u.avatar_url !== pic) {
+          try {
+            await setUserAvatar(email, pic);
+          } catch {
+            /* best-effort */
+          }
+        }
       }
       return token;
     },

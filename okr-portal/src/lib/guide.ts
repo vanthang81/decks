@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.4';
+export const GUIDE_VERSION = '2026-08-01.5';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -345,6 +345,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (tinh chỉnh giao diện thảo luận)',
+    items: [
+      'Ô soạn bình luận tự dọn sạch sau khi gửi/lưu thành công (không giữ lại nội dung đã gửi).',
+      'Hiển thị đúng avatar Google của người dùng ở mọi bình luận (tự cập nhật, không cần đăng nhập lại).',
+      'Mục "📈 Check-in / cập nhật" và "💬 Thảo luận" dưới mỗi KR được thụt lề + gắn icon, gom nhóm gọn gàng.',
+    ],
+  },
   {
     date: '01/08/2026 (an toàn khi xoá + phản hồi khi lưu)',
     items: [
