@@ -111,7 +111,43 @@ img.cmt-avatar, img.cmt-mm-av, img.ntf-av { object-fit: cover; }
 .card h2, .card h3 { margin-top: 0; }
 .grid { display: grid; gap: 14px; }
 .grid.two { grid-template-columns: 1fr 1fr; }
-@media (max-width: 760px) { .grid.two { grid-template-columns: 1fr; } }
+.grid.three { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 980px) { .grid.three { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 760px) { .grid.two, .grid.three { grid-template-columns: 1fr; } }
+
+/* ===== Biểu đồ (charts.tsx) ===== */
+.donut-wrap { margin: 0 auto; }
+.donut-top { font-size: 26px; font-weight: 800; fill: var(--ink); }
+.donut-sub { font-size: 11px; font-weight: 600; fill: var(--muted); }
+.legend { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
+.lg-row { display: flex; align-items: center; gap: 7px; font-size: 12.5px; }
+.lg-dot { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; }
+.lg-lbl { color: var(--ink); flex: 1; min-width: 0; }
+.lg-val { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); }
+.barlist { display: flex; flex-direction: column; gap: 8px; }
+.bl-row { display: grid; grid-template-columns: minmax(90px, 40%) 1fr auto; align-items: center; gap: 10px; font-size: 13px; }
+.bl-lbl { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
+.bl-track { height: 9px; background: #EFEAE3; border-radius: 999px; overflow: hidden; }
+.bl-fill { display: block; height: 100%; border-radius: 999px; }
+.bl-val { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); min-width: 34px; text-align: right; }
+.stacked { display: flex; width: 100%; border-radius: 999px; overflow: hidden; background: #EFEAE3; }
+.st-seg { display: block; height: 100%; }
+.spark { display: block; overflow: visible; }
+
+/* Thẻ insight trên bảng điều khiển */
+.insight { display: flex; flex-direction: column; }
+.insight-h { margin: 0 0 10px; font-size: 15px; display: flex; align-items: center; flex-wrap: wrap; }
+.insight-donut { display: flex; justify-content: center; margin: 4px 0 12px; }
+
+/* Xu hướng tiến độ (sparkline) trên timeline check-in của KR */
+.ci-trend { display: flex; align-items: center; gap: 8px; padding: 4px 0 6px; }
+.ci-trend-lbl { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+.ci-trend-now { font-size: 12px; font-weight: 700; color: var(--ink); }
+
+/* Tổng quan trạng thái việc (project detail) */
+.task-summary { margin: 6px 0 10px; }
+.ts-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; align-items: center; }
+.ts-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--ink); }
 
 .pagetitle { font-size: 22px; font-weight: 700; margin: 4px 0 2px; }
 .subtitle { color: var(--muted); margin: 0 0 18px; }

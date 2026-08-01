@@ -18,6 +18,7 @@ import {
   PROJECT_STATUS_CLS,
 } from '@/lib/projects';
 import { listInitiativesForProject } from '@/lib/initiatives';
+import { StackedBar } from '@/components/charts';
 import { loadAccess } from '@/lib/access';
 import { fmtVnd, fmtDate } from '@/lib/format';
 import {
@@ -45,6 +46,17 @@ export default async function ProjectDetail({ params }: { params: { id: string }
   const objectiveOpts = p.period_id ? await listObjectivesWithKrs(p.period_id) : [];
   const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url }));
   const unitOpts = units.filter((u) => u.type !== 'company').map((u) => ({ id: u.id, name: u.name, type: u.type }));
+
+  // Tổng quan trạng thái công việc của dự án.
+  const TS_C: Record<string, string> = { todo: '#94a3b8', in_progress: '#2563eb', blocked: '#dc2626', done: '#16a34a', canceled: '#cbd5e1' };
+  const TS_L: Record<string, string> = { todo: 'Chưa làm', in_progress: 'Đang làm', blocked: 'Vướng', done: 'Xong', canceled: 'Huỷ' };
+  const tsCount: Record<string, number> = {};
+  const todayStr = new Date().toISOString().slice(0, 10);
+  let overdueCount = 0;
+  for (const t of tasks) {
+    tsCount[t.status] = (tsCount[t.status] ?? 0) + 1;
+    if (t.due_on && t.due_on < todayStr && t.status !== 'done' && t.status !== 'canceled') overdueCount++;
+  }
 
   return (
     <>
@@ -128,6 +140,26 @@ export default async function ProjectDetail({ params }: { params: { id: string }
             Gom từ nhiều OKR/khối. Bấm một việc để mở &amp; sửa (đổi trạng thái/tiến độ/người giao…).
             Chip <b>🎯</b> là OKR gốc — mở việc để nhảy sâu hơn. Thêm việc sẽ gắn vào OKR/KR bộ phận đã chọn.
           </p>
+          {tasks.length > 0 && (
+            <div className="task-summary">
+              <StackedBar
+                segments={['done', 'in_progress', 'blocked', 'todo', 'canceled']
+                  .filter((s) => tsCount[s])
+                  .map((s) => ({ value: tsCount[s], color: TS_C[s], label: TS_L[s] }))}
+                height={10}
+              />
+              <div className="ts-legend">
+                {['done', 'in_progress', 'blocked', 'todo'].map((s) =>
+                  tsCount[s] ? (
+                    <span className="ts-chip" key={s}>
+                      <span className="lg-dot" style={{ background: TS_C[s] }} /> {TS_L[s]} {tsCount[s]}
+                    </span>
+                  ) : null,
+                )}
+                {overdueCount > 0 && <span className="badge red">⚠ {overdueCount} quá hạn</span>}
+              </div>
+            </div>
+          )}
           {tasks.length === 0 ? (
             <p className="muted">
               Chưa có việc nào. Mở một OKR → mục “Dự án &amp; Kế hoạch hành động” → bấm việc → tick “🗂 Thuộc dự án” và chọn dự án này.

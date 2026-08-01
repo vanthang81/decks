@@ -5,8 +5,14 @@ import { ProgressBar } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
 import { getCurrentPeriod, listPeriods } from '@/lib/periods';
 import { listObjectivesByPeriod, type ObjectiveRow } from '@/lib/okr';
+import { periodInsights } from '@/lib/insights';
 import { unitIcon } from '@/lib/unit-icons';
-import { fmtNumber } from '@/lib/format';
+import { fmtNumber, progressColor } from '@/lib/format';
+import { Donut, BarList, Legend } from '@/components/charts';
+
+const PROG_C = { done: '#16a34a', ahead: '#2563eb', behind: '#f59e0b', notStarted: '#cbd5e1' };
+const CONF_C = { on_track: '#16a34a', at_risk: '#d97706', off_track: '#dc2626', none: '#cbd5e1' };
+const INIT_C = { todo: '#94a3b8', in_progress: '#2563eb', blocked: '#dc2626', done: '#16a34a', canceled: '#cbd5e1' };
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +28,22 @@ export default async function Dashboard() {
 
   const avg = (arr: ObjectiveRow[]) =>
     arr.length ? arr.reduce((a, o) => a + o.progress, 0) / arr.length : 0;
+
+  const ins = period ? await periodInsights(period.id) : null;
+  const companyProg = Math.round(avg(company.length ? company : divisions));
+  // Nhịp độ: % thời gian kỳ đã trôi qua (so với tiến độ để biết đang dẫn/chậm).
+  let elapsed = 0;
+  if (period) {
+    const s = new Date(period.starts_on).getTime();
+    const e = new Date(period.ends_on).getTime();
+    const now = Date.now();
+    elapsed = e > s ? Math.max(0, Math.min(100, Math.round(((now - s) / (e - s)) * 100))) : 0;
+  }
+  const gap = companyProg - elapsed;
+  const paceVerdict =
+    gap >= 5 ? { cls: 'green', txt: `Đang dẫn nhịp +${gap} điểm` }
+    : gap <= -5 ? { cls: 'red', txt: `Chậm nhịp ${-gap} điểm` }
+    : { cls: 'blue', txt: 'Đúng nhịp kế hoạch' };
 
   return (
     <>
@@ -78,6 +100,114 @@ export default async function Dashboard() {
                 </div>
               </div>
             </div>
+
+            {ins && (
+              <div className="grid three">
+                {/* Tiến độ & Nhịp độ */}
+                <div className="card insight">
+                  <h3 className="insight-h">Tiến độ &amp; Nhịp độ</h3>
+                  <div className="insight-donut">
+                    <Donut
+                      segments={[
+                        { value: companyProg, color: progressColor(companyProg) },
+                        { value: 100 - companyProg, color: 'transparent' },
+                      ]}
+                      centerTop={`${companyProg}%`}
+                      centerSub="công ty"
+                    />
+                  </div>
+                  <div style={{ textAlign: 'center', marginBottom: 10 }}>
+                    <span className={`badge ${paceVerdict.cls}`}>{paceVerdict.txt}</span>
+                  </div>
+                  <BarList
+                    items={[
+                      { label: 'Tiến độ', value: companyProg, color: 'var(--primary)' },
+                      { label: 'Thời gian kỳ', value: elapsed, color: '#cbd5e1' },
+                    ]}
+                  />
+                </div>
+
+                {/* Phân bố tiến độ KR */}
+                <div className="card insight">
+                  <h3 className="insight-h">Phân bố tiến độ {ins.krTotal} KR</h3>
+                  <div className="insight-donut">
+                    <Donut
+                      segments={[
+                        { value: ins.progress.done, color: PROG_C.done },
+                        { value: ins.progress.ahead, color: PROG_C.ahead },
+                        { value: ins.progress.behind, color: PROG_C.behind },
+                        { value: ins.progress.notStarted, color: PROG_C.notStarted },
+                      ]}
+                      centerTop={ins.krTotal}
+                      centerSub="KR"
+                    />
+                  </div>
+                  <Legend
+                    items={[
+                      { color: PROG_C.done, label: 'Đạt / gần đạt (≥90%)', value: ins.progress.done },
+                      { color: PROG_C.ahead, label: 'Đúng hướng (50–90%)', value: ins.progress.ahead },
+                      { color: PROG_C.behind, label: 'Cần chú ý (10–50%)', value: ins.progress.behind },
+                      { color: PROG_C.notStarted, label: 'Chưa khởi động (<10%)', value: ins.progress.notStarted },
+                    ]}
+                  />
+                </div>
+
+                {/* Công việc thực thi */}
+                <div className="card insight">
+                  <h3 className="insight-h">
+                    Công việc thực thi
+                    {ins.overdueTasks > 0 && (
+                      <span className="badge red" style={{ marginLeft: 8, fontSize: 11 }}>
+                        ⚠ {ins.overdueTasks} quá hạn
+                      </span>
+                    )}
+                  </h3>
+                  <div className="insight-donut">
+                    <Donut
+                      segments={[
+                        { value: ins.initByStatus.done, color: INIT_C.done },
+                        { value: ins.initByStatus.in_progress, color: INIT_C.in_progress },
+                        { value: ins.initByStatus.blocked, color: INIT_C.blocked },
+                        { value: ins.initByStatus.todo, color: INIT_C.todo },
+                        { value: ins.initByStatus.canceled, color: INIT_C.canceled },
+                      ]}
+                      centerTop={ins.initTotal}
+                      centerSub="việc"
+                    />
+                  </div>
+                  <Legend
+                    items={[
+                      { color: INIT_C.done, label: 'Xong', value: ins.initByStatus.done },
+                      { color: INIT_C.in_progress, label: 'Đang làm', value: ins.initByStatus.in_progress },
+                      { color: INIT_C.blocked, label: 'Vướng', value: ins.initByStatus.blocked },
+                      { color: INIT_C.todo, label: 'Chưa làm', value: ins.initByStatus.todo },
+                    ]}
+                  />
+                </div>
+              </div>
+            )}
+
+            {divisions.length > 0 && (
+              <div className="card">
+                <h3 style={{ marginTop: 0 }}>Tiến độ theo Khối</h3>
+                <BarList
+                  items={[...divisions]
+                    .sort((a, b) => b.progress - a.progress)
+                    .map((o) => ({
+                      label: (
+                        <span>
+                          <span aria-hidden style={{ marginRight: 5 }}>
+                            {unitIcon({ code: o.unit_code, name: o.unit_name, type: 'division' })}
+                          </span>
+                          {o.unit_name ?? o.title}
+                        </span>
+                      ),
+                      value: o.progress,
+                      color: progressColor(o.progress),
+                    }))}
+                />
+              </div>
+            )}
 
             <div className="card">
               <div className="flexbtw">

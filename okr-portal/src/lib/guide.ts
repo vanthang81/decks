@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.16';
+export const GUIDE_VERSION = '2026-08-01.17';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -264,9 +264,9 @@ export const FEATURES: Feature[] = [
     key: 'dashboard',
     title: 'Bảng điều khiển',
     where: 'Menu "Bảng điều khiển"',
-    help: 'Tổng quan tiến độ công ty + OKR cấp công ty/khối trong kỳ hiện tại.',
+    help: 'Tổng quan trực quan: tiến độ vs nhịp độ, phân bố KR, trạng thái việc, tiến độ theo khối.',
     detail:
-      'Trang chủ tóm tắt sức khỏe OKR toàn công ty theo kỳ hiện tại: tiến độ chung, các Objective cấp công ty và cấp khối, để lãnh đạo nắm nhanh bức tranh tổng thể trước khi đi sâu vào từng OKR/dự án.',
+      'Trang chủ tóm tắt sức khỏe OKR toàn công ty theo kỳ hiện tại bằng BIỂU ĐỒ để nắm insight nhanh: (1) donut Tiến độ công ty kèm "nhịp độ" — so tiến độ với % thời gian kỳ đã trôi để biết đang DẪN hay CHẬM nhịp; (2) donut phân bố tiến độ KR (đạt/đúng hướng/cần chú ý/chưa khởi động); (3) donut trạng thái công việc + số việc quá hạn; (4) thanh xếp hạng tiến độ theo Khối. Trong trang chi tiết OKR, mỗi KR có đường "xu hướng tiến độ" (sparkline) theo các lần check-in; trang Dự án có thanh tổng quan trạng thái việc.',
   },
   {
     key: 'codes',
@@ -353,6 +353,15 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (biểu đồ & trực quan hoá insight)',
+    items: [
+      'Bảng điều khiển thêm biểu đồ: donut Tiến độ vs Nhịp độ (dẫn/chậm so với thời gian kỳ), phân bố tiến độ KR, trạng thái công việc + việc quá hạn, xếp hạng tiến độ theo Khối.',
+      'Trang chi tiết OKR: mỗi KR có đường "xu hướng tiến độ" (sparkline) qua các lần check-in.',
+      'Trang Dự án: thanh tổng quan trạng thái công việc + số việc quá hạn.',
+      'Biểu đồ SVG nhẹ, render sẵn ở máy chủ (không thêm thư viện), khớp theme.',
+    ],
+  },
   {
     date: '01/08/2026 (rà soát & vá lỗ hổng phân quyền)',
     items: [

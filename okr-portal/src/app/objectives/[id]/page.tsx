@@ -7,6 +7,7 @@ import CommentThread from '@/components/CommentThread';
 import CheckinRow from '@/components/CheckinRow';
 import ObjectiveEditButton from '@/components/ObjectiveEditButton';
 import KeyResultEditButton from '@/components/KeyResultEditButton';
+import { Sparkline } from '@/components/charts';
 import { ProgressBar, LevelBadge, StatusBadge } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
 import { listUnits } from '@/lib/org';
@@ -15,6 +16,7 @@ import {
   getObjective,
   listKeyResults,
   listChildObjectives,
+  computeKrProgress,
   OKR_TYPE_LABEL,
   OKR_TYPE_EXPECT,
   INDICATOR_LABEL,
@@ -28,7 +30,7 @@ import {
 import { listProjectOptions } from '@/lib/projects';
 import { listCheckInsForObjective, CONFIDENCE_LABEL, CONFIDENCE_COLOR } from '@/lib/checkins';
 import { listKpiMetrics } from '@/lib/kpi';
-import { fmtMetric, fmtVnd, fmtDate } from '@/lib/format';
+import { fmtMetric, fmtVnd, fmtDate, progressColor } from '@/lib/format';
 import {
   editObjectiveAction,
   deleteObjectiveAction,
@@ -116,11 +118,26 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
   }
   const objectiveCheckins = checkins.filter((c) => !c.key_result_id);
 
-  const renderKrCheckins = (krId: string, metricType: typeof krs[number]['metric_type'], unitLabel: string | null) => {
+  const renderKrCheckins = (kr: typeof krs[number]) => {
+    const krId = kr.id;
+    const metricType = kr.metric_type;
+    const unitLabel = kr.unit_label;
     const list = checkinsByKr.get(krId) ?? [];
     if (list.length === 0) return null;
+    // Xu hướng tiến độ: progress tại mỗi lần check-in (cũ → mới).
+    const trend = [...list]
+      .filter((ci) => ci.value !== null)
+      .sort((a, b) => a.created_at.localeCompare(b.created_at))
+      .map((ci) => computeKrProgress({ ...kr, current_value: ci.value as number }));
     return (
       <div className="ci-list">
+        {trend.length >= 2 && (
+          <div className="ci-trend">
+            <span className="ci-trend-lbl">Xu hướng tiến độ</span>
+            <Sparkline points={trend} width={150} height={30} color={progressColor(trend[trend.length - 1])} />
+            <span className="ci-trend-now mono">{trend[trend.length - 1].toFixed(0)}%</span>
+          </div>
+        )}
         {list.map((ci) => {
           const isAuthor = !!ci.author_email && ci.author_email.toLowerCase() === emailLc;
           // Quản lý sửa/xoá bất kỳ lúc nào; tác giả chỉ SỬA trong 3 giờ, KHÔNG xoá.
@@ -344,7 +361,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                 </details>
               )}
 
-              {renderKrCheckins(kr.id, kr.metric_type, kr.unit_label)}
+              {renderKrCheckins(kr)}
               <CommentThread entityType="key_result" entityId={kr.id} users={personOpts} canModerate={canManage} />
               </div>
             </div>
