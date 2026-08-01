@@ -15,6 +15,10 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   trôi giữa màn); breakpoint dùng `@media (max-width:640px)` (và 760px cho lưới/row đã có sẵn);
   `.row > *` tự full-width ≤760px; bảng bọc `.table-scroll`; nút đủ lớn để bấm; header thu gọn hamburger.
 - **Tự chủ động rà UI/UX (desktop + mobile) mỗi lần đụng màn hình** — CFO không phải nhắc lại.
+- **Desktop và mobile KHÔNG bắt buộc giống hệt** (CFO 01/08): được phép bố trí KHÁC nhau cho mỗi
+  kích thước, miễn MỖI bên đều đẹp/chuyên nghiệp/tối ưu. Vd bảng/bar nhiều cột: desktop xếp 1 dòng
+  (nhãn · thanh · số); mobile tách nhãn xuống dòng riêng đầy đủ + thanh/số dòng dưới (không cắt cụt).
+  → Ưu tiên "đẹp & dễ đọc theo từng kích thước" hơn là ép cùng một layout co giãn.
 
 ## Vị trí & lý do
 - App Next.js **độc lập, self-contained** trong thư mục `okr-portal/` của repo `decks` (KHÔNG tạo

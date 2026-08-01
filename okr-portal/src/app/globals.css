@@ -131,6 +131,18 @@ img.cmt-avatar, img.cmt-mm-av, img.ntf-av { object-fit: cover; }
 .bl-track { height: 9px; background: #EFEAE3; border-radius: 999px; overflow: hidden; }
 .bl-fill { display: block; height: 100%; border-radius: 999px; }
 .bl-val { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); min-width: 34px; text-align: right; }
+/* MOBILE: nhãn Khối (tên dài) xuống DÒNG RIÊNG đầy đủ, thanh + % ở dòng dưới — dễ đọc hơn
+   là cắt cụt nhãn 40%. Desktop giữ bố cục lưới 1 dòng (nhãn · thanh · %). */
+@media (max-width: 640px) {
+  .bl-row {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "lbl lbl" "track val";
+    gap: 4px 10px;
+  }
+  .bl-lbl { grid-area: lbl; white-space: normal; overflow: visible; text-overflow: clip; font-weight: 600; line-height: 1.3; }
+  .bl-track { grid-area: track; }
+  .bl-val { grid-area: val; }
+}
 .stacked { display: flex; width: 100%; border-radius: 999px; overflow: hidden; background: #EFEAE3; }
 .st-seg { display: block; height: 100%; }
 .spark { display: block; overflow: visible; }
