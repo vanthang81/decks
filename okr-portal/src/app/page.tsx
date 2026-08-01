@@ -39,6 +39,22 @@ export default async function Dashboard() {
     const now = Date.now();
     elapsed = e > s ? Math.max(0, Math.min(100, Math.round(((now - s) / (e - s)) * 100))) : 0;
   }
+  // Gom OKR cấp khối theo ĐƠN VỊ (1 khối có thể có nhiều OKR) → 1 thanh/khối, tiến độ bình quân.
+  const byUnit = new Map<
+    string,
+    { name: string; code: string | null; sum: number; n: number }
+  >();
+  for (const o of divisions) {
+    const key = o.unit_code ?? o.unit_id ?? o.id;
+    const cur = byUnit.get(key) ?? { name: o.unit_name ?? o.title, code: o.unit_code, sum: 0, n: 0 };
+    cur.sum += o.progress;
+    cur.n += 1;
+    byUnit.set(key, cur);
+  }
+  const divBars = [...byUnit.values()]
+    .map((u) => ({ name: u.name, code: u.code, progress: u.sum / u.n, n: u.n }))
+    .sort((a, b) => b.progress - a.progress);
+
   const gap = companyProg - elapsed;
   const paceVerdict =
     gap >= 5 ? { cls: 'green', txt: `Đang dẫn nhịp +${gap} điểm` }
@@ -187,24 +203,23 @@ export default async function Dashboard() {
               </div>
             )}
 
-            {divisions.length > 0 && (
+            {divBars.length > 0 && (
               <div className="card">
                 <h3 style={{ marginTop: 0 }}>Tiến độ theo Khối</h3>
                 <BarList
-                  items={[...divisions]
-                    .sort((a, b) => b.progress - a.progress)
-                    .map((o) => ({
-                      label: (
-                        <span>
-                          <span aria-hidden style={{ marginRight: 5 }}>
-                            {unitIcon({ code: o.unit_code, name: o.unit_name, type: 'division' })}
-                          </span>
-                          {o.unit_name ?? o.title}
+                  items={divBars.map((u) => ({
+                    label: (
+                      <span>
+                        <span aria-hidden style={{ marginRight: 5 }}>
+                          {unitIcon({ code: u.code, name: u.name, type: 'division' })}
                         </span>
-                      ),
-                      value: o.progress,
-                      color: progressColor(o.progress),
-                    }))}
+                        {u.name}
+                        {u.n > 1 && <span className="muted" style={{ fontSize: 11 }}> · {u.n} OKR</span>}
+                      </span>
+                    ),
+                    value: u.progress,
+                    color: progressColor(u.progress),
+                  }))}
                 />
               </div>
             )}
