@@ -59,6 +59,12 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
               Cấu hình Nhóm quyền (Quản trị hệ thống · OKR Admin · Quản lý · Cộng tác · Người xem) từ Sổ năng lực tự cập nhật. Gán nhóm cho user ở Người dùng.
             </p>
           </Link>
+          <Link className="card" href="/admin/kpi" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <h3 style={{ marginTop: 0 }}>Thư viện KPI</h3>
+            <p className="muted" style={{ marginBottom: 0 }}>
+              Khai báo chỉ số đo dùng lại: viễn cảnh BSC · module (KRA) · tầng &amp; trọng số · nguồn (auto/tay) · ngưỡng W/A/E · chủ sở hữu.
+            </p>
+          </Link>
           <Link className="card" href="/admin/settings" style={{ textDecoration: 'none', color: 'inherit' }}>
             <h3 style={{ marginTop: 0 }}>Cài đặt · Nhắc check-in</h3>
             <p className="muted" style={{ marginBottom: 0 }}>

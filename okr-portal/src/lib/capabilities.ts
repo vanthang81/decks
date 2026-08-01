@@ -14,7 +14,9 @@ export type CapKey =
   | 'okr.delete'
   | 'project.manage'
   | 'data.import'
-  | 'kpi.sync';
+  | 'kpi.sync'
+  | 'kpi.manage'
+  | 'kpi.input';
 
 export type Capability = { key: CapKey; label: string; desc: string; cat: string };
 
@@ -22,6 +24,7 @@ export const CAP_CATEGORIES: { key: string; label: string }[] = [
   { key: 'system', label: 'Hệ thống' },
   { key: 'okr', label: 'OKR & Key Result' },
   { key: 'exec', label: 'Thực thi & Dự án' },
+  { key: 'kpi', label: 'KPI & Chỉ số' },
   { key: 'data', label: 'Dữ liệu' },
 ];
 
@@ -35,6 +38,8 @@ export const CAPABILITIES: Capability[] = [
   { key: 'project.manage', cat: 'exec', label: 'Quản lý Dự án', desc: 'Tạo / sửa / xoá dự án và gắn việc vào dự án.' },
   { key: 'data.import', cat: 'data', label: 'Nhập Excel', desc: 'Nhập / cập nhật OKR hàng loạt từ file Excel.' },
   { key: 'kpi.sync', cat: 'data', label: 'Đồng bộ KPI', desc: 'Chạy đồng bộ KPI kế hoạch/thực hiện từ BigQuery.' },
+  { key: 'kpi.manage', cat: 'kpi', label: 'Quản lý Thư viện KPI', desc: 'Khai báo / sửa / xoá KPI trong thư viện: công thức, nguồn, ngưỡng W/A/E, module, tầng, chủ sở hữu.' },
+  { key: 'kpi.input', cat: 'kpi', label: 'Nhập số KPI', desc: 'Nhập giá trị target / actual của KPI trong phạm vi đơn vị mình (scorecard).' },
 ];
 
 export const CAP_LABEL: Record<string, string> = Object.fromEntries(
@@ -53,21 +58,21 @@ export const DEFAULT_GROUPS: PermGroup[] = [
     label: 'Quản trị hệ thống',
     icon: '🛡️',
     desc: 'Toàn quyền: quản trị hệ thống + phân quyền + mọi thao tác OKR.',
-    caps: ['system.admin', 'system.permissions', 'scope.all', 'okr.create', 'okr.edit', 'okr.delete', 'project.manage', 'data.import', 'kpi.sync'],
+    caps: ['system.admin', 'system.permissions', 'scope.all', 'okr.create', 'okr.edit', 'okr.delete', 'project.manage', 'data.import', 'kpi.sync', 'kpi.manage', 'kpi.input'],
   },
   {
     key: 'okr_admin',
     label: 'Quản trị OKR',
     icon: '⭐',
     desc: 'Sửa/Xoá/Tạo MỌI OKR (toàn phạm vi) + quản dự án, KPI. Không quản trị hệ thống.',
-    caps: ['scope.all', 'okr.create', 'okr.edit', 'okr.delete', 'project.manage', 'kpi.sync'],
+    caps: ['scope.all', 'okr.create', 'okr.edit', 'okr.delete', 'project.manage', 'kpi.sync', 'kpi.manage', 'kpi.input'],
   },
   {
     key: 'manager',
     label: 'Quản lý',
     icon: '👔',
     desc: 'Tạo & Sửa OKR + quản dự án TRONG phạm vi đơn vị mình.',
-    caps: ['okr.create', 'okr.edit', 'project.manage'],
+    caps: ['okr.create', 'okr.edit', 'project.manage', 'kpi.input'],
   },
   {
     key: 'contributor',

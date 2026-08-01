@@ -244,6 +244,11 @@ table.t th.sortable.active { color: var(--primary); }
 .bsc-set select { width: auto; min-width: 190px; }
 @media (max-width: 640px) { .bsc-set select { flex: 1 1 100%; } }
 
+/* Form sửa KPI trong bảng Thư viện KPI */
+.kpi-editform { margin-top: 8px; padding: 12px 14px; background: #FBF7F2; border: 1px solid var(--line); border-radius: 10px; }
+.kpi-editactions { display: flex; justify-content: flex-end; margin-top: 12px; }
+.kpi-delform { margin-top: 6px; }
+
 /* Objective rows with level indent */
 .obj-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
 /* Icon nhận diện Khối (division) */

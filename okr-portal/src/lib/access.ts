@@ -75,6 +75,12 @@ export function canImportData(user: OkrUser, access: Access): boolean {
 export function canSyncKpi(user: OkrUser, access: Access): boolean {
   return hasCap(user, 'kpi.sync', access);
 }
+export function canManageKpi(user: OkrUser, access: Access): boolean {
+  return hasCap(user, 'kpi.manage', access);
+}
+export function canInputKpi(user: OkrUser, access: Access): boolean {
+  return hasCap(user, 'kpi.input', access);
+}
 
 // ---- Kiểm quyền theo OKR (năng lực × phạm vi) ----
 type ObjScope = Pick<Objective, 'unit_id' | 'owner_email' | 'created_by'>;

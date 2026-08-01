@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.25';
+export const GUIDE_VERSION = '2026-08-01.26';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -182,6 +182,20 @@ export const FEATURES: Feature[] = [
       'Gắn viễn cảnh cho OKR khi tạo mới, hoặc bấm "Viễn cảnh BSC" ở đầu trang chi tiết OKR (người quản OKR) để đặt/đổi.',
       'Bảng điều khiển hiện "Tiến độ theo Viễn cảnh BSC" — bình quân tiến độ các OKR theo từng viễn cảnh, để nhìn công ty có đang cân bằng cả 4 mặt hay lệch về một phía.',
       'Đây là lớp trên cùng của chuỗi liên kết chuẩn (xem mục "Khung liên kết chuẩn"): BSC → Mục tiêu chiến lược → KRA → OKR → KPI/Thực thi.',
+    ],
+  },
+  {
+    key: 'kpi-library',
+    title: 'Thư viện KPI',
+    where: 'Quản trị → "Thư viện KPI" (cần năng lực Quản lý Thư viện KPI)',
+    help: 'Khai báo chỉ số đo dùng lại cho toàn hệ thống — nguồn tự động/nhập tay, ngưỡng W/A/E, module (KRA), tầng & trọng số, chủ sở hữu.',
+    detail: [
+      'Thư viện KPI là NGUỒN DUY NHẤT định nghĩa mọi chỉ số đo — khai một lần, dùng lại cho nhiều OKR/đơn vị và đo ở nhiều cấp (Scorecard).',
+      'Mỗi KPI mang đủ thuộc tính phục vụ cả lens BSC lẫn scorecard vận hành: viễn cảnh BSC · module (KRA = 1 trong 12 module Control Tower) · tầng (Kết quả/Động cơ/Bộ máy) + trọng số điểm · hướng tốt · cách gộp lên cấp trên.',
+      'Nguồn dữ liệu: 🟢 tự động (BigQuery/Postgres — điền số tự động) hoặc 🟡 nhập tay (khai trên Scorecard). Nơi chưa có nguồn thì nhập tay trước, tự động hoá dần.',
+      '3 ngưỡng cảnh báo Watch / Alert / Escalate: khi actual vượt ngưỡng sẽ đổi màu & bật cảnh báo trên Scorecard (vd DIO Watch >35 · Alert >45 · Escalate >60).',
+      'Mỗi KPI gắn 2 vai trò: business owner (người tạo kết quả) và measurement owner (người đo) + đơn vị chủ — bảo đảm mọi KPI luôn có người chịu trách nhiệm ở từng cấp.',
+      'Phân quyền: năng lực "Quản lý Thư viện KPI" (kpi.manage) mới khai báo/sửa/xoá; "Nhập số KPI" (kpi.input) để nhập target/actual trong phạm vi đơn vị — chỉnh ở Phân quyền.',
     ],
   },
   {
@@ -412,6 +426,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (Thư viện KPI)',
+    items: [
+      'Thêm "Thư viện KPI" (Quản trị): khai báo chỉ số đo dùng lại — viễn cảnh BSC, module (KRA), tầng & trọng số, nguồn tự động/nhập tay, ngưỡng Watch/Alert/Escalate, business & measurement owner.',
+      'Hai năng lực mới tự vào trang Phân quyền: "Quản lý Thư viện KPI" (kpi.manage) và "Nhập số KPI" (kpi.input).',
+    ],
+  },
   {
     date: '01/08/2026 (BSC — viễn cảnh trên OKR)',
     items: [
