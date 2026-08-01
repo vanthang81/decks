@@ -270,6 +270,55 @@ export async function setObjectiveBsc(id: string, bsc: BscPerspective | null): P
   await query('UPDATE okr_objectives SET bsc_perspective=$2, updated_at=now() WHERE id=$1', [id, bsc]);
 }
 
+/** Đặt/gỡ OKR cha (cascade alignment). Chặn vòng lặp: cha mới không được là chính
+ *  nó hoặc bất kỳ hậu duệ nào của nó. Trả về false nếu bị chặn (tạo vòng). */
+export async function setObjectiveParent(id: string, parentId: string | null): Promise<boolean> {
+  if (parentId === id) return false;
+  if (parentId) {
+    // Duyệt lên từ cha mới: nếu gặp lại id thì parentId là hậu duệ của id → vòng lặp.
+    let cur: string | null = parentId;
+    const seen = new Set<string>();
+    while (cur) {
+      if (cur === id) return false;
+      if (seen.has(cur)) break;
+      seen.add(cur);
+      const r: { parent_id: string | null } | null = await queryOne<{ parent_id: string | null }>(
+        'SELECT parent_id FROM okr_objectives WHERE id=$1',
+        [cur],
+      );
+      cur = r?.parent_id ?? null;
+    }
+  }
+  await query('UPDATE okr_objectives SET parent_id=$2, updated_at=now() WHERE id=$1', [id, parentId]);
+  return true;
+}
+
+/** Toàn bộ KR trong kỳ + trạng thái gắn KPI (cho Bản đồ liên kết). */
+export type KrLite = {
+  id: string;
+  code: string | null;
+  objective_id: string;
+  title: string;
+  progress: number;
+  indicator: Indicator;
+  kpi_id: string | null;
+  kpi_code: string | null;
+  kpi_name: string | null;
+};
+
+export async function listKrsWithKpiByPeriod(periodId: string): Promise<KrLite[]> {
+  return query<KrLite>(
+    `SELECT k.id, k.code, k.objective_id, k.title, k.progress::float8 AS progress, k.indicator,
+            k.kpi_id, kp.code AS kpi_code, kp.name AS kpi_name
+       FROM okr_key_results k
+       JOIN okr_objectives o ON o.id = k.objective_id
+       LEFT JOIN okr_kpis kp ON kp.id = k.kpi_id
+      WHERE o.period_id = $1
+      ORDER BY k.sort, k.code`,
+    [periodId],
+  );
+}
+
 export async function updateObjective(
   id: string,
   input: {

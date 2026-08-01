@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.31';
+export const GUIDE_VERSION = '2026-08-01.32';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -182,6 +182,19 @@ export const FEATURES: Feature[] = [
       'Gắn viễn cảnh cho OKR khi tạo mới, hoặc bấm "Viễn cảnh BSC" ở đầu trang chi tiết OKR (người quản OKR) để đặt/đổi.',
       'Bảng điều khiển hiện "Tiến độ theo Viễn cảnh BSC" — bình quân tiến độ các OKR theo từng viễn cảnh, để nhìn công ty có đang cân bằng cả 4 mặt hay lệch về một phía.',
       'Đây là lớp trên cùng của chuỗi liên kết chuẩn (xem mục "Khung liên kết chuẩn"): BSC → Mục tiêu chiến lược → KRA → OKR → KPI/Thực thi.',
+    ],
+  },
+  {
+    key: 'align-map',
+    title: 'Bản đồ liên kết chiến lược',
+    where: 'Menu "Bản đồ"',
+    help: 'Toàn cảnh chuỗi BSC → Mục tiêu → Kết quả then chốt → KPI; kéo–thả mục tiêu để gắn viễn cảnh, mở ⚙ để đặt cấp trên & gắn KPI.',
+    detail: [
+      'Trang "Bản đồ" xếp toàn bộ mục tiêu trong kỳ theo 5 làn: 4 viễn cảnh BSC (💰 Tài chính · 🛍️ Khách hàng · ⚙️ Quy trình nội bộ · 🎓 Học hỏi & Phát triển) + "Chưa gắn viễn cảnh".',
+      'Mỗi thẻ mục tiêu hiển thị mã, cấp, người chủ trì, tiến độ, OKR cấp trên (cascade), và danh sách Key Result kèm trạng thái GẮN KPI — nhìn 1 chỗ thấy cả chuỗi liên kết.',
+      'KÉO–THẢ (chuột hoặc chạm) thẻ mục tiêu (nắm ở biểu tượng ⠿) sang làn viễn cảnh khác để gắn BSC ngay.',
+      'Bấm ⚙ "Liên kết" trên thẻ để đặt Viễn cảnh BSC, chọn OKR cấp trên (cascade — tự chặn vòng lặp), và gắn KPI cho từng KR. Chỉ mục tiêu bạn có quyền sửa mới kéo/chỉnh được.',
+      'Dùng bản đồ này để THIẾT LẬP và soát nhanh sự liền mạch chiến lược → thực thi trên toàn công ty.',
     ],
   },
   {
@@ -460,6 +473,15 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (Bản đồ liên kết chiến lược — kéo–thả BSC→OKR→KR→KPI)',
+    items: [
+      'Trang mới "Bản đồ": toàn cảnh chuỗi BSC → Mục tiêu → Kết quả then chốt → KPI, xếp theo 5 làn viễn cảnh.',
+      'KÉO–THẢ (chuột & cảm ứng) thẻ mục tiêu sang làn khác để gắn viễn cảnh BSC ngay trên bản đồ.',
+      'Mở ⚙ trên mỗi thẻ để đặt OKR cấp trên (cascade, tự chặn vòng lặp) và gắn KPI cho từng KR — thiết lập liên kết trực quan, thân thiện.',
+      'Chỉ mục tiêu bạn có quyền sửa mới kéo/chỉnh được; mọi người đều xem được bức tranh tổng thể.',
+    ],
+  },
   {
     date: '01/08/2026 (Trải nghiệm: header tự ẩn + thanh tải + cả dòng bấm được + mã ở mọi nơi)',
     items: [
