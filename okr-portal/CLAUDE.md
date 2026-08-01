@@ -4,6 +4,13 @@ App điều hành OKR nội bộ của **Bảo Tín Mạnh Hải (BTMH)**. Chủ
 Phân quyền theo cây tổ chức **CEO/CFO → Giám đốc khối → Trưởng phòng → Nhân viên**, đăng nhập Google.
 Dự kiến live tại `okr.consultx.vn`.
 
+## ⭐ YÊU CẦU THƯỜNG TRỰC VỀ UI/UX (CFO nhấn mạnh — áp cho MỌI thay đổi, KHÔNG cần nhắc lại)
+Mọi tính năng/màn hình phải **đẹp, chuyên nghiệp, gọn gàng (neat), user-friendly**. Cụ thể:
+thông tin quan trọng hiển thị ngay tại chỗ (không bắt mở popup mới thấy); dữ liệu trình bày kèm
+**ý nghĩa/insight** (vd trọng số KR kèm % đóng góp roll-up); thao tác có phản hồi rõ (toast "đã lưu",
+tự đóng form); xoá luôn có popup xác nhận; canh lề/thụt cấp/icon nhất quán; mỗi thao tác sửa mở popup
+gọn, nhãn căn trái. **Tự chủ động rà UI/UX mỗi lần đụng màn hình** — CFO không phải nhắc lại.
+
 ## Vị trí & lý do
 - App Next.js **độc lập, self-contained** trong thư mục `okr-portal/` của repo `decks` (KHÔNG tạo
   được repo riêng do integration bị chặn quyền tạo repo). Có `package.json` / `Dockerfile` / DB schema

@@ -244,7 +244,11 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
             </div>
           )}
           {krs.length === 0 && <p className="muted">Chưa có KR nào.</p>}
-          {krs.map((kr) => (
+          {krs.map((kr) => {
+            // Tỷ trọng đóng góp của KR khi roll-up (KR trọng số 0 bị loại khỏi bình quân).
+            const totalKrWeight = krs.reduce((s, k) => s + (k.weight > 0 ? k.weight : 0), 0);
+            const share = totalKrWeight > 0 && kr.weight > 0 ? Math.round((kr.weight / totalKrWeight) * 100) : 0;
+            return (
             <div key={kr.id} id={`kr-${kr.id}`} style={{ padding: '10px 0', borderBottom: '1px solid var(--line)', scrollMarginTop: 80 }}>
               <div className="flexbtw">
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -256,6 +260,13 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                       style={{ fontSize: 11 }}
                     >
                       {INDICATOR_LABEL[kr.indicator]}
+                    </span>{' '}
+                    <span
+                      className="kr-wt"
+                      title={`Trọng số ${kr.weight}${share > 0 ? ` — chiếm ~${share}% khi tính tiến độ Objective` : ' (không tính vào tiến độ)'}`}
+                    >
+                      ⚖ Trọng số {kr.weight}
+                      {share > 0 ? <span className="kr-wt-share"> · {share}%</span> : null}
                     </span>
                   </div>
                   <div className="obj-meta">
@@ -329,7 +340,8 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
               <CommentThread entityType="key_result" entityId={kr.id} users={personOpts} canModerate={canManage} />
               </div>
             </div>
-          ))}
+            );
+          })}
 
           {canManage && (
             <details className="inline" style={{ marginTop: 14 }}>

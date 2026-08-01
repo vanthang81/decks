@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.8';
+export const GUIDE_VERSION = '2026-08-01.9';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -353,6 +353,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (hiển thị trọng số KR)',
+    items: [
+      'Mỗi KR hiển thị chip "⚖ Trọng số N" ngay trên danh sách KR, kèm % tỷ trọng đóng góp khi tính tiến độ Objective (di chuột xem chi tiết).',
+    ],
+  },
   {
     date: '01/08/2026 (sửa/xoá Key Result ngay trên màn hình)',
     items: [

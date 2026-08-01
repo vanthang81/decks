@@ -421,6 +421,14 @@ details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 
 .kr-foot .cmt-toggle { font-size: 13.5px; padding: 3px 0; }
 .kr-foot .ci-list { margin-top: 4px; }
 
+/* Chip trọng số KR — hiện ngay trên dòng KR (tỷ trọng đóng góp roll-up) */
+.kr-wt {
+  display: inline-flex; align-items: center; gap: 3px; vertical-align: middle;
+  font-size: 11px; font-weight: 700; white-space: nowrap;
+  color: #8a6d1a; background: var(--gold-tint); border-radius: 6px; padding: 1px 7px;
+}
+.kr-wt-share { font-weight: 600; opacity: .8; }
+
 /* Help tooltip (nút bấm mở popup hướng dẫn) */
 .helptip {
   display: inline-flex; align-items: center; justify-content: center;
