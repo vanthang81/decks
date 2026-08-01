@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.21';
+export const GUIDE_VERSION = '2026-08-01.22';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -200,7 +200,7 @@ export const FEATURES: Feature[] = [
     key: 'tasks',
     title: 'Công việc (toàn hệ thống)',
     where: 'Menu "Công việc"',
-    help: 'Liệt kê MỌI dự án/tiểu dự án/công việc từ tất cả OKR & dự án, với đầy đủ bộ lọc. Chỉ hiện việc bạn được phép xem.',
+    help: 'Liệt kê MỌI dự án/tiểu dự án/công việc từ tất cả OKR & dự án, đầy đủ bộ lọc + sắp xếp theo cột + header đóng băng khi cuộn. Chỉ hiện việc bạn được phép xem.',
     detail:
       'Một bảng duy nhất gom toàn bộ công việc (dự án → tiểu dự án → công việc) từ mọi OKR, Key Result và Dự án. Có tổng quan trạng thái + số việc quá hạn và ĐẦY ĐỦ BỘ LỌC: tìm kiếm (tên/mã/OKR/dự án), Phụ trách, Đơn vị, OKR, Dự án, Trạng thái, Ưu tiên, Loại, Kỳ, "⚠ Quá hạn" và "👤 Việc của tôi". Mỗi dòng liên kết thẳng tới OKR/dự án gốc. PHÂN QUYỀN XEM (need-to-know): cây OKR vẫn minh bạch cho mọi người, nhưng bảng công việc chỉ hiện việc bạn CÓ LIÊN QUAN — bạn được giao, bạn giao/tạo, bạn chủ trì OKR chứa việc, bạn là thành viên dự án (chủ trì dự án hoặc có việc trong dự án đó), hoặc việc thuộc phạm vi đơn vị bạn quản lý (Giám đốc khối/Trưởng phòng thấy toàn bộ đơn vị mình + cấp dưới). CEO/CFO và nhóm có năng lực "Toàn phạm vi" (chỉnh ở Phân quyền) xem tất cả.',
   },
@@ -361,6 +361,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (Công việc: sắp xếp cột + header đóng băng)',
+    items: [
+      'Bảng "Công việc": bấm tiêu đề cột để sắp xếp (bấm lại đổi chiều tăng/giảm) — mã, tên, trạng thái, ưu tiên, tiến độ, phụ trách, đơn vị, OKR, dự án, hạn.',
+      'Header cột ĐÓNG BĂNG (floating) khi cuộn danh sách dài — luôn thấy tên cột.',
+    ],
+  },
   {
     date: '01/08/2026 (trang "Công việc" toàn hệ thống + phân quyền xem)',
     items: [

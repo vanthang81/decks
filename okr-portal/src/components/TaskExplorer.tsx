@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import Link from 'next/link';
 import { ProgressBar } from '@/components/ui';
 import { StackedBar } from '@/components/charts';
@@ -35,6 +35,36 @@ const COLUMNS: Status[] = ['todo', 'in_progress', 'blocked', 'done', 'canceled']
 const KIND_LABEL: Record<Kind, string> = { project: 'Dự án', subproject: 'Tiểu dự án', action: 'Công việc' };
 const KIND_CLS: Record<Kind, string> = { project: 'blue', subproject: 'amber', action: 'gray' };
 const PRIO_LABEL: Record<string, string> = { high: 'Cao', medium: 'Trung bình', low: 'Thấp' };
+const PRIO_RANK: Record<string, number> = { high: 0, medium: 1, low: 2 };
+
+// Sắp xếp theo cột (nulls luôn xuống cuối, không đổi theo chiều).
+type SortKey = 'code' | 'title' | 'status' | 'priority' | 'progress' | 'owner' | 'unit' | 'objective' | 'project' | 'due';
+function sortVal(t: TaskRow, k: SortKey): string | number | null {
+  switch (k) {
+    case 'code': return t.code;
+    case 'title': return t.title;
+    case 'status': return COLUMNS.indexOf(t.status);
+    case 'priority': return PRIO_RANK[t.priority] ?? 9;
+    case 'progress': return t.progress;
+    case 'owner': return t.owner_name || t.owner_email;
+    case 'unit': return t.unit_name;
+    case 'objective': return t.objective_code || t.objective_title;
+    case 'project': return t.project_name;
+    case 'due': return t.due_on;
+  }
+}
+const COLS: { key: SortKey; label: string; style?: CSSProperties }[] = [
+  { key: 'code', label: 'Mã' },
+  { key: 'title', label: 'Công việc' },
+  { key: 'status', label: 'Trạng thái' },
+  { key: 'priority', label: 'Ưu tiên' },
+  { key: 'progress', label: 'Tiến độ', style: { minWidth: 120 } },
+  { key: 'owner', label: 'Phụ trách' },
+  { key: 'unit', label: 'Đơn vị' },
+  { key: 'objective', label: 'OKR' },
+  { key: 'project', label: 'Dự án' },
+  { key: 'due', label: 'Hạn' },
+];
 
 // Cảnh báo hạn (đồng bộ ExecutionTabs): chỉ tính việc CÒN MỞ.
 type DlState = 'overdue' | 'today' | 'soon' | 'none';
@@ -69,6 +99,16 @@ export default function TaskExplorer({
   seeAll: boolean;
   totalAll: number;
 }) {
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const toggleSort = (k: SortKey) => {
+    if (sortKey === k) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    else {
+      setSortKey(k);
+      setSortDir('asc');
+    }
+  };
+
   const [q, setQ] = useState('');
   const [fOwner, setFOwner] = useState('');
   const [fUnit, setFUnit] = useState('');
@@ -136,6 +176,24 @@ export default function TaskExplorer({
     setQ(''); setFOwner(''); setFUnit(''); setFObj(''); setFProject('');
     setFStatus(''); setFPrio(''); setFKind(''); setFPeriod(''); setFOverdue(false); setFMine(false);
   };
+
+  const sorted = useMemo(() => {
+    if (!sortKey) return filtered;
+    const dir = sortDir === 'asc' ? 1 : -1;
+    return [...filtered].sort((a, b) => {
+      const va = sortVal(a, sortKey);
+      const vb = sortVal(b, sortKey);
+      const an = va === null || va === undefined || va === '';
+      const bn = vb === null || vb === undefined || vb === '';
+      if (an && bn) return 0;
+      if (an) return 1; // null luôn xuống cuối
+      if (bn) return -1;
+      const r = typeof va === 'number' && typeof vb === 'number'
+        ? va - vb
+        : String(va).localeCompare(String(vb), 'vi');
+      return r * dir;
+    });
+  }, [filtered, sortKey, sortDir]);
 
   // Tổng quan trạng thái + quá hạn của tập đang lọc.
   const byStatus = useMemo(() => {
@@ -224,24 +282,26 @@ export default function TaskExplorer({
         )}
       </div>
 
-      <div className="table-scroll wide-x">
+      <div className="table-sticky">
         <table className="t task-table">
           <thead>
             <tr>
-              <th>Mã</th>
-              <th>Công việc</th>
-              <th>Trạng thái</th>
-              <th>Ưu tiên</th>
-              <th style={{ minWidth: 120 }}>Tiến độ</th>
-              <th>Phụ trách</th>
-              <th>Đơn vị</th>
-              <th>OKR</th>
-              <th>Dự án</th>
-              <th>Hạn</th>
+              {COLS.map((c) => (
+                <th
+                  key={c.key}
+                  className={`sortable${sortKey === c.key ? ' active' : ''}`}
+                  style={c.style}
+                  onClick={() => toggleSort(c.key)}
+                  title="Bấm để sắp xếp"
+                >
+                  {c.label}
+                  {sortKey === c.key && <span className="sort-ar">{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {filtered.map((t) => (
+            {sorted.map((t) => (
               <tr key={t.id}>
                 <td>{t.code && <span className="okr-code">{t.code}</span>}</td>
                 <td>
