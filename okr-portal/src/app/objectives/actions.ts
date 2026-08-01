@@ -8,6 +8,7 @@ import { listUnits } from '@/lib/org';
 import {
   createObjective,
   updateObjective,
+  setObjectiveBsc,
   deleteObjective,
   createKeyResult,
   updateKeyResult,
@@ -21,6 +22,7 @@ import {
   type ObjStatus,
   type OkrType,
   type Indicator,
+  type BscPerspective,
 } from '@/lib/okr';
 import {
   createInitiative,
@@ -88,9 +90,23 @@ export async function createObjectiveAction(fd: FormData) {
     description: orNull(str(fd, 'description')),
     status: (str(fd, 'status') || 'active') as ObjStatus,
     okr_type: (str(fd, 'okr_type') || 'committed') as OkrType,
+    bsc_perspective: (orNull(str(fd, 'bsc_perspective')) as BscPerspective | null),
     created_by: user.email,
   });
   redirect(`/objectives/${id}`);
+}
+
+/** Đặt/gỡ viễn cảnh BSC cho 1 OKR (chỉ người quản OKR). */
+export async function setObjectiveBscAction(fd: FormData) {
+  const objectiveId = str(fd, 'objective_id');
+  await assertCanManageObjective(objectiveId);
+  const raw = orNull(str(fd, 'bsc_perspective'));
+  const valid = raw && ['financial', 'customer', 'process', 'learning'].includes(raw)
+    ? (raw as BscPerspective)
+    : null;
+  await setObjectiveBsc(objectiveId, valid);
+  revalidatePath(`/objectives/${objectiveId}`);
+  revalidatePath('/');
 }
 
 export async function editObjectiveAction(fd: FormData) {

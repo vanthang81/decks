@@ -4,7 +4,13 @@ import SiteHeader from '@/components/SiteHeader';
 import { ProgressBar } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
 import { getCurrentPeriod, listPeriods } from '@/lib/periods';
-import { listObjectivesByPeriod, type ObjectiveRow } from '@/lib/okr';
+import {
+  listObjectivesByPeriod,
+  type ObjectiveRow,
+  BSC_PERSPECTIVES,
+  BSC_PERSPECTIVE_LABEL,
+  BSC_PERSPECTIVE_ICON,
+} from '@/lib/okr';
 import { periodInsights } from '@/lib/insights';
 import { unitIcon } from '@/lib/unit-icons';
 import { fmtNumber, progressColor } from '@/lib/format';
@@ -54,6 +60,16 @@ export default async function Dashboard() {
   const divBars = [...byUnit.values()]
     .map((u) => ({ name: u.name, code: u.code, progress: u.sum / u.n, n: u.n }))
     .sort((a, b) => b.progress - a.progress);
+
+  // Tiến độ theo VIỄN CẢNH BSC — bình quân tiến độ OKR gắn mỗi viễn cảnh (chỉ hiện viễn cảnh có OKR).
+  const bscBars = BSC_PERSPECTIVES.map((b) => {
+    const arr = objectives.filter((o) => o.bsc_perspective === b);
+    return {
+      b,
+      progress: arr.length ? arr.reduce((a, o) => a + o.progress, 0) / arr.length : 0,
+      n: arr.length,
+    };
+  }).filter((x) => x.n > 0);
 
   const gap = companyProg - elapsed;
   const paceVerdict =
@@ -200,6 +216,28 @@ export default async function Dashboard() {
                     ]}
                   />
                 </div>
+              </div>
+            )}
+
+            {bscBars.length > 0 && (
+              <div className="card">
+                <h3 style={{ marginTop: 0 }}>
+                  Tiến độ theo Viễn cảnh BSC
+                  <HelpTip k="bsc" />
+                </h3>
+                <BarList
+                  items={bscBars.map((x) => ({
+                    label: (
+                      <span>
+                        <span aria-hidden style={{ marginRight: 5 }}>{BSC_PERSPECTIVE_ICON[x.b]}</span>
+                        {BSC_PERSPECTIVE_LABEL[x.b]}
+                        {x.n > 1 && <span className="muted" style={{ fontSize: 11 }}> · {x.n} OKR</span>}
+                      </span>
+                    ),
+                    value: x.progress,
+                    color: progressColor(x.progress),
+                  }))}
+                />
               </div>
             )}
 

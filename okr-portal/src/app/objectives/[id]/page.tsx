@@ -22,6 +22,9 @@ import {
   INDICATOR_LABEL,
   MAX_KR,
   MAX_LEADING,
+  BSC_PERSPECTIVES,
+  BSC_PERSPECTIVE_LABEL,
+  BSC_PERSPECTIVE_ICON,
 } from '@/lib/okr';
 import {
   listInitiativesForObjective,
@@ -46,6 +49,7 @@ import {
   editInitiativeAction,
   deleteInitiativeAction,
   moveInitiativeAction,
+  setObjectiveBscAction,
 } from '../actions';
 import { createProjectForInitiativeAction } from '@/app/projects/actions';
 import { withinEditWindow } from '@/lib/moderation';
@@ -272,8 +276,28 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                   title={OKR_TYPE_EXPECT[obj.okr_type]}
                 >
                   {OKR_TYPE_LABEL[obj.okr_type]}
-                </span>
+                </span>{' '}
+                {obj.bsc_perspective && (
+                  <span className="badge bsc" title="Viễn cảnh BSC">
+                    {BSC_PERSPECTIVE_ICON[obj.bsc_perspective]} {BSC_PERSPECTIVE_LABEL[obj.bsc_perspective]}
+                  </span>
+                )}
               </div>
+              {canManage && (
+                <form action={setObjectiveBscAction} className="bsc-set">
+                  <input type="hidden" name="objective_id" value={obj.id} />
+                  <span className="bsc-set-lbl">Viễn cảnh BSC:</span>
+                  <select className="i" name="bsc_perspective" defaultValue={obj.bsc_perspective ?? ''}>
+                    <option value="">— Chưa gắn —</option>
+                    {BSC_PERSPECTIVES.map((b) => (
+                      <option key={b} value={b}>
+                        {BSC_PERSPECTIVE_ICON[b]} {BSC_PERSPECTIVE_LABEL[b]}
+                      </option>
+                    ))}
+                  </select>
+                  <button type="submit" className="btn ghost sm">Lưu</button>
+                </form>
+              )}
               <div className="pagetitle" style={{ margin: 0 }}>
                 {obj.code && <span className="okr-code" style={{ fontSize: 14, marginRight: 8 }}>{obj.code}</span>}
                 {obj.title}

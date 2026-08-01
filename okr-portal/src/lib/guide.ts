@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.24';
+export const GUIDE_VERSION = '2026-08-01.25';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -171,6 +171,18 @@ export const FEATURES: Feature[] = [
     help: 'Cây mục tiêu Công ty → Khối → Phòng → Cá nhân, thu gọn/mở rộng + BỘ LỌC (khối/phòng, cấp, trạng thái, loại, tìm kiếm).',
     detail:
       'Trang OKR hiển thị toàn bộ mục tiêu trong kỳ dạng cây theo alignment. Có THANH LỌC: tìm theo tên/mã/người chủ trì + lọc theo Khối/Phòng, Cấp, Trạng thái, Loại OKR — khi lọc sẽ hiện danh sách kết quả khớp (kèm số lượng), bỏ lọc để về lại cây. Mỗi nút CÓ cấp con hiện mũi tên ▸ để thu gọn/mở rộng (kèm số OKR con); có nút "Mở rộng tất cả / Thu gọn tất cả". Mặc định mở tới cấp Khối, thu gọn từ Phòng trở xuống. Khi tạo OKR, chọn cấp, đơn vị, người chủ trì và "Liên kết lên" một OKR cấp trên để tạo dòng chảy chiến lược.',
+  },
+  {
+    key: 'bsc',
+    title: 'Viễn cảnh BSC (Balanced Scorecard)',
+    where: 'Tạo/chi tiết OKR → "Viễn cảnh BSC" · Bảng điều khiển → "Tiến độ theo Viễn cảnh BSC"',
+    help: 'Gắn mỗi OKR Công ty/Khối vào 1 trong 4 viễn cảnh: Tài chính · Khách hàng · Quy trình nội bộ · Học hỏi & Phát triển — để đọc chiến lược cân bằng.',
+    detail: [
+      'BSC (Balanced Scorecard) là lăng kính cân bằng của chiến lược, chia mục tiêu thành 4 viễn cảnh: 💰 Tài chính · 🛍️ Khách hàng · ⚙️ Quy trình nội bộ · 🎓 Học hỏi & Phát triển.',
+      'Gắn viễn cảnh cho OKR khi tạo mới, hoặc bấm "Viễn cảnh BSC" ở đầu trang chi tiết OKR (người quản OKR) để đặt/đổi.',
+      'Bảng điều khiển hiện "Tiến độ theo Viễn cảnh BSC" — bình quân tiến độ các OKR theo từng viễn cảnh, để nhìn công ty có đang cân bằng cả 4 mặt hay lệch về một phía.',
+      'Đây là lớp trên cùng của chuỗi liên kết chuẩn (xem mục "Khung liên kết chuẩn"): BSC → Mục tiêu chiến lược → KRA → OKR → KPI/Thực thi.',
+    ],
   },
   {
     key: 'key-result',
@@ -400,6 +412,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (BSC — viễn cảnh trên OKR)',
+    items: [
+      'Mỗi OKR (nhất là Công ty/Khối) gắn được 1 viễn cảnh BSC: Tài chính · Khách hàng · Quy trình nội bộ · Học hỏi & Phát triển — chọn khi tạo hoặc đặt nhanh ở đầu trang chi tiết OKR.',
+      'Bảng điều khiển thêm "Tiến độ theo Viễn cảnh BSC" — đọc chiến lược có cân bằng cả 4 mặt hay không.',
+    ],
+  },
   {
     date: '01/08/2026 (phương pháp luận: chuỗi liên kết chuẩn)',
     items: [

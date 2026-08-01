@@ -3,6 +3,7 @@ import type { OkrUser } from './users';
 import { nextObjectiveCode, nextKrCode } from './codes';
 
 export type Level = 'company' | 'division' | 'department' | 'individual';
+export type BscPerspective = 'financial' | 'customer' | 'process' | 'learning';
 
 // Objective + KR của nó (cho bộ chọn khi thêm việc vào dự án — việc gắn vào O/KR nào
 // của bộ phận thì hiện luôn ở action plan của bộ phận đó).
@@ -56,6 +57,22 @@ export const OKR_TYPE_EXPECT: Record<OkrType, string> = {
   learning: 'Ưu tiên học hỏi/khám phá, không ép điểm.',
 };
 
+// Viễn cảnh Balanced Scorecard (BSC) — lăng kính cân bằng của chiến lược,
+// gắn trên Objective (nhất là cấp Công ty/Khối) để nhóm & đọc theo 4 mặt.
+export const BSC_PERSPECTIVE_LABEL: Record<BscPerspective, string> = {
+  financial: 'Tài chính',
+  customer: 'Khách hàng',
+  process: 'Quy trình nội bộ',
+  learning: 'Học hỏi & Phát triển',
+};
+export const BSC_PERSPECTIVE_ICON: Record<BscPerspective, string> = {
+  financial: '💰',
+  customer: '🛍️',
+  process: '⚙️',
+  learning: '🎓',
+};
+export const BSC_PERSPECTIVES: BscPerspective[] = ['financial', 'customer', 'process', 'learning'];
+
 // #2 Nhãn chỉ số KR — dẫn dắt (hành động) vs kết quả (đầu ra cuối).
 export const INDICATOR_LABEL: Record<Indicator, string> = {
   leading: 'Dẫn dắt',
@@ -79,6 +96,7 @@ export type Objective = {
   description: string | null;
   status: ObjStatus;
   okr_type: OkrType;
+  bsc_perspective: BscPerspective | null;
   progress: number;
   sort: number;
   created_by: string | null;
@@ -135,7 +153,8 @@ export function computeKrProgress(kr: {
 
 const OBJ_SELECT = `
   SELECT o.id, o.code, o.period_id, o.parent_id, o.level, o.unit_id, o.owner_email,
-         o.title, o.description, o.status, o.okr_type, o.progress::float8 AS progress, o.sort, o.created_by,
+         o.title, o.description, o.status, o.okr_type, o.bsc_perspective,
+         o.progress::float8 AS progress, o.sort, o.created_by,
          n.name AS unit_name, n.code AS unit_code,
          u.display_name AS owner_name,
          (SELECT count(*)::int FROM okr_key_results k WHERE k.objective_id=o.id) AS kr_count
@@ -219,13 +238,14 @@ export async function createObjective(input: {
   description: string | null;
   status: ObjStatus;
   okr_type: OkrType;
+  bsc_perspective: BscPerspective | null;
   created_by: string;
 }): Promise<string> {
   const code = await nextObjectiveCode(input.unit_id);
   const row = await queryOne<{ id: string }>(
     `INSERT INTO okr_objectives (period_id, level, unit_id, owner_email, parent_id,
-                                 title, description, status, okr_type, created_by, code)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id`,
+                                 title, description, status, okr_type, bsc_perspective, created_by, code)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
     [
       input.period_id,
       input.level,
@@ -236,11 +256,17 @@ export async function createObjective(input: {
       input.description,
       input.status,
       input.okr_type,
+      input.bsc_perspective,
       input.created_by,
       code,
     ],
   );
   return row!.id;
+}
+
+/** Đặt/gỡ viễn cảnh BSC cho 1 Objective. */
+export async function setObjectiveBsc(id: string, bsc: BscPerspective | null): Promise<void> {
+  await query('UPDATE okr_objectives SET bsc_perspective=$2, updated_at=now() WHERE id=$1', [id, bsc]);
 }
 
 export async function updateObjective(
