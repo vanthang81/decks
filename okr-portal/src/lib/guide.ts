@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.3';
+export const GUIDE_VERSION = '2026-08-01.4';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -345,6 +345,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (an toàn khi xoá + phản hồi khi lưu)',
+    items: [
+      'Mọi thao tác XOÁ (check-in, KR, công việc/dự án, đơn vị, người dùng, bình luận) đều mở popup xác nhận trước khi xoá — tránh xoá nhầm.',
+      'Sửa check-in: bấm "Lưu thay đổi" xong hiện note "✓ Đã lưu" và tự đóng ô sửa.',
+    ],
+  },
   {
     date: '01/08/2026 (rà soát & sửa lỗi toàn diện)',
     items: [

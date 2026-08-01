@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import CommentThread from '@/components/CommentThread';
+import ConfirmButton from '@/components/ConfirmButton';
 
 // Hằng số lặp lại từ lib (KHÔNG import initiatives.ts để tránh kéo pg vào client bundle).
 type Status = 'todo' | 'in_progress' | 'blocked' | 'done' | 'canceled';
@@ -273,7 +274,6 @@ function EditModal({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [err, setErr] = useState<string | null>(null);
-  const [confirmDel, setConfirmDel] = useState(false);
   const [addKid, setAddKid] = useState(false);
   const [inProject, setInProject] = useState<boolean>(!!card.project_id);
   const [newProj, setNewProj] = useState(false);
@@ -631,23 +631,15 @@ function EditModal({
                   </button>
                 ))}
 
-              {confirmDel ? (
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                  <span className="muted" style={{ fontSize: 13 }}>
-                    Xoá {KIND_LABEL[card.kind].toLowerCase()} này{card.parent_id ? '' : ' (và mọi mục con)'}?
-                  </span>
-                  <button className="btn ghost sm danger" type="button" onClick={doDelete} disabled={pending}>
-                    Xoá hẳn
-                  </button>
-                  <button className="btn ghost sm" type="button" onClick={() => setConfirmDel(false)}>
-                    Không
-                  </button>
-                </div>
-              ) : (
-                <button className="btn ghost sm danger" type="button" onClick={() => setConfirmDel(true)}>
-                  🗑 Xoá {KIND_LABEL[card.kind].toLowerCase()}
-                </button>
-              )}
+              <ConfirmButton
+                className="btn ghost sm danger"
+                label={`🗑 Xoá ${KIND_LABEL[card.kind].toLowerCase()}`}
+                title={`Xoá ${KIND_LABEL[card.kind].toLowerCase()}`}
+                message={`Xoá ${KIND_LABEL[card.kind].toLowerCase()} này${card.parent_id ? '' : ' và mọi mục con bên dưới'}? Hành động không thể hoàn tác.`}
+                confirmLabel="Xoá hẳn"
+                onConfirm={doDelete}
+                disabled={pending}
+              />
             </div>
           )}
           </>

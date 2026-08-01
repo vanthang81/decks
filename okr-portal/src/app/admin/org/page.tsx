@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
+import ConfirmButton from '@/components/ConfirmButton';
 import { requireUser } from '@/lib/current-user';
 import { canAdmin } from '@/lib/rbac';
 import { listUnits, buildTree, type UnitNode } from '@/lib/org';
@@ -31,9 +32,13 @@ export default async function AdminOrg() {
         {n.type !== 'company' && (
           <form action={deleteUnitAction}>
             <input type="hidden" name="id" value={n.id} />
-            <button className="btn ghost sm danger" type="submit">
-              Xoá
-            </button>
+            <ConfirmButton
+              className="btn ghost sm danger"
+              label="Xoá"
+              title="Xoá đơn vị"
+              message={`Xoá "${n.name}"? Mọi đơn vị con bên dưới cũng sẽ bị xoá theo.`}
+              confirmLabel="Xoá hẳn"
+            />
           </form>
         )}
       </div>

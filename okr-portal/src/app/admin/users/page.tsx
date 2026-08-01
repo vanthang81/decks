@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
+import ConfirmButton from '@/components/ConfirmButton';
 import { requireUser } from '@/lib/current-user';
 import { canAdmin, ROLE_LABEL, ROLES } from '@/lib/rbac';
 import { listUsers } from '@/lib/users';
@@ -113,9 +114,13 @@ export default async function AdminUsers() {
                         </form>
                         <form action={removeUserAction}>
                           <input type="hidden" name="email" value={u.email} />
-                          <button className="btn ghost sm danger" type="submit">
-                            Xoá
-                          </button>
+                          <ConfirmButton
+                            className="btn ghost sm danger"
+                            label="Xoá"
+                            title="Xoá người dùng"
+                            message={`Xoá "${u.email}" khỏi hệ thống? Người này sẽ không đăng nhập được nữa.`}
+                            confirmLabel="Xoá hẳn"
+                          />
                         </form>
                       </div>
                     </td>

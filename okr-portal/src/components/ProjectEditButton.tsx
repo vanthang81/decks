@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import ConfirmButton from './ConfirmButton';
 
 export type ProjData = {
   id: string;
@@ -42,7 +43,6 @@ export default function ProjectEditButton({
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [err, setErr] = useState<string | null>(null);
-  const [confirmDel, setConfirmDel] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -178,23 +178,15 @@ export default function ProjectEditButton({
             </form>
 
             <div className="okr-modal-manage">
-              {confirmDel ? (
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                  <span className="muted" style={{ fontSize: 13 }}>
-                    Xoá dự án? (Việc chỉ được gỡ liên kết, không bị xoá.)
-                  </span>
-                  <button className="btn ghost sm danger" type="button" onClick={doDelete} disabled={pending}>
-                    Xoá hẳn
-                  </button>
-                  <button className="btn ghost sm" type="button" onClick={() => setConfirmDel(false)}>
-                    Không
-                  </button>
-                </div>
-              ) : (
-                <button className="btn ghost sm danger" type="button" onClick={() => setConfirmDel(true)}>
-                  🗑 Xoá dự án
-                </button>
-              )}
+              <ConfirmButton
+                className="btn ghost sm danger"
+                label="🗑 Xoá dự án"
+                title="Xoá dự án"
+                message="Xoá dự án này? Các công việc chỉ được gỡ liên kết (không bị xoá). Hành động không thể hoàn tác."
+                confirmLabel="Xoá hẳn"
+                onConfirm={doDelete}
+                disabled={pending}
+              />
             </div>
           </div>
         </div>

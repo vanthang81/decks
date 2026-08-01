@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import ConfirmButton from './ConfirmButton';
 
 type EntityType = 'objective' | 'key_result' | 'initiative';
 type UserOpt = { email: string; name: string; avatar?: string | null };
@@ -226,7 +227,6 @@ export default function CommentThread({
   };
 
   const remove = async (id: string) => {
-    if (!confirm('Xoá bình luận này?')) return;
     setBusy(true);
     try {
       const r = await fetch(`/api/comments?id=${id}`, { method: 'DELETE' });
@@ -272,7 +272,15 @@ export default function CommentThread({
                 {mine && (
                   <>
                     <button className="linkbtn" type="button" onClick={() => setEditId(c.id)}>Sửa</button>
-                    <button className="linkbtn danger" type="button" onClick={() => remove(c.id)}>Xoá</button>
+                    <ConfirmButton
+                      className="linkbtn danger"
+                      label="Xoá"
+                      title="Xoá bình luận"
+                      message="Xoá bình luận này? Mọi trả lời bên trong cũng bị xoá."
+                      confirmLabel="Xoá hẳn"
+                      onConfirm={() => remove(c.id)}
+                    />
+
                   </>
                 )}
               </div>
