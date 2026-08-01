@@ -219,6 +219,52 @@ export default function ExecutionTabs({
     { key: 'timeline', label: 'Dòng thời gian', icon: '📅' },
   ];
 
+  // ----- Bộ lọc việc (áp cho cả 3 view) -----
+  const [q, setQ] = useState('');
+  const [fOwner, setFOwner] = useState('');
+  const [fUnit, setFUnit] = useState('');
+  const [fStatus, setFStatus] = useState('');
+  const [fPrio, setFPrio] = useState('');
+  const [fOverdue, setFOverdue] = useState(false);
+
+  const owners = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const c of initiatives) if (c.owner_email) m.set(c.owner_email, c.owner_name || c.owner_email);
+    return [...m.entries()].map(([email, name]) => ({ email, name })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [initiatives]);
+  const unitList = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const c of initiatives) if (c.unit_id && c.unit_name) m.set(c.unit_id, c.unit_name);
+    return [...m.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [initiatives]);
+
+  const qlc = q.trim().toLowerCase();
+  const fActive = !!(qlc || fOwner || fUnit || fStatus || fPrio || fOverdue);
+  const filtered = useMemo(
+    () =>
+      initiatives.filter((c) => {
+        if (fOwner && c.owner_email !== fOwner) return false;
+        if (fUnit && c.unit_id !== fUnit) return false;
+        if (fStatus && c.status !== fStatus) return false;
+        if (fPrio && c.priority !== fPrio) return false;
+        if (fOverdue && deadlineInfo(c).state !== 'overdue') return false;
+        if (qlc) {
+          const hay = `${c.title} ${c.code ?? ''} ${c.owner_name ?? ''}`.toLowerCase();
+          if (!hay.includes(qlc)) return false;
+        }
+        return true;
+      }),
+    [initiatives, fOwner, fUnit, fStatus, fPrio, fOverdue, qlc],
+  );
+  const clearFilter = () => {
+    setQ('');
+    setFOwner('');
+    setFUnit('');
+    setFStatus('');
+    setFPrio('');
+    setFOverdue(false);
+  };
+
   return (
     <div>
       <div className="exec-tabs">
@@ -234,15 +280,51 @@ export default function ExecutionTabs({
         ))}
       </div>
 
+      <div className="filterbar" style={{ marginTop: 2 }}>
+        <input className="i fb-search" placeholder="🔍 Tìm việc…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <select className="i fb-sel" value={fOwner} onChange={(e) => setFOwner(e.target.value)}>
+          <option value="">Phụ trách: tất cả</option>
+          {owners.map((o) => (
+            <option key={o.email} value={o.email}>{o.name}</option>
+          ))}
+        </select>
+        <select className="i fb-sel" value={fUnit} onChange={(e) => setFUnit(e.target.value)}>
+          <option value="">Đơn vị: tất cả</option>
+          {unitList.map((u) => (
+            <option key={u.id} value={u.id}>{u.name}</option>
+          ))}
+        </select>
+        <select className="i fb-sel" value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
+          <option value="">Trạng thái: tất cả</option>
+          {COLUMNS.map((s) => (
+            <option key={s} value={s}>{STATUS_LABEL[s]}</option>
+          ))}
+        </select>
+        <select className="i fb-sel" value={fPrio} onChange={(e) => setFPrio(e.target.value)}>
+          <option value="">Ưu tiên: tất cả</option>
+          <option value="high">Cao</option>
+          <option value="medium">Trung bình</option>
+          <option value="low">Thấp</option>
+        </select>
+        <label className="fb-chk">
+          <input type="checkbox" checked={fOverdue} onChange={(e) => setFOverdue(e.target.checked)} /> ⚠ Quá hạn
+        </label>
+        {fActive && (
+          <button type="button" className="btn ghost sm" onClick={clearFilter}>
+            ✕ Xoá lọc ({filtered.length})
+          </button>
+        )}
+      </div>
+
       {view === 'list' && (
         <div>
-          <ListView initiatives={initiatives} canEdit={canEdit} context={context} onOpen={(c) => setEditing(c)} />
+          <ListView initiatives={filtered} canEdit={canEdit} context={context} onOpen={(c) => setEditing(c)} />
           {children}
         </div>
       )}
       {view === 'kanban' && (
         <KanbanView
-          initiatives={initiatives}
+          initiatives={filtered}
           canEdit={canEdit}
           context={context}
           move={move}
@@ -250,7 +332,7 @@ export default function ExecutionTabs({
         />
       )}
       {view === 'timeline' && (
-        <TimelineView initiatives={initiatives} canEdit={canEdit} onOpen={(c) => setEditing(c)} />
+        <TimelineView initiatives={filtered} canEdit={canEdit} onOpen={(c) => setEditing(c)} />
       )}
 
       {editing && (

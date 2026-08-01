@@ -1,7 +1,6 @@
-import Link from 'next/link';
 import HelpTip from '@/components/HelpTip';
 import SiteHeader from '@/components/SiteHeader';
-import { ProgressBar } from '@/components/ui';
+import ProjectsList from '@/components/ProjectsList';
 import PeriodPicker from '@/components/PeriodPicker';
 import { requireUser } from '@/lib/current-user';
 import { listUnits } from '@/lib/org';
@@ -17,10 +16,8 @@ import {
   listProjectsByPeriod,
   canCreateProject,
   PROJECT_STATUS_LABEL,
-  PROJECT_STATUS_CLS,
 } from '@/lib/projects';
 import { loadAccess } from '@/lib/access';
-import { fmtVnd } from '@/lib/format';
 import { createProjectAction } from './actions';
 
 export const dynamic = 'force-dynamic';
@@ -68,46 +65,7 @@ export default async function ProjectsPage({
           </div>
         </div>
 
-        {period && projects.length > 0 && (
-          <div className="grid two">
-            {projects.map((p) => (
-              <Link
-                key={p.id}
-                href={`/projects/${p.id}`}
-                className="card"
-                style={{ textDecoration: 'none', color: 'inherit' }}
-              >
-                <div className="flexbtw" style={{ gap: 10 }}>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ marginBottom: 4 }}>
-                      {p.code && <span className="okr-code" style={{ marginRight: 6 }}>{p.code}</span>}
-                      <span className={`badge ${PROJECT_STATUS_CLS[p.status]}`} style={{ fontSize: 11 }}>
-                        {PROJECT_STATUS_LABEL[p.status]}
-                      </span>
-                    </div>
-                    <h3 style={{ margin: '2px 0 4px' }}>{p.name}</h3>
-                    <div className="obj-meta">
-                      {p.unit_name ? `🏢 ${p.unit_name} · ` : ''}
-                      {p.owner_name ? `Chủ trì: ${p.owner_name} · ` : ''}
-                      {p.task_count} việc ({p.done_count} xong)
-                    </div>
-                  </div>
-                  <div style={{ width: 150, flexShrink: 0 }}>
-                    <ProgressBar value={p.progress} />
-                    <div className="right muted mono" style={{ fontSize: 12 }}>
-                      {p.progress.toFixed(0)}%
-                    </div>
-                  </div>
-                </div>
-                {(p.budget_planned > 0 || p.task_budget_actual > 0) && (
-                  <div className="muted" style={{ fontSize: 12.5, marginTop: 8 }}>
-                    NS kế hoạch {fmtVnd(p.budget_planned)} · Đã chi (gom việc) {fmtVnd(p.task_budget_actual)}
-                  </div>
-                )}
-              </Link>
-            ))}
-          </div>
-        )}
+        {period && projects.length > 0 && <ProjectsList projects={projects} />}
 
         {period && projects.length === 0 && (
           <div className="card">
