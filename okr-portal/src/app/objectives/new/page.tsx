@@ -99,6 +99,9 @@ export default async function NewObjectivePage({
 
               <label className="f">Mục tiêu (Objective)</label>
               <input className="i" name="title" placeholder="VD: Tăng trưởng doanh thu bán lẻ vượt kế hoạch" required />
+              <p className="muted" style={{ fontSize: 12, margin: '4px 0 0' }}>
+                Không cần ghi tên Khối/Phòng — đã lấy từ ô “Đơn vị” ở trên.
+              </p>
 
               <label className="f">Mô tả (tuỳ chọn)</label>
               <textarea className="i" name="description" />

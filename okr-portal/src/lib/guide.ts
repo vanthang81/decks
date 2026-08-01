@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.14';
+export const GUIDE_VERSION = '2026-08-01.15';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -353,6 +353,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (tiêu đề bỏ tên Khối/Phòng — lấy từ ô Đơn vị)',
+    items: [
+      'Tiêu đề Objective không cần ghi tên Khối/Phòng nữa (đã có ở ô "Đơn vị phụ trách"). Đã dọn tiền tố "Khối …:"/"Phòng …:" khỏi tiêu đề seed.',
+    ],
+  },
   {
     date: '01/08/2026 (Nhóm quyền × Năng lực — phân quyền nâng cao)',
     items: [

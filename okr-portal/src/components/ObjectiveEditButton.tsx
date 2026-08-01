@@ -110,6 +110,9 @@ export default function ObjectiveEditButton({
             <form onSubmit={submit}>
               <label className="f">Tiêu đề Objective</label>
               <input className="i" name="title" defaultValue={objective.title} required />
+              <p className="muted" style={{ fontSize: 12, margin: '4px 0 0' }}>
+                Không cần ghi tên Khối/Phòng — đã lấy từ ô “Đơn vị phụ trách” bên dưới.
+              </p>
 
               <div className="row">
                 <div>
