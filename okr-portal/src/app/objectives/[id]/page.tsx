@@ -26,6 +26,8 @@ import {
 import {
   listInitiativesForObjective,
   budgetSummaryForObjective,
+  INIT_STATUS_LABEL,
+  INIT_KIND_LABEL,
 } from '@/lib/initiatives';
 import { listProjectOptions } from '@/lib/projects';
 import { listCheckInsForObjective, CONFIDENCE_LABEL, CONFIDENCE_COLOR } from '@/lib/checkins';
@@ -117,6 +119,73 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
     checkinsByKr.set(ci.key_result_id, arr);
   }
   const objectiveCheckins = checkins.filter((c) => !c.key_result_id);
+
+  // Việc gắn theo KR — chỉ NÚT GỐC của mỗi nhóm (con kế thừa key_result_id nên bỏ để tránh trùng),
+  // kèm số việc con để biết quy mô. Hiện ngay dưới từng KR cho rõ ràng.
+  const INIT_STATUS_CLS: Record<string, string> = {
+    todo: 'gray',
+    in_progress: 'blue',
+    blocked: 'red',
+    done: 'green',
+    canceled: 'gray',
+  };
+  const initById = new Map(initiatives.map((i) => [i.id, i]));
+  const initChildCount = new Map<string, number>();
+  for (const it of initiatives) {
+    if (it.parent_id) initChildCount.set(it.parent_id, (initChildCount.get(it.parent_id) ?? 0) + 1);
+  }
+  const initByKr = new Map<string, typeof initiatives>();
+  for (const it of initiatives) {
+    if (!it.key_result_id) continue;
+    const parent = it.parent_id ? initById.get(it.parent_id) : null;
+    if (parent && parent.key_result_id === it.key_result_id) continue; // bỏ nút con (kế thừa)
+    const arr = initByKr.get(it.key_result_id) ?? [];
+    arr.push(it);
+    initByKr.set(it.key_result_id, arr);
+  }
+
+  const renderKrInitiatives = (krId: string) => {
+    const list = initByKr.get(krId) ?? [];
+    if (list.length === 0) return null;
+    return (
+      <details className="kr-sub kri-details" open>
+        <summary>
+          <span className="kr-sub-ic">🗂</span> Dự án &amp; công việc gắn KR ({list.length})
+        </summary>
+        <div className="kri-list">
+          {list.map((it) => {
+            const kids = initChildCount.get(it.id) ?? 0;
+            return (
+              <div key={it.id} className="kri-row">
+                <div className="kri-main">
+                  <div className="kri-ttl">
+                    <span className={`badge ${it.kind === 'project' ? 'blue' : 'gray'}`} style={{ fontSize: 10 }}>
+                      {INIT_KIND_LABEL[it.kind]}
+                    </span>
+                    {it.code && <span className="okr-code">{it.code}</span>}
+                    <span className="kri-name">{it.title}</span>
+                    <span className={`badge ${INIT_STATUS_CLS[it.status] ?? 'gray'}`} style={{ fontSize: 10 }}>
+                      {INIT_STATUS_LABEL[it.status]}
+                    </span>
+                  </div>
+                  <div className="kri-meta">
+                    {it.owner_name ? `👤 ${it.owner_name}` : 'Chưa giao'}
+                    {kids > 0 ? ` · ${kids} việc con` : ''}
+                    {it.due_on ? ` · hạn ${fmtDate(it.due_on)}` : ''}
+                    {it.project_name ? ` · 🗂 ${it.project_name}` : ''}
+                  </div>
+                </div>
+                <div className="kri-prog">
+                  <ProgressBar value={it.progress} />
+                  <span className="right muted mono" style={{ fontSize: 11 }}>{it.progress.toFixed(0)}%</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </details>
+    );
+  };
 
   const renderKrCheckins = (kr: typeof krs[number]) => {
     const krId = kr.id;
@@ -274,7 +343,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
             const totalKrWeight = krs.reduce((s, k) => s + (k.weight > 0 ? k.weight : 0), 0);
             const share = totalKrWeight > 0 && kr.weight > 0 ? Math.round((kr.weight / totalKrWeight) * 100) : 0;
             return (
-            <div key={kr.id} id={`kr-${kr.id}`} style={{ padding: '10px 0', borderBottom: '1px solid var(--line)', scrollMarginTop: 80 }}>
+            <div key={kr.id} id={`kr-${kr.id}`} className="kr-block">
               <div className="flexbtw kr-head">
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600 }}>
@@ -361,6 +430,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                 </details>
               )}
 
+              {renderKrInitiatives(kr.id)}
               {renderKrCheckins(kr)}
               <CommentThread entityType="key_result" entityId={kr.id} users={personOpts} canModerate={canManage} />
               </div>

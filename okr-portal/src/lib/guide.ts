@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.18';
+export const GUIDE_VERSION = '2026-08-01.19';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -353,6 +353,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (hiển thị dự án/việc gắn từng KR)',
+    items: [
+      'Mỗi KR hiện ngay "🗂 Dự án & công việc gắn KR" (nếu có): tên, mã, trạng thái, tiến độ, người phụ trách, hạn, số việc con — gọn, tách bạch rõ giữa các KR.',
+    ],
+  },
   {
     date: '01/08/2026 (bộ lọc trang OKR)',
     items: [
