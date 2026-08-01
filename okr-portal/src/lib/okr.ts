@@ -1,6 +1,5 @@
 import { query, queryOne } from './db';
 import type { OkrUser } from './users';
-import { manageScope, type Unit } from './org';
 import { nextObjectiveCode, nextKrCode } from './codes';
 
 export type Level = 'company' | 'division' | 'department' | 'individual';
@@ -426,39 +425,5 @@ export async function recomputeUp(objectiveId: string | null): Promise<void> {
   }
 }
 
-// ---------- Quyền sửa ----------
-
-/**
- * Người dùng có được TẠO/SỬA objective này không?
- *  - exec: luôn được
- *  - owner (individual) hoặc created_by: được
- *  - lead: nếu unit của objective nằm trong phạm vi quản trị (subtree đơn vị mình)
- */
-export function canManageObjective(
-  user: OkrUser,
-  obj: Pick<Objective, 'unit_id' | 'owner_email' | 'created_by'>,
-  units: Unit[],
-): boolean {
-  if (user.role === 'exec') return true;
-  const email = user.email.toLowerCase();
-  if (obj.owner_email && obj.owner_email.toLowerCase() === email) return true;
-  if (obj.created_by && obj.created_by.toLowerCase() === email) return true;
-  const scope = manageScope(user, units);
-  if (scope === null) return true;
-  if (obj.unit_id && scope.has(obj.unit_id)) return true;
-  return false;
-}
-
-/** Người dùng có được tạo objective ở level + unit chỉ định không (dùng cho form tạo mới). */
-export function canCreateAt(
-  user: OkrUser,
-  level: Level,
-  unitId: string | null,
-  units: Unit[],
-): boolean {
-  if (user.role === 'exec') return true;
-  if (level === 'individual') return true; // ai cũng tạo được OKR cá nhân của mình
-  const scope = manageScope(user, units);
-  if (scope === null) return true;
-  return Boolean(unitId && scope.has(unitId));
-}
+// Quyền Tạo/Sửa/Xoá OKR nay ở src/lib/access.ts (Nhóm quyền × Năng lực).
+// Các hàm role-based cũ (canManageObjective/canCreateAt) đã bỏ để tránh dùng nhầm.

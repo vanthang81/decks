@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
@@ -77,8 +78,8 @@ export default async function AdminPermissions({
                     const caps = CAPABILITIES.filter((c) => c.cat === cat.key);
                     if (caps.length === 0) return null;
                     return (
-                      <>
-                        <tr key={`cat-${cat.key}`} className="perm-cat">
+                      <Fragment key={cat.key}>
+                        <tr className="perm-cat">
                           <td colSpan={groups.length + 1}>{cat.label}</td>
                         </tr>
                         {caps.map((c) => (
@@ -103,7 +104,7 @@ export default async function AdminPermissions({
                             })}
                           </tr>
                         ))}
-                      </>
+                      </Fragment>
                     );
                   })}
                 </tbody>

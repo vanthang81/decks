@@ -19,6 +19,7 @@ import {
   PROJECT_STATUS_LABEL,
   PROJECT_STATUS_CLS,
 } from '@/lib/projects';
+import { loadAccess } from '@/lib/access';
 import { fmtVnd } from '@/lib/format';
 import { createProjectAction } from './actions';
 
@@ -38,7 +39,7 @@ export default async function ProjectsPage({
   const projects = period ? await listProjectsByPeriod(period.id) : [];
   const units = await listUnits();
   const users = await listUsers();
-  const canCreate = canCreateProject(user);
+  const canCreate = canCreateProject(user, await loadAccess());
   const divisionUnits = units.filter((u) => u.type === 'division');
   const deptUnits = units.filter((u) => u.type === 'department');
 

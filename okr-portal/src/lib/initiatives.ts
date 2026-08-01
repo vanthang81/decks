@@ -1,7 +1,5 @@
 import { query, queryOne } from './db';
 import type { OkrUser } from './users';
-import { manageScope, type Unit } from './org';
-import type { Objective } from './okr';
 import { nextInitCode } from './codes';
 
 export type InitStatus = 'todo' | 'in_progress' | 'blocked' | 'done' | 'canceled';
@@ -326,26 +324,16 @@ export async function recomputeInitiativeUp(id: string | null): Promise<void> {
 }
 
 /**
- * Quyền cập nhật 1 initiative:
- *  - Quản lý OKR (canManageObjective) → sửa/giao/xoá mọi thứ.
- *  - Người được giao (owner_email) → cập nhật trạng thái + tiến độ việc CỦA MÌNH.
+ * Quyền cập nhật 1 initiative. `manage` = quyền quản lý OKR gắn việc (do caller
+ * tính bằng canEditObjective — năng lực + phạm vi); người được giao (owner_email)
+ * chỉ cập nhật trạng thái + tiến độ việc CỦA MÌNH.
  */
 export function canUpdateInitiative(
   user: OkrUser,
   init: Pick<Initiative, 'owner_email'>,
-  obj: Pick<Objective, 'unit_id' | 'owner_email' | 'created_by'>,
-  units: Unit[],
+  manage: boolean,
 ): { manage: boolean; assignee: boolean } {
   const email = user.email.toLowerCase();
-  let manage = false;
-  if (user.role === 'exec') manage = true;
-  else if (obj.owner_email && obj.owner_email.toLowerCase() === email) manage = true;
-  else if (obj.created_by && obj.created_by.toLowerCase() === email) manage = true;
-  else {
-    const scope = manageScope(user, units);
-    if (scope === null) manage = true;
-    else if (obj.unit_id && scope.has(obj.unit_id)) manage = true;
-  }
   const assignee = Boolean(init.owner_email && init.owner_email.toLowerCase() === email);
   return { manage, assignee };
 }

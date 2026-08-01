@@ -215,9 +215,16 @@ export async function checkInAction(fd: FormData) {
   const kr = await getKeyResult(krId);
   if (!kr) throw new Error('Không tìm thấy KR.');
   await assertCanManageObjective(kr.objective_id);
+  // KR gắn nguồn KPI tự động: giá trị do BigQuery quản → KHÔNG ghi đè bằng check-in tay,
+  // chỉ lưu độ tự tin/ghi chú (value = giá trị hiện tại đã đồng bộ).
+  const isAuto = !!kr.kpi_source;
   // Bỏ trống "Giá trị mới" = chỉ cập nhật confidence/ghi chú, GIỮ giá trị KR hiện tại.
-  const value = str(fd, 'value') === '' ? kr.current_value : num(fd, 'value', kr.current_value);
-  await setKeyResultValue(krId, value);
+  const value = isAuto
+    ? kr.current_value
+    : str(fd, 'value') === ''
+      ? kr.current_value
+      : num(fd, 'value', kr.current_value);
+  if (!isAuto) await setKeyResultValue(krId, value);
   await addCheckIn({
     key_result_id: krId,
     objective_id: kr.objective_id,
@@ -335,7 +342,8 @@ export async function updateInitiativeAction(fd: FormData) {
   if (!init) throw new Error('Không tìm thấy công việc.');
   const obj = init.objective_id ? await getObjective(init.objective_id) : null;
   if (!obj) throw new Error('Công việc chưa gắn OKR.');
-  const perm = canUpdateInitiative(user, init, obj, units);
+  const manage = canEditObjective(user, obj, units, await loadAccess());
+  const perm = canUpdateInitiative(user, init, manage);
   if (!perm.manage && !perm.assignee) throw new Error('Bạn không có quyền cập nhật việc này.');
   if (perm.manage) {
     await updateInitiative(id, {
@@ -367,7 +375,8 @@ export async function editInitiativeAction(fd: FormData) {
   if (!init) throw new Error('Không tìm thấy công việc.');
   const obj = init.objective_id ? await getObjective(init.objective_id) : null;
   if (!obj) throw new Error('Công việc chưa gắn OKR.');
-  const perm = canUpdateInitiative(user, init, obj, units);
+  const manage = canEditObjective(user, obj, units, await loadAccess());
+  const perm = canUpdateInitiative(user, init, manage);
   if (!perm.manage && !perm.assignee) throw new Error('Bạn không có quyền cập nhật việc này.');
   if (perm.manage) {
     await editInitiative(id, {
@@ -408,7 +417,8 @@ export async function moveInitiativeAction(id: string, status: InitStatus) {
   if (!init) throw new Error('Không tìm thấy công việc.');
   const obj = init.objective_id ? await getObjective(init.objective_id) : null;
   if (!obj) throw new Error('Công việc chưa gắn OKR.');
-  const perm = canUpdateInitiative(user, init, obj, units);
+  const manage = canEditObjective(user, obj, units, await loadAccess());
+  const perm = canUpdateInitiative(user, init, manage);
   if (!perm.manage && !perm.assignee) throw new Error('Bạn không có quyền cập nhật việc này.');
   await setInitiativeStatus(id, status);
   revalidatePath(`/objectives/${obj.id}`);

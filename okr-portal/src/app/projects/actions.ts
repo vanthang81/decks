@@ -17,6 +17,7 @@ import {
 } from '@/lib/projects';
 import { getInitiative, canUpdateInitiative } from '@/lib/initiatives';
 import { getObjective } from '@/lib/okr';
+import { loadAccess, canEditObjective } from '@/lib/access';
 
 function str(fd: FormData, k: string): string {
   return String(fd.get(k) ?? '').trim();
@@ -30,7 +31,7 @@ function orNull(s: string): string | null {
 
 export async function createProjectAction(fd: FormData) {
   const user = await requireUser();
-  if (!canCreateProject(user)) throw new Error('Bạn không có quyền tạo dự án.');
+  if (!canCreateProject(user, await loadAccess())) throw new Error('Bạn không có quyền tạo dự án.');
   const name = str(fd, 'name');
   if (!name) throw new Error('Thiếu tên dự án.');
   const id = await createProject({
@@ -55,7 +56,8 @@ export async function updateProjectAction(fd: FormData) {
   const id = str(fd, 'id');
   const p = await getProject(id);
   if (!p) throw new Error('Không tìm thấy dự án.');
-  if (!canManageProject(user, p, units)) throw new Error('Bạn không có quyền sửa dự án này.');
+  if (!canManageProject(user, p, units, await loadAccess()))
+    throw new Error('Bạn không có quyền sửa dự án này.');
   await updateProject(id, {
     name: str(fd, 'name') || p.name,
     description: orNull(str(fd, 'description')),
@@ -77,7 +79,8 @@ export async function deleteProjectAction(fd: FormData) {
   const id = str(fd, 'id');
   const p = await getProject(id);
   if (!p) return;
-  if (!canManageProject(user, p, units)) throw new Error('Bạn không có quyền xoá dự án này.');
+  if (!canManageProject(user, p, units, await loadAccess()))
+    throw new Error('Bạn không có quyền xoá dự án này.');
   await deleteProject(id);
   redirect('/projects');
 }
@@ -85,7 +88,8 @@ export async function deleteProjectAction(fd: FormData) {
 // Modal edit task: tạo NHANH 1 dự án rồi gắn task vào (khi dự án chưa tồn tại).
 export async function createProjectForInitiativeAction(fd: FormData) {
   const user = await requireUser();
-  if (!canCreateProject(user)) throw new Error('Bạn không có quyền tạo dự án.');
+  const access = await loadAccess();
+  if (!canCreateProject(user, access)) throw new Error('Bạn không có quyền tạo dự án.');
   const initId = str(fd, 'init_id');
   const name = str(fd, 'name');
   if (!name) throw new Error('Thiếu tên dự án.');
@@ -93,7 +97,8 @@ export async function createProjectForInitiativeAction(fd: FormData) {
   const init = await getInitiative(initId);
   if (!init) throw new Error('Không tìm thấy công việc.');
   const obj = init.objective_id ? await getObjective(init.objective_id) : null;
-  const perm = canUpdateInitiative(user, init, obj ?? { unit_id: null, owner_email: null, created_by: null }, units);
+  const manage = obj ? canEditObjective(user, obj, units, access) : false;
+  const perm = canUpdateInitiative(user, init, manage);
   if (!perm.manage && !perm.assignee) throw new Error('Bạn không có quyền gắn dự án cho việc này.');
   const projectId = await createProject({
     period_id: obj?.period_id ?? null,

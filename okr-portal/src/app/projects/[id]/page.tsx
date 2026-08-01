@@ -18,6 +18,7 @@ import {
   PROJECT_STATUS_CLS,
 } from '@/lib/projects';
 import { listInitiativesForProject } from '@/lib/initiatives';
+import { loadAccess } from '@/lib/access';
 import { fmtVnd, fmtDate } from '@/lib/format';
 import {
   editInitiativeAction,
@@ -39,7 +40,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
     listUnits(),
     listUsers(),
   ]);
-  const canManage = canManageProject(user, p, units);
+  const canManage = canManageProject(user, p, units, await loadAccess());
   const projectOpts = p.period_id ? await listProjectOptions(p.period_id) : [];
   const objectiveOpts = p.period_id ? await listObjectivesWithKrs(p.period_id) : [];
   const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url }));

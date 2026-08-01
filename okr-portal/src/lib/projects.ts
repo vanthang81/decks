@@ -2,6 +2,7 @@ import { query, queryOne } from './db';
 import type { OkrUser } from './users';
 import { manageScope, type Unit } from './org';
 import { nextProjectCode } from './codes';
+import { hasCap, type Access } from './access';
 
 // DỰ ÁN độc lập, xuyên nhiều OKR. Task (okr_initiatives.project_id) trỏ vào 1 dự án.
 export type ProjectStatus = 'active' | 'done' | 'paused' | 'archived';
@@ -190,23 +191,26 @@ export async function setInitiativeProject(initId: string, projectId: string | n
   ]);
 }
 
-/** Quyền quản trị 1 dự án: exec · chủ trì · người tạo · lead có phạm vi đơn vị của dự án. */
+/** Quyền quản trị 1 dự án: Quản trị OKR (scope.all) · chủ trì · người tạo ·
+ *  hoặc có năng lực "Quản lý Dự án" trong phạm vi đơn vị của dự án. */
 export function canManageProject(
   user: OkrUser,
   project: Pick<Project, 'owner_email' | 'created_by' | 'unit_id'>,
   units: Unit[],
+  access: Access,
 ): boolean {
+  if (hasCap(user, 'scope.all', access)) return true; // Quản trị hệ thống / OKR Admin
   const email = user.email.toLowerCase();
-  if (user.role === 'exec') return true;
   if (project.owner_email && project.owner_email.toLowerCase() === email) return true;
   if (project.created_by && project.created_by.toLowerCase() === email) return true;
+  if (!hasCap(user, 'project.manage', access)) return false;
   const scope = manageScope(user, units);
   if (scope === null) return true;
   if (project.unit_id && scope.has(project.unit_id)) return true;
   return false;
 }
 
-/** Ai được TẠO dự án: từ dept_lead trở lên (staff chỉ được gắn task vào dự án có sẵn). */
-export function canCreateProject(user: OkrUser): boolean {
-  return user.role === 'exec' || user.role === 'division_lead' || user.role === 'dept_lead';
+/** Ai được TẠO dự án: cần năng lực "Quản lý Dự án" (mặc định: Quản lý trở lên). */
+export function canCreateProject(user: OkrUser, access: Access): boolean {
+  return hasCap(user, 'project.manage', access);
 }

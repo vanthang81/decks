@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.15';
+export const GUIDE_VERSION = '2026-08-01.16';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -353,6 +353,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (rà soát & vá lỗ hổng phân quyền)',
+    items: [
+      'Sửa/giao/kéo-thả công việc & quản lý Dự án nay theo đúng Nhóm quyền × Năng lực (trước còn dùng logic vai trò cũ ở máy chủ — đã đồng bộ, chặn cả request thủ công).',
+      'Check-in tay KHÔNG còn ghi đè giá trị KR gắn KPI tự động (chỉ lưu độ tự tin/ghi chú).',
+      'Dọn mã cũ & cảnh báo giao diện nhỏ; kiểm thử lại toàn hệ thống (build + DB + HTTP) đều đạt.',
+    ],
+  },
   {
     date: '01/08/2026 (tiêu đề bỏ tên Khối/Phòng — lấy từ ô Đơn vị)',
     items: [
