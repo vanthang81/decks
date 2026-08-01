@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.9';
+export const GUIDE_VERSION = '2026-08-01.10';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -353,6 +353,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (làm mới giao diện trang Hướng dẫn)',
+    items: [
+      'Trang Hướng dẫn thiết kế lại: hero + mục lục dính bên trái, tính năng dạng lưới thẻ, thuật ngữ dạng thẻ, nhật ký dạng dòng thời gian — dễ theo dõi, dễ đọc.',
+      'Giãn cách dòng check-in (giá trị · độ tự tin · ghi chú) cho thoáng, không còn dính nhau.',
+    ],
+  },
   {
     date: '01/08/2026 (hiển thị trọng số KR)',
     items: [

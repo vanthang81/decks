@@ -264,7 +264,7 @@ a.ctx-chip:hover { text-decoration: underline; }
   box-shadow: 0 0 0 3px #fff, 0 0 0 4px var(--line);
 }
 .ci-body { flex: 1; min-width: 0; }
-.ci-line { font-size: 13.5px; line-height: 1.4; }
+.ci-line { font-size: 13.5px; line-height: 1.4; display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 10px; }
 .ci-note { color: var(--ink); }
 .ci-meta { color: var(--muted); font-size: 12px; margin-top: 2px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .ci-edit { margin-top: 5px; }
@@ -528,17 +528,100 @@ details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 
 
 .okr-modal-cmt { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); }
 
-/* Guide page */
-.guide h2 { margin: 26px 0 8px; font-size: 19px; }
+/* ===== Trang Hướng dẫn sử dụng (redesign) ===== */
+.guide-hero {
+  background: linear-gradient(135deg, var(--primary) 0%, #6d64e0 100%);
+  color: #fff; border-radius: 16px; padding: 24px 28px; margin-bottom: 20px;
+  box-shadow: 0 12px 30px rgba(67, 56, 202, .22);
+}
+.guide-hero h1 { margin: 0; font-size: 26px; letter-spacing: -.01em; }
+.guide-hero p { margin: 8px 0 0; opacity: .93; font-size: 14.5px; max-width: 760px; line-height: 1.55; }
+.guide-hero .ver {
+  display: inline-block; margin-top: 14px; background: rgba(255, 255, 255, .18);
+  border-radius: 999px; padding: 3px 13px; font-size: 12.5px; font-weight: 600;
+}
+
+.guide-layout { display: grid; grid-template-columns: 224px minmax(0, 1fr); gap: 28px; align-items: start; }
+.guide-nav { position: sticky; top: 72px; align-self: start; font-size: 13.5px; }
+.guide-nav .nav-group {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted);
+  font-weight: 800; margin: 16px 0 4px; padding-left: 10px;
+}
+.guide-nav .nav-group:first-child { margin-top: 0; }
+.guide-nav a {
+  display: block; padding: 5px 10px; border-radius: 8px; color: var(--ink);
+  text-decoration: none; border-left: 2px solid transparent; line-height: 1.35;
+}
+.guide-nav a:hover { background: var(--primary-tint); color: var(--primary); border-left-color: var(--primary); }
+@media (max-width: 900px) {
+  .guide-layout { grid-template-columns: 1fr; gap: 14px; }
+  .guide-nav { position: static; }
+  .guide-nav .nav-inner { display: flex; flex-wrap: wrap; gap: 6px; }
+  .guide-nav .nav-group { width: 100%; margin: 8px 0 2px; padding-left: 0; }
+  .guide-nav a { border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 12.5px; }
+  .guide-nav a:hover { border-left-color: var(--primary); }
+}
+
+.guide h2 {
+  margin: 0 0 12px; font-size: 19px; display: flex; align-items: center; gap: 10px; letter-spacing: -.01em;
+}
 .guide h3 { margin: 18px 0 6px; font-size: 16px; }
-.guide p { margin: 6px 0; }
-.guide ul { margin: 6px 0; padding-left: 20px; }
-.guide .gnote { background: var(--primary-tint); border-left: 3px solid var(--primary); padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 14px; }
-.guide .toc { display: flex; flex-wrap: wrap; gap: 6px; }
-.guide .toc a { padding: 4px 10px; background: #f1f5f9; border-radius: 999px; font-size: 13px; }
-.guide .feat { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
-.guide .feat .where { color: var(--muted); font-size: 12.5px; }
-.guide .anchor { scroll-margin-top: 70px; }
+.guide p { margin: 8px 0; line-height: 1.62; }
+.guide ul { margin: 8px 0; padding-left: 20px; line-height: 1.55; }
+.guide ul li { margin: 3px 0; }
+.guide .gnote {
+  background: var(--primary-tint); border-left: 3px solid var(--primary);
+  padding: 10px 14px; border-radius: 8px; margin: 12px 0; font-size: 14px; line-height: 1.55;
+}
+.guide .anchor { scroll-margin-top: 80px; }
+
+/* Số thứ tự mục phương pháp luận */
+.sec-num {
+  display: inline-flex; align-items: center; justify-content: center; width: 27px; height: 27px;
+  border-radius: 8px; background: var(--primary); color: #fff; font-size: 14px; font-weight: 800; flex: 0 0 auto;
+}
+
+/* Ảnh chụp hệ thống */
+.snap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; }
+.snap-cell { background: var(--primary-tint); border-radius: 12px; padding: 13px 15px; }
+.snap-cell .n { font-size: 22px; font-weight: 800; color: var(--primary); line-height: 1.1; }
+.snap-cell .l { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.snap-rows { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.snap-rows .r { display: flex; gap: 8px; font-size: 13.5px; flex-wrap: wrap; }
+.snap-rows .r b { color: var(--ink); min-width: 130px; }
+
+/* Lưới tính năng */
+.feat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.guide .feat {
+  border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 0; background: var(--card);
+  transition: box-shadow .12s ease, border-color .12s ease;
+}
+.guide .feat:hover { border-color: var(--primary); box-shadow: 0 8px 22px rgba(67, 56, 202, .09); }
+.guide .feat .ftitle { font-weight: 700; font-size: 15px; }
+.guide .feat .where {
+  display: inline-flex; align-items: center; gap: 4px; color: var(--primary); background: var(--primary-tint);
+  font-size: 11.5px; font-weight: 600; border-radius: 6px; padding: 2px 8px; margin: 7px 0 2px;
+}
+.guide .feat p { margin: 6px 0 0; font-size: 13.5px; color: #2b2f36; line-height: 1.55; }
+
+/* Thuật ngữ */
+.gloss-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(258px, 1fr)); gap: 10px; }
+.gloss-item { border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; }
+.gloss-item .term { font-weight: 700; color: var(--primary); font-size: 13.5px; }
+.gloss-item .def { font-size: 13px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+
+/* Nhật ký dạng dòng thời gian */
+.timeline { position: relative; padding-left: 24px; }
+.timeline::before { content: ''; position: absolute; left: 6px; top: 6px; bottom: 6px; width: 2px; background: var(--line); }
+.tl-item { position: relative; margin-bottom: 16px; }
+.tl-item:last-child { margin-bottom: 0; }
+.tl-item::before {
+  content: ''; position: absolute; left: -22px; top: 4px; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--primary); box-shadow: 0 0 0 3px var(--primary-tint);
+}
+.tl-date { font-weight: 700; font-size: 13.5px; color: var(--ink); }
+.tl-item ul { margin: 5px 0 0; }
+.tl-item ul li { font-size: 13.5px; }
 
 /* Mã unique O/KR/H (import-export) */
 .okr-code {
