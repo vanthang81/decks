@@ -1,0 +1,45 @@
+-- 250_kpi_seed_control_tower.sql — SEED 30 KPI từ deck "Hệ điều hành BTMH" (Control Tower)
+-- vào Thư viện KPI. Idempotent: ON CONFLICT (code) DO NOTHING.
+-- 16 KPI scorecard 3 tầng (trọng số 40/36/24=100) + 14 KPI vận hành theo module (weight 0).
+-- Ngưỡng W/A/E để NULL (calibrate sau 1 quý — trừ DIO có ví dụ 35/45/60 trong deck).
+-- Chủ sở hữu (email) để NULL (CFO/Admin gán theo người); đơn vị chủ (unit_id) gắn theo Khối.
+-- Chạy bằng superuser postgres. Cột đơn vị lấy theo mã Khối cho khớp chắc chắn.
+
+INSERT INTO okr_kpis
+  (code, name, description, unit_label, bsc_perspective, module, tier, weight, direction, agg, source, unit_id, threshold_watch, threshold_alert, threshold_escalate, created_by)
+VALUES
+  -- ===== Tầng 1 · Kết quả · 40đ =====
+  ('T1-01','Lợi nhuận gộp thương mại','DT − giá vốn (đã tách phần biến động giá vàng) — "công" thật của chuỗi','đ','financial','Commercial / Retail / Store ops / B2B','result',6,'up','sum','bigquery',(SELECT id FROM okr_units WHERE code='BL' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('T1-02','Biên thương mại / chỉ','(giá bán − giá vốn − công) mỗi chỉ — trọng số cao nhất, phanh khi chạy theo sản lượng','đ/chỉ','financial','Gold pricing & margin','result',9,'up','avg','bigquery',(SELECT id FROM okr_units WHERE code='SP' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('T1-03','Sản lượng (chỉ quy 24K)','Σ khối lượng bán quy về 24K — tăng trưởng thực, loại nhiễu giá vàng','chỉ','financial','Commercial / Retail / Store ops / B2B','result',7,'up','sum','bigquery',(SELECT id FROM okr_units WHERE code='BL' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('T1-04','GMROI','Biên gộp ÷ tồn kho bình quân (giá vốn) — mỗi đồng vốn trong vàng sinh bao nhiêu lãi','lần','financial','Inventory & Working Capital','result',6,'up','avg','bigquery',(SELECT id FROM okr_units WHERE code='TC' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('T1-05','Vòng quay tồn / DIO','365 ÷ (giá vốn ÷ tồn bình quân) — số ngày vốn kẹt trong vàng (tham chiếu PNJ ~147)','ngày','process','Inventory & Working Capital','result',6,'down','avg','bigquery',(SELECT id FROM okr_units WHERE code='CU' AND type='division' LIMIT 1),35,45,60,'seed_control_tower'),
+  ('T1-06','Suất sinh lời / chỉ theo nhóm','Biên gộp nhóm ÷ sản lượng nhóm — điều hướng mix về nhóm biên cao','đ/chỉ','financial','Merchandise / Sản phẩm & đặt hàng mới','result',6,'up','avg','bigquery',(SELECT id FROM okr_units WHERE code='SP' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  -- ===== Tầng 2 · Động cơ · 36đ =====
+  ('T2-01','Contribution margin / cửa hàng','Biên gộp trừ chi phí trực tiếp cửa hàng — CH nào thực sự sinh lời','%','financial','Commercial / Retail / Store ops / B2B','driver',9,'up','avg','bigquery',(SELECT id FROM okr_units WHERE code='BL' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('T2-02','Doanh thu / m²','Doanh thu ÷ diện tích bán — chuẩn hóa để so cửa hàng lớn-nhỏ','đ/m²','process','Commercial / Retail / Store ops / B2B','driver',6,'up','avg','bigquery',(SELECT id FROM okr_units WHERE code='BL' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('T2-03','Same-store growth','Tăng trưởng sản lượng CH đã mở ≥12 tháng — tách khỏi tăng do mở mới','%','customer','Commercial / Retail / Store ops / B2B','driver',7,'up','avg','bigquery',(SELECT id FROM okr_units WHERE code='BL' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('T2-04','Số khách giao dịch','Lead indicator của doanh số — báo sớm hơn doanh thu','lượt','customer','Customer / CRM / brand','driver',8,'up','sum','manual',(SELECT id FROM okr_units WHERE code='MKT' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('T2-05','Ramp-up cửa hàng mới','% đạt đường doanh số kỳ vọng theo tháng tuổi','%','process','Expansion / project','driver',6,'up','avg','manual',(SELECT id FROM okr_units WHERE code='DB' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  -- ===== Tầng 3 · Bộ máy · 24đ =====
+  ('T3-01','Chi phí HO / Lợi nhuận gộp','Overhead văn phòng trên lợi nhuận gộp — độ "nặng" bộ máy','%','process','Finance / accounting','enabler',6,'down','avg','bigquery',(SELECT id FROM okr_units WHERE code='TC' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('T3-02','Time-to-standard nhân sự mới','Số ngày nhân sự mới đạt chuẩn năng suất — then chốt khi mở nhiều CH','ngày','learning','People / HR / org','enabler',5,'down','avg','manual',(SELECT id FROM okr_units WHERE code='NS' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('T3-03','Đòn bẩy vận hành (tiền)','% tăng lợi nhuận so với % tăng chi phí cố định','lần','financial','Finance / accounting','enabler',6,'up','avg','bigquery',(SELECT id FROM okr_units WHERE code='TC' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('T3-04','Đòn bẩy vận hành (người)','Sản lượng tăng nhanh hơn headcount','lần','learning','People / HR / org','enabler',4,'up','avg','manual',(SELECT id FROM okr_units WHERE code='NS' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('T3-05','Năng suất / nhân viên bán','Doanh số hoặc biên trên mỗi nhân viên bán hàng','đ/người','learning','Commercial / Retail / Store ops / B2B','enabler',3,'up','avg','bigquery',(SELECT id FROM okr_units WHERE code='BL' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  -- ===== KPI vận hành theo module (BAU, chưa vào scorecard trọng số) =====
+  ('M-01','Coverage KĐ (vàng miếng)','Hệ số phủ nghĩa vụ Kim Định — gate G-01','lần','process','Inventory & Working Capital',NULL,0,'up','last','manual',(SELECT id FROM okr_units WHERE code='CU' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('M-02','Liquidity coverage (13 tuần)','Đường tiền 13 tuần đủ phủ nghĩa vụ đến hạn','lần','financial','Cash & treasury',NULL,0,'up','last','manual',(SELECT id FROM okr_units WHERE code='TC' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('M-03','Bank-line utilization','% hạn mức tín dụng đã dùng','%','financial','Cash & treasury',NULL,0,'down','last','manual',(SELECT id FROM okr_units WHERE code='TC' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('M-04','SKU availability','% SKU lõi có sẵn hàng','%','process','Supply / SKU fulfillment / Mfg',NULL,0,'up','avg','manual',(SELECT id FROM okr_units WHERE code='CU' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('M-05','OTIF (giao đúng hẹn & đủ)','% đơn giao đúng hẹn và đủ số lượng','%','process','Supply / SKU fulfillment / Mfg',NULL,0,'up','avg','manual',(SELECT id FROM okr_units WHERE code='CU' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('M-06','Tỷ lệ QC fail','% lô/hàng không đạt kiểm định chất lượng','%','process','Supply / SKU fulfillment / Mfg',NULL,0,'down','avg','manual',(SELECT id FROM okr_units WHERE code='SX' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('M-07','Yield sản xuất','% thu hồi vàng qua công đoạn (loại hao hụt)','%','process','Supply / SKU fulfillment / Mfg',NULL,0,'up','avg','manual',(SELECT id FROM okr_units WHERE code='SX' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('M-08','NPS','Net Promoter Score — mức độ khách sẵn lòng giới thiệu','điểm','customer','Customer / CRM / brand',NULL,0,'up','last','manual',(SELECT id FROM okr_units WHERE code='MKT' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('M-09','Tỷ lệ phàn nàn (complaint rate)','% giao dịch phát sinh phàn nàn dịch vụ','%','customer','Customer / CRM / brand',NULL,0,'down','avg','manual',(SELECT id FROM okr_units WHERE code='VH' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('M-10','ROAS','Doanh thu trên chi phí quảng cáo','lần','customer','Customer / CRM / brand',NULL,0,'up','avg','manual',(SELECT id FROM okr_units WHERE code='MKT' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('M-11','CAC (chi phí có khách mới)','Chi phí marketing ÷ số khách mới','đ','customer','Customer / CRM / brand',NULL,0,'down','avg','manual',(SELECT id FROM okr_units WHERE code='MKT' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('M-12','Tỷ lệ chốt đơn (conversion)','% khách vào cửa hàng phát sinh giao dịch','%','customer','Commercial / Retail / Store ops / B2B',NULL,0,'up','avg','manual',(SELECT id FROM okr_units WHERE code='BL' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('M-13','Uptime hệ thống','% thời gian hệ thống POS/dữ liệu hoạt động','%','process','IT / data / system',NULL,0,'up','avg','manual',(SELECT id FROM okr_units WHERE code='CN' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower'),
+  ('M-14','Tỷ lệ nghỉ việc (attrition)','% nhân sự nghỉ việc trong kỳ (12 tháng)','%','learning','People / HR / org',NULL,0,'down','avg','manual',(SELECT id FROM okr_units WHERE code='NS' AND type='division' LIMIT 1),NULL,NULL,NULL,'seed_control_tower')
+ON CONFLICT (code) DO NOTHING;
