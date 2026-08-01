@@ -21,10 +21,10 @@ export async function periodInsights(periodId: string): Promise<PeriodInsights> 
     checked: number;
   }>(
     `SELECT count(*)::int total,
-        count(*) FILTER (WHERE progress>=90)::int done,
-        count(*) FILTER (WHERE progress>=50 AND progress<90)::int ahead,
-        count(*) FILTER (WHERE progress>=10 AND progress<50)::int behind,
-        count(*) FILTER (WHERE progress<10)::int notstarted,
+        count(*) FILTER (WHERE k.progress>=90)::int done,
+        count(*) FILTER (WHERE k.progress>=50 AND k.progress<90)::int ahead,
+        count(*) FILTER (WHERE k.progress>=10 AND k.progress<50)::int behind,
+        count(*) FILTER (WHERE k.progress<10)::int notstarted,
         count(*) FILTER (WHERE EXISTS (SELECT 1 FROM okr_checkins c WHERE c.key_result_id=k.id))::int checked
        FROM okr_key_results k JOIN okr_objectives o ON o.id=k.objective_id
       WHERE o.period_id=$1`,
