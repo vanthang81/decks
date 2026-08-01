@@ -9,7 +9,17 @@ export type OkrUser = {
   unit_id: string | null;
   is_active: boolean;
   notify_email: boolean;
+  avatar_url: string | null;
 };
+
+/** Cập nhật avatar Google (gọi lúc đăng nhập). Best-effort, chỉ ghi khi đổi. */
+export async function setUserAvatar(email: string, url: string): Promise<void> {
+  await query(
+    'UPDATE okr_users SET avatar_url=$2 WHERE lower(email)=lower($1) AND avatar_url IS DISTINCT FROM $2',
+    [email, url],
+  );
+  invalidateUser(email);
+}
 
 // Cache ngắn allowlist (jwt callback gọi mỗi lần auth()).
 const TTL = 45_000;
@@ -25,7 +35,7 @@ export async function getUser(email: string): Promise<OkrUser | null> {
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < TTL) return hit.user;
   const user = await queryOne<OkrUser>(
-    `SELECT email, display_name, title, role, unit_id, is_active, notify_email
+    `SELECT email, display_name, title, role, unit_id, is_active, notify_email, avatar_url
        FROM okr_users WHERE lower(email) = lower($1)`,
     [email],
   );
@@ -37,7 +47,7 @@ export async function listUsers(): Promise<
   (OkrUser & { unit_name: string | null; unit_code: string | null })[]
 > {
   return query(
-    `SELECT u.email, u.display_name, u.title, u.role, u.unit_id, u.is_active, u.notify_email,
+    `SELECT u.email, u.display_name, u.title, u.role, u.unit_id, u.is_active, u.notify_email, u.avatar_url,
             n.name AS unit_name, n.code AS unit_code
        FROM okr_users u
        LEFT JOIN okr_units n ON n.id = u.unit_id

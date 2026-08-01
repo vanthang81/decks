@@ -42,7 +42,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
   const canManage = canManageProject(user, p, units);
   const projectOpts = p.period_id ? await listProjectOptions(p.period_id) : [];
   const objectiveOpts = p.period_id ? await listObjectivesWithKrs(p.period_id) : [];
-  const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email }));
+  const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url }));
   const unitOpts = units.filter((u) => u.type !== 'company').map((u) => ({ id: u.id, name: u.name, type: u.type }));
 
   return (

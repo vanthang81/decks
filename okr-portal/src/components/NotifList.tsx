@@ -8,6 +8,7 @@ type Notif = {
   type: string;
   actor_name: string | null;
   actor_email: string | null;
+  actor_avatar: string | null;
   preview: string | null;
   link: string | null;
   is_read: boolean;
@@ -91,9 +92,14 @@ export default function NotifList() {
             onClick={() => openItem(n)}
           >
             <span className="ntf-dot" aria-hidden />
-            <span className="ntf-av" aria-hidden>
-              {(n.actor_name ?? n.actor_email ?? '?').trim().charAt(0).toUpperCase()}
-            </span>
+            {n.actor_avatar ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="ntf-av" src={n.actor_avatar} alt="" referrerPolicy="no-referrer" />
+            ) : (
+              <span className="ntf-av" aria-hidden>
+                {(n.actor_name ?? n.actor_email ?? '?').trim().charAt(0).toUpperCase()}
+              </span>
+            )}
             <span className="ntf-body">
               <span className="ntf-line">
                 <b>{n.actor_name || n.actor_email}</b> {TYPE_LABEL[n.type] ?? 'có hoạt động'}

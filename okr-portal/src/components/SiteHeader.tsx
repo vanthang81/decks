@@ -42,6 +42,10 @@ export default async function SiteHeader({ active }: { active?: string }) {
         <div className="spacer" />
         {email && <NotifBell initialCount={notifCount} />}
         <div className="userchip userchip-desktop">
+          {session?.user?.image && (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img className="hdr-av" src={session.user.image} alt="" referrerPolicy="no-referrer" />
+          )}
           <span>{who}</span>
           <form
             action={async () => {

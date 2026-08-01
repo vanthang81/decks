@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-07-31.19';
+export const GUIDE_VERSION = '2026-08-01.1';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -345,6 +345,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (avatar Google)',
+    items: [
+      'Tự lấy avatar từ tài khoản Google khi đăng nhập, hiển thị ở bình luận, thông báo, gợi ý @mention và góc phải header (thiếu thì dùng chữ cái đầu).',
+    ],
+  },
   {
     date: '31/07/2026 (comment: @tag inline + xoá hẳn)',
     items: [

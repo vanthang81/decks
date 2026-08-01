@@ -3,12 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 type EntityType = 'objective' | 'key_result' | 'initiative';
-type UserOpt = { email: string; name: string };
+type UserOpt = { email: string; name: string; avatar?: string | null };
 type Comment = {
   id: string;
   parent_id: string | null;
   author_email: string | null;
   author_name: string | null;
+  author_avatar: string | null;
   body: string;
   mentions: string[];
   created_at: string;
@@ -21,6 +22,15 @@ function fmtTime(iso: string): string {
   return new Intl.DateTimeFormat('vi-VN', {
     day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
   }).format(d);
+}
+
+// Avatar Google nếu có, ngược lại chữ cái đầu.
+function Avatar({ url, name, cls }: { url?: string | null; name: string; cls: string }) {
+  if (url) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img className={cls} src={url} alt="" referrerPolicy="no-referrer" />;
+  }
+  return <span className={cls} aria-hidden>{(name || '?').trim().charAt(0).toUpperCase()}</span>;
 }
 
 // Ô soạn: gõ "@" NGAY trong nội dung để gắn thẻ người (autocomplete inline).
@@ -107,7 +117,7 @@ function Composer({
           <div className="cmt-mentionmenu">
             {matches.map((u) => (
               <button key={u.email} type="button" onMouseDown={(e) => { e.preventDefault(); pick(u); }}>
-                <span className="cmt-mm-av">{u.name.trim().charAt(0).toUpperCase()}</span>
+                <Avatar url={u.avatar} name={u.name} cls="cmt-mm-av" />
                 {u.name}
               </button>
             ))}
@@ -230,9 +240,7 @@ export default function CommentThread({
     const mine = !!c.author_email && c.author_email.toLowerCase() === me.toLowerCase();
     return (
       <div key={c.id} className={`cmt ${isReply ? 'cmt-reply' : ''}`}>
-        <div className="cmt-avatar" aria-hidden>
-          {(c.author_name ?? c.author_email ?? '?').trim().charAt(0).toUpperCase()}
-        </div>
+        <Avatar url={c.author_avatar} name={c.author_name ?? c.author_email ?? '?'} cls="cmt-avatar" />
         <div className="cmt-main">
           <div className="cmt-head">
             <b>{c.author_name || c.author_email || '—'}</b>

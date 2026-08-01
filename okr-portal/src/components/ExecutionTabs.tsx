@@ -71,7 +71,7 @@ export type Card = {
   budget_actual: number;
 };
 
-export type PersonOpt = { email: string; name: string };
+export type PersonOpt = { email: string; name: string; avatar?: string | null };
 export type UnitOpt = { id: string; name: string; type: 'company' | 'division' | 'department' };
 export type ProjectOpt = { id: string; code: string | null; name: string };
 

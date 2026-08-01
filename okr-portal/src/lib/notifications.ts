@@ -9,6 +9,7 @@ export type Notification = {
   comment_id: string | null;
   actor_email: string | null;
   actor_name: string | null;
+  actor_avatar: string | null;
   preview: string | null;
   link: string | null;
   is_read: boolean;
@@ -25,11 +26,12 @@ export async function unreadCount(email: string): Promise<number> {
 
 export async function listNotifications(email: string, limit = 50): Promise<Notification[]> {
   return query<Notification>(
-    `SELECT id, type, entity_type, entity_id, comment_id, actor_email, actor_name,
-            preview, link, is_read, created_at::text
-       FROM okr_notifications
-      WHERE recipient_email=$1
-      ORDER BY created_at DESC LIMIT $2`,
+    `SELECT n.id, n.type, n.entity_type, n.entity_id, n.comment_id, n.actor_email, n.actor_name,
+            au.avatar_url AS actor_avatar, n.preview, n.link, n.is_read, n.created_at::text
+       FROM okr_notifications n
+       LEFT JOIN okr_users au ON au.email = n.actor_email
+      WHERE n.recipient_email=$1
+      ORDER BY n.created_at DESC LIMIT $2`,
     [email, limit],
   );
 }

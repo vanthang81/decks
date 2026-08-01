@@ -55,6 +55,8 @@ a:hover { text-decoration: underline; }
 .nav a.active { background: rgba(255,255,255,.18); color: #fff; }
 .spacer { flex: 1; }
 .userchip { font-size: 13px; color: rgba(255,255,255,.85); display: flex; align-items: center; gap: 8px; }
+.hdr-av { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(255,255,255,.5); flex: 0 0 auto; }
+img.cmt-avatar, img.cmt-mm-av, img.ntf-av { object-fit: cover; }
 .site-header .btn.ghost {
   background: transparent; color: #fff; border-color: rgba(255,255,255,.5);
 }

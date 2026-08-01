@@ -52,7 +52,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
   const canManage = canManageObjective(user, obj, units);
 
   // Options cho popup edit (client): người (cá nhân) + đơn vị (khối/phòng).
-  const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email }));
+  const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url }));
   const unitOpts = units
     .filter((u) => u.type !== 'company')
     .map((u) => ({ id: u.id, name: u.name, type: u.type }));

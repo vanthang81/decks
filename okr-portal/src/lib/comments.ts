@@ -10,6 +10,7 @@ export type Comment = {
   parent_id: string | null;
   author_email: string | null;
   author_name: string | null;
+  author_avatar: string | null;
   body: string;
   mentions: string[];
   created_at: string;
@@ -19,7 +20,7 @@ export type Comment = {
 
 const C_SELECT = `
   SELECT c.id, c.entity_type, c.entity_id, c.parent_id, c.author_email,
-         u.display_name AS author_name, c.body, c.mentions,
+         u.display_name AS author_name, u.avatar_url AS author_avatar, c.body, c.mentions,
          c.created_at::text, c.updated_at::text, (c.deleted_at IS NOT NULL) AS deleted
     FROM okr_comments c
     LEFT JOIN okr_users u ON u.email = c.author_email`;
