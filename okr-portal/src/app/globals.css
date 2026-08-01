@@ -249,6 +249,9 @@ table.t th.sortable.active { color: var(--primary); }
 .kpi-editactions { display: flex; justify-content: flex-end; margin-top: 12px; }
 .kpi-delform { margin-top: 6px; }
 
+/* Ô nhập số trong Scorecard KPI (gọn trong bảng) */
+.sc-in { width: 100px; min-width: 80px; padding: 5px 7px; font-size: 13px; text-align: right; }
+
 /* Objective rows with level indent */
 .obj-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
 /* Icon nhận diện Khối (division) */

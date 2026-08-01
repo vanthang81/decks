@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.26';
+export const GUIDE_VERSION = '2026-08-01.27';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -182,6 +182,19 @@ export const FEATURES: Feature[] = [
       'Gắn viễn cảnh cho OKR khi tạo mới, hoặc bấm "Viễn cảnh BSC" ở đầu trang chi tiết OKR (người quản OKR) để đặt/đổi.',
       'Bảng điều khiển hiện "Tiến độ theo Viễn cảnh BSC" — bình quân tiến độ các OKR theo từng viễn cảnh, để nhìn công ty có đang cân bằng cả 4 mặt hay lệch về một phía.',
       'Đây là lớp trên cùng của chuỗi liên kết chuẩn (xem mục "Khung liên kết chuẩn"): BSC → Mục tiêu chiến lược → KRA → OKR → KPI/Thực thi.',
+    ],
+  },
+  {
+    key: 'kpi-scorecard',
+    title: 'Scorecard KPI (đo đa cấp)',
+    where: 'Menu "KPI"',
+    help: 'Đo target vs thực hiện của KPI theo Công ty → Khối → Phòng, ngưỡng Watch/Alert/Escalate, chấm điểm theo trọng số 3 tầng.',
+    detail: [
+      'Chọn kỳ + đơn vị (Công ty / Khối / Phòng) + viễn cảnh để xem bảng KPI: mục tiêu, thực hiện, % đạt, trạng thái cảnh báo.',
+      'Trạng thái W/A/E tự tính theo hướng tốt & ngưỡng của KPI: Ổn (xanh) · Theo dõi/Cảnh báo (vàng/cam) · Khẩn (đỏ).',
+      'Điểm scorecard = Σ trọng số × min(% đạt, 100%) trên các KPI đã có đủ mục tiêu + thực hiện — ra điểm/tổng-trọng-số (vd 72/100).',
+      'Nhập số: người có năng lực "Nhập số KPI" (kpi.input) nhập mục tiêu/thực hiện TRONG phạm vi đơn vị mình; người khác chỉ xem.',
+      'KPI nguồn tự động (BigQuery/Postgres) sẽ được điền số qua đồng bộ (bước sau); nơi chưa có nguồn thì nhập tay tại đây.',
     ],
   },
   {
@@ -426,6 +439,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (Scorecard KPI đa cấp)',
+    items: [
+      'Thêm menu "KPI" — Scorecard đo target vs thực hiện theo Công ty → Khối → Phòng, ngưỡng Watch/Alert/Escalate tự tính, chấm điểm theo trọng số 3 tầng (vd 72/100).',
+      'Nhập số theo phân quyền: năng lực "Nhập số KPI" (kpi.input) nhập trong phạm vi đơn vị mình; còn lại chỉ xem.',
+    ],
+  },
   {
     date: '01/08/2026 (Thư viện KPI)',
     items: [
