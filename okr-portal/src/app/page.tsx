@@ -5,6 +5,7 @@ import { ProgressBar } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
 import { getCurrentPeriod, listPeriods } from '@/lib/periods';
 import { listObjectivesByPeriod, type ObjectiveRow } from '@/lib/okr';
+import { unitIcon } from '@/lib/unit-icons';
 import { fmtNumber } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
@@ -110,6 +111,11 @@ export default async function Dashboard() {
 function ObjLine({ o, showUnit }: { o: ObjectiveRow; showUnit?: boolean }) {
   return (
     <div className="obj-row">
+      {showUnit && (
+        <span className="unit-ic" title={o.unit_name ?? undefined} aria-hidden>
+          {unitIcon({ code: o.unit_code, name: o.unit_name, type: 'division' })}
+        </span>
+      )}
       <div className="obj-main">
         <div className="ttl">
           <Link href={`/objectives/${o.id}`}>{o.title}</Link>

@@ -46,6 +46,7 @@ import {
 import { createProjectForInitiativeAction } from '@/app/projects/actions';
 import { withinEditWindow } from '@/lib/moderation';
 import { loadOkrPerms, canEditObjectiveP, canDeleteObjectiveP } from '@/lib/okr-perms';
+import { unitIcon } from '@/lib/unit-icons';
 
 export const dynamic = 'force-dynamic';
 
@@ -192,7 +193,14 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                 {obj.title}
               </div>
               <div className="obj-meta" style={{ marginTop: 4 }}>
-                {obj.unit_name ? `${obj.unit_name} · ` : ''}
+                {obj.unit_name ? (
+                  <>
+                    <span className="unit-ic-sm" aria-hidden>
+                      {unitIcon({ code: obj.unit_code, name: obj.unit_name, type: obj.level })}
+                    </span>
+                    {`${obj.unit_name} · `}
+                  </>
+                ) : ''}
                 {obj.owner_name ? `Chủ trì: ${obj.owner_name}` : 'Chưa gán chủ trì'}
               </div>
               {obj.description && <p style={{ marginBottom: 0 }}>{obj.description}</p>}

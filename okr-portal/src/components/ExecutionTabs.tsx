@@ -91,6 +91,42 @@ function dayDiff(a: Date, b: Date): number {
   return Math.round((b.getTime() - a.getTime()) / 86400000);
 }
 
+// Cảnh báo hạn công việc: quá hạn / đến hạn hôm nay / sắp đến hạn (≤3 ngày).
+// Việc đã Xong hoặc Huỷ thì KHÔNG cảnh báo.
+type DlState = 'overdue' | 'today' | 'soon' | 'none';
+function deadlineInfo(c: Card): { state: DlState; days: number } {
+  if (!c.due_on || c.status === 'done' || c.status === 'canceled') return { state: 'none', days: 0 };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = dayDiff(today, parseD(c.due_on)); // >0 tương lai · 0 hôm nay · <0 quá khứ
+  if (days < 0) return { state: 'overdue', days };
+  if (days === 0) return { state: 'today', days };
+  if (days <= 3) return { state: 'soon', days };
+  return { state: 'none', days };
+}
+function DeadlineBadge({ c }: { c: Card }) {
+  const { state, days } = deadlineInfo(c);
+  if (state === 'overdue')
+    return (
+      <span className="dl-badge dl-over" title={`Quá hạn ${-days} ngày (hạn ${fmtD(c.due_on)})`}>
+        ⚠ Quá hạn {-days}n
+      </span>
+    );
+  if (state === 'today')
+    return (
+      <span className="dl-badge dl-today" title={`Đến hạn hôm nay (${fmtD(c.due_on)})`}>
+        ⏰ Đến hạn hôm nay
+      </span>
+    );
+  if (state === 'soon')
+    return (
+      <span className="dl-badge dl-soon" title={`Còn ${days} ngày tới hạn (${fmtD(c.due_on)})`}>
+        ⏰ Còn {days}n
+      </span>
+    );
+  return null;
+}
+
 type Ctx = 'objective' | 'project';
 
 // Chip ngữ cảnh: hiện thông tin CÓ Ý NGHĨA theo nơi đang xem, ẩn cái hiển nhiên.
@@ -723,6 +759,7 @@ function ListView({
                       Ưu tiên
                     </span>
                   )}
+                  <DeadlineBadge c={n} />
                 </div>
                 <div className="il-meta">
                   <span className="il-metatext">
@@ -832,10 +869,11 @@ function KanbanView({
               <div className="kb-col-body">
                 {list.map((c) => {
                   const editable = canEdit(c);
+                  const dl = deadlineInfo(c).state;
                   return (
                     <div
                       key={c.id}
-                      className={`kb-card ${dragId === c.id ? 'dragging' : ''} ${editable ? '' : 'locked'}`}
+                      className={`kb-card ${dragId === c.id ? 'dragging' : ''} ${editable ? '' : 'locked'} ${dl === 'overdue' ? 'kb-over' : dl === 'today' || dl === 'soon' ? 'kb-soon' : ''}`}
                       draggable={editable}
                       onDragStart={(e) => {
                         setDragId(c.id);
@@ -878,6 +916,11 @@ function KanbanView({
                         {c.due_on && <span>· {fmtD(c.due_on)}</span>}
                         <span className="kb-card-prog">{c.progress.toFixed(0)}%</span>
                       </div>
+                      {deadlineInfo(c).state !== 'none' && (
+                        <div className="kb-card-dl">
+                          <DeadlineBadge c={c} />
+                        </div>
+                      )}
                       <div className="kb-mini">
                         <span style={{ width: `${Math.max(0, Math.min(100, c.progress))}%` }} />
                       </div>
@@ -965,6 +1008,7 @@ function TimelineView({
           const e = c.due_on ? parseD(c.due_on) : parseD(c.start_on!);
           const left = (dayDiff(min, s) / total) * 100;
           const width = Math.max(1.5, (Math.max(0, dayDiff(s, e)) / total) * 100);
+          const dl = deadlineInfo(c).state;
           return (
             <div
               key={c.id}
@@ -978,6 +1022,7 @@ function TimelineView({
                   {KIND_LABEL[c.kind]}
                 </span>{' '}
                 {c.code && <span className="okr-code" style={{ fontSize: 9.5, marginRight: 3 }}>{c.code}</span>}
+                {dl !== 'none' && <><DeadlineBadge c={c} /> </>}
                 <span className="gantt-name">{c.title}</span>
               </div>
               <div className="gantt-track">
@@ -985,7 +1030,7 @@ function TimelineView({
                   <span className="gantt-today" style={{ left: `${todayLeft}%` }} />
                 )}
                 <span
-                  className="gantt-bar"
+                  className={`gantt-bar ${dl === 'overdue' ? 'gantt-over' : dl === 'today' || dl === 'soon' ? 'gantt-soon' : ''}`}
                   style={{
                     left: `${left}%`,
                     width: `${width}%`,

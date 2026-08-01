@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ProgressBar } from './ui';
+import { unitIcon } from '@/lib/unit-icons';
 
 // Kiểu dữ liệu phẳng truyền từ server (chỉ field cần cho cây — đều serializable).
 export type TreeObjective = {
@@ -115,6 +116,11 @@ export default function ObjectiveTree({ objectives }: { objectives: TreeObjectiv
           )}
           <div className="ot-main">
             <div className="ot-ttl">
+              {(n.level === 'division' || n.level === 'department') && n.unit_name && (
+                <span className="unit-ic-sm" title={n.unit_name} aria-hidden>
+                  {unitIcon({ name: n.unit_name, type: n.level })}
+                </span>
+              )}
               <span className={`ot-lvl lvl-${n.level}`}>{LEVEL_LABEL[n.level] ?? n.level}</span>
               {n.code && <span className="okr-code">{n.code}</span>}
               <Link href={`/objectives/${n.id}`}>{n.title}</Link>

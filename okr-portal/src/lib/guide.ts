@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.10';
+export const GUIDE_VERSION = '2026-08-01.11';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -353,6 +353,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (cảnh báo hạn công việc + icon riêng cho Khối)',
+    items: [
+      'Công việc quá hạn / đến hạn hôm nay / sắp đến hạn (≤3 ngày) được cảnh báo rõ ở CẢ 3 view: Danh sách (badge), Kanban (vạch màu + badge), Dòng thời gian (viền thanh + badge). Việc Xong/Huỷ không cảnh báo.',
+      'Mỗi Khối có icon nhận diện riêng (Tài chính 💰, Bán lẻ 🏬, Marketing 📣, Sản xuất 🏭…) — hiện ở bảng điều khiển, cây OKR và trang chi tiết.',
+    ],
+  },
   {
     date: '01/08/2026 (làm mới giao diện trang Hướng dẫn)',
     items: [
