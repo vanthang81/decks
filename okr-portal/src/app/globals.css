@@ -252,6 +252,18 @@ table.t th.sortable.active { color: var(--primary); }
 /* Ô nhập số trong Scorecard KPI (gọn trong bảng) */
 .sc-in { width: 100px; min-width: 80px; padding: 5px 7px; font-size: 13px; text-align: right; }
 
+/* Cảnh báo toàn vẹn alignment (dashboard) */
+.intg-card { border-left: 4px solid #d97706; }
+.intg-list { list-style: none; padding: 0; margin: 6px 0 0; display: flex; flex-direction: column; gap: 9px; }
+.intg-list li { display: flex; gap: 10px; align-items: flex-start; }
+.intg-n { flex: 0 0 auto; min-width: 30px; height: 26px; padding: 0 8px; border-radius: 8px; background: #FEF3C7; color: #B45309; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums; }
+
+/* Gắn KPI vào KR */
+.kr-kpi { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.kr-kpi .kk-lbl { font-size: 12px; color: var(--muted); }
+.kr-kpi select { width: auto; min-width: 170px; max-width: 260px; }
+.badge.kpi { background: #EAF3EC; color: #2E7D5B; border: 1px solid #CDE6D5; }
+
 /* Objective rows with level indent */
 .obj-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
 /* Icon nhận diện Khối (division) */

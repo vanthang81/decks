@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.27';
+export const GUIDE_VERSION = '2026-08-01.28';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -182,6 +182,27 @@ export const FEATURES: Feature[] = [
       'Gắn viễn cảnh cho OKR khi tạo mới, hoặc bấm "Viễn cảnh BSC" ở đầu trang chi tiết OKR (người quản OKR) để đặt/đổi.',
       'Bảng điều khiển hiện "Tiến độ theo Viễn cảnh BSC" — bình quân tiến độ các OKR theo từng viễn cảnh, để nhìn công ty có đang cân bằng cả 4 mặt hay lệch về một phía.',
       'Đây là lớp trên cùng của chuỗi liên kết chuẩn (xem mục "Khung liên kết chuẩn"): BSC → Mục tiêu chiến lược → KRA → OKR → KPI/Thực thi.',
+    ],
+  },
+  {
+    key: 'integrity',
+    title: 'Cảnh báo toàn vẹn alignment',
+    where: 'Bảng điều khiển → thẻ "⚠ Cảnh báo toàn vẹn alignment"',
+    help: 'Tự soi các lỗ hổng trong chuỗi chiến lược → thực thi để bịt kịp thời.',
+    detail: [
+      'Hệ thống tự kiểm và đếm các "lỗ hổng" trong kỳ: OKR chưa có chủ trì · OKR Công ty/Khối chưa cascade xuống · Key Result chưa có việc thực thi · KPI thiếu chủ/đơn vị · KPI (có trọng số) chưa có số · Dự án chưa gắn công việc.',
+      'Chỉ hiện mục còn vấn đề (count > 0) — mục nào sạch thì ẩn. Bịt hết = chuỗi chiến lược→thực thi liền mạch.',
+    ],
+  },
+  {
+    key: 'kr-kpi-link',
+    title: 'Gắn Key Result với KPI thư viện',
+    where: 'Trang chi tiết OKR → mỗi KR → "Gắn KPI"',
+    help: 'KR lấy số (mục tiêu/thực hiện) thẳng từ một KPI trong Thư viện — khỏi nhập trùng.',
+    detail: [
+      'Chọn một KPI từ Thư viện gắn vào KR; hệ thống tự KÉO SỐ từ giá trị KPI ở đúng kỳ + đơn vị của OKR (Scorecard) vào KR (mục tiêu + thực hiện) và tính lại tiến độ.',
+      'Nhờ vậy "đo" (KPI) và "làm" (OKR/Key Result) là một — không nhập hai lần, số luôn khớp giữa Scorecard và OKR.',
+      'Bấm lại "Gắn & lấy số" để đồng bộ số mới nhất; chọn "— Không —" để gỡ liên kết.',
     ],
   },
   {
@@ -439,6 +460,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (KR↔KPI + cảnh báo toàn vẹn)',
+    items: [
+      'Gắn Key Result với KPI thư viện: KR tự KÉO SỐ (mục tiêu/thực hiện) từ giá trị KPI ở đúng kỳ + đơn vị của OKR — "đo" và "làm" là một, khỏi nhập trùng.',
+      'Bảng điều khiển thêm "⚠ Cảnh báo toàn vẹn alignment": tự soi lỗ hổng chuỗi chiến lược→thực thi (OKR chưa chủ trì/chưa cascade, KR chưa có việc, KPI thiếu chủ/chưa có số, dự án rỗng).',
+    ],
+  },
   {
     date: '01/08/2026 (Scorecard KPI đa cấp)',
     items: [

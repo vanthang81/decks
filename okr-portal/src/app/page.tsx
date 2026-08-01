@@ -12,6 +12,7 @@ import {
   BSC_PERSPECTIVE_ICON,
 } from '@/lib/okr';
 import { periodInsights } from '@/lib/insights';
+import { integrityIssues } from '@/lib/integrity';
 import { unitIcon } from '@/lib/unit-icons';
 import { fmtNumber, progressColor } from '@/lib/format';
 import { Donut, BarList, Legend } from '@/components/charts';
@@ -36,6 +37,7 @@ export default async function Dashboard() {
     arr.length ? arr.reduce((a, o) => a + o.progress, 0) / arr.length : 0;
 
   const ins = period ? await periodInsights(period.id) : null;
+  const issues = period ? await integrityIssues(period.id).catch(() => []) : [];
   const companyProg = Math.round(avg(company.length ? company : divisions));
   // Nhịp độ: % thời gian kỳ đã trôi qua (so với tiến độ để biết đang dẫn/chậm).
   let elapsed = 0;
@@ -216,6 +218,29 @@ export default async function Dashboard() {
                     ]}
                   />
                 </div>
+              </div>
+            )}
+
+            {issues.length > 0 && (
+              <div className="card intg-card">
+                <h3 style={{ marginTop: 0 }}>
+                  ⚠ Cảnh báo toàn vẹn alignment
+                  <HelpTip k="integrity" />
+                </h3>
+                <p className="muted" style={{ marginTop: 0, fontSize: 12.5 }}>
+                  Các “lỗ hổng” trong chuỗi chiến lược → thực thi cần bịt (kỳ {period?.name}).
+                </p>
+                <ul className="intg-list">
+                  {issues.map((it) => (
+                    <li key={it.key}>
+                      <span className="intg-n">{it.count}</span>
+                      <span>
+                        <b>{it.label}</b>
+                        <span className="muted" style={{ display: 'block', fontSize: 12 }}>{it.hint}</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
 

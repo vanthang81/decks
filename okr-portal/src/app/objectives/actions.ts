@@ -9,6 +9,8 @@ import {
   createObjective,
   updateObjective,
   setObjectiveBsc,
+  linkKrKpi,
+  syncKrFromKpi,
   deleteObjective,
   createKeyResult,
   updateKeyResult,
@@ -94,6 +96,18 @@ export async function createObjectiveAction(fd: FormData) {
     created_by: user.email,
   });
   redirect(`/objectives/${id}`);
+}
+
+/** Gắn KPI thư viện vào 1 KR (rồi kéo số từ KPI theo kỳ+đơn vị của OKR). Chỉ người quản OKR. */
+export async function linkKrKpiAction(fd: FormData) {
+  const krId = str(fd, 'id');
+  const kr = await getKeyResult(krId);
+  if (!kr) throw new Error('Không tìm thấy Key Result.');
+  await assertCanManageObjective(kr.objective_id);
+  const kpiId = orNull(str(fd, 'kpi_id'));
+  await linkKrKpi(krId, kpiId);
+  if (kpiId) await syncKrFromKpi(krId);
+  revalidatePath(`/objectives/${kr.objective_id}`);
 }
 
 /** Đặt/gỡ viễn cảnh BSC cho 1 OKR (chỉ người quản OKR). */

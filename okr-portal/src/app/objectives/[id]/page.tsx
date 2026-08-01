@@ -33,6 +33,7 @@ import {
   INIT_KIND_LABEL,
 } from '@/lib/initiatives';
 import { listProjectOptions } from '@/lib/projects';
+import { listKpis } from '@/lib/kpis';
 import { listCheckInsForObjective, CONFIDENCE_LABEL, CONFIDENCE_COLOR } from '@/lib/checkins';
 import { listKpiMetrics } from '@/lib/kpi';
 import { fmtMetric, fmtVnd, fmtDate, progressColor } from '@/lib/format';
@@ -50,6 +51,7 @@ import {
   deleteInitiativeAction,
   moveInitiativeAction,
   setObjectiveBscAction,
+  linkKrKpiAction,
 } from '../actions';
 import { createProjectForInitiativeAction } from '@/app/projects/actions';
 import { withinEditWindow } from '@/lib/moderation';
@@ -67,6 +69,8 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
   const users = await listUsers();
   const access = await loadAccess();
   const canManage = canEditObjective(user, obj, units, access);
+  const kpiOpts = (await listKpis()).filter((k) => k.is_active);
+  const kpiById = new Map(kpiOpts.map((k) => [k.id, `${k.code ? `${k.code} · ` : ''}${k.name}`]));
   const canDelete = canDeleteObjective(user, obj, units, access);
 
   // Options cho popup edit (client): người (cá nhân) + đơn vị (khối/phòng).
@@ -392,6 +396,24 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                     <b>{fmtMetric(kr.current_value, kr.metric_type, kr.unit_label)}</b> / mục tiêu{' '}
                     {fmtMetric(kr.target_value, kr.metric_type, kr.unit_label)}
                     {kr.kpi_source ? ` · auto: ${kr.kpi_source}` : ''}
+                  </div>
+                  <div className="kr-kpi">
+                    {kr.kpi_id && (
+                      <span className="badge kpi" title="KR lấy số từ KPI thư viện">🔗 {kpiById.get(kr.kpi_id) ?? 'KPI đã gắn'}</span>
+                    )}
+                    {canManage && (
+                      <form action={linkKrKpiAction}>
+                        <input type="hidden" name="id" value={kr.id} />
+                        <span className="kk-lbl">Gắn KPI:</span>
+                        <select className="i" name="kpi_id" defaultValue={kr.kpi_id ?? ''}>
+                          <option value="">— Không —</option>
+                          {kpiOpts.map((k) => (
+                            <option key={k.id} value={k.id}>{k.code ? `${k.code} · ` : ''}{k.name}</option>
+                          ))}
+                        </select>
+                        <button type="submit" className="btn ghost sm">Gắn &amp; lấy số</button>
+                      </form>
+                    )}
                   </div>
                 </div>
                 <div className="kr-side">

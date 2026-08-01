@@ -122,6 +122,7 @@ export type KeyResult = {
   current_value: number;
   weight: number;
   kpi_source: string | null;
+  kpi_id: string | null;
   indicator: Indicator;
   progress: number;
   sort: number;
@@ -209,7 +210,7 @@ export async function listKeyResults(objectiveId: string): Promise<KeyResult[]> 
     `SELECT id, code, objective_id, title, metric_type, direction, unit_label,
             start_value::float8 AS start_value, target_value::float8 AS target_value,
             current_value::float8 AS current_value, weight::float8 AS weight,
-            kpi_source, indicator, progress::float8 AS progress, sort
+            kpi_source, kpi_id, indicator, progress::float8 AS progress, sort
        FROM okr_key_results WHERE objective_id=$1 ORDER BY sort, created_at`,
     [objectiveId],
   );
@@ -220,7 +221,7 @@ export async function getKeyResult(id: string): Promise<KeyResult | null> {
     `SELECT id, code, objective_id, title, metric_type, direction, unit_label,
             start_value::float8 AS start_value, target_value::float8 AS target_value,
             current_value::float8 AS current_value, weight::float8 AS weight,
-            kpi_source, indicator, progress::float8 AS progress, sort
+            kpi_source, kpi_id, indicator, progress::float8 AS progress, sort
        FROM okr_key_results WHERE id=$1`,
     [id],
   );
@@ -400,6 +401,30 @@ export async function setKrAutoValues(
     [krId, t, c, progress],
   );
   await recomputeUp(kr.objective_id);
+}
+
+/** Gắn / gỡ KPI thư viện cho 1 KR. */
+export async function linkKrKpi(krId: string, kpiId: string | null): Promise<void> {
+  await query('UPDATE okr_key_results SET kpi_id=$2, updated_at=now() WHERE id=$1', [krId, kpiId]);
+}
+
+/** Kéo số từ KPI thư viện (giá trị ở kỳ + đơn vị của Objective) vào KR. Trả true nếu tìm được số. */
+export async function syncKrFromKpi(krId: string): Promise<boolean> {
+  const kr = await getKeyResult(krId);
+  if (!kr?.kpi_id) return false;
+  const obj = await queryOne<{ period_id: string; unit_id: string | null }>(
+    'SELECT period_id, unit_id FROM okr_objectives WHERE id=$1',
+    [kr.objective_id],
+  );
+  if (!obj?.unit_id) return false;
+  const v = await queryOne<{ target: number | null; actual: number | null }>(
+    `SELECT target::float8 AS target, actual::float8 AS actual
+       FROM okr_kpi_values WHERE kpi_id=$1 AND period_id=$2 AND unit_id=$3`,
+    [kr.kpi_id, obj.period_id, obj.unit_id],
+  );
+  if (!v) return false;
+  await setKrAutoValues(krId, v.target, v.actual);
+  return true;
 }
 
 export async function deleteKeyResult(krId: string): Promise<void> {
