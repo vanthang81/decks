@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.20';
+export const GUIDE_VERSION = '2026-08-01.21';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -197,6 +197,14 @@ export const FEATURES: Feature[] = [
       'Mọi mục có mã unique gắn mã khối: Objective = <KHỐI>-O<n>, Key Result = <objective>.KR<m>, Công việc = <objective>.H<kk>. Bấm "Xuất Excel" (trang OKR hoặc Quản trị) để tải file .xlsx gồm 3 sheet (Objectives, KeyResults, Initiatives). Sửa trực tiếp trên Excel/Google Sheets rồi CEO/CFO "Nhập Excel" ở Quản trị: hệ thống khớp theo cột Mã để cập nhật (tiêu đề, trạng thái, tiến độ, giá trị KR, ngày, ngân sách…); công việc để trống Mã (kèm Mã Objective) sẽ được tạo mới. Không dòng nào bị xoá khi nhập.',
   },
   {
+    key: 'tasks',
+    title: 'Công việc (toàn hệ thống)',
+    where: 'Menu "Công việc"',
+    help: 'Liệt kê MỌI dự án/tiểu dự án/công việc từ tất cả OKR & dự án, với đầy đủ bộ lọc. Chỉ hiện việc bạn được phép xem.',
+    detail:
+      'Một bảng duy nhất gom toàn bộ công việc (dự án → tiểu dự án → công việc) từ mọi OKR, Key Result và Dự án. Có tổng quan trạng thái + số việc quá hạn và ĐẦY ĐỦ BỘ LỌC: tìm kiếm (tên/mã/OKR/dự án), Phụ trách, Đơn vị, OKR, Dự án, Trạng thái, Ưu tiên, Loại, Kỳ, "⚠ Quá hạn" và "👤 Việc của tôi". Mỗi dòng liên kết thẳng tới OKR/dự án gốc. PHÂN QUYỀN XEM (need-to-know): cây OKR vẫn minh bạch cho mọi người, nhưng bảng công việc chỉ hiện việc bạn CÓ LIÊN QUAN — bạn được giao, bạn giao/tạo, bạn chủ trì OKR chứa việc, bạn là thành viên dự án (chủ trì dự án hoặc có việc trong dự án đó), hoặc việc thuộc phạm vi đơn vị bạn quản lý (Giám đốc khối/Trưởng phòng thấy toàn bộ đơn vị mình + cấp dưới). CEO/CFO và nhóm có năng lực "Toàn phạm vi" (chỉnh ở Phân quyền) xem tất cả.',
+  },
+  {
     key: 'my',
     title: 'OKR & việc của tôi',
     where: 'Menu "Của tôi"',
@@ -353,6 +361,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '01/08/2026 (trang "Công việc" toàn hệ thống + phân quyền xem)',
+    items: [
+      'Thêm menu "Công việc": một bảng gom TẤT CẢ dự án/tiểu dự án/công việc từ mọi OKR, KR và dự án; có tổng quan trạng thái + việc quá hạn và đầy đủ bộ lọc (tìm kiếm, Phụ trách, Đơn vị, OKR, Dự án, Trạng thái, Ưu tiên, Loại, Kỳ, Quá hạn, Việc của tôi).',
+      'Phân quyền XEM công việc theo nguyên tắc "cần-mới-biết": chỉ hiện việc bạn được giao / bạn giao / OKR bạn chủ trì / dự án bạn tham gia / phạm vi đơn vị bạn quản. Năng lực "Toàn phạm vi" (Phân quyền) cho phép xem toàn bộ — CEO/CFO mặc định thấy tất cả.',
+    ],
+  },
   {
     date: '01/08/2026 (bộ lọc công việc & dự án)',
     items: [

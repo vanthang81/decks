@@ -113,3 +113,63 @@ export function canCreateObjective(
   if (!hasCap(user, 'okr.create', access)) return false;
   return inScope(user, unitId, units, access);
 }
+
+// ---- Quyền XEM công việc (need-to-know) — dùng cho trang "Công việc" /tasks ----
+// Cây OKR vẫn minh bạch (mọi người xem); nhưng danh sách công việc tổng hợp áp
+// nguyên tắc "cần-mới-biết": chỉ hiện việc bạn có liên quan (được giao / giao /
+// chủ trì OKR / thành viên dự án) hoặc trong phạm vi quản lý của bạn. Nhóm có
+// năng lực "Toàn phạm vi" (scope.all) và CEO/CFO xem TẤT CẢ.
+type TaskView = {
+  owner_email: string | null;
+  created_by: string | null;
+  unit_id: string | null;
+  objective_owner: string | null;
+  objective_unit_id: string | null;
+  project_id: string | null;
+  project_owner: string | null;
+};
+
+export type TaskViewCtx = { seeAll: boolean; scope: Set<string> | null; myProjects: Set<string> };
+
+/** Tính ngữ cảnh xem MỘT LẦN cho cả danh sách (tránh lặp): phạm vi lead + dự án user là thành viên. */
+export function buildTaskViewCtx(
+  user: OkrUser,
+  tasks: TaskView[],
+  units: Unit[],
+  access: Access,
+): TaskViewCtx {
+  const seeAll = hasCap(user, 'scope.all', access);
+  const scope = manageScope(user, units); // null = exec (không giới hạn)
+  const e = user.email.toLowerCase();
+  const myProjects = new Set<string>();
+  for (const t of tasks) {
+    if (!t.project_id) continue;
+    if (
+      (t.owner_email && t.owner_email.toLowerCase() === e) ||
+      (t.project_owner && t.project_owner.toLowerCase() === e)
+    ) {
+      myProjects.add(t.project_id);
+    }
+  }
+  return { seeAll, scope, myProjects };
+}
+
+/**
+ * Ai được XEM 1 công việc (need-to-know):
+ *  - "Toàn phạm vi" (scope.all) hoặc CEO/CFO (scope=null): xem tất cả;
+ *  - người ĐƯỢC GIAO (owner_email) hoặc người GIAO/TẠO (created_by);
+ *  - CHỦ TRÌ OKR gốc của việc (objective_owner);
+ *  - THÀNH VIÊN dự án (chủ trì dự án, hoặc có việc được giao trong dự án đó);
+ *  - LEAD: việc thuộc phạm vi đơn vị mình quản (unit của việc HOẶC unit của OKR).
+ */
+export function canViewInitiative(user: OkrUser, t: TaskView, ctx: TaskViewCtx): boolean {
+  if (ctx.seeAll || ctx.scope === null) return true;
+  const e = user.email.toLowerCase();
+  if (t.owner_email && t.owner_email.toLowerCase() === e) return true;
+  if (t.created_by && t.created_by.toLowerCase() === e) return true;
+  if (t.objective_owner && t.objective_owner.toLowerCase() === e) return true;
+  if (t.project_id && ctx.myProjects.has(t.project_id)) return true;
+  if (t.unit_id && ctx.scope.has(t.unit_id)) return true;
+  if (t.objective_unit_id && ctx.scope.has(t.objective_unit_id)) return true;
+  return false;
+}

@@ -22,6 +22,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
     { href: '/', label: 'Bảng điều khiển', key: 'home', show: true },
     { href: '/objectives', label: 'OKR', key: 'okr', show: true },
     { href: '/projects', label: 'Dự án', key: 'projects', show: true },
+    { href: '/tasks', label: 'Công việc', key: 'tasks', show: true },
     { href: '/my', label: 'Của tôi', key: 'my', show: true },
     { href: '/guide', label: 'Hướng dẫn', key: 'guide', show: true },
     { href: '/admin', label: 'Quản trị', key: 'admin', show: showAdmin },

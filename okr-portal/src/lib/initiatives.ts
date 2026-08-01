@@ -98,6 +98,71 @@ export async function listInitiativesForProject(projectId: string): Promise<Init
   );
 }
 
+// ---- Danh sách TOÀN BỘ công việc (xuyên mọi OKR/KR/dự án) cho trang /tasks ----
+// Kèm đủ trường để lọc + kiểm quyền XEM (need-to-know): người giao (created_by),
+// chủ trì OKR gốc + đơn vị OKR (COALESCE objective/kr→objective), chủ trì dự án, kỳ.
+export type TaskRow = {
+  id: string;
+  code: string | null;
+  kind: InitKind;
+  title: string;
+  status: InitStatus;
+  priority: Priority;
+  progress: number;
+  start_on: string | null;
+  due_on: string | null;
+  owner_email: string | null;
+  owner_name: string | null;
+  owner_avatar: string | null;
+  created_by: string | null;
+  unit_id: string | null;
+  unit_name: string | null;
+  project_id: string | null;
+  project_code: string | null;
+  project_name: string | null;
+  project_owner: string | null;
+  objective_id: string | null; // OKR gốc HIỆU LỰC (i.objective_id hoặc kr.objective_id)
+  objective_code: string | null;
+  objective_title: string | null;
+  objective_owner: string | null;
+  objective_unit_id: string | null;
+  key_result_id: string | null;
+  key_result_code: string | null;
+  period_id: string | null;
+  period_name: string | null;
+  budget_planned: number;
+  budget_actual: number;
+};
+
+const TASK_SELECT = `
+  SELECT i.id, i.code, i.kind, i.title, i.status, i.priority,
+         i.progress::float8 AS progress, i.start_on::text, i.due_on::text,
+         i.owner_email, u.display_name AS owner_name, u.avatar_url AS owner_avatar, i.created_by,
+         i.unit_id, un.name AS unit_name,
+         i.project_id, pr.code AS project_code, pr.name AS project_name, pr.owner_email AS project_owner,
+         eo.id AS objective_id, eo.code AS objective_code, eo.title AS objective_title,
+         eo.owner_email AS objective_owner, eo.unit_id AS objective_unit_id,
+         i.key_result_id, kr.code AS key_result_code,
+         eo.period_id, per.name AS period_name,
+         i.budget_planned::float8 AS budget_planned, i.budget_actual::float8 AS budget_actual
+    FROM okr_initiatives i
+    LEFT JOIN okr_users u ON u.email = i.owner_email
+    LEFT JOIN okr_units un ON un.id = i.unit_id
+    LEFT JOIN okr_projects pr ON pr.id = i.project_id
+    LEFT JOIN okr_key_results kr ON kr.id = i.key_result_id
+    LEFT JOIN okr_objectives eo ON eo.id = COALESCE(i.objective_id, kr.objective_id)
+    LEFT JOIN okr_periods per ON per.id = eo.period_id`;
+
+/** Toàn bộ công việc trong hệ thống (mọi kỳ). Lọc quyền XEM ở tầng gọi (canViewInitiative). */
+export async function listAllInitiatives(): Promise<TaskRow[]> {
+  return query<TaskRow>(
+    `${TASK_SELECT}
+     ORDER BY CASE i.status WHEN 'blocked' THEN 0 WHEN 'in_progress' THEN 1 WHEN 'todo' THEN 2
+                            WHEN 'done' THEN 3 ELSE 4 END,
+              i.due_on NULLS LAST, i.created_at`,
+  );
+}
+
 /** Việc được giao cho 1 người (mọi cấp, còn mở). */
 export async function listInitiativesForOwner(email: string): Promise<Initiative[]> {
   return query<Initiative>(
