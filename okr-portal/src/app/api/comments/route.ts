@@ -5,7 +5,7 @@ import {
   listComments,
   addComment,
   editComment,
-  softDeleteComment,
+  deleteComment,
   getComment,
   type EntityType,
 } from '@/lib/comments';
@@ -84,6 +84,6 @@ export async function DELETE(req: NextRequest) {
   if (!isAuthor && u.role !== 'exec') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
-  await softDeleteComment(id);
+  await deleteComment(id);
   return NextResponse.json({ ok: true });
 }

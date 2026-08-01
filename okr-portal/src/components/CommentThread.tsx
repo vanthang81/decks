@@ -23,7 +23,7 @@ function fmtTime(iso: string): string {
   }).format(d);
 }
 
-// Ô soạn bình luận: textarea + gắn thẻ (@mention) người dùng.
+// Ô soạn: gõ "@" NGAY trong nội dung để gắn thẻ người (autocomplete inline).
 function Composer({
   users,
   onSubmit,
@@ -47,69 +47,86 @@ function Composer({
 }) {
   const [body, setBody] = useState(initialBody);
   const [mentions, setMentions] = useState<string[]>(initialMentions);
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState<string | null>(null);
+  const taRef = useRef<HTMLTextAreaElement>(null);
   const nameOf = (email: string) => users.find((u) => u.email === email)?.name ?? email;
+
   const matches = useMemo(() => {
+    if (q === null) return [];
     const t = q.trim().toLowerCase();
-    if (!t) return [];
     return users
       .filter((u) => !mentions.includes(u.email))
-      .filter((u) => u.name.toLowerCase().includes(t) || u.email.toLowerCase().includes(t))
+      .filter((u) => !t || u.name.toLowerCase().includes(t) || u.email.toLowerCase().includes(t))
       .slice(0, 6);
   }, [q, users, mentions]);
 
+  const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setBody(val);
+    const pos = e.target.selectionStart ?? val.length;
+    const m = val.slice(0, pos).match(/@([^\s@]{0,30})$/);
+    setQ(m ? m[1] : null);
+  };
+
+  const pick = (u: UserOpt) => {
+    const ta = taRef.current;
+    const pos = ta?.selectionStart ?? body.length;
+    const before = body.slice(0, pos).replace(/@([^\s@]{0,30})$/, `@${u.name} `);
+    const after = body.slice(pos);
+    const next = before + after;
+    setBody(next);
+    setMentions((xs) => (xs.includes(u.email) ? xs : [...xs, u.email]));
+    setQ(null);
+    setTimeout(() => {
+      if (ta) {
+        ta.focus();
+        ta.setSelectionRange(before.length, before.length);
+      }
+    }, 0);
+  };
+
+  const submit = () => {
+    const finalMentions = mentions.filter((e) => body.includes(`@${nameOf(e)}`));
+    onSubmit(body.trim(), finalMentions);
+  };
+
   return (
     <div className="cmt-composer">
-      <textarea
-        className="i"
-        rows={2}
-        placeholder={placeholder ?? 'Viết bình luận…'}
-        value={body}
-        autoFocus={autoFocus}
-        onChange={(e) => setBody(e.target.value)}
-      />
-      <div className="cmt-mentionbar">
-        <span className="cmt-atbtn">＠</span>
-        {mentions.map((m) => (
-          <span key={m} className="cmt-chip">
-            {nameOf(m)}
-            <button type="button" onClick={() => setMentions((xs) => xs.filter((x) => x !== m))} aria-label="Bỏ">
-              ✕
-            </button>
-          </span>
-        ))}
-        <div className="cmt-mentionpick">
-          <input
-            className="i cmt-mentioninput"
-            placeholder="Gắn thẻ người…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-          {matches.length > 0 && (
-            <div className="cmt-mentionmenu">
-              {matches.map((u) => (
-                <button
-                  key={u.email}
-                  type="button"
-                  onClick={() => {
-                    setMentions((xs) => [...xs, u.email]);
-                    setQ('');
-                  }}
-                >
-                  {u.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+      <div className="cmt-tawrap">
+        <textarea
+          ref={taRef}
+          className="i"
+          rows={2}
+          placeholder={placeholder ?? 'Viết bình luận… gõ @ để gắn thẻ người'}
+          value={body}
+          autoFocus={autoFocus}
+          onChange={onChange}
+          onBlur={() => setTimeout(() => setQ(null), 150)}
+        />
+        {q !== null && matches.length > 0 && (
+          <div className="cmt-mentionmenu">
+            {matches.map((u) => (
+              <button key={u.email} type="button" onMouseDown={(e) => { e.preventDefault(); pick(u); }}>
+                <span className="cmt-mm-av">{u.name.trim().charAt(0).toUpperCase()}</span>
+                {u.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
+      {mentions.length > 0 && (
+        <div className="cmt-taglist">
+          Gắn thẻ:{' '}
+          {mentions.map((m) => (
+            <span key={m} className="cmt-chip">
+              @{nameOf(m)}
+              <button type="button" onClick={() => setMentions((xs) => xs.filter((x) => x !== m))} aria-label="Bỏ">✕</button>
+            </span>
+          ))}
+        </div>
+      )}
       <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-        <button
-          className="btn sm"
-          type="button"
-          disabled={busy || !body.trim()}
-          onClick={() => onSubmit(body.trim(), mentions)}
-        >
+        <button className="btn sm" type="button" disabled={busy || !body.trim()} onClick={submit}>
           {busy ? 'Đang gửi…' : submitLabel}
         </button>
         {onCancel && (
@@ -160,10 +177,9 @@ export default function CommentThread({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const count = comments.filter((c) => !c.deleted).length;
+  const count = comments.length;
   const roots = comments.filter((c) => !c.parent_id);
   const repliesOf = (id: string) => comments.filter((c) => c.parent_id === id);
-  const nameOf = (email: string) => users.find((u) => u.email === email)?.name ?? email;
 
   const post = async (parentId: string | null, body: string, mentions: string[]) => {
     setBusy(true);
@@ -222,10 +238,10 @@ export default function CommentThread({
             <b>{c.author_name || c.author_email || '—'}</b>
             <span className="cmt-time">
               {fmtTime(c.created_at)}
-              {c.updated_at !== c.created_at && !c.deleted ? ' · đã sửa' : ''}
+              {c.updated_at !== c.created_at ? ' · đã sửa' : ''}
             </span>
           </div>
-          {editId === c.id && !c.deleted ? (
+          {editId === c.id ? (
             <Composer
               users={users}
               busy={busy}
@@ -238,27 +254,20 @@ export default function CommentThread({
             />
           ) : (
             <>
-              <div className={`cmt-body ${c.deleted ? 'cmt-deleted' : ''}`}>
-                {c.deleted ? 'Bình luận đã xoá.' : c.body}
+              <div className="cmt-body">{c.body}</div>
+              <div className="cmt-actions">
+                {!isReply && (
+                  <button className="linkbtn" type="button" onClick={() => setReplyTo(replyTo === c.id ? null : c.id)}>
+                    Trả lời
+                  </button>
+                )}
+                {mine && (
+                  <>
+                    <button className="linkbtn" type="button" onClick={() => setEditId(c.id)}>Sửa</button>
+                    <button className="linkbtn danger" type="button" onClick={() => remove(c.id)}>Xoá</button>
+                  </>
+                )}
               </div>
-              {!c.deleted && c.mentions.length > 0 && (
-                <div className="cmt-mentions">{c.mentions.map((m) => `@${nameOf(m)}`).join(' ')}</div>
-              )}
-              {!c.deleted && (
-                <div className="cmt-actions">
-                  {!isReply && (
-                    <button className="linkbtn" type="button" onClick={() => setReplyTo(replyTo === c.id ? null : c.id)}>
-                      Trả lời
-                    </button>
-                  )}
-                  {mine && (
-                    <>
-                      <button className="linkbtn" type="button" onClick={() => setEditId(c.id)}>Sửa</button>
-                      <button className="linkbtn danger" type="button" onClick={() => remove(c.id)}>Xoá</button>
-                    </>
-                  )}
-                </div>
-              )}
             </>
           )}
 
@@ -270,7 +279,7 @@ export default function CommentThread({
                 users={users}
                 busy={busy}
                 autoFocus
-                placeholder={`Trả lời ${c.author_name || ''}…`}
+                placeholder={`Trả lời ${c.author_name || ''}… gõ @ để gắn thẻ`}
                 submitLabel="Trả lời"
                 onSubmit={(b, m) => post(c.id, b, m)}
                 onCancel={() => setReplyTo(null)}

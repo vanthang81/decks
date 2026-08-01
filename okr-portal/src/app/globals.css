@@ -451,24 +451,26 @@ details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 
 
 .cmt-composer { margin-top: 4px; }
 .cmt-composer textarea.i { min-height: 40px; }
-.cmt-mentionbar { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
-.cmt-atbtn { color: var(--muted); font-weight: 700; }
+.cmt-tawrap { position: relative; }
+.cmt-taglist { margin-top: 6px; font-size: 12px; color: var(--muted); display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
 .cmt-chip {
   display: inline-flex; align-items: center; gap: 4px; background: var(--primary-tint); color: var(--primary);
   border-radius: 999px; padding: 1px 4px 1px 8px; font-size: 12px; font-weight: 600;
 }
 .cmt-chip button { border: 0; background: transparent; color: var(--primary); cursor: pointer; font-size: 11px; padding: 0 2px; }
-.cmt-mentionpick { position: relative; }
-.cmt-mentioninput { width: 150px; padding: 4px 8px; font-size: 12.5px; }
 .cmt-mentionmenu {
-  position: absolute; z-index: 30; top: calc(100% + 3px); left: 0; min-width: 180px; background: var(--card);
-  border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 22px rgba(0,0,0,.16); padding: 4px; max-height: 200px; overflow-y: auto;
+  position: absolute; z-index: 40; top: calc(100% + 3px); left: 0; min-width: 220px; background: var(--card);
+  border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 22px rgba(0,0,0,.16); padding: 4px; max-height: 220px; overflow-y: auto;
 }
 .cmt-mentionmenu button {
-  display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 6px 9px;
-  border-radius: 6px; cursor: pointer; font-size: 13px; font-family: inherit; color: var(--ink);
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; border: 0; background: transparent;
+  padding: 6px 9px; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: inherit; color: var(--ink);
 }
 .cmt-mentionmenu button:hover { background: #FBF7F2; }
+.cmt-mm-av {
+  flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; background: var(--primary-tint); color: var(--primary);
+  font-weight: 800; font-size: 11px; display: inline-flex; align-items: center; justify-content: center;
+}
 
 .okr-modal-cmt { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); }
 

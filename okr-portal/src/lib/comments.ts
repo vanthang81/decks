@@ -26,7 +26,8 @@ const C_SELECT = `
 
 export async function listComments(entityType: EntityType, entityId: string): Promise<Comment[]> {
   return query<Comment>(
-    `${C_SELECT} WHERE c.entity_type=$1 AND c.entity_id=$2 ORDER BY c.created_at ASC`,
+    `${C_SELECT} WHERE c.entity_type=$1 AND c.entity_id=$2 AND c.deleted_at IS NULL
+     ORDER BY c.created_at ASC`,
     [entityType, entityId],
   );
 }
@@ -125,6 +126,7 @@ export async function editComment(id: string, body: string, mentions: string[]):
   ]);
 }
 
-export async function softDeleteComment(id: string): Promise<void> {
-  await query('UPDATE okr_comments SET deleted_at=now() WHERE id=$1', [id]);
+/** Xoá HẲN bình luận (kèm mọi trả lời con nhờ FK ON DELETE CASCADE). */
+export async function deleteComment(id: string): Promise<void> {
+  await query('DELETE FROM okr_comments WHERE id=$1', [id]);
 }
