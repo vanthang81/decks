@@ -194,3 +194,17 @@ export async function syncKpiAction() {
   }
   redirect(`/admin?kpi=${encodeURIComponent(msg)}`);
 }
+
+// ---------- Bản tin điều hành tuần (gửi thử) ----------
+export async function sendDigestAction() {
+  await requireExec();
+  let msg: string;
+  try {
+    const { sendWeeklyDigest } = await import('@/lib/digest');
+    const r = await sendWeeklyDigest();
+    msg = `ok:${r.sent}`;
+  } catch (e) {
+    msg = `err:${String(e).slice(0, 60)}`;
+  }
+  redirect(`/admin?digest=${encodeURIComponent(msg)}`);
+}

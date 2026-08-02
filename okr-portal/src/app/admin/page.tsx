@@ -8,12 +8,12 @@ import { listUsers } from '@/lib/users';
 import { listUnits } from '@/lib/org';
 import { listPeriods, getCurrentPeriod } from '@/lib/periods';
 import { listKpiMetrics } from '@/lib/kpi';
-import { syncKpiAction } from './actions';
+import { syncKpiAction, sendDigestAction } from './actions';
 import ImportOkr from '@/components/ImportOkr';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminHome({ searchParams }: { searchParams: { kpi?: string } }) {
+export default async function AdminHome({ searchParams }: { searchParams: { kpi?: string; digest?: string } }) {
   const user = await requireUser();
   const access = await loadAccess();
   if (!canManageSystem(user, access)) redirect('/');
@@ -26,6 +26,7 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
   ]);
   const metrics = listKpiMetrics();
   const kpiMsg = searchParams.kpi;
+  const digestMsg = searchParams.digest;
 
   return (
     <>
@@ -94,6 +95,28 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
                   <span className="badge green">Đã cập nhật {kpiMsg.slice(3)} KR</span>
                 ) : (
                   <span className="badge red">Lỗi: {kpiMsg.replace(/^err:/, '')}</span>
+                )}
+              </p>
+            )}
+          </div>
+
+          <div className="card">
+            <h3 style={{ marginTop: 0 }}>Bản tin điều hành tuần</h3>
+            <p className="muted" style={{ marginTop: 0 }}>
+              Gửi email tóm tắt (nhịp độ · Nhận định &amp; Khuyến nghị · KPI cảnh báo · việc quá hạn) tới Ban
+              lãnh đạo. Cron n8n gửi tự động hằng tuần; bấm để gửi thử ngay.
+            </p>
+            <form action={sendDigestAction}>
+              <button className="btn" type="submit">
+                Gửi bản tin ngay
+              </button>
+            </form>
+            {digestMsg && (
+              <p className="muted" style={{ marginBottom: 0, marginTop: 8 }}>
+                {digestMsg.startsWith('ok:') ? (
+                  <span className="badge green">Đã gửi {digestMsg.slice(3)} email</span>
+                ) : (
+                  <span className="badge red">Lỗi: {digestMsg.replace(/^err:/, '')}</span>
                 )}
               </p>
             )}

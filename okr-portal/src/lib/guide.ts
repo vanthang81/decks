@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-02.36';
+export const GUIDE_VERSION = '2026-08-02.37';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -504,6 +504,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '02/08/2026 (Bản tin điều hành tuần + cảnh báo KPI qua email)',
+    items: [
+      'Bản tin điều hành tuần: email tóm tắt (nhịp độ · Nhận định & Khuyến nghị · KPI cảnh báo/khẩn · việc quá hạn · sức khỏe OKR) gửi Ban lãnh đạo; nút "Gửi bản tin ngay" ở Quản trị + cron n8n hằng tuần.',
+    ],
+  },
   {
     date: '02/08/2026 (Họp điều hành + Nhận định/Khuyến nghị + Sức khỏe OKR)',
     items: [
