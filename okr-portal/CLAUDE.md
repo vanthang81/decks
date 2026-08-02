@@ -30,6 +30,17 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   kích thước, miễn MỖI bên đều đẹp/chuyên nghiệp/tối ưu. Vd bảng/bar nhiều cột: desktop xếp 1 dòng
   (nhãn · thanh · số); mobile tách nhãn xuống dòng riêng đầy đủ + thanh/số dòng dưới (không cắt cụt).
   → Ưu tiên "đẹp & dễ đọc theo từng kích thước" hơn là ép cùng một layout co giãn.
+- **TRACE-BACK BẮT BUỘC (CFO 02/08 — áp cho MỌI báo cáo/cảnh báo/tổng hợp, KHÔNG cần nhắc lại)**: mọi
+  CON SỐ đếm/tổng hợp (cảnh báo, health, KPI W/A/E, đếm "chưa cascade/chưa có việc"…) PHẢI **bấm được
+  → dẫn tới danh sách ĐÍCH DANH** các mục cấu thành, mỗi mục có link tới trang chi tiết gốc (OKR→
+  `/objectives/[id]`, KPI→`/kpi`, Dự án→`/projects/[id]`). Không để "số trơ" không truy vết được.
+  Mẫu chuẩn = **trang `/integrity`** (`src/app/integrity/page.tsx` + `integrityGroups()` trong
+  `src/lib/integrity.ts`): card cảnh báo Dashboard → mỗi hàng `.intg-row` link `/integrity#<key>` →
+  liệt kê từng mục + link. Khi thêm bảng tổng hợp/cảnh báo mới ⇒ tự làm luôn lớp trace-back tương tự.
+- **MENU = CỤM DROPDOWN (SiteHeader)**: desktop gom `links` theo `group` → 5 cụm (Tổng quan · Chiến
+  lược & Đo lường · Thực thi · Cá nhân · Quản trị), cụm ≥2 mục = dropdown (hover/focus), cụm 1 mục =
+  link thẳng; mobile giữ hamburger `<details>` phân nhóm. Thêm trang mới ⇒ thêm vào `links` với `group`
+  phù hợp (KHÔNG nhồi thêm mục cấp 1 làm dài thanh menu). CSS `.nav-top/.nav-group/.nav-menu` ở globals.css.
 
 ## Vị trí & lý do
 - App Next.js **độc lập, self-contained** trong thư mục `okr-portal/` của repo `decks` (KHÔNG tạo
