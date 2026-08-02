@@ -4,6 +4,8 @@ import { computeKrProgress, recomputeUp, type MetricType, type Direction, type I
 import { recomputeInitiativeUp, initIdByCode } from './initiatives';
 import { nextInitCode } from './codes';
 import { parseNum } from './num';
+import { kpiStatus, attainment, STATUS_LABEL } from './kpi-values';
+import type { KpiDirection } from './kpis';
 
 // ---- Nhãn cột (tiếng Việt) cho 3 sheet ----
 const OBJ_HEAD = ['Mã', 'Kỳ', 'Cấp', 'Khối/Phòng', 'Người chủ trì (email)', 'Tiêu đề', 'Mô tả', 'Loại OKR', 'Trạng thái', 'Tiến độ %', 'Mã OKR cha'];
@@ -53,6 +55,55 @@ export async function buildOkrWorkbook(periodId: string | null, unitId: string |
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(objAoa), 'Objectives');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(krAoa), 'KeyResults');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(initAoa), 'Initiatives');
+  return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+}
+
+// ============ EXPORT SCORECARD KPI ============
+const SC_HEAD = ['Kỳ', 'Đơn vị', 'Mã KPI', 'KPI', 'Viễn cảnh', 'Tầng', 'Trọng số', 'Hướng', 'Mục tiêu', 'Thực hiện', '% Đạt', 'Trạng thái', 'Ghi chú'];
+const BSC_VN: Record<string, string> = { financial: 'Tài chính', customer: 'Khách hàng', process: 'Quy trình nội bộ', learning: 'Học hỏi & Phát triển' };
+const TIER_VN: Record<string, string> = { result: 'Kết quả', driver: 'Động cơ', enabler: 'Bộ máy' };
+
+export async function buildScorecardWorkbook(periodId: string | null, unitId: string | null): Promise<Buffer> {
+  const where: string[] = ['k.is_active'];
+  const p: unknown[] = [];
+  if (periodId) { p.push(periodId); where.push(`v.period_id=$${p.length}`); }
+  if (unitId) { p.push(unitId); where.push(`v.unit_id=$${p.length}`); }
+
+  const rows = await query<{
+    period: string; unit: string | null; code: string | null; name: string;
+    bsc: string | null; tier: string | null; weight: number; direction: KpiDirection;
+    target: number | null; actual: number | null;
+    tw: number | null; ta: number | null; te: number | null; note: string | null;
+  }>(
+    `SELECT pe.name AS period, u.name AS unit, k.code, k.name,
+            k.bsc_perspective AS bsc, k.tier, k.weight::float8 AS weight, k.direction,
+            v.target::float8 AS target, v.actual::float8 AS actual,
+            k.threshold_watch::float8 AS tw, k.threshold_alert::float8 AS ta, k.threshold_escalate::float8 AS te,
+            v.note
+       FROM okr_kpi_values v
+       JOIN okr_kpis k ON k.id=v.kpi_id
+       JOIN okr_periods pe ON pe.id=v.period_id
+       LEFT JOIN okr_units u ON u.id=v.unit_id
+      WHERE ${where.join(' AND ')}
+      ORDER BY pe.name, u.name NULLS FIRST,
+               CASE k.tier WHEN 'result' THEN 0 WHEN 'driver' THEN 1 WHEN 'enabler' THEN 2 ELSE 3 END, k.weight DESC, k.name`,
+    p,
+  );
+
+  const aoa: (string | number)[][] = [SC_HEAD];
+  for (const r of rows) {
+    const at = attainment(r.direction, r.target, r.actual);
+    const st = kpiStatus({ direction: r.direction, threshold_watch: r.tw, threshold_alert: r.ta, threshold_escalate: r.te }, r.actual, r.target);
+    aoa.push([
+      r.period, r.unit ?? 'Công ty', r.code ?? '', r.name,
+      r.bsc ? BSC_VN[r.bsc] ?? r.bsc : '', r.tier ? TIER_VN[r.tier] ?? r.tier : '',
+      r.weight, r.direction === 'down' ? 'Thấp tốt' : 'Cao tốt',
+      r.target ?? '', r.actual ?? '',
+      at == null ? '' : Math.round(at * 100), st ? STATUS_LABEL[st] : '', r.note ?? '',
+    ]);
+  }
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), 'Scorecard');
   return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
 }
 

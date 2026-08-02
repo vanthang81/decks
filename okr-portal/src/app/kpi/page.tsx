@@ -60,7 +60,15 @@ export default async function KpiScorecardPage({
     <>
       <SiteHeader active="kpi" />
       <div className="wrap">
-        <div className="pagetitle">Scorecard KPI<HelpTip k="kpi-scorecard" /></div>
+        <div className="flexbtw">
+          <div className="pagetitle">Scorecard KPI<HelpTip k="kpi-scorecard" /></div>
+          <a
+            className="btn ghost"
+            href={`/api/scorecard/export?period=${period?.id ?? ''}&unit=${unitId}`}
+          >
+            ⬇ Xuất Excel
+          </a>
+        </div>
         <p className="subtitle">
           Đo chỉ số theo <b>{unit?.name ?? '—'}</b> · kỳ <b>{period?.name ?? '—'}</b>. Mục tiêu &amp; thực hiện,
           ngưỡng Watch/Alert/Escalate, chấm điểm theo trọng số 3 tầng.

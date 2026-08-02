@@ -1,6 +1,8 @@
+import Link from 'next/link';
 import SiteHeader from '@/components/SiteHeader';
 import HelpTip from '@/components/HelpTip';
 import AlignmentMap from '@/components/AlignmentMap';
+import StrategyMap from '@/components/StrategyMap';
 import { requireUser } from '@/lib/current-user';
 import { getCurrentPeriod, listPeriods } from '@/lib/periods';
 import { listUnits } from '@/lib/org';
@@ -10,9 +12,10 @@ import { listKpis } from '@/lib/kpis';
 
 export const dynamic = 'force-dynamic';
 
-export default async function MapPage() {
+export default async function MapPage({ searchParams }: { searchParams: { v?: string } }) {
   const user = await requireUser();
   const period = (await getCurrentPeriod()) ?? (await listPeriods())[0] ?? null;
+  const view = searchParams.v === 'strategy' ? 'strategy' : 'align';
 
   if (!period) {
     return (
@@ -79,18 +82,33 @@ export default async function MapPage() {
       <SiteHeader active="map" />
       <div className="wrap">
         <div className="pagetitle">
-          Bản đồ liên kết chiến lược<HelpTip k="align-map" />
+          Bản đồ chiến lược<HelpTip k={view === 'strategy' ? 'strategy-map' : 'align-map'} />
         </div>
-        <p className="subtitle">
-          Toàn cảnh chuỗi <b>BSC → Mục tiêu → Kết quả then chốt → KPI</b> · kỳ <b>{period.name}</b>.
-          Kéo–thả một mục tiêu sang làn Viễn cảnh khác để gắn BSC; mở ⚙ để đặt cấp trên (cascade) & gắn KPI.
-        </p>
-        <AlignmentMap
-          objectives={objData}
-          krs={krData}
-          kpis={kpiData}
-          manageableIds={manageableIds}
-        />
+        <div className="map-viewtabs">
+          <Link href="/map" className={view === 'align' ? 'active' : ''}>🔗 Liên kết (kéo–thả)</Link>
+          <Link href="/map?v=strategy" className={view === 'strategy' ? 'active' : ''}>🗺️ Sơ đồ chiến lược BSC</Link>
+        </div>
+        {view === 'strategy' ? (
+          <>
+            <p className="subtitle">
+              Sơ đồ chiến lược 4 tầng Balanced Scorecard theo quan hệ nhân-quả · kỳ <b>{period.name}</b>.
+            </p>
+            <StrategyMap objectives={objData} />
+          </>
+        ) : (
+          <>
+            <p className="subtitle">
+              Toàn cảnh chuỗi <b>BSC → Mục tiêu → Kết quả then chốt → KPI</b> · kỳ <b>{period.name}</b>.
+              Kéo–thả một mục tiêu sang làn Viễn cảnh khác để gắn BSC; mở ⚙ để đặt cấp trên (cascade) & gắn KPI.
+            </p>
+            <AlignmentMap
+              objectives={objData}
+              krs={krData}
+              kpis={kpiData}
+              manageableIds={manageableIds}
+            />
+          </>
+        )}
       </div>
     </>
   );

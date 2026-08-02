@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-02.37';
+export const GUIDE_VERSION = '2026-08-02.38';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -195,6 +195,17 @@ export const FEATURES: Feature[] = [
       'KÉO–THẢ (chuột hoặc chạm) thẻ mục tiêu (nắm ở biểu tượng ⠿) sang làn viễn cảnh khác để gắn BSC ngay.',
       'Bấm ⚙ "Liên kết" trên thẻ để đặt Viễn cảnh BSC, chọn OKR cấp trên (cascade — tự chặn vòng lặp), và gắn KPI cho từng KR. Chỉ mục tiêu bạn có quyền sửa mới kéo/chỉnh được.',
       'Dùng bản đồ này để THIẾT LẬP và soát nhanh sự liền mạch chiến lược → thực thi trên toàn công ty.',
+    ],
+  },
+  {
+    key: 'strategy-map',
+    title: 'Sơ đồ chiến lược BSC (Strategy Map)',
+    where: 'Menu "Bản đồ" → tab "Sơ đồ chiến lược BSC"',
+    help: '4 tầng Balanced Scorecard xếp theo quan hệ nhân-quả: Học hỏi → Quy trình → Khách hàng → Tài chính.',
+    detail: [
+      'Sơ đồ chiến lược kinh điển của BSC: nền móng (Học hỏi & Phát triển) thúc đẩy Quy trình nội bộ → tạo giá trị Khách hàng → dẫn tới kết quả Tài chính. Mũi tên hướng lên thể hiện chuỗi nhân-quả.',
+      'Mỗi tầng liệt kê các OKR thuộc viễn cảnh đó kèm tiến độ; bấm vào một OKR để mở chi tiết. Đọc từ dưới lên để thấy chiến lược được "xây" như thế nào.',
+      'Chuyển qua lại giữa "Liên kết (kéo–thả)" và "Sơ đồ chiến lược BSC" bằng tab ở đầu trang Bản đồ.',
     ],
   },
   {
@@ -504,6 +515,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '02/08/2026 (Sơ đồ chiến lược BSC + Xuất Scorecard Excel)',
+    items: [
+      'Bản đồ có thêm tab "Sơ đồ chiến lược BSC" (Strategy Map): 4 tầng nhân-quả Học hỏi → Quy trình → Khách hàng → Tài chính, mỗi tầng liệt kê OKR + tiến độ.',
+      'Nút "Xuất Excel" ở Scorecard KPI: tải bảng KPI (mục tiêu/thực hiện/% đạt/trạng thái) theo kỳ & đơn vị đang lọc.',
+    ],
+  },
   {
     date: '02/08/2026 (Bản tin điều hành tuần + cảnh báo KPI qua email)',
     items: [
