@@ -110,6 +110,21 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   (`N8N_MAIL_WEBHOOK` trong .env VPS). **Cron n8n "OKR Check-in Reminder" (id `p0cAn5ghp8ZU0Sfw`, ACTIVE,
   `0 8 * * *` giờ VN)** — app tự gác theo weekday cấu hình. Đã test `sent:1` tới vanthang81@gmail.com.
 
+## Điều hành: Họp điều hành + Nhận định/Khuyến nghị + Sức khỏe OKR + Bản tin tuần (02/08)
+- **`src/lib/health.ts`**: chấm SỨC KHỎE mỗi OKR theo 7 tiêu chí (chủ trì 20 · có KR 20 · có KR lagging 10 ·
+  cascade 15 · thực thi 15 · check-in gần đây 10 · KR gắn KPI 10 = 100). `okrHealthSummary` (TB + phân bố
+  tốt/khá/yếu + hạng mục thiếu). Hiện ở Dashboard card "Sức khỏe OKR".
+- **`src/lib/review.ts`**: ENGINE tổng hợp 1 kỳ (`reviewData`/`currentReviewData`) → nhịp độ, theo Khối,
+  BSC, **KPI cảnh báo W/A/E** (quét okr_kpi_values mọi đơn vị, `kpiStatus`), OKR cần chú ý, việc quá hạn,
+  toàn vẹn, sức khỏe + **Nhận định/Khuyến nghị rule-based** (Quan sát→Hàm ý→Khuyến nghị). Dùng chung cho:
+  trang **`/review`** ("Họp điều hành" WBR/MBR, in đẹp), card Dashboard, và **Bản tin tuần**.
+- **Bản tin điều hành tuần**: `src/lib/digest.ts` `sendWeeklyDigest()` dựng HTML từ reviewData → gửi
+  **role=exec** (fallback vanthang81@) qua Deck Mail webhook. Route `POST/GET /api/digest/weekly` (gác
+  x-sync-key/admin). Nút "Gửi bản tin ngay" ở `/admin` (`sendDigestAction`). **Cron n8n "OKR Weekly Digest"
+  (id `zwiPmsyDaCRxgSG2`, ACTIVE, `30 0 * * 1` UTC = Thứ 2 07:30 VN)** SSH curl route. Đã test `sent:2`
+  (nguyenvanthang@baotinmanhhai.vn + vanthang81@gmail.com).
+- HelpTip: `review` · `insights` · `okr-health`. Nav "Họp điều hành" (/review) ở nhóm Tổng quan.
+
 ## Hướng dẫn sử dụng trong app + QUY TẮC CẬP NHẬT TÀI LIỆU (BẮT BUỘC)
 - Trang **`/guide`** (`src/app/guide/page.tsx`) = hướng dẫn chi tiết: phương pháp luận OKR/KPI/Action
   Plan (best practice) + tính năng + lộ trình đề xuất + thuật ngữ + nhật ký. Vào từ menu "Hướng dẫn".
