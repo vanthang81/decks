@@ -13,7 +13,7 @@ VALUES
      'Doanh thu thuần (2030)', 'number', 'increase', 'tỷ đồng', 27891, 27891, 180346, 1, 'lagging', 0, 4),
   ('CTY-O6.KR5', (SELECT id FROM okr_objectives WHERE code='CTY-O6'),
      'Lợi nhuận sau thuế (2030)', 'number', 'increase', 'tỷ đồng', 774, 774, 5015, 1, 'lagging', 0, 5)
-ON CONFLICT (code) DO UPDATE SET
+ON CONFLICT (code) WHERE code IS NOT NULL DO UPDATE SET
   title = EXCLUDED.title, metric_type = EXCLUDED.metric_type, unit_label = EXCLUDED.unit_label,
   start_value = EXCLUDED.start_value, current_value = EXCLUDED.current_value,
   target_value = EXCLUDED.target_value, updated_at = now();
