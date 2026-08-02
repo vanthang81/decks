@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { mapSetBscAction, mapSetParentAction, mapLinkKpiAction } from '@/app/map/actions';
@@ -99,11 +99,19 @@ export default function AlignmentMap({
   const [drag, setDrag] = useState<{ id: string; x: number; y: number; label: string } | null>(null);
   const [hoverLane, setHoverLane] = useState<string | null>(null);
   const dragRef = useRef<{ id: string; from: string } | null>(null);
+  const lastPtRef = useRef({ x: 0, y: 0 });
+  const velRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
+
+  const EDGE = 90; // vùng mép kích hoạt tự cuộn (px)
+  const EDGE_MAX = 16; // tốc độ cuộn tối đa (px/frame)
 
   function beginDrag(e: React.PointerEvent, o: Obj) {
     if (!manageable.has(o.id) || busy) return;
     e.preventDefault();
     dragRef.current = { id: o.id, from: o.bsc_perspective ?? 'none' };
+    lastPtRef.current = { x: e.clientX, y: e.clientY };
+    velRef.current = 0;
     setDrag({ id: o.id, x: e.clientX, y: e.clientY, label: `${o.code ? o.code + ' · ' : ''}${o.title}` });
     setHoverLane(null);
     window.addEventListener('pointermove', onDragMove);
@@ -116,15 +124,44 @@ export default function AlignmentMap({
     const lane = el?.closest?.('[data-lane]') as HTMLElement | null;
     return lane?.getAttribute('data-lane') ?? null;
   }
+  // Vòng lặp tự cuộn khi con trỏ kéo tới sát mép trên/dưới màn hình (giúp kéo xa trên mobile).
+  const edgeTick = () => {
+    const v = velRef.current;
+    if (v === 0) {
+      rafRef.current = null;
+      return;
+    }
+    window.scrollBy(0, v);
+    setHoverLane(laneAt(lastPtRef.current.x, lastPtRef.current.y));
+    rafRef.current = requestAnimationFrame(edgeTick);
+  };
+  function updateVel(y: number) {
+    const H = window.innerHeight;
+    let v = 0;
+    if (y < EDGE) v = -EDGE_MAX * Math.min(1, (EDGE - y) / EDGE);
+    else if (y > H - EDGE) v = EDGE_MAX * Math.min(1, (y - (H - EDGE)) / EDGE);
+    velRef.current = v;
+    if (v !== 0 && rafRef.current == null) rafRef.current = requestAnimationFrame(edgeTick);
+  }
+  function stopEdge() {
+    velRef.current = 0;
+    if (rafRef.current != null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+  }
   const onDragMove = (e: PointerEvent) => {
+    lastPtRef.current = { x: e.clientX, y: e.clientY };
     setDrag((d) => (d ? { ...d, x: e.clientX, y: e.clientY } : d));
     setHoverLane(laneAt(e.clientX, e.clientY));
+    updateVel(e.clientY);
   };
   const onDragEnd = (e: PointerEvent) => {
     window.removeEventListener('pointermove', onDragMove);
     window.removeEventListener('pointerup', onDragEnd);
     window.removeEventListener('pointercancel', onDragEnd);
     document.body.classList.remove('map-dragging');
+    stopEdge();
     const info = dragRef.current;
     const lane = laneAt(e.clientX, e.clientY);
     setDrag(null);
@@ -132,6 +169,18 @@ export default function AlignmentMap({
     dragRef.current = null;
     if (info && lane && lane !== info.from) void run(() => mapSetBscAction(info.id, lane === 'none' ? '' : lane));
   };
+
+  // Dọn dẹp nếu component unmount giữa lúc đang kéo.
+  useEffect(() => {
+    return () => {
+      window.removeEventListener('pointermove', onDragMove);
+      window.removeEventListener('pointerup', onDragEnd);
+      window.removeEventListener('pointercancel', onDragEnd);
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      document.body.classList.remove('map-dragging');
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function run(fn: () => Promise<unknown>) {
     setBusy(true);

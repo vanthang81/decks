@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-01.32';
+export const GUIDE_VERSION = '2026-08-02.33';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -473,6 +473,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '02/08/2026 (Bản đồ: sửa cắt chữ trên mobile + tự cuộn khi kéo)',
+    items: [
+      'Sửa lỗi thẻ mục tiêu bị CẮT CHỮ ở màn hẹp (tiêu đề/đơn vị/cascade/KR nay tự XUỐNG DÒNG, hiện đầy đủ — không còn tràn mép).',
+      'Khi KÉO thẻ tới sát mép trên/dưới màn hình, trang TỰ CUỘN để thả vào làn ở xa (thuận tiện trên điện thoại khi cuộn tay bị khoá lúc kéo).',
+    ],
+  },
   {
     date: '01/08/2026 (Bản đồ liên kết chiến lược — kéo–thả BSC→OKR→KR→KPI)',
     items: [
