@@ -9,7 +9,7 @@ INSERT INTO okr_settings (key, value) VALUES ('company_strategy', $strat$
   "horizon": "2026–2030",
   "vision": "Trở thành nhà bán lẻ vàng đẳng cấp thế giới, đặt chuẩn đầu tiên tại Việt Nam — được quản trị theo chuẩn định chế, sở hữu nguồn vàng có trách nhiệm, và được các gia đình Việt Nam tin cậy qua nhiều thế hệ.",
   "mission": "Là nhà bán lẻ vàng chất lượng định chế với nguồn cung có trách nhiệm mà người Việt có thể tin cậy — giúp mỗi gia đình tích lũy và gìn giữ tài sản qua nhiều thế hệ. Kim chỉ nam: “Giữ tín nhiệm hơn giữ vàng.”",
-  "ambition": "Dẫn dắt phân khúc vàng tích lũy 24K và trở thành “thương hiệu vàng quốc dân”: mở rộng mạng lưới từ ~16 lên hơn 300 cửa hàng toàn quốc vào 2030, IPO trên HOSE (Q4/2026) và đạt chuẩn quản trị định chế (hạng ESG A− vào 2030).",
+  "ambition": "Dẫn dắt phân khúc vàng tích lũy 24K và trở thành “thương hiệu vàng quốc dân”: mở rộng mạng lưới lên ~261 cửa hàng toàn quốc vào 2030 (2026→2030: 80·159·208·241·261); nâng doanh thu thuần lên ~180 nghìn tỷ và lợi nhuận sau thuế ~5.000 tỷ vào 2030 (2025: ~27,9 nghìn tỷ / 774 tỷ). IPO trên HOSE Q4/2026 và đạt chuẩn quản trị định chế (hạng ESG A− vào 2030). [Số liệu theo Financial Model Project Imperial v52.1]",
   "values": [
     "Tín nhiệm trên hết — “Giữ tín nhiệm hơn giữ vàng”",
     "Quản trị chuẩn định chế — minh bạch, tuân thủ, công bố đầy đủ (sẵn sàng niêm yết)",
