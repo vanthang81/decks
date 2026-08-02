@@ -1211,3 +1211,29 @@ body.map-dragging { user-select: none; touch-action: none; cursor: grabbing; }
   .smap-objs { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 420px) { .smap-objs { grid-template-columns: 1fr; } }
+
+/* ===== Trang Chiến lược công ty ===== */
+.strat-chain { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 14px; }
+.strat-chain .sc-step { display: inline-flex; align-items: center; gap: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; }
+.strat-chain .sc-step.apex { background: var(--primary); color: #fff; border-color: var(--primary); }
+.strat-chain .sc-arr { color: var(--muted); font-weight: 700; }
+.strat-card .strat-k { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-top: 12px; }
+.strat-card .strat-k:first-child { margin-top: 0; }
+.strat-card .strat-v { font-size: 15px; line-height: 1.55; margin-top: 3px; overflow-wrap: anywhere; }
+.strat-values { margin: 4px 0 0; padding-left: 20px; }
+.strat-values li { margin: 4px 0; font-size: 14.5px; }
+.strat-bsc { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.strat-bsc-cell { border-radius: 12px; padding: 14px; text-align: center; border: 1px solid var(--line); border-top: 4px solid var(--line); }
+.strat-bsc-cell.bsc-financial { border-top-color: #b45309; background: #fffaf3; }
+.strat-bsc-cell.bsc-customer { border-top-color: #2563eb; background: #f5f8ff; }
+.strat-bsc-cell.bsc-process { border-top-color: #0f766e; background: #f2fbf9; }
+.strat-bsc-cell.bsc-learning { border-top-color: #7c3aed; background: #faf6ff; }
+.strat-bsc-ic { font-size: 26px; line-height: 1; }
+.strat-bsc-lbl { font-weight: 700; font-size: 13.5px; margin-top: 6px; }
+.strat-bsc-n { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.strat-edit summary { cursor: pointer; }
+.strat-form { margin-top: 12px; display: flex; flex-direction: column; }
+.strat-form .f { font-weight: 700; font-size: 13px; margin: 10px 0 4px; }
+.strat-form .i { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; font-family: inherit; }
+.strat-form textarea.i { resize: vertical; line-height: 1.5; }
+@media (max-width: 640px) { .strat-bsc { grid-template-columns: 1fr 1fr; } }

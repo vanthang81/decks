@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-02.39';
+export const GUIDE_VERSION = '2026-08-02.40';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -195,6 +195,17 @@ export const FEATURES: Feature[] = [
       'KÉO–THẢ (chuột hoặc chạm) thẻ mục tiêu (nắm ở biểu tượng ⠿) sang làn viễn cảnh khác để gắn BSC ngay.',
       'Bấm ⚙ "Liên kết" trên thẻ để đặt Viễn cảnh BSC, chọn OKR cấp trên (cascade — tự chặn vòng lặp), và gắn KPI cho từng KR. Chỉ mục tiêu bạn có quyền sửa mới kéo/chỉnh được.',
       'Dùng bản đồ này để THIẾT LẬP và soát nhanh sự liền mạch chiến lược → thực thi trên toàn công ty.',
+    ],
+  },
+  {
+    key: 'company-strategy',
+    title: 'Chiến lược công ty (điểm khởi đầu)',
+    where: 'Menu "Chiến lược"',
+    help: 'Khai báo Tầm nhìn · Sứ mệnh · Giá trị cốt lõi · Khát vọng + Trụ cột chiến lược (OKR nhiều năm) — TRƯỚC khi cascade OKR.',
+    detail: [
+      'Theo phương pháp luận, chiến lược được khai báo TRƯỚC: Tầm nhìn (Vision) · Sứ mệnh (Mission) · Giá trị cốt lõi · Khát vọng/định vị · chân trời chiến lược (vd 2026–2030). CEO/CFO nhập tại trang "Chiến lược" (mục "Khai báo/sửa chiến lược").',
+      'TRỤ CỘT CHIẾN LƯỢC = các Mục tiêu cấp Công ty thuộc kỳ "Chiến lược nhiều năm" (multiyear). Mỗi OKR Công ty hằng năm sẽ "Liên kết lên" một trụ cột → tạo dòng chảy Chiến lược → OKR năm → Khối/Phòng.',
+      'Trang này hiện sơ đồ chuỗi (Chiến lược → BSC → OKR → KRA → KPI/Thực thi) + 4 viễn cảnh BSC + danh sách trụ cột kèm tiến độ — là "kim chỉ nam" cho toàn hệ thống.',
     ],
   },
   {
@@ -515,6 +526,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '02/08/2026 (Chiến lược công ty — điểm khởi đầu của chuỗi)',
+    items: [
+      'Trang mới "Chiến lược": khai báo Tầm nhìn · Sứ mệnh · Giá trị cốt lõi · Khát vọng · chân trời chiến lược (CEO/CFO) — TRƯỚC khi cascade OKR, đúng phương pháp luận.',
+      'Hiện sơ đồ chuỗi (Chiến lược → BSC → OKR → KRA → KPI/Thực thi) + 4 viễn cảnh BSC + Trụ cột chiến lược (OKR nhiều năm) kèm tiến độ. Menu "Chiến lược".',
+    ],
+  },
   {
     date: '02/08/2026 (Sửa tràn ngang trên mobile)',
     items: [
