@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-02.40';
+export const GUIDE_VERSION = '2026-08-02.41';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -526,6 +526,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '02/08/2026 (Menu gọn + trace-back cảnh báo)',
+    items: [
+      'Menu desktop gom thành CỤM DROPDOWN (Tổng quan · Chiến lược & Đo lường · Thực thi · Cá nhân · Quản trị) — thanh menu gọn 1 hàng, chuyên nghiệp; mobile giữ menu hamburger phân nhóm.',
+      'Cảnh báo "Toàn vẹn alignment" nay BẤM ĐƯỢC → trang chi tiết /integrity liệt kê ĐÍCH DANH từng OKR/KR/KPI/Dự án còn lỗ hổng + link tới trang chi tiết (trace-back). Nguyên tắc: mọi con số cảnh báo/tổng hợp đều truy vết được về danh sách gốc.',
+    ],
+  },
   {
     date: '02/08/2026 (Chiến lược công ty — điểm khởi đầu của chuỗi)',
     items: [

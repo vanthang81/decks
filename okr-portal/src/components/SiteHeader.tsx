@@ -19,7 +19,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
   const access = await loadAccess();
   const showAdmin = me ? canManageSystem(me, access) : false;
 
-  // Sắp xếp theo dòng chảy: Tổng quan → Chiến lược & Đo lường → Thực thi → Cá nhân → Trợ giúp.
+  // Sắp xếp theo dòng chảy: Tổng quan → Chiến lược & Đo lường → Thực thi → Cá nhân → Quản trị.
   const links = [
     { href: '/', label: 'Bảng điều khiển', key: 'home', group: 'overview', show: true },
     { href: '/review', label: 'Họp điều hành', key: 'review', group: 'overview', show: true },
@@ -30,8 +30,8 @@ export default async function SiteHeader({ active }: { active?: string }) {
     { href: '/projects', label: 'Dự án', key: 'projects', group: 'exec', show: true },
     { href: '/tasks', label: 'Công việc', key: 'tasks', group: 'exec', show: true },
     { href: '/my', label: 'Của tôi', key: 'my', group: 'personal', show: true },
-    { href: '/guide', label: 'Hướng dẫn', key: 'guide', group: 'util', show: true },
-    { href: '/admin', label: 'Quản trị', key: 'admin', group: 'util', show: showAdmin },
+    { href: '/guide', label: 'Hướng dẫn', key: 'guide', group: 'personal', show: true },
+    { href: '/admin', label: 'Quản trị', key: 'admin', group: 'admin', show: showAdmin },
   ].filter((l) => l.show);
 
   const GROUP_LABEL: Record<string, string> = {
@@ -39,8 +39,16 @@ export default async function SiteHeader({ active }: { active?: string }) {
     strategy: 'Chiến lược & Đo lường',
     exec: 'Thực thi',
     personal: 'Cá nhân',
-    util: 'Trợ giúp',
+    admin: 'Quản trị',
   };
+
+  // Desktop: gom link thành CỤM DROPDOWN (giống Control Tower) → thanh menu gọn 1 hàng.
+  const GROUP_ORDER = ['overview', 'strategy', 'exec', 'personal', 'admin'];
+  const groups = GROUP_ORDER.map((gk) => ({
+    key: gk,
+    label: GROUP_LABEL[gk],
+    items: links.filter((l) => l.group === gk),
+  })).filter((g) => g.items.length > 0);
 
   return (
     <header className="site-header">
@@ -54,16 +62,35 @@ export default async function SiteHeader({ active }: { active?: string }) {
           </span>
         </Link>
 
-        {/* ---- Desktop (có vạch ngăn giữa các nhóm) ---- */}
+        {/* ---- Desktop: cụm dropdown (mở khi hover/focus) ---- */}
         <nav className="nav nav-desktop">
-          {links.map((l, i) => (
-            <Fragment key={l.key}>
-              {i > 0 && links[i - 1].group !== l.group && <span className="nav-div" aria-hidden />}
-              <Link href={l.href} className={active === l.key ? 'active' : ''}>
-                {l.label}
-              </Link>
-            </Fragment>
-          ))}
+          {groups.map((g) => {
+            const groupActive = g.items.some((it) => it.key === active);
+            // Cụm 1 mục → link thẳng (không dropdown)
+            if (g.items.length === 1) {
+              const it = g.items[0];
+              return (
+                <Link key={g.key} href={it.href} className={`nav-top ${groupActive ? 'active' : ''}`}>
+                  {it.label}
+                </Link>
+              );
+            }
+            return (
+              <div key={g.key} className="nav-group">
+                <button type="button" className={`nav-top nav-grp-btn ${groupActive ? 'active' : ''}`}>
+                  {g.label}
+                  <span className="nav-caret" aria-hidden>▾</span>
+                </button>
+                <div className="nav-menu" role="menu">
+                  {g.items.map((it) => (
+                    <Link key={it.key} href={it.href} className={active === it.key ? 'active' : ''}>
+                      {it.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </nav>
         <div className="spacer" />
         {email && <NotifBell initialCount={notifCount} />}

@@ -43,3 +43,98 @@ export async function integrityIssues(periodId: string): Promise<IntegrityIssue[
     (x) => x.count > 0,
   );
 }
+
+// ── Trace-back: liệt kê ĐÍCH DANH các mục thuộc mỗi lỗ hổng + link tới trang chi tiết ──
+export type IntegrityItem = { code: string | null; title: string; href: string; sub?: string };
+export type IntegrityGroup = IntegrityIssue & { items: IntegrityItem[] };
+
+const CAP = 500; // trần an toàn mỗi nhóm
+
+async function itemsFor(key: keyof Counts, periodId: string): Promise<IntegrityItem[]> {
+  switch (key) {
+    case 'obj_no_owner':
+      return (
+        await query<{ id: string; code: string | null; title: string }>(
+          `SELECT id, code, title FROM okr_objectives
+            WHERE period_id=$1 AND owner_email IS NULL ORDER BY code NULLS LAST, title LIMIT ${CAP}`,
+          [periodId],
+        )
+      ).map((o) => ({ code: o.code, title: o.title, href: `/objectives/${o.id}` }));
+    case 'obj_no_child':
+      return (
+        await query<{ id: string; code: string | null; title: string; level: string }>(
+          `SELECT id, code, title, level FROM okr_objectives o
+            WHERE period_id=$1 AND level IN ('company','division')
+              AND NOT EXISTS (SELECT 1 FROM okr_objectives c WHERE c.parent_id=o.id)
+            ORDER BY code NULLS LAST, title LIMIT ${CAP}`,
+          [periodId],
+        )
+      ).map((o) => ({
+        code: o.code,
+        title: o.title,
+        href: `/objectives/${o.id}`,
+        sub: o.level === 'company' ? 'Cấp Công ty' : 'Cấp Khối',
+      }));
+    case 'kr_no_exec':
+      return (
+        await query<{ id: string; code: string | null; title: string; oid: string; ocode: string | null }>(
+          `SELECT k.id, k.code, k.title, o.id AS oid, o.code AS ocode
+             FROM okr_key_results k JOIN okr_objectives o ON o.id=k.objective_id
+            WHERE o.period_id=$1
+              AND NOT EXISTS (SELECT 1 FROM okr_initiatives i WHERE i.key_result_id=k.id OR i.objective_id=o.id)
+            ORDER BY o.code NULLS LAST, k.code NULLS LAST LIMIT ${CAP}`,
+          [periodId],
+        )
+      ).map((k) => ({
+        code: k.code,
+        title: k.title,
+        href: `/objectives/${k.oid}`,
+        sub: k.ocode ? `Thuộc ${k.ocode}` : undefined,
+      }));
+    case 'kpi_no_owner':
+      return (
+        await query<{ code: string | null; name: string; no_owner: boolean; no_unit: boolean }>(
+          `SELECT code, name, (business_owner IS NULL) AS no_owner, (unit_id IS NULL) AS no_unit
+             FROM okr_kpis WHERE is_active AND (business_owner IS NULL OR unit_id IS NULL)
+            ORDER BY code NULLS LAST, name LIMIT ${CAP}`,
+        )
+      ).map((k) => ({
+        code: k.code,
+        title: k.name,
+        href: '/kpi',
+        sub: [k.no_owner ? 'thiếu chủ sở hữu' : null, k.no_unit ? 'thiếu đơn vị (KRA)' : null]
+          .filter(Boolean)
+          .join(' · '),
+      }));
+    case 'kpi_no_value':
+      return (
+        await query<{ code: string | null; name: string; weight: number }>(
+          `SELECT k.code, k.name, k.weight FROM okr_kpis k
+            WHERE k.is_active AND k.weight>0
+              AND NOT EXISTS (SELECT 1 FROM okr_kpi_values v WHERE v.kpi_id=k.id AND v.period_id=$1)
+            ORDER BY k.weight DESC, k.code NULLS LAST LIMIT ${CAP}`,
+          [periodId],
+        )
+      ).map((k) => ({ code: k.code, title: k.name, href: '/kpi', sub: `trọng số ${k.weight}` }));
+    case 'proj_no_task':
+      return (
+        await query<{ id: string; code: string | null; name: string }>(
+          `SELECT id, code, name FROM okr_projects p
+            WHERE period_id=$1 AND NOT EXISTS (SELECT 1 FROM okr_initiatives i WHERE i.project_id=p.id)
+            ORDER BY code NULLS LAST, name LIMIT ${CAP}`,
+          [periodId],
+        )
+      ).map((p) => ({ code: p.code, title: p.name, href: `/projects/${p.id}` }));
+    default:
+      return [];
+  }
+}
+
+/** Chi tiết trace-back: mỗi lỗ hổng + danh sách mục đích danh (chỉ nhóm có count>0). */
+export async function integrityGroups(periodId: string): Promise<IntegrityGroup[]> {
+  const issues = await integrityIssues(periodId);
+  const groups = await Promise.all(
+    issues.map(async (iss) => ({ ...iss, items: await itemsFor(iss.key as keyof Counts, periodId) })),
+  );
+  return groups;
+}

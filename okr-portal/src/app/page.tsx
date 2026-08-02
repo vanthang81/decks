@@ -257,14 +257,20 @@ export default async function Dashboard() {
                 <ul className="intg-list">
                   {issues.map((it) => (
                     <li key={it.key}>
-                      <span className="intg-n">{it.count}</span>
-                      <span>
-                        <b>{it.label}</b>
-                        <span className="muted" style={{ display: 'block', fontSize: 12 }}>{it.hint}</span>
-                      </span>
+                      <Link href={`/integrity#${it.key}`} className="intg-row">
+                        <span className="intg-n">{it.count}</span>
+                        <span className="intg-row-txt">
+                          <b>{it.label}</b>
+                          <span className="muted" style={{ display: 'block', fontSize: 12 }}>{it.hint}</span>
+                        </span>
+                        <span className="intg-item-go" aria-hidden>→</span>
+                      </Link>
                     </li>
                   ))}
                 </ul>
+                <Link href="/integrity" className="intg-all">
+                  Xem chi tiết từng mục để bịt lỗ hổng →
+                </Link>
               </div>
             )}
 
