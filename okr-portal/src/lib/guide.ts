@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-02.38';
+export const GUIDE_VERSION = '2026-08-02.39';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -515,6 +515,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '02/08/2026 (Sửa tràn ngang trên mobile)',
+    items: [
+      'Chặn tràn ngang cấp trang (body overflow-x:clip) + cho chuỗi kỹ thuật dài trong Hướng dẫn tự xuống dòng → trang luôn vừa bề rộng máy, banner phủ đủ chiều ngang.',
+    ],
+  },
   {
     date: '02/08/2026 (Sơ đồ chiến lược BSC + Xuất Scorecard Excel)',
     items: [
