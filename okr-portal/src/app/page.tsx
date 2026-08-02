@@ -13,6 +13,7 @@ import {
 } from '@/lib/okr';
 import { periodInsights } from '@/lib/insights';
 import { integrityIssues } from '@/lib/integrity';
+import { reviewData } from '@/lib/review';
 import { unitIcon } from '@/lib/unit-icons';
 import { fmtNumber, progressColor } from '@/lib/format';
 import { Donut, BarList, Legend } from '@/components/charts';
@@ -20,6 +21,8 @@ import { Donut, BarList, Legend } from '@/components/charts';
 const PROG_C = { done: '#16a34a', ahead: '#2563eb', behind: '#f59e0b', notStarted: '#cbd5e1' };
 const CONF_C = { on_track: '#16a34a', at_risk: '#d97706', off_track: '#dc2626', none: '#cbd5e1' };
 const INIT_C = { todo: '#94a3b8', in_progress: '#2563eb', blocked: '#dc2626', done: '#16a34a', canceled: '#cbd5e1' };
+const TONE_CLS = { good: 'ins-good', watch: 'ins-watch', risk: 'ins-risk' } as const;
+const TONE_ICON = { good: '✅', watch: '⚠️', risk: '🔴' } as const;
 
 export const dynamic = 'force-dynamic';
 
@@ -38,6 +41,7 @@ export default async function Dashboard() {
 
   const ins = period ? await periodInsights(period.id) : null;
   const issues = period ? await integrityIssues(period.id).catch(() => []) : [];
+  const rv = period ? await reviewData(period).catch(() => null) : null;
   const companyProg = Math.round(avg(company.length ? company : divisions));
   // Nhịp độ: % thời gian kỳ đã trôi qua (so với tiến độ để biết đang dẫn/chậm).
   let elapsed = 0;
@@ -134,6 +138,26 @@ export default async function Dashboard() {
                 </div>
               </div>
             </div>
+
+            {rv && rv.insights.length > 0 && (
+              <div className="card">
+                <div className="flexbtw">
+                  <h3 style={{ marginTop: 0 }}>Nhận định &amp; Khuyến nghị<HelpTip k="insights" /></h3>
+                  <Link className="muted" href="/review" style={{ fontSize: 13 }}>Xem họp điều hành →</Link>
+                </div>
+                <div className="ins-list">
+                  {rv.insights.slice(0, 3).map((it, i) => (
+                    <div key={i} className={`ins ${TONE_CLS[it.tone]}`}>
+                      <div className="ins-ic" aria-hidden>{TONE_ICON[it.tone]}</div>
+                      <div className="ins-body">
+                        <div><span className="ins-tag">Quan sát</span> {it.observe}</div>
+                        <div><span className="ins-tag rec">Khuyến nghị</span> {it.recommend}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {ins && (
               <div className="grid three">
@@ -286,6 +310,28 @@ export default async function Dashboard() {
                         color: progressColor(u.progress),
                       }))}
                     />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {rv && rv.health.total > 0 && (
+              <div className="card">
+                <h3 style={{ marginTop: 0 }}>Sức khỏe OKR<HelpTip k="okr-health" /></h3>
+                <div className="hlth">
+                  <div className="hlth-score">
+                    <div className="n" style={{ color: progressColor(rv.health.avg) }}>{rv.health.avg}</div>
+                    <div className="l">điểm TB /100</div>
+                  </div>
+                  <div className="hlth-bands">
+                    <span className="badge green">{rv.health.good} tốt (≥80)</span>
+                    <span className="badge amber">{rv.health.ok} khá (60–79)</span>
+                    <span className="badge red">{rv.health.weak} yếu (&lt;60)</span>
+                  </div>
+                </div>
+                {rv.health.gaps.length > 0 && (
+                  <div className="hlth-gaps">
+                    Thiếu nhiều nhất: {rv.health.gaps.slice(0, 3).map((g) => `${g.label} (${g.missing})`).join(' · ')}
                   </div>
                 )}
               </div>

@@ -1125,3 +1125,37 @@ body.map-dragging { user-select: none; touch-action: none; cursor: grabbing; }
   .map-lane-body { grid-template-columns: 1fr; padding: 10px; }
   .map-lane-avg .map-mini { width: 44px; }
 }
+
+/* ===== Nhận định & Khuyến nghị (insights) ===== */
+.ins-list { display: flex; flex-direction: column; gap: 10px; }
+.ins { display: flex; gap: 10px; padding: 11px 13px; border-radius: 10px; border: 1px solid var(--line); border-left-width: 4px; background: #fff; }
+.ins-ic { font-size: 16px; line-height: 1.4; flex: 0 0 auto; }
+.ins-body { display: flex; flex-direction: column; gap: 3px; font-size: 13.5px; min-width: 0; }
+.ins-body > div { line-height: 1.45; }
+.ins-tag { display: inline-block; font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); background: var(--bg); border-radius: 5px; padding: 1px 6px; margin-right: 6px; }
+.ins-tag.rec { color: var(--primary); background: var(--primary-tint); }
+.ins.ins-good { border-left-color: #16a34a; }
+.ins.ins-watch { border-left-color: #d97706; }
+.ins.ins-risk { border-left-color: #dc2626; background: #fdf5f5; }
+
+/* ===== Trang Họp điều hành ===== */
+.rv-kpis { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; text-align: center; }
+.rv-kpi .n { font-size: 26px; font-weight: 800; line-height: 1.1; }
+.rv-kpi .l { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+.rv-health { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 13px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+@media (max-width: 760px) { .rv-kpis { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 420px) { .rv-kpis { grid-template-columns: repeat(2, 1fr); } }
+
+/* ===== Sức khỏe OKR (dashboard) ===== */
+.hlth { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.hlth-score { text-align: center; flex: 0 0 auto; }
+.hlth-score .n { font-size: 34px; font-weight: 800; line-height: 1; }
+.hlth-score .l { font-size: 11px; color: var(--muted); }
+.hlth-bands { display: flex; gap: 6px; flex-wrap: wrap; }
+.hlth-gaps { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+
+/* In sạch trang Họp điều hành */
+@media print {
+  .site-header, .site-footer, .backtop, .btn, .helptip { display: none !important; }
+  .card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+}

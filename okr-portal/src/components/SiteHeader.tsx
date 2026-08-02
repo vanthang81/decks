@@ -22,6 +22,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
   // Sắp xếp theo dòng chảy: Tổng quan → Chiến lược & Đo lường → Thực thi → Cá nhân → Trợ giúp.
   const links = [
     { href: '/', label: 'Bảng điều khiển', key: 'home', group: 'overview', show: true },
+    { href: '/review', label: 'Họp điều hành', key: 'review', group: 'overview', show: true },
     { href: '/map', label: 'Bản đồ', key: 'map', group: 'strategy', show: true },
     { href: '/objectives', label: 'OKR', key: 'okr', group: 'strategy', show: true },
     { href: '/kpi', label: 'KPI', key: 'kpi', group: 'strategy', show: true },

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-02.35';
+export const GUIDE_VERSION = '2026-08-02.36';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -195,6 +195,37 @@ export const FEATURES: Feature[] = [
       'KÉO–THẢ (chuột hoặc chạm) thẻ mục tiêu (nắm ở biểu tượng ⠿) sang làn viễn cảnh khác để gắn BSC ngay.',
       'Bấm ⚙ "Liên kết" trên thẻ để đặt Viễn cảnh BSC, chọn OKR cấp trên (cascade — tự chặn vòng lặp), và gắn KPI cho từng KR. Chỉ mục tiêu bạn có quyền sửa mới kéo/chỉnh được.',
       'Dùng bản đồ này để THIẾT LẬP và soát nhanh sự liền mạch chiến lược → thực thi trên toàn công ty.',
+    ],
+  },
+  {
+    key: 'review',
+    title: 'Họp điều hành (WBR/MBR)',
+    where: 'Menu "Họp điều hành"',
+    help: 'Trang tổng hợp trạng thái để họp: nhịp độ, Nhận định & Khuyến nghị, tiến độ Khối, KPI cảnh báo, OKR cần chú ý, việc quá hạn.',
+    detail: [
+      'Một trang duy nhất tổng hợp mọi thứ cần cho cuộc họp điều hành tuần/tháng: nhịp độ công ty vs thời gian, độ phủ check-in, số KPI cảnh báo & việc quá hạn.',
+      'Có panel "Nhận định & Khuyến nghị" tự sinh theo quy tắc, bảng tiến độ theo Khối, tiến độ theo Viễn cảnh BSC, danh sách KPI cần can thiệp, OKR tiến độ thấp và việc quá hạn.',
+      'Mở ra là họp được ngay; số liệu tự cập nhật theo dữ liệu hiện tại.',
+    ],
+  },
+  {
+    key: 'insights',
+    title: 'Nhận định & Khuyến nghị tự sinh',
+    where: 'Bảng điều khiển & Họp điều hành',
+    help: 'Hệ thống tự đọc số liệu và nêu Quan sát → Hàm ý → Khuyến nghị theo mức Ổn/Theo dõi/Rủi ro.',
+    detail: [
+      'Theo quy tắc, hệ thống tự phát hiện điểm đáng chú ý: nhịp độ nhanh/chậm, độ phủ check-in thấp, KPI vượt ngưỡng, điểm hở alignment, sức khỏe OKR yếu, việc quá hạn.',
+      'Mỗi nhận định trình bày 3 lớp: Quan sát (số liệu) → Hàm ý (ý nghĩa điều hành) → Khuyến nghị (việc nên làm), gắn màu theo mức độ.',
+    ],
+  },
+  {
+    key: 'okr-health',
+    title: 'Điểm sức khỏe OKR',
+    where: 'Bảng điều khiển → "Sức khỏe OKR"',
+    help: 'Chấm mỗi OKR theo 7 tiêu chí best-practice (chủ trì, KR, KR lagging, cascade, thực thi, check-in, gắn KPI).',
+    detail: [
+      'Mỗi OKR được chấm 0–100 theo 7 tiêu chí: có người chủ trì (20) · có KR (20) · có ≥1 KR đo kết quả lagging (10) · đã cascade cha/con (15) · có việc thực thi (15) · có check-in gần đây (10) · KR gắn KPI (10).',
+      'Bảng điều khiển hiện điểm trung bình + phân bố tốt/khá/yếu + hạng mục còn thiếu nhiều nhất → biết cần bổ sung gì để chuẩn hóa OKR.',
     ],
   },
   {
@@ -473,6 +504,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '02/08/2026 (Họp điều hành + Nhận định/Khuyến nghị + Sức khỏe OKR)',
+    items: [
+      'Trang mới "Họp điều hành" (WBR/MBR): tổng hợp nhịp độ, tiến độ Khối, viễn cảnh BSC, KPI cảnh báo, OKR cần chú ý, việc quá hạn — mở ra là họp được (in đẹp).',
+      'Panel "Nhận định & Khuyến nghị" tự sinh (Quan sát → Hàm ý → Khuyến nghị) trên Bảng điều khiển & Họp điều hành.',
+      '"Điểm sức khỏe OKR": chấm mỗi OKR theo 7 tiêu chí best-practice + hiện điểm TB/phân bố/hạng mục còn thiếu.',
+    ],
+  },
   {
     date: '02/08/2026 (Auto-fill Nhóm A: 6 KPI vận hành từ BigQuery)',
     items: [
