@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-02.44';
+export const GUIDE_VERSION = '2026-08-02.45';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -526,6 +526,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '02/08/2026 (Kéo–thả BSC + box apex bao trùm trên sơ đồ)',
+    items: [
+      'Sơ đồ chiến lược BSC nay KÉO–THẢ được: kéo tay nắm ⠿ để chuyển OKR sang tầng viễn cảnh khác (Tài chính/Khách hàng/Quy trình/Học hỏi).',
+      'Sơ đồ liên kết (flow) hiện OKR CHA khác kỳ (trụ cột chiến lược) làm node APEX bao trùm — vd "Thương hiệu vàng Quốc dân" (CTY-O11) đứng trên 5 OKR Công ty 2026 đã cascade lên nó. Cột bố trí "hybrid" để cha luôn nằm trái con dù cùng cấp.',
+    ],
+  },
   {
     date: '02/08/2026 (Tầm nhìn/Sứ mệnh mới + Lộ trình 2026–2030 + OKR "Thương hiệu vàng Quốc dân")',
     items: [

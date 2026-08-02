@@ -1324,9 +1324,14 @@ body.flow-panning, body.flow-panning * { cursor: grabbing !important; user-selec
 .smap-obj.lv-company { border-top-color: var(--primary); }
 .smap-obj.lv-division { border-top-color: #2563eb; }
 .smap-obj.lv-department { border-top-color: #0f766e; }
-.smap-obj-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
-.smap-obj-prog { font-weight: 700; font-size: 12px; font-variant-numeric: tabular-nums; }
-.smap-obj-ttl { font-size: 12.5px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+.smap-obj-top { display: flex; align-items: center; gap: 6px; }
+.smap-grip { cursor: grab; color: var(--muted); font-size: 13px; background: none; border: 0; padding: 0 2px; line-height: 1; }
+.smap-grip:active { cursor: grabbing; }
+.smap-obj-prog { font-weight: 700; font-size: 12px; font-variant-numeric: tabular-nums; margin-left: auto; }
+.smap-obj-ttl { font-size: 12.5px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; display: block; color: var(--ink); text-decoration: none; }
+.smap-obj-ttl:hover { color: var(--primary); text-decoration: none; }
+.smap-band.drop-hot { outline: 3px solid var(--accent); outline-offset: 2px; background: var(--gold-tint); border-radius: 12px; }
+.smap-obj.is-dragging { opacity: .4; }
 .smap-obj-unit { font-size: 11px; color: var(--muted); }
 .smap-obj-bar { display: block; height: 5px; border-radius: 4px; background: var(--line); overflow: hidden; margin-top: 2px; }
 .smap-obj-bar i { display: block; height: 100%; border-radius: 4px; }

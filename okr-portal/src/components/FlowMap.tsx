@@ -125,26 +125,28 @@ export default function FlowMap({
     for (const o of visible)
       if (!isRoot(o)) (vChildren.get(o.parent_id!) ?? vChildren.set(o.parent_id!, []).get(o.parent_id!)!).push(o);
     for (const arr of vChildren.values()) arr.sort((a, b) => (a.code ?? '').localeCompare(b.code ?? ''));
-    // Cột theo CẤP (Công ty→Khối→Phòng→Cá nhân); dồn trái theo cấp nhỏ nhất đang hiện (khi xem 1 nhánh).
+    // Cột = LỚN HƠN của (cấp tổ chức) và (cột cha + 1) → con LUÔN nằm phải cha (kể cả cùng cấp,
+    // vd apex "Thương hiệu vàng Quốc dân" bao trùm các OKR Công ty), nhưng node rời vẫn giữ cột theo cấp.
     const minLevel = visible.length ? Math.min(...visible.map(levelIdxOf)) : 0;
     const pos = new Map<string, Pt>();
     let cursor = 0;
-    const place = (o: Obj) => {
+    const place = (o: Obj, parentCol: number) => {
+      const col = Math.max(levelIdxOf(o) - minLevel, parentCol + 1);
       const kids = vChildren.get(o.id) ?? [];
       let y: number;
       if (kids.length === 0) {
         y = cursor;
         cursor += NODE_H + ROW_GAP;
       } else {
-        for (const k of kids) place(k);
+        for (const k of kids) place(k, col);
         y = (pos.get(kids[0].id)!.y + pos.get(kids[kids.length - 1].id)!.y) / 2;
       }
-      pos.set(o.id, { x: (levelIdxOf(o) - minLevel) * (NODE_W + COL_GAP), y });
+      pos.set(o.id, { x: col * (NODE_W + COL_GAP), y });
     };
     visible
       .filter(isRoot)
       .sort((a, b) => levelIdxOf(a) - levelIdxOf(b) || (a.code ?? '').localeCompare(b.code ?? ''))
-      .forEach(place);
+      .forEach((r) => place(r, -1));
     return pos;
   }, [visible, objById]);
 

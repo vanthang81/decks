@@ -8,7 +8,7 @@ import { requireUser } from '@/lib/current-user';
 import { getCurrentPeriod, listPeriods } from '@/lib/periods';
 import { listUnits } from '@/lib/org';
 import { loadAccess, canEditObjective } from '@/lib/access';
-import { listObjectivesByPeriod, listKrsWithKpiByPeriod } from '@/lib/okr';
+import { listObjectivesByPeriod, listKrsWithKpiByPeriod, listObjectivesByIds } from '@/lib/okr';
 import { listKpis } from '@/lib/kpis';
 
 export const dynamic = 'force-dynamic';
@@ -41,12 +41,21 @@ export default async function MapPage({ searchParams }: { searchParams: { v?: st
   ]);
   const kpis = kpisAll.filter((k) => k.is_active);
 
+  // Nạp thêm OKR CHA KHÁC KỲ (trụ cột chiến lược nhiều năm) mà OKR trong kỳ "liên kết lên"
+  // → hiển thị làm node APEX bao trùm trên sơ đồ flow (vd "Thương hiệu vàng Quốc dân").
+  const inSet = new Set(objectives.map((o) => o.id));
+  const missingParentIds = [
+    ...new Set(objectives.map((o) => o.parent_id).filter((p): p is string => !!p && !inSet.has(p))),
+  ];
+  const apex = await listObjectivesByIds(missingParentIds);
+  const allObjs = [...apex, ...objectives];
+
   // Tập OKR mà người dùng ĐƯỢC SỬA → chỉ những card này mới kéo–thả / chỉnh liên kết.
-  const manageableIds = objectives
+  const manageableIds = allObjs
     .filter((o) => canEditObjective(user, o, units, access))
     .map((o) => o.id);
 
-  const objData = objectives.map((o) => ({
+  const objData = allObjs.map((o) => ({
     id: o.id,
     code: o.code,
     title: o.title,
@@ -103,7 +112,7 @@ export default async function MapPage({ searchParams }: { searchParams: { v?: st
             <p className="subtitle">
               Sơ đồ chiến lược 4 tầng Balanced Scorecard theo quan hệ nhân-quả · kỳ <b>{period.name}</b>.
             </p>
-            <StrategyMap objectives={objData} />
+            <StrategyMap objectives={objData} manageableIds={manageableIds} />
           </>
         ) : (
           <>

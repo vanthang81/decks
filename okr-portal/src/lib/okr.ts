@@ -173,6 +173,12 @@ export async function getObjective(id: string): Promise<ObjectiveRow | null> {
   return queryOne<ObjectiveRow>(`${OBJ_SELECT} WHERE o.id=$1`, [id]);
 }
 
+// Lấy nhiều OKR theo id (dùng để nạp OKR CHA khác kỳ = trụ cột chiến lược, làm node apex trên bản đồ).
+export async function listObjectivesByIds(ids: string[]): Promise<ObjectiveRow[]> {
+  if (ids.length === 0) return [];
+  return query<ObjectiveRow>(`${OBJ_SELECT} WHERE o.id = ANY($1)`, [ids]);
+}
+
 export async function listChildObjectives(parentId: string): Promise<ObjectiveRow[]> {
   return query<ObjectiveRow>(`${OBJ_SELECT} WHERE o.parent_id=$1 ORDER BY o.sort, o.created_at`, [
     parentId,
