@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-02.42';
+export const GUIDE_VERSION = '2026-08-02.43';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -526,6 +526,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '02/08/2026 (Sơ đồ liên kết — layout cây gọn + bộ lọc)',
+    items: [
+      'Bố cục lại kiểu "tidy-tree": node cha canh giữa các con, cột theo cấp (Công ty→Khối→Phòng) → gọn & chuyên nghiệp kể cả khi nhiều OKR.',
+      'Thêm bộ lọc: chọn LỚP hiển thị (Công ty · +Khối · +Phòng · Tất cả), "Xem nhánh" để chỉ hiện 1 nhánh OKR, "Mở tất cả/Thu gọn tất cả" và nút ± gập/mở nhánh con trên từng node. Tự "vừa khung" khi đổi bộ lọc.',
+    ],
+  },
   {
     date: '02/08/2026 (Sơ đồ liên kết dạng flow-chart)',
     items: [

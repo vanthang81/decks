@@ -5,10 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { mapSetParentAction } from '@/app/map/actions';
 
-// ===== Sơ đồ liên kết OKR kiểu flow-chart (kéo–thả node + nối nhánh cascade) =====
-// Node = Objective, đường nối = quan hệ cha→con (alignment/cascade). Kéo nền để di chuyển,
-// lăn chuột/nút để zoom, kéo tay nắm node để đổi vị trí (nhớ ở localStorage), kéo chấm ● bên
-// phải node CHA thả vào node CON để nối (đặt cấp trên) — chỉ với OKR mình được sửa.
+// ===== Sơ đồ liên kết OKR kiểu flow-chart (tidy-tree + lọc + gập/mở layer) =====
 type Level = 'company' | 'division' | 'department' | 'individual';
 type Obj = {
   id: string;
@@ -25,6 +22,12 @@ type Obj = {
 const LEVEL_ORDER: Level[] = ['company', 'division', 'department', 'individual'];
 const LEVEL_LABEL: Record<Level, string> = { company: 'Công ty', division: 'Khối', department: 'Phòng ban', individual: 'Cá nhân' };
 const LEVEL_CLS: Record<Level, string> = { company: 'lv-company', division: 'lv-division', department: 'lv-department', individual: 'lv-individual' };
+const LAYER_OPTS = [
+  { idx: 0, label: 'Công ty' },
+  { idx: 1, label: '+ Khối' },
+  { idx: 2, label: '+ Phòng' },
+  { idx: 3, label: 'Tất cả' },
+];
 
 const NODE_W = 244;
 const NODE_H = 104;
@@ -40,26 +43,6 @@ function progColor(p: number): string {
 
 type Pt = { x: number; y: number };
 
-// Tự bố trí: cột theo cấp, trong cột xếp theo (thứ hạng cha, mã) để giảm chéo.
-function autoLayout(objs: Obj[]): Map<string, Pt> {
-  const levels = LEVEL_ORDER.filter((lv) => objs.some((o) => o.level === lv));
-  const pos = new Map<string, Pt>();
-  const rank = new Map<string, number>(); // thứ hạng hàng của mỗi node (để con bám theo cha)
-  levels.forEach((lv, colIdx) => {
-    const arr = objs.filter((o) => o.level === lv);
-    arr.sort((a, b) => {
-      const ra = a.parent_id != null ? rank.get(a.parent_id) ?? 9999 : 9999;
-      const rb = b.parent_id != null ? rank.get(b.parent_id) ?? 9999 : 9999;
-      return ra - rb || (a.code ?? '').localeCompare(b.code ?? '');
-    });
-    arr.forEach((o, rowIdx) => {
-      rank.set(o.id, rowIdx);
-      pos.set(o.id, { x: colIdx * (NODE_W + COL_GAP), y: rowIdx * (NODE_H + ROW_GAP) });
-    });
-  });
-  return pos;
-}
-
 export default function FlowMap({
   objectives,
   manageableIds,
@@ -72,52 +55,139 @@ export default function FlowMap({
   const router = useRouter();
   const manageable = useMemo(() => new Set(manageableIds), [manageableIds]);
   const objById = useMemo(() => new Map(objectives.map((o) => [o.id, o])), [objectives]);
-  const auto = useMemo(() => autoLayout(objectives), [objectives]);
 
-  const [pos, setPos] = useState<Map<string, Pt>>(() => new Map(auto));
-  const [view, setView] = useState({ tx: 40, ty: 24, k: 1 });
-  const [busy, setBusy] = useState(false);
-  const [connect, setConnect] = useState<{ fromId: string; x: number; y: number; overId: string | null } | null>(null);
-  const vpRef = useRef<HTMLDivElement | null>(null);
+  // Con theo parent_id (toàn bộ) + hàm hậu duệ.
+  const childrenAll = useMemo(() => {
+    const m = new Map<string, Obj[]>();
+    for (const o of objectives) if (o.parent_id) (m.get(o.parent_id) ?? m.set(o.parent_id, []).get(o.parent_id)!).push(o);
+    for (const arr of m.values()) arr.sort((a, b) => (a.code ?? '').localeCompare(b.code ?? ''));
+    return m;
+  }, [objectives]);
+  function descendants(id: string): string[] {
+    const out: string[] = [];
+    const stack = [...(childrenAll.get(id) ?? [])];
+    const seen = new Set<string>();
+    while (stack.length) {
+      const c = stack.pop()!;
+      if (seen.has(c.id)) continue;
+      seen.add(c.id);
+      out.push(c.id);
+      for (const cc of childrenAll.get(c.id) ?? []) stack.push(cc);
+    }
+    return out;
+  }
+  const levelIdxOf = (o: Obj) => LEVEL_ORDER.indexOf(o.level);
+
+  // ---------- Bộ lọc / gập ----------
+  const [maxLevel, setMaxLevel] = useState(3);
+  const [focusId, setFocusId] = useState<string>('');
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  // Danh sách nhánh để "Xem nhánh" (Công ty + Khối).
+  const branchOpts = useMemo(
+    () =>
+      objectives
+        .filter((o) => o.level === 'company' || o.level === 'division')
+        .sort((a, b) => (a.code ?? '').localeCompare(b.code ?? '')),
+    [objectives],
+  );
+
+  // Tập hiển thị = focus → theo lớp → bỏ node có tổ tiên đang gập.
+  const { visible, baseIds, hiddenCount } = useMemo(() => {
+    let base = objectives;
+    if (focusId && objById.has(focusId)) {
+      const keep = new Set<string>([focusId, ...descendants(focusId)]);
+      base = base.filter((o) => keep.has(o.id));
+    }
+    base = base.filter((o) => levelIdxOf(o) <= maxLevel);
+    const bIds = new Set(base.map((o) => o.id));
+    const hidden = (o: Obj) => {
+      let cur = o.parent_id;
+      while (cur && bIds.has(cur)) {
+        if (collapsed.has(cur)) return true;
+        cur = objById.get(cur)?.parent_id ?? null;
+      }
+      return false;
+    };
+    const vis = base.filter((o) => !hidden(o));
+    // số node bị ẩn do gập, theo từng node cha đang gập
+    const hc = new Map<string, number>();
+    for (const o of base) if (collapsed.has(o.id)) hc.set(o.id, descendants(o.id).filter((d) => bIds.has(d)).length);
+    return { visible: vis, baseIds: bIds, hiddenCount: hc };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [objectives, focusId, maxLevel, collapsed]);
+
+  // ---------- Tidy-tree layout (cột theo ĐỘ SÂU hiển thị, cha canh giữa con) ----------
+  const tidy = useMemo(() => {
+    const visSet = new Set(visible.map((o) => o.id));
+    const vChildren = new Map<string, Obj[]>();
+    const isRoot = (o: Obj) => !(o.parent_id && visSet.has(o.parent_id));
+    for (const o of visible)
+      if (!isRoot(o)) (vChildren.get(o.parent_id!) ?? vChildren.set(o.parent_id!, []).get(o.parent_id!)!).push(o);
+    for (const arr of vChildren.values()) arr.sort((a, b) => (a.code ?? '').localeCompare(b.code ?? ''));
+    // Cột theo CẤP (Công ty→Khối→Phòng→Cá nhân); dồn trái theo cấp nhỏ nhất đang hiện (khi xem 1 nhánh).
+    const minLevel = visible.length ? Math.min(...visible.map(levelIdxOf)) : 0;
+    const pos = new Map<string, Pt>();
+    let cursor = 0;
+    const place = (o: Obj) => {
+      const kids = vChildren.get(o.id) ?? [];
+      let y: number;
+      if (kids.length === 0) {
+        y = cursor;
+        cursor += NODE_H + ROW_GAP;
+      } else {
+        for (const k of kids) place(k);
+        y = (pos.get(kids[0].id)!.y + pos.get(kids[kids.length - 1].id)!.y) / 2;
+      }
+      pos.set(o.id, { x: (levelIdxOf(o) - minLevel) * (NODE_W + COL_GAP), y });
+    };
+    visible
+      .filter(isRoot)
+      .sort((a, b) => levelIdxOf(a) - levelIdxOf(b) || (a.code ?? '').localeCompare(b.code ?? ''))
+      .forEach(place);
+    return pos;
+  }, [visible, objById]);
+
+  // Vị trí người dùng tự kéo (đè lên tidy). Lưu localStorage.
+  const [override, setOverride] = useState<Map<string, Pt>>(new Map());
   const LS_KEY = `okrFlowPos_${periodId}`;
-
-  // Nạp vị trí đã lưu (localStorage) chồng lên auto-layout.
   useEffect(() => {
     try {
       const raw = localStorage.getItem(LS_KEY);
       if (raw) {
-        const saved = JSON.parse(raw) as Record<string, [number, number]>;
-        setPos((prev) => {
-          const m = new Map(prev);
-          for (const o of objectives) if (saved[o.id]) m.set(o.id, { x: saved[o.id][0], y: saved[o.id][1] });
-          return m;
-        });
+        const s = JSON.parse(raw) as Record<string, [number, number]>;
+        const m = new Map<string, Pt>();
+        for (const id in s) m.set(id, { x: s[id][0], y: s[id][1] });
+        setOverride(m);
       }
     } catch {
-      /* bỏ qua localStorage lỗi */
+      /* bỏ qua */
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [LS_KEY]);
-
-  function savePos(m: Map<string, Pt>) {
+  function saveOverride(m: Map<string, Pt>) {
     try {
-      const obj: Record<string, [number, number]> = {};
-      m.forEach((p, id) => (obj[id] = [Math.round(p.x), Math.round(p.y)]));
-      localStorage.setItem(LS_KEY, JSON.stringify(obj));
+      const o: Record<string, [number, number]> = {};
+      m.forEach((p, id) => (o[id] = [Math.round(p.x), Math.round(p.y)]));
+      localStorage.setItem(LS_KEY, JSON.stringify(o));
     } catch {
       /* bỏ qua */
     }
   }
+  const posOf = (id: string): Pt => override.get(id) ?? tidy.get(id) ?? { x: 0, y: 0 };
 
-  // Chuyển toạ độ màn hình → toạ độ "thế giới" (trước transform).
+  // ---------- View (pan/zoom) ----------
+  const [view, setView] = useState({ tx: 40, ty: 24, k: 1 });
+  const [busy, setBusy] = useState(false);
+  const [connect, setConnect] = useState<{ fromId: string; x: number; y: number; overId: string | null } | null>(null);
+  const vpRef = useRef<HTMLDivElement | null>(null);
+
   function toWorld(clientX: number, clientY: number): Pt {
     const r = vpRef.current?.getBoundingClientRect();
-    const left = r?.left ?? 0;
-    const top = r?.top ?? 0;
-    return { x: (clientX - left - view.tx) / view.k, y: (clientY - top - view.ty) / view.k };
+    return { x: (clientX - (r?.left ?? 0) - view.tx) / view.k, y: (clientY - (r?.top ?? 0) - view.ty) / view.k };
   }
 
-  // ---------- PAN nền ----------
+  // PAN
   const panRef = useRef<{ sx: number; sy: number; tx: number; ty: number } | null>(null);
   const onPanMove = (e: PointerEvent) => {
     const p = panRef.current;
@@ -131,7 +201,6 @@ export default function FlowMap({
     document.body.classList.remove('flow-panning');
   };
   function beginPan(e: React.PointerEvent) {
-    // chỉ pan khi bấm nền (không phải node/handle/link)
     const t = e.target as HTMLElement;
     if (t.closest('.flow-node') || t.closest('.flow-handle') || t.closest('a,button')) return;
     panRef.current = { sx: e.clientX, sy: e.clientY, tx: view.tx, ty: view.ty };
@@ -140,55 +209,49 @@ export default function FlowMap({
     document.body.classList.add('flow-panning');
   }
 
-  // ---------- ZOOM (lăn chuột quanh con trỏ) ----------
+  // ZOOM
   function onWheel(e: React.WheelEvent) {
     e.preventDefault();
     const r = vpRef.current?.getBoundingClientRect();
     const cx = e.clientX - (r?.left ?? 0);
     const cy = e.clientY - (r?.top ?? 0);
     setView((v) => {
-      const k2 = Math.min(2, Math.max(0.35, v.k * (e.deltaY < 0 ? 1.1 : 1 / 1.1)));
-      // giữ điểm dưới con trỏ cố định
+      const k2 = Math.min(2, Math.max(0.3, v.k * (e.deltaY < 0 ? 1.1 : 1 / 1.1)));
       const wx = (cx - v.tx) / v.k;
       const wy = (cy - v.ty) / v.k;
       return { k: k2, tx: cx - wx * k2, ty: cy - wy * k2 };
     });
   }
   function zoomBy(f: number) {
-    setView((v) => ({ ...v, k: Math.min(2, Math.max(0.35, v.k * f)) }));
+    setView((v) => ({ ...v, k: Math.min(2, Math.max(0.3, v.k * f)) }));
   }
   function fit() {
-    if (pos.size === 0) return;
+    if (visible.length === 0) return;
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    pos.forEach((p) => {
+    for (const o of visible) {
+      const p = posOf(o.id);
       minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
       maxX = Math.max(maxX, p.x + NODE_W); maxY = Math.max(maxY, p.y + NODE_H);
-    });
+    }
     const r = vpRef.current?.getBoundingClientRect();
     const W = r?.width ?? 900, H = r?.height ?? 560;
     const k = Math.min(1, Math.min((W - 60) / (maxX - minX || 1), (H - 60) / (maxY - minY || 1)));
-    setView({ k, tx: (W - (maxX - minX) * k) / 2 - minX * k, ty: 24 - minY * k });
+    setView({ k, tx: (W - (maxX - minX) * k) / 2 - minX * k, ty: 26 - minY * k });
   }
+  // Tự vừa khung mỗi khi tập hiển thị đổi (đổi lớp/nhánh/gập).
   useEffect(() => {
     const t = setTimeout(fit, 60);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [maxLevel, focusId, collapsed]);
 
-  function resetLayout() {
-    const m = new Map(auto);
-    setPos(m);
-    try { localStorage.removeItem(LS_KEY); } catch { /* bỏ qua */ }
-    setTimeout(fit, 20);
-  }
-
-  // ---------- Kéo NODE đổi vị trí ----------
+  // Kéo NODE
   const ndRef = useRef<{ id: string; ox: number; oy: number } | null>(null);
   const onNodeMove = (e: PointerEvent) => {
     const nd = ndRef.current;
     if (!nd) return;
     const w = toWorld(e.clientX, e.clientY);
-    setPos((prev) => {
+    setOverride((prev) => {
       const m = new Map(prev);
       m.set(nd.id, { x: w.x - nd.ox, y: w.y - nd.oy });
       return m;
@@ -199,28 +262,25 @@ export default function FlowMap({
     window.removeEventListener('pointermove', onNodeMove);
     window.removeEventListener('pointerup', onNodeEnd);
     document.body.classList.remove('flow-panning');
-    setPos((m) => { savePos(m); return m; });
+    setOverride((m) => { saveOverride(m); return m; });
   };
   function beginNodeDrag(e: React.PointerEvent, id: string) {
     e.stopPropagation();
     const w = toWorld(e.clientX, e.clientY);
-    const p = pos.get(id) ?? { x: 0, y: 0 };
+    const p = posOf(id);
     ndRef.current = { id, ox: w.x - p.x, oy: w.y - p.y };
     window.addEventListener('pointermove', onNodeMove);
     window.addEventListener('pointerup', onNodeEnd);
     document.body.classList.add('flow-panning');
   }
 
-  // ---------- Kéo NỐI (drag ● từ node cha thả vào node con) ----------
+  // Kéo NỐI
   function nodeAt(x: number, y: number): string | null {
     const el = document.elementFromPoint(x, y) as HTMLElement | null;
     return (el?.closest?.('.flow-node') as HTMLElement | null)?.getAttribute('data-nodeid') ?? null;
   }
-  // Node hợp lệ để làm CON của fromId: khác chính nó + không phải tổ tiên của fromId (tránh vòng).
   function isValidChild(fromId: string, childId: string): boolean {
-    if (childId === fromId) return false;
-    if (!manageable.has(childId)) return false;
-    // tổ tiên của fromId
+    if (childId === fromId || !manageable.has(childId)) return false;
     let cur: string | null = fromId;
     const seen = new Set<string>();
     while (cur) {
@@ -268,8 +328,6 @@ export default function FlowMap({
       setBusy(false);
     }
   }
-
-  // Gỡ liên kết (bấm vào đường nối) → đặt con về gốc.
   function detach(childId: string) {
     if (!manageable.has(childId)) {
       alert('Bạn không có quyền sửa liên kết của OKR này.');
@@ -291,45 +349,94 @@ export default function FlowMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Kích thước SVG = bao trọn nội dung.
-  const bbox = useMemo(() => {
-    let maxX = 600, maxY = 400;
-    pos.forEach((p) => { maxX = Math.max(maxX, p.x + NODE_W); maxY = Math.max(maxY, p.y + NODE_H); });
-    return { w: maxX + 200, h: maxY + 200 };
-  }, [pos]);
+  // Gập/mở
+  function toggleCollapse(id: string) {
+    setCollapsed((prev) => {
+      const m = new Set(prev);
+      if (m.has(id)) m.delete(id);
+      else m.add(id);
+      return m;
+    });
+  }
+  function collapseAll() {
+    setCollapsed(new Set(objectives.filter((o) => (childrenAll.get(o.id)?.length ?? 0) > 0).map((o) => o.id)));
+  }
+  function expandAll() {
+    setCollapsed(new Set());
+  }
+  function autoArrange() {
+    setOverride(new Map());
+    try { localStorage.removeItem(LS_KEY); } catch { /* bỏ qua */ }
+    setTimeout(fit, 30);
+  }
 
-  // Đường nối cha→con (bezier ngang).
+  // SVG bao trọn
+  const bbox = useMemo(() => {
+    let maxX = 400, maxY = 300;
+    for (const o of visible) {
+      const p = posOf(o.id);
+      maxX = Math.max(maxX, p.x + NODE_W);
+      maxY = Math.max(maxY, p.y + NODE_H);
+    }
+    return { w: maxX + 200, h: maxY + 200 };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, tidy, override]);
+
+  const visSet = useMemo(() => new Set(visible.map((o) => o.id)), [visible]);
   const edges = useMemo(() => {
-    const list: { id: string; d: string; color: string; childId: string; mid: Pt }[] = [];
-    for (const o of objectives) {
-      if (!o.parent_id) continue;
-      const cp = pos.get(o.parent_id);
-      const kp = pos.get(o.id);
-      if (!cp || !kp) continue;
-      const x1 = cp.x + NODE_W, y1 = cp.y + NODE_H / 2;
-      const x2 = kp.x, y2 = kp.y + NODE_H / 2;
+    const list: { id: string; d: string; color: string }[] = [];
+    for (const o of visible) {
+      if (!o.parent_id || !visSet.has(o.parent_id)) continue;
+      const cp = posOf(o.parent_id);
+      const kp = posOf(o.id);
+      const x1 = cp.x + NODE_W, y1 = cp.y + NODE_H / 2, x2 = kp.x, y2 = kp.y + NODE_H / 2;
       const dx = Math.max(40, Math.abs(x2 - x1) * 0.5);
-      list.push({
-        id: o.id,
-        childId: o.id,
-        d: `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`,
-        color: progColor(o.progress),
-        mid: { x: (x1 + x2) / 2, y: (y1 + y2) / 2 },
-      });
+      list.push({ id: o.id, d: `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`, color: progColor(o.progress) });
     }
     return list;
-  }, [objectives, pos]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, tidy, override]);
 
-  const connFrom = connect ? pos.get(connect.fromId) : null;
+  const connFrom = connect ? posOf(connect.fromId) : null;
+  const total = objectives.length;
 
   return (
     <>
+      <div className="flow-filters">
+        <div className="flow-fl-grp">
+          <span className="flow-fl-lbl">Lớp:</span>
+          <div className="flow-seg">
+            {LAYER_OPTS.map((l) => (
+              <button key={l.idx} type="button" className={maxLevel === l.idx ? 'on' : ''} onClick={() => setMaxLevel(l.idx)}>
+                {l.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flow-fl-grp">
+          <span className="flow-fl-lbl">Xem nhánh:</span>
+          <select value={focusId} onChange={(e) => setFocusId(e.target.value)}>
+            <option value="">Tất cả ({total})</option>
+            {branchOpts.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.code ? o.code + ' · ' : ''}{o.title.length > 40 ? o.title.slice(0, 40) + '…' : o.title}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flow-fl-grp">
+          <button type="button" className="btn ghost sm" onClick={expandAll}>⊕ Mở tất cả</button>
+          <button type="button" className="btn ghost sm" onClick={collapseAll}>⊖ Thu gọn tất cả</button>
+        </div>
+      </div>
+
       <div className="flow-toolbar">
         <span className="muted flow-hint">
-          Kéo <b>nền</b> để di chuyển · lăn chuột để zoom · kéo <b>⠿</b> để dời node · kéo chấm <b className="flow-dot-lbl">●</b> từ node cha thả vào node con để <b>nối cascade</b> · bấm đường nối để gỡ.
+          Kéo <b>nền</b> để di chuyển · lăn chuột để zoom · kéo <b>⠿</b> để dời node · kéo chấm <b className="flow-dot-lbl">●</b> từ node cha thả vào node con để <b>nối cascade</b> · <b>±</b> gập/mở nhánh · bấm đường nối để gỡ.
         </span>
         <div className="flow-tools">
-          <button type="button" className="btn ghost sm" onClick={resetLayout} title="Tự sắp xếp lại">↺ Tự sắp xếp</button>
+          <span className="muted" style={{ fontSize: 12 }}>Hiện {visible.length}/{total}</span>
+          <button type="button" className="btn ghost sm" onClick={autoArrange} title="Tự sắp xếp lại">↺ Tự sắp xếp</button>
           <button type="button" className="btn ghost sm" onClick={() => zoomBy(1 / 1.15)} aria-label="Thu nhỏ">−</button>
           <span className="flow-zoom">{Math.round(view.k * 100)}%</span>
           <button type="button" className="btn ghost sm" onClick={() => zoomBy(1.15)} aria-label="Phóng to">＋</button>
@@ -337,12 +444,7 @@ export default function FlowMap({
         </div>
       </div>
 
-      <div
-        ref={vpRef}
-        className="flow-vp no-swipe"
-        onPointerDown={beginPan}
-        onWheel={onWheel}
-      >
+      <div ref={vpRef} className="flow-vp no-swipe" onPointerDown={beginPan} onWheel={onWheel}>
         <div className="flow-layer" style={{ transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.k})` }}>
           <svg className="flow-svg" width={bbox.w} height={bbox.h} style={{ overflow: 'visible' }}>
             <defs>
@@ -351,28 +453,20 @@ export default function FlowMap({
               </marker>
             </defs>
             {edges.map((e) => (
-              <path
-                key={e.id}
-                className="flow-edge"
-                d={e.d}
-                stroke={e.color}
-                markerEnd="url(#flow-arrow)"
-                onClick={() => detach(e.childId)}
-              />
+              <path key={e.id} className="flow-edge" d={e.d} stroke={e.color} markerEnd="url(#flow-arrow)" onClick={() => detach(e.id)} />
             ))}
             {connect && connFrom && (
-              <path
-                className="flow-edge tmp"
-                d={`M ${connFrom.x + NODE_W} ${connFrom.y + NODE_H / 2} L ${connect.x} ${connect.y}`}
-              />
+              <path className="flow-edge tmp" d={`M ${connFrom.x + NODE_W} ${connFrom.y + NODE_H / 2} L ${connect.x} ${connect.y}`} />
             )}
           </svg>
 
-          {objectives.map((o) => {
-            const p = pos.get(o.id);
-            if (!p) return null;
+          {visible.map((o) => {
+            const p = posOf(o.id);
             const canEdit = manageable.has(o.id);
             const isTarget = connect?.overId === o.id;
+            const hasKids = (childrenAll.get(o.id)?.length ?? 0) > 0;
+            const isCollapsed = collapsed.has(o.id);
+            const hid = hiddenCount.get(o.id) ?? 0;
             return (
               <div
                 key={o.id}
@@ -384,6 +478,17 @@ export default function FlowMap({
                   <span className="flow-grip" title="Kéo để dời node">⠿</span>
                   <span className={`lv-badge ${LEVEL_CLS[o.level]}`}>{LEVEL_LABEL[o.level]}</span>
                   {o.code && <span className="okr-code">{o.code}</span>}
+                  {hasKids && (
+                    <button
+                      type="button"
+                      className="flow-collapse"
+                      title={isCollapsed ? 'Mở nhánh con' : 'Thu gọn nhánh con'}
+                      onClick={(e) => { e.stopPropagation(); toggleCollapse(o.id); }}
+                      onPointerDown={(e) => e.stopPropagation()}
+                    >
+                      {isCollapsed ? `+${hid || ''}` : '–'}
+                    </button>
+                  )}
                 </div>
                 <div className="flow-node-ttl">
                   <Link href={`/objectives/${o.id}`}>{o.title}</Link>
@@ -409,6 +514,7 @@ export default function FlowMap({
             );
           })}
         </div>
+        {visible.length === 0 && <div className="flow-empty-c">Không có OKR nào khớp bộ lọc.</div>}
         {busy && <div className="flow-busy">Đang lưu…</div>}
       </div>
     </>
