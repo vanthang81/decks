@@ -16,6 +16,7 @@
 
 * { box-sizing: border-box; }
 html, body { padding: 0; margin: 0; }
+html { overflow-x: clip; } /* root guard: layout viewport không rộng hơn màn hình (kể cả khi zoom) */
 body {
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color: var(--ink);
@@ -279,7 +280,7 @@ table.t th.sortable.active { color: var(--primary); }
 .unit-ic-sm { font-size: 15px; margin-right: 4px; vertical-align: middle; line-height: 1; }
 
 /* ===== Trang Phân quyền (Nhóm quyền × Năng lực) ===== */
-.grp-legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.grp-legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 10px; }
 .grp-chip { display: flex; gap: 9px; align-items: flex-start; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
 .grp-ic { font-size: 20px; line-height: 1; flex: 0 0 auto; }
 .perm-matrix { width: 100%; border-collapse: collapse; min-width: 620px; }
@@ -799,7 +800,7 @@ details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 
 }
 
 /* Ảnh chụp hệ thống */
-.snap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; }
+.snap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 118px), 1fr)); gap: 10px; }
 .snap-cell { background: var(--primary-tint); border-radius: 12px; padding: 13px 15px; }
 .snap-cell .n { font-size: 22px; font-weight: 800; color: var(--primary); line-height: 1.1; }
 .snap-cell .l { font-size: 12px; color: var(--muted); margin-top: 3px; }
@@ -808,7 +809,7 @@ details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 
 .snap-rows .r b { color: var(--ink); min-width: 130px; }
 
 /* Lưới tính năng */
-.feat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.feat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; }
 .guide .feat {
   border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 0; background: var(--card);
   transition: box-shadow .12s ease, border-color .12s ease;
@@ -1059,7 +1060,7 @@ details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 
 .map-mini i { display: block; height: 100%; border-radius: 4px; }
 .map-lane-body {
   padding: 12px; display: grid; gap: 12px;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
 }
 .map-empty { color: var(--muted); font-size: 12.5px; padding: 8px 4px; grid-column: 1 / -1; font-style: italic; }
 
@@ -1188,7 +1189,7 @@ body.map-dragging { user-select: none; touch-action: none; cursor: grabbing; }
 .smap-psub { font-size: 11.5px; color: var(--muted); line-height: 1.35; }
 .smap-avg { display: flex; align-items: center; gap: 8px; margin-top: 5px; font-size: 12px; }
 .smap-avg .map-mini { width: 80px; }
-.smap-objs { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 10px; }
+.smap-objs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 185px), 1fr)); gap: 10px; }
 .smap-empty { color: var(--muted); font-style: italic; font-size: 12.5px; align-self: center; }
 .smap-obj {
   display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--line); border-top: 3px solid var(--line);
