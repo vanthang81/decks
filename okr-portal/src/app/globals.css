@@ -1362,3 +1362,26 @@ body.flow-panning, body.flow-panning * { cursor: grabbing !important; user-selec
 .strat-form .i { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; font-family: inherit; }
 .strat-form textarea.i { resize: vertical; line-height: 1.5; }
 @media (max-width: 640px) { .strat-bsc { grid-template-columns: 1fr 1fr; } }
+
+/* Lộ trình chiến lược theo năm */
+.road { display: flex; flex-direction: column; gap: 0; margin-top: 6px; }
+.road-step { display: flex; gap: 14px; align-items: stretch; position: relative; padding: 4px 0; }
+.road-year {
+  flex: 0 0 66px; display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 15px; color: var(--primary);
+  background: var(--primary-tint); border-radius: 10px; border: 1px solid var(--line);
+  position: relative;
+}
+/* Đường nối dọc giữa các mốc */
+.road-step:not(:last-child) .road-year::after {
+  content: ''; position: absolute; left: 50%; top: 100%; width: 2px; height: 100%;
+  background: linear-gradient(var(--accent, #C8A951), transparent); transform: translateX(-50%);
+}
+.road-body { flex: 1 1 auto; min-width: 0; padding: 8px 0; }
+.road-market { font-weight: 700; font-size: 14.5px; color: var(--ink); }
+.road-metrics { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 5px; }
+.road-m { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+@media (max-width: 640px) {
+  .road-year { flex-basis: 54px; font-size: 14px; }
+  .road-m { white-space: normal; }
+}

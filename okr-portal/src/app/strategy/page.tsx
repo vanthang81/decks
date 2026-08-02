@@ -73,6 +73,31 @@ export default async function StrategyPage() {
           </div>
         )}
 
+        {/* Lộ trình chiến lược theo năm (2026–2030) */}
+        {(strat.roadmap ?? []).length > 0 && (
+          <div className="card">
+            <h3 style={{ marginTop: 0 }}>Lộ trình chiến lược {strat.horizon || '2026–2030'}</h3>
+            <p className="muted" style={{ marginTop: 4, fontSize: 13 }}>
+              Cột mốc theo năm về vị thế thương hiệu · khách hàng · vốn hoá · mạng lưới (số cửa hàng theo Financial Model).
+            </p>
+            <div className="road">
+              {(strat.roadmap ?? []).map((r) => (
+                <div key={r.year} className="road-step">
+                  <div className="road-year">{r.year}</div>
+                  <div className="road-body">
+                    <div className="road-market">{r.market}</div>
+                    <div className="road-metrics">
+                      <span className="road-m">👥 {r.customers}</span>
+                      <span className="road-m">💰 Vốn hoá {r.capitalization}</span>
+                      <span className="road-m">🏬 {r.stores}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Trụ cột chiến lược = OKR multiyear công ty */}
         <div className="card">
           <div className="flexbtw">

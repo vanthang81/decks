@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-02.43';
+export const GUIDE_VERSION = '2026-08-02.44';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -526,6 +526,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '02/08/2026 (Tầm nhìn/Sứ mệnh mới + Lộ trình 2026–2030 + OKR "Thương hiệu vàng Quốc dân")',
+    items: [
+      'Cập nhật Tầm nhìn ("Thương hiệu vàng Quốc dân" — doanh thu lớn nhất VN, dẫn dắt vàng 24K) và Sứ mệnh theo bộ nhận diện BTMH.',
+      'Trang Chiến lược thêm "Lộ trình chiến lược 2026–2030": cột mốc từng năm (vị thế · khách hàng · vốn hoá · số cửa hàng — số CH lấy theo Financial Model v52.1: 80·159·208·241·261).',
+      'Thêm Objective cấp Công ty đến 2030 "Thương hiệu vàng Quốc dân" (CTY-O11) + 4 KR: khách hàng 6,5tr · vốn hoá ~2,2 tỷ USD · Top 1 thị phần 24K · công nhận thương hiệu quốc dân.',
+    ],
+  },
   {
     date: '02/08/2026 (Sơ đồ liên kết — layout cây gọn + bộ lọc)',
     items: [

@@ -8,16 +8,26 @@ import type { BscPerspective } from './okr';
 
 export const STRATEGY_KEY = 'company_strategy';
 
+// Cột mốc chiến lược theo NĂM (lộ trình 2026–2030). Số cửa hàng lấy theo FM Project Imperial v52.1.
+export type RoadmapYear = {
+  year: string;
+  market: string; // vị thế thị trường / thương hiệu
+  customers: string; // quy mô khách hàng
+  capitalization: string; // vốn hoá mục tiêu
+  stores: string; // mạng lưới cửa hàng (theo FM)
+};
+
 export type CompanyStrategy = {
   vision: string;
   mission: string;
   ambition: string; // khát vọng / định vị chiến lược
   values: string[]; // giá trị cốt lõi
   horizon: string; // vd "2026–2030"
+  roadmap?: RoadmapYear[]; // lộ trình theo năm (read-only, seed từ DB)
 };
 
 export const EMPTY_STRATEGY: CompanyStrategy = {
-  vision: '', mission: '', ambition: '', values: [], horizon: '',
+  vision: '', mission: '', ambition: '', values: [], horizon: '', roadmap: [],
 };
 
 export async function getCompanyStrategy(): Promise<CompanyStrategy> {
@@ -28,16 +38,20 @@ export async function getCompanyStrategy(): Promise<CompanyStrategy> {
     ambition: s.ambition ?? '',
     values: Array.isArray(s.values) ? s.values : [],
     horizon: s.horizon ?? '',
+    roadmap: Array.isArray(s.roadmap) ? (s.roadmap as RoadmapYear[]) : [],
   };
 }
 
+// Lưu 5 trường văn bản; GIỮ NGUYÊN roadmap (biên tập qua seed DB, form không đụng tới).
 export async function setCompanyStrategy(input: CompanyStrategy): Promise<void> {
+  const cur = await getSetting<Partial<CompanyStrategy>>(STRATEGY_KEY, {});
   await setSetting(STRATEGY_KEY, {
     vision: input.vision.trim(),
     mission: input.mission.trim(),
     ambition: input.ambition.trim(),
     values: input.values.map((v) => v.trim()).filter(Boolean),
     horizon: input.horizon.trim(),
+    roadmap: Array.isArray(cur.roadmap) ? cur.roadmap : [],
   });
 }
 
