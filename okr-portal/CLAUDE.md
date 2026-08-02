@@ -88,6 +88,15 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   Middleware ĐÃ loại `/api` (route tự gác). Nút "Đồng bộ ngay" ở `/admin`.
 - **Cron n8n "OKR KPI Sync — cron đồng bộ KPI BigQuery" (id `xOxOrwj80MPNSJqx`, ACTIVE, `0 7-22 * * *`
   giờ VN)**: SSH VPS đọc SYNC_KEY từ .env → `curl POST 127.0.0.1:8640/api/kpi/sync`. Key không rời VPS.
+- **Auto-fill Scorecard (Thư viện KPI)** — `kpi.ts` `KPI_ACTUAL_SQL` (map MÃ KPI → SQL BigQuery) +
+  `syncKpiScorecardActuals()` điền **chỉ số THỰC HIỆN** cấp **Công ty**, kỳ hiện tại (KHÔNG đụng target).
+  Đã nối: scorecard T1-01 (gross_profit_vnd) · T1-03 (gold_weight_chi); **Nhóm A vận hành (db/260, weight 0,
+  source=bigquery)**: OPS-01 Doanh thu (line_income_vnd) · OPS-02 Số hóa đơn (COUNT DISTINCT bill_id) ·
+  OPS-03/04 Mua vào chỉ/tiền (`v_flatten_buyback` assessed_weight_chi/net_buyback_amount_vnd, scope
+  `company_code NOT IN ('SX','BN','HD')`) · OPS-05/06 Tồn kho gt/tl (`v_so_du_ton_kho`, snapshot ngày mới
+  nhất ≤ hôm nay, scope `nguon NOT IN ('Bắc Ninh','Sản xuất','Hải Dương')`). Thêm KPI auto mới ⇒ INSERT
+  vào db (source=bigquery) + thêm entry `KPI_ACTUAL_SQL[code]`. Best-effort: 1 KPI lỗi không chặn KPI khác.
+  Còn LẠI (Nhóm B — GMROI/DIO/biên/chỉ/contribution margin…) cần BI chốt công thức trước khi nối.
 
 ## Nâng cấp best-practice (31/07 batch 2) — #1/#2/#5/#4
 - `db/040`: cột `okr_objectives.okr_type` (committed/aspirational/learning), `okr_key_results.indicator`
