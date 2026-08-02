@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-02.45';
+export const GUIDE_VERSION = '2026-08-02.46';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -526,6 +526,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '02/08/2026 (Tinh chỉnh mũi tên sơ đồ flow)',
+    items: [
+      'Sửa đầu mũi tên bị lệch: cố định chiều cao node (120px) để mũi tên khớp đúng TÂM cạnh trái node; màu mũi tên khớp màu đường nối.',
+    ],
+  },
   {
     date: '02/08/2026 (Kéo–thả BSC + box apex bao trùm trên sơ đồ)',
     items: [

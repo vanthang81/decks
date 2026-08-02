@@ -30,7 +30,7 @@ const LAYER_OPTS = [
 ];
 
 const NODE_W = 244;
-const NODE_H = 104;
+const NODE_H = 120;
 const COL_GAP = 96;
 const ROW_GAP = 26;
 
@@ -450,8 +450,9 @@ export default function FlowMap({
         <div className="flow-layer" style={{ transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.k})` }}>
           <svg className="flow-svg" width={bbox.w} height={bbox.h} style={{ overflow: 'visible' }}>
             <defs>
-              <marker id="flow-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
-                <path d="M0,0 L8,3 L0,6 Z" fill="#94a3b8" />
+              {/* userSpaceOnUse = cỡ mũi tên cố định (không phồng theo độ dày nét); fill theo màu nét (context-stroke) → khớp màu đường + tip đúng cạnh node */}
+              <marker id="flow-arrow" markerWidth="11" markerHeight="11" refX="9.5" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+                <path d="M1,1 L9.5,5 L1,9 Z" fill="context-stroke" />
               </marker>
             </defs>
             {edges.map((e) => (

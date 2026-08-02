@@ -1270,6 +1270,7 @@ body.flow-panning, body.flow-panning * { cursor: grabbing !important; user-selec
 .flow-node {
   position: absolute; box-sizing: border-box; background: #fff; border: 1px solid var(--line);
   border-left: 4px solid #cbd5e1; border-radius: 12px; padding: 8px 10px 10px; box-shadow: 0 3px 10px rgba(0,0,0,.06);
+  height: 120px; overflow: hidden; /* CỐ ĐỊNH chiều cao = NODE_H → đầu mũi tên khớp đúng tâm cạnh node */
 }
 .flow-node.lv-company { border-left-color: var(--primary); }
 .flow-node.lv-division { border-left-color: #2563eb; }
