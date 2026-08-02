@@ -3,6 +3,7 @@ import SiteHeader from '@/components/SiteHeader';
 import HelpTip from '@/components/HelpTip';
 import AlignmentMap from '@/components/AlignmentMap';
 import StrategyMap from '@/components/StrategyMap';
+import FlowMap from '@/components/FlowMap';
 import { requireUser } from '@/lib/current-user';
 import { getCurrentPeriod, listPeriods } from '@/lib/periods';
 import { listUnits } from '@/lib/org';
@@ -15,7 +16,7 @@ export const dynamic = 'force-dynamic';
 export default async function MapPage({ searchParams }: { searchParams: { v?: string } }) {
   const user = await requireUser();
   const period = (await getCurrentPeriod()) ?? (await listPeriods())[0] ?? null;
-  const view = searchParams.v === 'strategy' ? 'strategy' : 'align';
+  const view = searchParams.v === 'strategy' ? 'strategy' : searchParams.v === 'flow' ? 'flow' : 'align';
 
   if (!period) {
     return (
@@ -85,10 +86,19 @@ export default async function MapPage({ searchParams }: { searchParams: { v?: st
           Bản đồ chiến lược<HelpTip k={view === 'strategy' ? 'strategy-map' : 'align-map'} />
         </div>
         <div className="map-viewtabs">
-          <Link href="/map" className={view === 'align' ? 'active' : ''}>🔗 Liên kết (kéo–thả)</Link>
+          <Link href="/map?v=flow" className={view === 'flow' ? 'active' : ''}>🕸️ Sơ đồ liên kết (flow)</Link>
+          <Link href="/map" className={view === 'align' ? 'active' : ''}>🔗 Theo viễn cảnh (kéo–thả)</Link>
           <Link href="/map?v=strategy" className={view === 'strategy' ? 'active' : ''}>🗺️ Sơ đồ chiến lược BSC</Link>
         </div>
-        {view === 'strategy' ? (
+        {view === 'flow' ? (
+          <>
+            <p className="subtitle">
+              Sơ đồ liên kết OKR dạng flow-chart · kỳ <b>{period.name}</b>. Kéo nền để di chuyển, lăn chuột
+              để zoom, kéo <b>⠿</b> dời node, kéo chấm <b>●</b> từ node cha thả vào node con để nối cascade.
+            </p>
+            <FlowMap objectives={objData} manageableIds={manageableIds} periodId={period.id} />
+          </>
+        ) : view === 'strategy' ? (
           <>
             <p className="subtitle">
               Sơ đồ chiến lược 4 tầng Balanced Scorecard theo quan hệ nhân-quả · kỳ <b>{period.name}</b>.

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-02.41';
+export const GUIDE_VERSION = '2026-08-02.42';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -526,6 +526,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '02/08/2026 (Sơ đồ liên kết dạng flow-chart)',
+    items: [
+      'Bản đồ chiến lược thêm view "🕸️ Sơ đồ liên kết (flow)": các OKR là node xếp theo cột cấp (Công ty → Khối → Phòng → Cá nhân), đường nối cha→con thể hiện cascade — kiểu mindmap/flow-chart.',
+      'Tương tác: kéo NỀN để di chuyển, lăn chuột/nút để zoom & "Vừa khung", kéo tay nắm ⠿ để dời node (nhớ vị trí ở trình duyệt), KÉO chấm ● từ node cha thả vào node con để NỐI cascade, bấm đường nối để gỡ — chỉ với OKR mình được sửa (chống tạo vòng).',
+    ],
+  },
   {
     date: '02/08/2026 (Menu gọn + trace-back cảnh báo)',
     items: [
