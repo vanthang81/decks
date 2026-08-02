@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
-import { FAVICON, BRAND } from '@/lib/brand';
+import { BRAND } from '@/lib/brand';
 import SiteFooter from '@/components/SiteFooter';
 import BackToTop from '@/components/BackToTop';
 import MobileGestures from '@/components/MobileGestures';
@@ -12,13 +12,13 @@ export const metadata: Metadata = {
   description: 'Hệ thống OKR/KPI/kế hoạch hành động & ngân sách — BTMH.',
   manifest: '/manifest.webmanifest',
   icons: {
-    // Tab trình duyệt: ưu tiên SVG (nét ở mọi cỡ) + PNG dự phòng.
+    // Tab trình duyệt: logo BTMH thật (PNG) — nhiều cỡ để nét.
     icon: [
-      { url: FAVICON, type: 'image/svg+xml' },
       { url: '/icons/favicon-32.png', sizes: '32x32', type: 'image/png' },
       { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
-    // iOS "Thêm vào MH chính": PNG (Safari không nhận data-URI cho apple-touch-icon).
+    // iOS "Thêm vào MH chính": PNG full-bleed (iOS tự bo góc).
     apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180' }],
   },
 };
