@@ -4,6 +4,17 @@ App điều hành OKR nội bộ của **Bảo Tín Mạnh Hải (BTMH)**. Chủ
 Phân quyền theo cây tổ chức **CEO/CFO → Giám đốc khối → Trưởng phòng → Nhân viên**, đăng nhập Google.
 Dự kiến live tại `okr.consultx.vn`.
 
+## Chiến lược công ty (đỉnh chuỗi) — trang `/strategy` + số liệu chuẩn từ FM
+- `src/lib/strategy.ts` (get/setCompanyStrategy → okr_settings key `company_strategy`; listStrategicPillars = OKR
+  multiyear cấp Công ty). Trang `/strategy` hiện Tầm nhìn/Sứ mệnh/Giá trị/Khát vọng + sơ đồ chuỗi + trụ cột + BSC;
+  exec sửa qua form. Đã điền sẵn từ KB (Outline "Chiến lược ESG 2030") — `db/280_seed_company_strategy.sql`.
+- **SỐ LIỆU CHUẨN = Financial Model "Project Imperial v52.1"** (đơn vị **VNDm — triệu đồng**). Cột năm 2023–2030.
+  Cửa hàng (Total Cumulative) **2030 = 261** (2026→30: 80·159·208·241·261). Doanh thu thuần: 2025 **27.891 tỷ** →
+  2026 73.841 tỷ → **2030 ~180.346 tỷ**. LNST: 2025 **774 tỷ** → 2026 1.562 tỷ → **2030 ~5.015 tỷ**. Mix vàng đầu tư
+  24K giảm 96%→79%, Trang sức 24K + quà tặng + bạc tăng dần. ⚠️ Khi trích số chiến lược/kế hoạch, LẤY THEO FM này
+  (số cũ >300 CH / KB ESG có thể lỗi thời). PDF "Chiến lược KD 2026–2030 (bản đẹp)" là ảnh/CID font — KHÔNG OCR
+  được trong sandbox (no poppler; pypdf panic) → narrative lấy từ KB, số lấy từ FM.
+
 ## ⭐ YÊU CẦU THƯỜNG TRỰC VỀ UI/UX (CFO nhấn mạnh — áp cho MỌI thay đổi, KHÔNG cần nhắc lại)
 Mọi tính năng/màn hình phải **đẹp, chuyên nghiệp, gọn gàng (neat), user-friendly** — **CẢ trên
 DESKTOP LẪN MOBILE (responsive)**. Cụ thể: thông tin quan trọng hiển thị ngay tại chỗ (không bắt mở
