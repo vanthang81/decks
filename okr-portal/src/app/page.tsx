@@ -244,46 +244,50 @@ export default async function Dashboard() {
               </div>
             )}
 
-            {bscBars.length > 0 && (
-              <div className="card">
-                <h3 style={{ marginTop: 0 }}>
-                  Tiến độ theo Viễn cảnh BSC
-                  <HelpTip k="bsc" />
-                </h3>
-                <BarList
-                  items={bscBars.map((x) => ({
-                    label: (
-                      <span>
-                        <span aria-hidden style={{ marginRight: 5 }}>{BSC_PERSPECTIVE_ICON[x.b]}</span>
-                        {BSC_PERSPECTIVE_LABEL[x.b]}
-                        {x.n > 1 && <span className="muted" style={{ fontSize: 11 }}> · {x.n} OKR</span>}
-                      </span>
-                    ),
-                    value: x.progress,
-                    color: progressColor(x.progress),
-                  }))}
-                />
-              </div>
-            )}
+            {(bscBars.length > 0 || divBars.length > 0) && (
+              <div className="grid two">
+                {bscBars.length > 0 && (
+                  <div className="card">
+                    <h3 style={{ marginTop: 0 }}>
+                      Tiến độ theo Viễn cảnh BSC
+                      <HelpTip k="bsc" />
+                    </h3>
+                    <BarList
+                      items={bscBars.map((x) => ({
+                        label: (
+                          <span>
+                            <span aria-hidden style={{ marginRight: 5 }}>{BSC_PERSPECTIVE_ICON[x.b]}</span>
+                            {BSC_PERSPECTIVE_LABEL[x.b]}
+                            {x.n > 1 && <span className="muted" style={{ fontSize: 11 }}> · {x.n} OKR</span>}
+                          </span>
+                        ),
+                        value: x.progress,
+                        color: progressColor(x.progress),
+                      }))}
+                    />
+                  </div>
+                )}
 
-            {divBars.length > 0 && (
-              <div className="card">
-                <h3 style={{ marginTop: 0 }}>Tiến độ theo Khối</h3>
-                <BarList
-                  items={divBars.map((u) => ({
-                    label: (
-                      <span>
-                        <span aria-hidden style={{ marginRight: 5 }}>
-                          {unitIcon({ code: u.code, name: u.name, type: 'division' })}
-                        </span>
-                        {u.name}
-                        {u.n > 1 && <span className="muted" style={{ fontSize: 11 }}> · {u.n} OKR</span>}
-                      </span>
-                    ),
-                    value: u.progress,
-                    color: progressColor(u.progress),
-                  }))}
-                />
+                {divBars.length > 0 && (
+                  <div className="card">
+                    <h3 style={{ marginTop: 0 }}>Tiến độ theo Khối</h3>
+                    <BarList
+                      items={divBars.map((u) => ({
+                        label: (
+                          <span>
+                            <span aria-hidden style={{ marginRight: 5 }}>
+                              {unitIcon({ code: u.code, name: u.name, type: 'division' })}
+                            </span>
+                            {u.name}
+                            {u.n > 1 && <span className="muted" style={{ fontSize: 11 }}> · {u.n} OKR</span>}
+                          </span>
+                        ),
+                        value: u.progress,
+                        color: progressColor(u.progress),
+                      }))}
+                    />
+                  </div>
+                )}
               </div>
             )}
 

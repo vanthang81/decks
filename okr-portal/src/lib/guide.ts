@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-02.33';
+export const GUIDE_VERSION = '2026-08-02.34';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -474,6 +474,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
   {
+    date: '02/08/2026 (Sắp xếp lại menu + gọn giao diện desktop)',
+    items: [
+      'Menu sắp theo dòng chảy hợp lý: Tổng quan → Chiến lược & Đo lường (Bản đồ · OKR · KPI) → Thực thi (Dự án · Công việc) → Cá nhân → Trợ giúp, có vạch ngăn nhóm (desktop) & nhãn nhóm (mobile).',
+      'Thanh tiến độ (Viễn cảnh BSC / theo Khối) không còn kéo dài quá khổ trên màn hình rộng: giới hạn bề rộng + đặt 2 thẻ cạnh nhau → gọn, dễ đọc.',
+      'Lược bỏ các câu chú thích kỹ thuật/nội bộ khỏi giao diện người dùng cho sạch.',
+    ],
+  },
+  {
     date: '02/08/2026 (Bản đồ: sửa cắt chữ trên mobile + tự cuộn khi kéo)',
     items: [
       'Sửa lỗi thẻ mục tiêu bị CẮT CHỮ ở màn hẹp (tiêu đề/đơn vị/cascade/KR nay tự XUỐNG DÒNG, hiện đầy đủ — không còn tràn mép).',
@@ -493,7 +501,7 @@ export const CHANGELOG: ChangeLog[] = [
     date: '01/08/2026 (Trải nghiệm: header tự ẩn + thanh tải + cả dòng bấm được + mã ở mọi nơi)',
     items: [
       'MOBILE: thanh menu TỰ ẨN khi cuộn xuống, hiện lại khi cuộn lên → xem được nhiều nội dung hơn (desktop luôn hiện).',
-      'Thanh TIẾN TRÌNH mảnh trên đỉnh khi điều hướng — bấm link phản hồi ngay, hết cảm giác "bấm mà không mở" (best-practice giống Control Tower).',
+      'Thanh TIẾN TRÌNH mảnh trên đỉnh khi điều hướng — bấm link phản hồi ngay, hết cảm giác "bấm mà không mở".',
       'Cả DÒNG OKR ở Bảng điều khiển / Của tôi đều bấm mở được (không chỉ mỗi tiêu đề) — vùng chạm lớn, dễ bấm trên điện thoại.',
       'Hiện MÃ (code) cho Objective/KR/Công việc ở Bảng điều khiển & trang Của tôi — đồng nhất với trang OKR.',
     ],
@@ -509,7 +517,7 @@ export const CHANGELOG: ChangeLog[] = [
   {
     date: '01/08/2026 (KPI: seed 30 + chủ sở hữu + ngưỡng mặc định + auto-fill)',
     items: [
-      'Seed 30 KPI Control Tower vào Thư viện (16 scorecard 3 tầng trọng số 40/36/24 + 14 KPI vận hành), gán đơn vị chủ (Khối) + chủ sở hữu (chủ trì OKR Khối) + đo (CFO).',
+      'Nạp 30 KPI vào Thư viện (16 chỉ số scorecard 3 tầng trọng số 40/36/24 + 14 KPI vận hành), gán đơn vị chủ (Khối) + chủ sở hữu (chủ trì OKR Khối) + người đo.',
       'Trạng thái W/A/E có MẶC ĐỊNH theo % đạt so target (Ổn ≥90% · Theo dõi ≥70% · Cảnh báo ≥50% · Khẩn <50%) khi chưa đặt ngưỡng tuyệt đối — vẫn override được bằng ngưỡng riêng.',
       'Auto-fill số THỰC HIỆN (actual) cấp Công ty từ BigQuery cho KPI ánh xạ sạch (Lợi nhuận gộp TM, Sản lượng) theo cron đồng bộ KPI; target/kế hoạch đặt tay.',
     ],
@@ -869,7 +877,7 @@ export const CHANGELOG: ChangeLog[] = [
       'Kế hoạch hành động (initiatives) + ngân sách gắn OKR.',
       'KPI tự động từ BigQuery (kế hoạch ĐHCĐ + thực hiện); cron đồng bộ mỗi giờ.',
       'Cây tổ chức thật BTMH (13 khối, 36 phòng).',
-      'Trang Hướng dẫn sử dụng + tooltip trợ giúp (tự cập nhật theo hệ thống).',
+      'Trang Hướng dẫn sử dụng + tooltip trợ giúp ở từng tính năng.',
     ],
   },
 ];

@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import Link from 'next/link';
 import { auth, signOut } from '@/auth';
 import { LOGO_WORDMARK } from '@/lib/brand';
@@ -18,17 +19,26 @@ export default async function SiteHeader({ active }: { active?: string }) {
   const access = await loadAccess();
   const showAdmin = me ? canManageSystem(me, access) : false;
 
+  // Sắp xếp theo dòng chảy: Tổng quan → Chiến lược & Đo lường → Thực thi → Cá nhân → Trợ giúp.
   const links = [
-    { href: '/', label: 'Bảng điều khiển', key: 'home', show: true },
-    { href: '/objectives', label: 'OKR', key: 'okr', show: true },
-    { href: '/projects', label: 'Dự án', key: 'projects', show: true },
-    { href: '/tasks', label: 'Công việc', key: 'tasks', show: true },
-    { href: '/kpi', label: 'KPI', key: 'kpi', show: true },
-    { href: '/map', label: 'Bản đồ', key: 'map', show: true },
-    { href: '/my', label: 'Của tôi', key: 'my', show: true },
-    { href: '/guide', label: 'Hướng dẫn', key: 'guide', show: true },
-    { href: '/admin', label: 'Quản trị', key: 'admin', show: showAdmin },
+    { href: '/', label: 'Bảng điều khiển', key: 'home', group: 'overview', show: true },
+    { href: '/map', label: 'Bản đồ', key: 'map', group: 'strategy', show: true },
+    { href: '/objectives', label: 'OKR', key: 'okr', group: 'strategy', show: true },
+    { href: '/kpi', label: 'KPI', key: 'kpi', group: 'strategy', show: true },
+    { href: '/projects', label: 'Dự án', key: 'projects', group: 'exec', show: true },
+    { href: '/tasks', label: 'Công việc', key: 'tasks', group: 'exec', show: true },
+    { href: '/my', label: 'Của tôi', key: 'my', group: 'personal', show: true },
+    { href: '/guide', label: 'Hướng dẫn', key: 'guide', group: 'util', show: true },
+    { href: '/admin', label: 'Quản trị', key: 'admin', group: 'util', show: showAdmin },
   ].filter((l) => l.show);
+
+  const GROUP_LABEL: Record<string, string> = {
+    overview: 'Tổng quan',
+    strategy: 'Chiến lược & Đo lường',
+    exec: 'Thực thi',
+    personal: 'Cá nhân',
+    util: 'Trợ giúp',
+  };
 
   return (
     <header className="site-header">
@@ -39,12 +49,15 @@ export default async function SiteHeader({ active }: { active?: string }) {
           <span className="brand-sub">OKR</span>
         </Link>
 
-        {/* ---- Desktop ---- */}
+        {/* ---- Desktop (có vạch ngăn giữa các nhóm) ---- */}
         <nav className="nav nav-desktop">
-          {links.map((l) => (
-            <Link key={l.key} href={l.href} className={active === l.key ? 'active' : ''}>
-              {l.label}
-            </Link>
+          {links.map((l, i) => (
+            <Fragment key={l.key}>
+              {i > 0 && links[i - 1].group !== l.group && <span className="nav-div" aria-hidden />}
+              <Link href={l.href} className={active === l.key ? 'active' : ''}>
+                {l.label}
+              </Link>
+            </Fragment>
           ))}
         </nav>
         <div className="spacer" />
@@ -77,10 +90,15 @@ export default async function SiteHeader({ active }: { active?: string }) {
           <div className="mobile-panel">
             <div className="mobile-user">{who}</div>
             <nav className="mobile-nav">
-              {links.map((l) => (
-                <Link key={l.key} href={l.href} className={active === l.key ? 'active' : ''}>
-                  {l.label}
-                </Link>
+              {links.map((l, i) => (
+                <Fragment key={l.key}>
+                  {(i === 0 || links[i - 1].group !== l.group) && (
+                    <div className="mobile-nav-group">{GROUP_LABEL[l.group]}</div>
+                  )}
+                  <Link href={l.href} className={active === l.key ? 'active' : ''}>
+                    {l.label}
+                  </Link>
+                </Fragment>
               ))}
             </nav>
             <form

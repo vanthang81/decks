@@ -47,7 +47,7 @@ export default async function GuidePage() {
           <h1>📖 Hướng dẫn sử dụng</h1>
           <p>
             Phương pháp luận OKR/KPI (best practice) và cách dùng từng tính năng của hệ thống điều hành
-            OKR BTMH. Trang này tự cập nhật theo cấu trúc hệ thống hiện tại.
+            OKR BTMH.
           </p>
           <span className="ver">Phiên bản tài liệu · {GUIDE_VERSION}</span>
         </div>
