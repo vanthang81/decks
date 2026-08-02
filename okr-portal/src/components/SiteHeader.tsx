@@ -48,7 +48,10 @@ export default async function SiteHeader({ active }: { active?: string }) {
         <Link href="/" className="brand">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={LOGO_WORDMARK} alt="Bảo Tín Mạnh Hải" className="brand-logo" />
-          <span className="brand-sub">OKR</span>
+          <span className="brand-sub">
+            <span className="brand-name">Performance Management</span>
+            <span className="brand-tag">Từ chiến lược tới thực thi</span>
+          </span>
         </Link>
 
         {/* ---- Desktop (có vạch ngăn giữa các nhóm) ---- */}

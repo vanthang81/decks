@@ -49,8 +49,18 @@ a:hover { text-decoration: underline; }
 .brand:hover { text-decoration: none; }
 .brand-logo { height: 26px; width: auto; display: block; }
 .brand-sub {
-  color: var(--accent); font-weight: 800; font-size: 15px; letter-spacing: 1px;
-  padding-left: 8px; border-left: 1px solid rgba(255,255,255,.3);
+  display: flex; flex-direction: column; justify-content: center; gap: 1px;
+  padding-left: 10px; margin-left: 2px;
+  border-left: 1px solid rgba(255,255,255,.3);
+  line-height: 1.12;
+}
+.brand-name {
+  color: var(--accent); font-weight: 800; font-size: 14px; letter-spacing: .3px;
+  white-space: nowrap;
+}
+.brand-tag {
+  color: rgba(255,255,255,.72); font-weight: 500; font-size: 10.5px; letter-spacing: .2px;
+  white-space: nowrap;
 }
 .nav { display: flex; align-items: center; gap: 3px; margin-left: 10px; flex-wrap: wrap; }
 .nav a { padding: 6px 11px; border-radius: 8px; color: rgba(255,255,255,.82); font-weight: 500; }
@@ -97,6 +107,9 @@ img.cmt-avatar, img.cmt-mm-av, img.ntf-av { object-fit: cover; }
   .mobile-menu { display: block; margin-left: auto; }
   .site-header .inner { padding: 8px 14px; gap: 8px; }
   .brand-logo { height: 24px; }
+  .brand-sub { padding-left: 8px; margin-left: 0; }
+  .brand-name { font-size: 12px; letter-spacing: 0; }
+  .brand-tag { font-size: 9px; }
 
   /* Bố cục chung gọn hơn trên mobile */
   .wrap { padding: 16px 14px 60px; }
