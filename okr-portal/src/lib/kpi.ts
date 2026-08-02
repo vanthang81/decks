@@ -85,13 +85,42 @@ export async function syncKrKpi(krId: string): Promise<boolean> {
 // cấp CÔNG TY, kỳ hiện tại, dùng scope bán lẻ đã kiểm chứng. Map theo MÃ KPI thư viện.
 // Chỉ những KPI ánh xạ SẠCH sang v_flatten_sales; các KPI khác nhập tay / phase sau.
 // ============================================================================
+// Nguồn bổ sung (từ điển dữ liệu đã kiểm chứng): mua vào + tồn kho.
+const BUYBACK_TBL = 'op_finance.v_flatten_buyback';
+const INV_TBL = 'op_finance.v_so_du_ton_kho';
+const BUYBACK_SCOPE = "company_code NOT IN ('SX','BN','HD')"; // bán lẻ NY+SG
+const INV_SCOPE = "nguon NOT IN ('Bắc Ninh','Sản xuất','Hải Dương')"; // bán lẻ
+
 const KPI_ACTUAL_SQL: Record<string, (from: string, to: string) => string> = {
+  // ── Scorecard (đã kiểm chứng) ──
   // T1-01 Lợi nhuận gộp thương mại = SUM(gross_profit_vnd), scope bán lẻ
   'T1-01': (f, t) =>
     `SELECT SUM(gross_profit_vnd) v FROM ${SALES_TBL} WHERE ${RETAIL} AND bill_date BETWEEN DATE('${f}') AND DATE('${t}')`,
   // T1-03 Sản lượng (chỉ quy 24K) = SUM(gold_weight_chi), scope bán lẻ
   'T1-03': (f, t) =>
     `SELECT SUM(gold_weight_chi) v FROM ${SALES_TBL} WHERE ${RETAIL} AND bill_date BETWEEN DATE('${f}') AND DATE('${t}')`,
+
+  // ── Nhóm A · KPI vận hành (BAU) — công thức từ từ điển dữ liệu ──
+  // OPS-01 Doanh thu = SUM(line_income_vnd), scope bán lẻ
+  'OPS-01': (f, t) =>
+    `SELECT SUM(line_income_vnd) v FROM ${SALES_TBL} WHERE ${RETAIL} AND bill_date BETWEEN DATE('${f}') AND DATE('${t}')`,
+  // OPS-02 Số hóa đơn = COUNT(DISTINCT bill_id), scope bán lẻ
+  'OPS-02': (f, t) =>
+    `SELECT COUNT(DISTINCT bill_id) v FROM ${SALES_TBL} WHERE ${RETAIL} AND bill_date BETWEEN DATE('${f}') AND DATE('${t}')`,
+  // OPS-03 Sản lượng mua vào (chỉ) = SUM(assessed_weight_chi), buyback bán lẻ
+  'OPS-03': (f, t) =>
+    `SELECT SUM(assessed_weight_chi) v FROM ${BUYBACK_TBL} WHERE ${BUYBACK_SCOPE} AND buyback_date BETWEEN DATE('${f}') AND DATE('${t}')`,
+  // OPS-04 Giá trị mua vào = SUM(net_buyback_amount_vnd), buyback bán lẻ
+  'OPS-04': (f, t) =>
+    `SELECT SUM(net_buyback_amount_vnd) v FROM ${BUYBACK_TBL} WHERE ${BUYBACK_SCOPE} AND buyback_date BETWEEN DATE('${f}') AND DATE('${t}')`,
+  // OPS-05 Tồn kho (giá trị) = SUM(ton_cuoi_ngay_gt) tại ngày MỚI NHẤT ≤ to
+  'OPS-05': (_f, t) =>
+    `SELECT SUM(ton_cuoi_ngay_gt) v FROM ${INV_TBL} WHERE ${INV_SCOPE}
+       AND ngay = (SELECT MAX(ngay) FROM ${INV_TBL} WHERE ${INV_SCOPE} AND ngay <= DATE('${t}'))`,
+  // OPS-06 Tồn kho (chỉ) = SUM(ton_cuoi_ngay_tl) tại ngày MỚI NHẤT ≤ to
+  'OPS-06': (_f, t) =>
+    `SELECT SUM(ton_cuoi_ngay_tl) v FROM ${INV_TBL} WHERE ${INV_SCOPE}
+       AND ngay = (SELECT MAX(ngay) FROM ${INV_TBL} WHERE ${INV_SCOPE} AND ngay <= DATE('${t}'))`,
 };
 
 /** Auto-fill ACTUAL cho các KPI nguồn BigQuery (cấp Công ty, kỳ hiện tại). Best-effort. */

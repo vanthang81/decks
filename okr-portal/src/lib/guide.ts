@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-02.34';
+export const GUIDE_VERSION = '2026-08-02.35';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -473,6 +473,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '02/08/2026 (Auto-fill Nhóm A: 6 KPI vận hành từ BigQuery)',
+    items: [
+      'Thêm 6 KPI vận hành (BAU, trọng số 0) tự lấy số THỰC HIỆN từ BigQuery theo công thức đã kiểm chứng: Doanh thu · Số hóa đơn · Sản lượng mua vào (chỉ) · Giá trị mua vào · Tồn kho (giá trị) · Tồn kho (chỉ).',
+      'Chạy theo cron đồng bộ KPI hằng giờ; cấp Công ty, kỳ hiện tại. Không xáo trộn 16 KPI scorecard trọng số 100.',
+    ],
+  },
   {
     date: '02/08/2026 (Sắp xếp lại menu + gọn giao diện desktop)',
     items: [
