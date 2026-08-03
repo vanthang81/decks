@@ -72,6 +72,29 @@ export async function resolveEntity(
   };
 }
 
+/** Người PHỤ TRÁCH thực thể (chủ trì OKR / người được giao việc) — để báo "có bình luận ở mục của bạn". */
+async function entityStakeholders(entityType: EntityType, entityId: string): Promise<string[]> {
+  const emails = new Set<string>();
+  if (entityType === 'objective') {
+    const o = await queryOne<{ owner_email: string | null }>('SELECT owner_email FROM okr_objectives WHERE id=$1', [entityId]);
+    if (o?.owner_email) emails.add(o.owner_email);
+  } else if (entityType === 'key_result') {
+    const k = await queryOne<{ owner: string | null }>(
+      'SELECT o.owner_email AS owner FROM okr_key_results k JOIN okr_objectives o ON o.id=k.objective_id WHERE k.id=$1',
+      [entityId],
+    );
+    if (k?.owner) emails.add(k.owner);
+  } else {
+    const i = await queryOne<{ owner_email: string | null; oowner: string | null }>(
+      'SELECT i.owner_email, o.owner_email AS oowner FROM okr_initiatives i LEFT JOIN okr_objectives o ON o.id=i.objective_id WHERE i.id=$1',
+      [entityId],
+    );
+    if (i?.owner_email) emails.add(i.owner_email);
+    if (i?.oowner) emails.add(i.oowner);
+  }
+  return [...emails];
+}
+
 /** Objective mà thực thể (objective/KR/việc) thuộc về — để kiểm quyền quản lý. */
 export async function objectiveIdOfEntity(
   entityType: EntityType,
@@ -118,26 +141,31 @@ export async function addComment(input: {
       if (input.mentions.length === 0) type = 'reply';
     }
   }
-  if (recipients.length > 0) {
-    // Best-effort: lỗi tạo thông báo KHÔNG được làm hỏng việc lưu bình luận.
-    try {
-      const ent = await resolveEntity(input.entityType, input.entityId);
-      const preview = input.body.length > 140 ? input.body.slice(0, 140) + '…' : input.body;
-      await notify({
-        recipients,
-        type,
-        actorEmail: input.authorEmail,
-        actorName: input.authorName,
-        entityType: input.entityType,
-        entityId: input.entityId,
-        commentId: id,
-        preview,
-        link: ent?.link ?? '/',
-        entityLabel: ent?.label ?? 'OKR',
-      });
-    } catch (e) {
-      console.error('[comments] notify failed', e);
-    }
+  // Best-effort: lỗi tạo thông báo KHÔNG được làm hỏng việc lưu bình luận.
+  try {
+    const ent = await resolveEntity(input.entityType, input.entityId);
+    const preview = input.body.length > 140 ? input.body.slice(0, 140) + '…' : input.body;
+    const base = {
+      actorEmail: input.authorEmail,
+      actorName: input.authorName,
+      entityType: input.entityType,
+      entityId: input.entityId,
+      commentId: id,
+      preview,
+      link: ent?.link ?? '/',
+      entityLabel: ent?.label ?? 'OKR',
+    };
+    // 1) Nhắc tên / trả lời trực tiếp.
+    if (recipients.length > 0) await notify({ ...base, recipients, type });
+    // 2) "Bình luận ở mục bạn phụ trách" — cho chủ trì/được giao (chưa nằm trong recipients, không phải người viết).
+    const already = new Set(recipients.map((r) => r.toLowerCase()));
+    already.add(input.authorEmail.toLowerCase());
+    const stake = (await entityStakeholders(input.entityType, input.entityId)).filter(
+      (e) => !already.has(e.toLowerCase()),
+    );
+    if (stake.length > 0) await notify({ ...base, recipients: stake, type: 'comment_mine' });
+  } catch (e) {
+    console.error('[comments] notify failed', e);
   }
 
   const created = await getComment(id);

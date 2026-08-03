@@ -112,7 +112,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
             /* eslint-disable-next-line @next/next/no-img-element */
             <img className="hdr-av" src={session.user.image} alt="" referrerPolicy="no-referrer" />
           )}
-          <span>{who}</span>
+          <Link href="/settings" className="userchip-name" title="Cài đặt cá nhân">{who}</Link>
           <form
             action={async () => {
               'use server';
@@ -133,7 +133,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
             <span />
           </summary>
           <div className="mobile-panel">
-            <div className="mobile-user">{who}</div>
+            <Link href="/settings" className="mobile-user mobile-user-link">⚙ {who} · Cài đặt</Link>
             <nav className="mobile-nav">
               {links.map((l, i) => (
                 <Fragment key={l.key}>

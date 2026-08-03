@@ -697,6 +697,35 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
 /* Link trong ô bảng (tiêu đề OKR/việc/KPI) → bấm vào chi tiết; giữ dáng chữ, hover mới nổi */
 .tbl-link { color: var(--ink); font-weight: 600; text-decoration: none; }
 .tbl-link:hover { color: var(--primary); text-decoration: underline; }
+
+/* Tên user ở header → link tới Cài đặt cá nhân */
+.userchip-name { color: rgba(255,255,255,.9); font-weight: 600; text-decoration: none; }
+.userchip-name:hover { color: #fff; text-decoration: underline; }
+.mobile-user-link { color: var(--primary); font-weight: 600; text-decoration: none; }
+
+/* Trang Cài đặt cá nhân — hồ sơ + toggle tuỳ chọn thông báo */
+.prof { display: flex; align-items: center; gap: 14px; }
+.prof-av { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; border: 2px solid var(--line); }
+.prof-av-ph { display: inline-flex; align-items: center; justify-content: center; background: var(--primary-tint); color: var(--primary); font-weight: 800; font-size: 22px; }
+.prof-name { font-weight: 700; font-size: 17px; }
+.prof-meta { margin-top: 3px; }
+.nset-list { display: flex; flex-direction: column; }
+.nset-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.nset-row:last-child { border-bottom: 0; }
+.nset-txt { display: flex; flex-direction: column; gap: 2px; }
+.nset-txt b { font-size: 14.5px; }
+.nset-txt .muted { font-size: 12.5px; }
+/* Công tắc bật/tắt */
+.switch { position: relative; flex: 0 0 auto; display: inline-flex; }
+.switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
+.switch-track { width: 42px; height: 24px; border-radius: 999px; background: #d6cfc6; transition: background .15s; display: inline-block; position: relative; }
+.switch-thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .15s; }
+.switch.on .switch-track { background: var(--primary); }
+.switch.on .switch-thumb { transform: translateX(18px); }
+@media (max-width: 640px) {
+  .nset-row { gap: 10px; }
+  .nset-txt .muted { font-size: 12px; }
+}
 .flexbtw { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 /* Hàng tiêu đề có nút hành động ở GÓC PHẢI-TRÊN (nút canh đỉnh, không kéo giãn theo tiêu đề nhiều dòng) */
 .flexbtw-top { align-items: flex-start; }

@@ -16,6 +16,26 @@ export type Notification = {
   created_at: string;
 };
 
+// ── Loại thông báo + tuỳ chọn chi tiết (per-user, lưu okr_users.notif_prefs) ──
+export type NotifType = 'mention' | 'reply' | 'comment_mine' | 'assignment';
+export const NOTIF_TYPE_META: { key: NotifType; label: string; desc: string }[] = [
+  { key: 'mention', label: 'Được nhắc tên (@)', desc: 'Khi ai đó @nhắc bạn trong một bình luận.' },
+  { key: 'reply', label: 'Trả lời bình luận của bạn', desc: 'Khi ai đó trả lời bình luận bạn đã viết.' },
+  { key: 'comment_mine', label: 'Bình luận trên mục bạn phụ trách', desc: 'Khi có bình luận mới trên OKR/công việc bạn chủ trì hoặc được giao.' },
+  { key: 'assignment', label: 'Được giao việc', desc: 'Khi bạn được giao một công việc mới.' },
+];
+const NOTIF_VERB: Record<NotifType, string> = {
+  mention: 'đã nhắc bạn',
+  reply: 'đã trả lời bình luận của bạn',
+  comment_mine: 'đã bình luận ở mục bạn phụ trách',
+  assignment: 'đã giao việc cho bạn',
+};
+
+/** Mặc định MỌI loại BẬT; chỉ tắt khi prefs[type] === false. */
+export function notifEnabled(prefs: Record<string, unknown> | null | undefined, type: string): boolean {
+  return !prefs || prefs[type] !== false;
+}
+
 export async function unreadCount(email: string): Promise<number> {
   const r = await queryOne<{ n: number }>(
     `SELECT count(*)::int AS n FROM okr_notifications WHERE recipient_email=$1 AND is_read=false`,
@@ -44,6 +64,27 @@ export async function markAllRead(email: string): Promise<void> {
   await query('UPDATE okr_notifications SET is_read=true WHERE recipient_email=$1 AND is_read=false', [email]);
 }
 
+export type NotifSettings = { notifyEmail: boolean; prefs: Record<string, boolean> };
+
+export async function getNotifSettings(email: string): Promise<NotifSettings> {
+  const r = await queryOne<{ notify_email: boolean; notif_prefs: Record<string, unknown> | null }>(
+    'SELECT notify_email, notif_prefs FROM okr_users WHERE email=$1',
+    [email],
+  );
+  const prefs: Record<string, boolean> = {};
+  for (const t of NOTIF_TYPE_META) prefs[t.key] = notifEnabled(r?.notif_prefs, t.key);
+  return { notifyEmail: r?.notify_email ?? true, prefs };
+}
+
+export async function saveNotifSettings(email: string, notifyEmail: boolean, prefs: Record<string, boolean>): Promise<void> {
+  // Chỉ lưu các loại bị TẮT (=false) để notif_prefs gọn; loại thiếu = bật.
+  const off: Record<string, boolean> = {};
+  for (const t of NOTIF_TYPE_META) if (prefs[t.key] === false) off[t.key] = false;
+  await query('UPDATE okr_users SET notify_email=$2, notif_prefs=$3 WHERE email=$1', [
+    email, notifyEmail, JSON.stringify(off),
+  ]);
+}
+
 /**
  * Tạo thông báo cho 1 nhóm người nhận (đã loại người thao tác), lưu DB + gửi email
  * (best-effort, chỉ gửi cho ai bật notify_email). Notification "smart": gộp theo người,
@@ -51,12 +92,12 @@ export async function markAllRead(email: string): Promise<void> {
  */
 export async function notify(input: {
   recipients: string[];
-  type: 'mention' | 'reply';
+  type: NotifType;
   actorEmail: string;
   actorName: string | null;
   entityType: string;
   entityId: string;
-  commentId: string;
+  commentId: string | null;
   preview: string;
   link: string;
   entityLabel: string;
@@ -66,14 +107,15 @@ export async function notify(input: {
     .filter((r) => r.toLowerCase() !== actorLc);
   if (uniq.length === 0) return;
 
-  // Lưu notification (chỉ cho user còn active).
-  const active = await query<{ email: string; notify_email: boolean }>(
-    `SELECT email, notify_email FROM okr_users WHERE lower(email) = ANY($1) AND is_active=true`,
+  // Lưu notification (chỉ cho user còn active + BẬT loại thông báo này).
+  const active = await query<{ email: string; notify_email: boolean; notif_prefs: Record<string, unknown> | null }>(
+    `SELECT email, notify_email, notif_prefs FROM okr_users WHERE lower(email) = ANY($1) AND is_active=true`,
     [uniq.map((e) => e.toLowerCase())],
   );
-  if (active.length === 0) return;
+  const wanted = active.filter((u) => notifEnabled(u.notif_prefs, input.type));
+  if (wanted.length === 0) return;
 
-  for (const u of active) {
+  for (const u of wanted) {
     await query(
       `INSERT INTO okr_notifications
          (recipient_email, type, entity_type, entity_id, comment_id, actor_email, actor_name, preview, link)
@@ -85,8 +127,8 @@ export async function notify(input: {
 
   // Email best-effort cho ai bật notify_email (qua webhook Deck Mail).
   const appUrl = process.env.AUTH_URL || 'https://okr.consultx.vn';
-  const verb = input.type === 'reply' ? 'đã trả lời bình luận của bạn' : 'đã nhắc bạn';
-  for (const u of active) {
+  const verb = NOTIF_VERB[input.type];
+  for (const u of wanted) {
     if (!u.notify_email) continue;
     const subject = `[OKR BTMH] ${input.actorName || input.actorEmail} ${verb}`;
     const html =

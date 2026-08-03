@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 type Notif = {
   id: string;
@@ -26,7 +27,6 @@ const TYPE_LABEL: Record<string, string> = { mention: 'đã nhắc bạn', reply
 export default function NotifList() {
   const router = useRouter();
   const [items, setItems] = useState<Notif[]>([]);
-  const [notifyEmail, setNotifyEmail] = useState(true);
   const [loaded, setLoaded] = useState(false);
 
   const load = async () => {
@@ -34,7 +34,6 @@ export default function NotifList() {
     if (r.ok) {
       const j = await r.json();
       setItems(j.items ?? []);
-      setNotifyEmail(!!j.notifyEmail);
     }
     setLoaded(true);
   };
@@ -61,20 +60,12 @@ export default function NotifList() {
     load();
   };
 
-  const toggleEmail = async (v: boolean) => {
-    setNotifyEmail(v);
-    await post({ action: 'set_email', value: v });
-  };
-
   const unread = items.filter((i) => !i.is_read).length;
 
   return (
     <div>
       <div className="flexbtw" style={{ alignItems: 'center', gap: 10, marginBottom: 12 }}>
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13.5 }}>
-          <input type="checkbox" checked={notifyEmail} onChange={(e) => toggleEmail(e.target.checked)} />
-          Nhận email khi có người nhắc/trả lời
-        </label>
+        <Link href="/settings" className="muted" style={{ fontSize: 13 }}>⚙ Cài đặt thông báo</Link>
         <button className="btn ghost sm" type="button" onClick={readAll} disabled={unread === 0}>
           Đánh dấu tất cả đã đọc
         </button>

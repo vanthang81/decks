@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-03.54';
+export const GUIDE_VERSION = '2026-08-03.55';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -461,9 +461,17 @@ export const FEATURES: Feature[] = [
     key: 'notifications',
     title: 'Thông báo (chuông 🔔)',
     where: 'Biểu tượng 🔔 góc phải · trang "Thông báo"',
-    help: 'Số chưa đọc ở chuông; bấm xem danh sách, mở tới đúng mục. Bật/tắt email khi được nhắc.',
+    help: 'Bấm chuông → danh sách thông báo, mỗi cái mở tới đúng mục. Tuỳ chọn loại thông báo ở Cài đặt cá nhân.',
     detail:
-      'Chuông 🔔 cạnh tên bạn hiện số thông báo chưa đọc (tự làm mới). Trang Thông báo liệt kê ai đã nhắc/trả lời bạn, bấm vào để mở đúng Objective/KR/Công việc và tự đánh dấu đã đọc. Có nút "Đánh dấu tất cả đã đọc" và tuỳ chọn "Nhận email khi có người nhắc/trả lời" (mỗi người tự bật/tắt).',
+      'Chuông 🔔 cạnh tên bạn hiện số chưa đọc (tự làm mới). Bấm chuông mở trang Thông báo — DANH SÁCH mọi thông báo, bấm từng cái để tới đúng Objective/KR/Công việc và tự đánh dấu đã đọc; có "Đánh dấu tất cả đã đọc". Bạn nhận thông báo khi: được @nhắc tên · có người trả lời bình luận của bạn · có bình luận trên OKR/việc bạn phụ trách · được giao việc. Bật/tắt từng loại + email ở Cài đặt cá nhân (bấm tên bạn ở góc phải).',
+  },
+  {
+    key: 'settings',
+    title: 'Cài đặt cá nhân',
+    where: 'Bấm TÊN bạn ở góc phải header → trang "Cài đặt cá nhân"',
+    help: 'Hồ sơ của bạn + bật/tắt từng loại thông báo và email.',
+    detail:
+      'Bấm vào tên bạn ở góc phải để mở Cài đặt cá nhân: xem hồ sơ (họ tên · vai trò · đơn vị — do quản trị viên quản lý) và tuỳ chọn thông báo. Mỗi loại (được nhắc @ · trả lời bình luận · bình luận ở mục bạn phụ trách · được giao việc) có công tắc riêng, thêm công tắc gửi email tổng. Lưu là áp dụng ngay.',
   },
   {
     key: 'admin',
@@ -526,6 +534,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/08/2026 (Trang Cài đặt cá nhân · thông báo chi tiết theo loại)',
+    items: [
+      'Thêm trang "Cài đặt cá nhân" (bấm TÊN bạn ở góc phải header): hồ sơ + bật/tắt TỪNG loại thông báo và email.',
+      'Chuông 🔔 nay mở thẳng DANH SÁCH thông báo (tuỳ chọn dời sang Cài đặt cá nhân).',
+      'Thêm loại thông báo: "bình luận trên OKR/việc bạn phụ trách" (ngoài @nhắc & trả lời). Mỗi loại tôn trọng tuỳ chọn của người nhận.',
+    ],
+  },
   {
     date: '03/08/2026 (Tạo dự án bằng popup góc phải-trên)',
     items: [
