@@ -1,6 +1,6 @@
 import { query, queryOne } from './db';
 import type { OkrUser } from './users';
-import type { Role } from './rbac';
+import { isExec, type Role } from './rbac';
 
 export type UnitType = 'company' | 'division' | 'department';
 export type Unit = {
@@ -86,7 +86,7 @@ export function ancestorIds(units: Unit[], unitId: string): Set<string> {
  * Trả về null nghĩa là KHÔNG giới hạn (exec).
  */
 export function manageScope(user: OkrUser, units: Unit[]): Set<string> | null {
-  if (user.role === 'exec') return null;
+  if (isExec(user.role)) return null;
   if (!user.unit_id) return new Set();
   if (user.role === 'division_lead' || user.role === 'dept_lead') {
     return subtreeIds(units, user.unit_id);
@@ -125,6 +125,8 @@ export async function deleteUnit(id: string): Promise<void> {
 
 export const ROLE_CAN_MANAGE_ROLE: Record<Role, boolean> = {
   exec: true,
+  ceo: true,
+  cfo: true,
   division_lead: false,
   dept_lead: false,
   staff: false,

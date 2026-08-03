@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-03.48';
+export const GUIDE_VERSION = '2026-08-03.49';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -526,6 +526,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/08/2026 (Tách CEO/CFO · icon menu · kết quả KPI tại chỗ)',
+    items: [
+      'Tách vai trò gộp "CEO/CFO" thành 2 vai trò RIÊNG: CEO và CFO (cùng cấp điều hành, toàn quyền). Dữ liệu cũ (exec) tự chuyển sang CFO; chỉnh lại từng người ở Người dùng → Sửa.',
+      'Menu (thanh trên + dropdown + panel mobile) có ICON nhận diện cho từng mục & từng cụm — dễ quét nhanh.',
+      'Thư viện KPI: thêm cột "Kết quả" hiện SỐ THỰC (cấp Công ty, kỳ hiện tại) ngay tại chỗ, tô màu theo Watch/Alert/Escalate; bấm mở popup chi tiết (thực hiện · mục tiêu · % đạt · trạng thái · nguồn · ngưỡng · ghi chú) kèm biểu đồ XU HƯỚNG qua các kỳ.',
+    ],
+  },
   {
     date: '03/08/2026 (Sửa quyền người dùng ngay tại bảng)',
     items: [

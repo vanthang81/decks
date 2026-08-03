@@ -13,6 +13,7 @@ import {
   type CapKey,
   type GroupKey,
 } from './capabilities';
+import { isExec } from './rbac';
 
 export const PERM_GROUPS_KEY = 'perm_groups';
 
@@ -47,14 +48,14 @@ export function invalidateAccess() {
 
 /** Nhóm quyền hiệu lực của user (exec luôn = system_admin; chưa gán → suy từ vai trò). */
 export function userGroupKey(user: Pick<OkrUser, 'role' | 'perm_group'>): GroupKey {
-  if (user.role === 'exec') return 'system_admin';
+  if (isExec(user.role)) return 'system_admin';
   const g = user.perm_group;
   if (g && (GROUP_KEYS as readonly string[]).includes(g)) return g as GroupKey;
   return defaultGroupForRole(user.role);
 }
 
 export function userCaps(user: OkrUser, access: Access): Set<CapKey> {
-  if (user.role === 'exec') return ALL_CAPS; // CEO/CFO không thể tự khoá
+  if (isExec(user.role)) return ALL_CAPS; // CEO/CFO không thể tự khoá
   return access.groups[userGroupKey(user)] ?? new Set<CapKey>();
 }
 

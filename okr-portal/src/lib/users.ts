@@ -52,7 +52,7 @@ export async function listUsers(): Promise<
             u.perm_group, n.name AS unit_name, n.code AS unit_code
        FROM okr_users u
        LEFT JOIN okr_units n ON n.id = u.unit_id
-      ORDER BY CASE u.role WHEN 'exec' THEN 0 WHEN 'division_lead' THEN 1
+      ORDER BY CASE u.role WHEN 'exec' THEN 0 WHEN 'ceo' THEN 0 WHEN 'cfo' THEN 0 WHEN 'division_lead' THEN 1
                            WHEN 'dept_lead' THEN 2 ELSE 3 END,
                u.display_name NULLS LAST, u.email`,
   );
@@ -60,7 +60,7 @@ export async function listUsers(): Promise<
 
 export async function countActiveExecs(): Promise<number> {
   const r = await queryOne<{ n: number }>(
-    "SELECT count(*)::int AS n FROM okr_users WHERE role='exec' AND is_active=true",
+    "SELECT count(*)::int AS n FROM okr_users WHERE role IN ('exec','ceo','cfo') AND is_active=true",
   );
   return r?.n ?? 0;
 }

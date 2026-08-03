@@ -3,7 +3,7 @@ import SiteHeader from '@/components/SiteHeader';
 import ConfirmButton from '@/components/ConfirmButton';
 import EditUserModal from '@/components/EditUserModal';
 import { requireUser } from '@/lib/current-user';
-import { ROLE_LABEL, ROLES } from '@/lib/rbac';
+import { ROLE_LABEL, ROLES, isExec } from '@/lib/rbac';
 import { loadAccess, canManageSystem, canAssignPerms } from '@/lib/access';
 import { DEFAULT_GROUPS, defaultGroupForRole } from '@/lib/capabilities';
 import { listUsers } from '@/lib/users';
@@ -25,7 +25,7 @@ export default async function AdminUsers() {
       <div className="wrap">
         <div className="pagetitle">Người dùng & phân quyền</div>
         <p className="subtitle">
-          Thêm bằng email Google. Vai trò: CEO/CFO (toàn quyền) · GĐ khối · Trưởng phòng · Nhân viên.
+          Thêm bằng email Google. Vai trò: CEO · CFO (toàn quyền) · GĐ khối · Trưởng phòng · Nhân viên.
         </p>
 
         <div className="card">
@@ -117,12 +117,12 @@ export default async function AdminUsers() {
                     </td>
                     <td>
                       {(() => {
-                        const gkey = u.role === 'exec' ? 'system_admin' : u.perm_group || defaultGroupForRole(u.role);
+                        const gkey = isExec(u.role) ? 'system_admin' : u.perm_group || defaultGroupForRole(u.role);
                         const g = DEFAULT_GROUPS.find((x) => x.key === gkey);
                         return (
                           <span title={g?.desc}>
                             {g ? `${g.icon} ${g.label}` : gkey}
-                            {!u.perm_group && u.role !== 'exec' && (
+                            {!u.perm_group && !isExec(u.role) && (
                               <span className="muted" style={{ fontSize: 11 }}> (mặc định)</span>
                             )}
                           </span>

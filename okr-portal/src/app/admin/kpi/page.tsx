@@ -7,6 +7,9 @@ import { requireUser } from '@/lib/current-user';
 import { loadAccess, canManageKpi } from '@/lib/access';
 import { listUnits } from '@/lib/org';
 import { listUsers } from '@/lib/users';
+import { getCurrentPeriod } from '@/lib/periods';
+import { listKpiResults } from '@/lib/kpi-values';
+import KpiResultCell from '@/components/KpiResultCell';
 import { BSC_PERSPECTIVES, BSC_PERSPECTIVE_LABEL, BSC_PERSPECTIVE_ICON } from '@/lib/okr';
 import type { Unit } from '@/lib/org';
 import type { OkrUser } from '@/lib/users';
@@ -162,10 +165,17 @@ function KpiFields({
 export default async function KpiLibraryPage() {
   const me = await requireUser();
   if (!canManageKpi(me, await loadAccess())) redirect('/');
-  const [units, users, kpis] = await Promise.all([listUnits(), listUsers(), listKpis()]);
+  const [units, users, kpis, period] = await Promise.all([
+    listUnits(), listUsers(), listKpis(), getCurrentPeriod(),
+  ]);
 
   const active = kpis.filter((k) => k.is_active);
   const totalWeight = active.reduce((a, k) => a + (k.weight || 0), 0);
+
+  // Kết quả THỰC (cấp Công ty, kỳ hiện tại) + lịch sử để hiện ngay tại chỗ / popup xu hướng.
+  const company = units.find((u) => u.type === 'company') ?? null;
+  const results = period && company ? await listKpiResults(period.id, company.id) : [];
+  const resultById = new Map(results.map((r) => [r.id, r]));
 
   return (
     <>
@@ -190,12 +200,14 @@ export default async function KpiLibraryPage() {
               <thead>
                 <tr>
                   <th>Mã</th><th>KPI</th><th>Viễn cảnh</th><th>Tầng</th><th className="right">Trọng số</th>
-                  <th>Nguồn</th><th>Đơn vị chủ</th><th>W / A / E</th><th></th>
+                  <th>Nguồn</th><th>Đơn vị chủ</th>
+                  <th>Kết quả<div className="th-sub">{period ? `Công ty · ${period.name}` : 'kỳ hiện tại'}</div></th>
+                  <th>W / A / E</th><th></th>
                 </tr>
               </thead>
               <tbody>
                 {kpis.length === 0 && (
-                  <tr><td colSpan={9} className="muted">Chưa có KPI. Thêm KPI đầu tiên bên dưới.</td></tr>
+                  <tr><td colSpan={10} className="muted">Chưa có KPI. Thêm KPI đầu tiên bên dưới.</td></tr>
                 )}
                 {kpis.map((k) => (
                   <tr key={k.id} style={k.is_active ? undefined : { opacity: 0.55 }}>
@@ -232,6 +244,11 @@ export default async function KpiLibraryPage() {
                     <td className="right mono">{k.weight || 0}</td>
                     <td><span className={`badge ${SRC_CLS[k.source]}`} style={{ fontSize: 10.5 }}>{SOURCE_LABEL[k.source]}</span></td>
                     <td style={{ fontSize: 12.5 }}>{k.unit_name || <span className="muted">—</span>}</td>
+                    <td>
+                      {resultById.has(k.id)
+                        ? <KpiResultCell data={resultById.get(k.id)!} />
+                        : <span className="muted">—</span>}
+                    </td>
                     <td className="mono" style={{ fontSize: 12 }}>
                       {[k.threshold_watch, k.threshold_alert, k.threshold_escalate].every((x) => x == null)
                         ? <span className="muted">—</span>

@@ -59,7 +59,7 @@ export function digestHtml(d: ReviewData, appUrl: string): string {
 
 async function recipients(): Promise<{ email: string; name: string | null }[]> {
   const rows = await query<{ email: string; name: string | null }>(
-    `SELECT email, display_name AS name FROM okr_users WHERE is_active AND role='exec' ORDER BY email`,
+    `SELECT email, display_name AS name FROM okr_users WHERE is_active AND role IN ('exec','ceo','cfo') ORDER BY email`,
   );
   if (rows.length) return rows;
   return [{ email: 'vanthang81@gmail.com', name: 'CFO' }];

@@ -130,6 +130,86 @@ export async function upsertKpiValue(
   );
 }
 
+// ── KẾT QUẢ KPI (kỳ hiện tại + xu hướng) cho Thư viện KPI ──
+// Mỗi KPI kèm giá trị mục tiêu/thực hiện ở (kỳ, đơn vị) đang xét + trạng thái W/A/E + % đạt
+// + LỊCH SỬ actual qua các kỳ (để vẽ sparkline xu hướng).
+export type KpiHistoryPoint = {
+  period: string;
+  kind: string;
+  starts_on: string;
+  actual: number | null;
+  target: number | null;
+};
+export type KpiResult = {
+  id: string;
+  code: string | null;
+  name: string;
+  unit_label: string | null;
+  direction: KpiDirection;
+  source: KpiSource;
+  threshold_watch: number | null;
+  threshold_alert: number | null;
+  threshold_escalate: number | null;
+  target: number | null;
+  actual: number | null;
+  note: string | null;
+  updated_at: string | null;
+  status: KpiStatus | null;
+  att: number | null;
+  history: KpiHistoryPoint[];
+};
+
+/**
+ * Kết quả mọi KPI đang hoạt động tại (kỳ, đơn vị) — giá trị kỳ này + lịch sử actual qua các kỳ.
+ * Trả về theo cùng thứ tự listScorecard (tầng → trọng số → tên) để khớp bảng Thư viện.
+ */
+export async function listKpiResults(periodId: string, unitId: string): Promise<KpiResult[]> {
+  const cur = await query<{
+    id: string; code: string | null; name: string; unit_label: string | null;
+    direction: KpiDirection; source: KpiSource;
+    threshold_watch: number | null; threshold_alert: number | null; threshold_escalate: number | null;
+    target: number | null; actual: number | null; note: string | null; updated_at: string | null;
+  }>(
+    `SELECT k.id, k.code, k.name, k.unit_label, k.direction, k.source,
+            k.threshold_watch::float8 AS threshold_watch, k.threshold_alert::float8 AS threshold_alert,
+            k.threshold_escalate::float8 AS threshold_escalate,
+            v.target::float8 AS target, v.actual::float8 AS actual, v.note, v.updated_at::text AS updated_at
+       FROM okr_kpis k
+       LEFT JOIN okr_kpi_values v ON v.kpi_id = k.id AND v.period_id = $1 AND v.unit_id = $2
+      WHERE k.is_active`,
+    [periodId, unitId],
+  );
+
+  // Lịch sử actual của TẤT CẢ kpi tại đơn vị này, qua mọi kỳ có số — gom theo kpi ở JS.
+  const hist = await query<{
+    kpi_id: string; period: string; kind: string; starts_on: string; actual: number | null; target: number | null;
+  }>(
+    `SELECT v.kpi_id, p.name AS period, p.kind, p.starts_on::text AS starts_on,
+            v.actual::float8 AS actual, v.target::float8 AS target
+       FROM okr_kpi_values v
+       JOIN okr_periods p ON p.id = v.period_id
+      WHERE v.unit_id = $1 AND v.actual IS NOT NULL
+      ORDER BY p.starts_on ASC, p.name ASC`,
+    [unitId],
+  );
+  const byKpi = new Map<string, KpiHistoryPoint[]>();
+  for (const h of hist) {
+    const arr = byKpi.get(h.kpi_id) ?? [];
+    arr.push({ period: h.period, kind: h.kind, starts_on: h.starts_on, actual: h.actual, target: h.target });
+    byKpi.set(h.kpi_id, arr);
+  }
+
+  return cur.map((k) => ({
+    id: k.id, code: k.code, name: k.name, unit_label: k.unit_label,
+    direction: k.direction, source: k.source,
+    threshold_watch: k.threshold_watch, threshold_alert: k.threshold_alert, threshold_escalate: k.threshold_escalate,
+    target: k.target, actual: k.actual, note: k.note, updated_at: k.updated_at,
+    status: kpiStatus(k, k.actual, k.target),
+    att: attainment(k.direction, k.target, k.actual),
+    history: byKpi.get(k.id) ?? [],
+  }));
+}
+
 export async function getKpiName(kpiId: string): Promise<string | null> {
   const r = await queryOne<{ name: string }>('SELECT name FROM okr_kpis WHERE id=$1', [kpiId]);
   return r?.name ?? null;

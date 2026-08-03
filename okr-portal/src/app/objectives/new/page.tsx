@@ -3,6 +3,7 @@ import SiteHeader from '@/components/SiteHeader';
 import { requireUser } from '@/lib/current-user';
 import { listUnits, manageScope } from '@/lib/org';
 import { listUsers } from '@/lib/users';
+import { isExec } from '@/lib/rbac';
 import { getCurrentPeriod, getPeriod, listPeriods } from '@/lib/periods';
 import {
   listObjectivesByPeriod,
@@ -66,7 +67,7 @@ export default async function NewObjectivePage({
               <select className="i" name="unit_id" defaultValue="">
                 <option value="">— Không gắn đơn vị —</option>
                 {allowedUnits
-                  .filter((u) => u.type !== 'company' || user.role === 'exec')
+                  .filter((u) => u.type !== 'company' || isExec(user.role))
                   .map((u) => (
                     <option key={u.id} value={u.id}>
                       {'· '.repeat(u.type === 'department' ? 1 : 0)}

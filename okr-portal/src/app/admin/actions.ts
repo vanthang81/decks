@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/current-user';
-import { isRole, type Role } from '@/lib/rbac';
+import { isRole, isExec, type Role } from '@/lib/rbac';
 import { loadAccess, canManageSystem, canAssignPerms, invalidateAccess, PERM_GROUPS_KEY } from '@/lib/access';
 import { DEFAULT_GROUPS, CAPABILITIES, type CapKey } from '@/lib/capabilities';
 import {
@@ -60,7 +60,7 @@ export async function toggleUserAction(fd: FormData) {
   // Không tự khoá chính mình nếu là exec cuối cùng.
   if (!active && email.toLowerCase() === me.email.toLowerCase()) {
     const u = await getUser(email);
-    if (u?.role === 'exec' && (await countActiveExecs()) <= 1) {
+    if (isExec(u?.role) && (await countActiveExecs()) <= 1) {
       throw new Error('Không thể khoá CEO/CFO cuối cùng.');
     }
   }
@@ -73,7 +73,7 @@ export async function removeUserAction(fd: FormData) {
   const email = str(fd, 'email');
   if (email.toLowerCase() === me.email.toLowerCase()) throw new Error('Không thể xoá chính mình.');
   const u = await getUser(email);
-  if (u?.role === 'exec' && (await countActiveExecs()) <= 1) {
+  if (isExec(u?.role) && (await countActiveExecs()) <= 1) {
     throw new Error('Không thể xoá CEO/CFO cuối cùng.');
   }
   await removeUser(email);

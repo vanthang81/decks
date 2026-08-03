@@ -10,6 +10,7 @@ import { requireUser } from '@/lib/current-user';
 import { listObjectivesWithKrs } from '@/lib/okr';
 import { listUnits } from '@/lib/org';
 import { listUsers } from '@/lib/users';
+import { isExec } from '@/lib/rbac';
 import {
   getProject,
   canManageProject,
@@ -167,7 +168,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
           ) : (
             <ExecutionTabs
               initiatives={tasks}
-              canManage={user.role === 'exec' || canManage}
+              canManage={isExec(user.role) || canManage}
               currentEmail={user.email}
               move={moveInitiativeAction}
               save={editInitiativeAction}
