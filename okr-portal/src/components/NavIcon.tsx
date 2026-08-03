@@ -66,6 +66,19 @@ const P: Record<string, ReactNode> = {
     </>
   ),
   plus: <path d="M12 5v14M5 12h14" />,
+  wallet: (
+    <>
+      <path d="M3.5 7.5a1.5 1.5 0 0 1 1.5-1.5h12a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5z" />
+      <path d="M16 6V4.8a1.3 1.3 0 0 0-1.6-1.25L4.6 6" />
+      <path d="M20.5 11h-4a1.6 1.6 0 0 0 0 3.2h4" />
+    </>
+  ),
+  calendar: (
+    <>
+      <rect x="3.5" y="5" width="17" height="15" rx="2" />
+      <path d="M3.5 9.5h17M8 3.5v3M16 3.5v3" />
+    </>
+  ),
 };
 
 export default function NavIcon({ name, className = 'nav-ic' }: { name: string; className?: string }) {

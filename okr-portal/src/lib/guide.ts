@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-03.57';
+export const GUIDE_VERSION = '2026-08-03.58';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -474,6 +474,14 @@ export const FEATURES: Feature[] = [
       'Bấm vào tên bạn ở góc phải để mở Cài đặt cá nhân: xem hồ sơ (họ tên · vai trò · đơn vị — do quản trị viên quản lý) và tuỳ chọn thông báo. Mỗi loại (được nhắc @ · trả lời bình luận · bình luận ở mục bạn phụ trách · được giao việc) có công tắc riêng, thêm công tắc gửi email tổng. Lưu là áp dụng ngay.',
   },
   {
+    key: 'budget',
+    title: 'Quản trị ngân sách',
+    where: 'Menu "Thực thi" → "Ngân sách" (chỉ CEO/CFO)',
+    help: 'Ngân sách kế hoạch vs đã chi theo dự án & khối.',
+    detail:
+      'Tổng hợp ngân sách toàn kỳ: Kế hoạch · Đã chi · Còn lại · % đã dùng; bảng theo từng dự án (bấm vào chi tiết dự án) và theo khối/đơn vị. "Đã chi" gom từ ngân sách thực chi của các công việc trong mỗi dự án — khai báo ngân sách khi tạo/sửa dự án và công việc. Chỉ CEO/CFO xem toàn cảnh.',
+  },
+  {
     key: 'admin',
     title: 'Quản trị hệ thống',
     where: 'Menu "Quản trị" (chỉ CEO/CFO)',
@@ -534,6 +542,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/08/2026 (Trang Quản trị ngân sách)',
+    items: [
+      'Thêm trang "Ngân sách" (menu Thực thi, chỉ CEO/CFO): tổng hợp Kế hoạch · Đã chi · Còn lại · % đã dùng; bảng theo dự án (bấm vào chi tiết) và theo khối. "Đã chi" gom từ ngân sách công việc.',
+    ],
+  },
   {
     date: '03/08/2026 (Ẩn việc đã xong cho danh sách gọn)',
     items: [

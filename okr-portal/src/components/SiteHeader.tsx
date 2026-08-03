@@ -2,7 +2,7 @@ import { Fragment } from 'react';
 import Link from 'next/link';
 import { auth, signOut } from '@/auth';
 import { LOGO_WORDMARK } from '@/lib/brand';
-import { ROLE_LABEL, type Role } from '@/lib/rbac';
+import { ROLE_LABEL, isExec, type Role } from '@/lib/rbac';
 import NavIcon from '@/components/NavIcon';
 import NotifBell from '@/components/NotifBell';
 import { unreadCount } from '@/lib/notifications';
@@ -19,6 +19,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
   const me = email ? await getUser(email).catch(() => null) : null;
   const access = await loadAccess();
   const showAdmin = me ? canManageSystem(me, access) : false;
+  const showBudget = me ? isExec(me.role) : false;
 
   // Sắp xếp theo dòng chảy: Tổng quan → Chiến lược & Đo lường → Thực thi → Cá nhân → Quản trị.
   // icon = biểu tượng nhận diện nhanh (hiện ở cả dropdown desktop lẫn menu mobile).
@@ -31,6 +32,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
     { href: '/kpi', label: 'KPI', key: 'kpi', group: 'strategy', icon: 'chart', show: true },
     { href: '/projects', label: 'Dự án', key: 'projects', group: 'exec', icon: 'folder', show: true },
     { href: '/tasks', label: 'Công việc', key: 'tasks', group: 'exec', icon: 'check', show: true },
+    { href: '/budget', label: 'Ngân sách', key: 'budget', group: 'exec', icon: 'wallet', show: showBudget },
     { href: '/my', label: 'Của tôi', key: 'my', group: 'personal', icon: 'user', show: true },
     { href: '/guide', label: 'Hướng dẫn', key: 'guide', group: 'personal', icon: 'book', show: true },
     { href: '/admin', label: 'Quản trị', key: 'admin', group: 'admin', icon: 'sliders', show: showAdmin },
