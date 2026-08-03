@@ -67,8 +67,10 @@ export default async function MyPage() {
                 {initiatives.map((i) => (
                   <tr key={i.id}>
                     <td>
-                      {i.code && <span className="okr-code" style={{ marginRight: 6 }}>{i.code}</span>}
-                      <b>{i.title}</b>
+                      <Link href={i.objective_id ? `/objectives/${i.objective_id}` : '/tasks'} className="tbl-link">
+                        {i.code && <span className="okr-code" style={{ marginRight: 6 }}>{i.code}</span>}
+                        {i.title}
+                      </Link>
                     </td>
                     <td>
                       <span className="badge gray">{INIT_STATUS_LABEL[i.status]}</span>

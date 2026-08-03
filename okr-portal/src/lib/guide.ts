@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-03.52';
+export const GUIDE_VERSION = '2026-08-03.53';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -526,6 +526,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/08/2026 (Trace-back: bảng/danh sách bấm được vào chi tiết)',
+    items: [
+      'Trang Họp điều hành: các bảng "OKR cần chú ý", "Việc quá hạn", "KPI cần can thiệp", "Điểm hở" → bấm mỗi hàng vào đúng trang chi tiết.',
+      '"Việc đang mở của tôi" (Của tôi) + thanh Viễn cảnh BSC ở Bảng điều khiển → bấm vào OKR/bản đồ tương ứng.',
+    ],
+  },
   {
     date: '03/08/2026 (Sửa icon dropdown · rõ nghĩa cột "Thuộc dự án" · tự-audit chính xác dữ liệu)',
     items: [

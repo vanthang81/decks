@@ -285,11 +285,11 @@ export default async function Dashboard() {
                     <BarList
                       items={bscBars.map((x) => ({
                         label: (
-                          <span>
+                          <Link href={`/map?v=strategy#smap-${x.b}`} className="tbl-link">
                             <span aria-hidden style={{ marginRight: 5 }}>{BSC_PERSPECTIVE_ICON[x.b]}</span>
                             {BSC_PERSPECTIVE_LABEL[x.b]}
                             {x.n > 1 && <span className="muted" style={{ fontSize: 11 }}> · {x.n} OKR</span>}
-                          </span>
+                          </Link>
                         ),
                         value: x.progress,
                         color: progressColor(x.progress),
