@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-03.62';
+export const GUIDE_VERSION = '2026-08-03.63';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -566,6 +566,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/08/2026 (Trang Quản trị gọn gàng theo nhóm + hướng dẫn bắt đầu)',
+    items: [
+      'Sắp xếp lại trang Quản trị theo 4 nhóm (Nền tảng tổ chức · Đo lường & thiết lập · Tự động hoá & dữ liệu · Bắt đầu nhanh) + thẻ có icon.',
+      '"Bắt đầu nhanh": trình tự thiết lập từng bước có LINK tới đúng nơi + nút chạy hướng dẫn trên màn hình + mở hướng dẫn đầy đủ.',
+    ],
+  },
   {
     date: '03/08/2026 (Lịch tháng — công việc · cuộc họp · check-in)',
     items: [

@@ -701,6 +701,16 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
 /* Link trong ô bảng (tiêu đề OKR/việc/KPI) → bấm vào chi tiết; giữ dáng chữ, hover mới nổi */
 .tbl-link { color: var(--ink); font-weight: 600; text-decoration: none; }
 .tbl-link:hover { color: var(--primary); text-decoration: underline; }
+/* Trang Quản trị — nhóm mục theo phần + thẻ có icon + hướng dẫn */
+.admin-sec-h { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin: 20px 2px 8px; }
+.admin-sec-h:first-of-type { margin-top: 8px; }
+.admin-card { display: flex; align-items: flex-start; gap: 12px; text-decoration: none; color: inherit; transition: border-color .12s, box-shadow .12s; }
+.admin-card:hover { border-color: var(--primary); box-shadow: 0 3px 12px rgba(0,0,0,.08); text-decoration: none; }
+.admin-card-ic { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 10px; background: var(--gold-tint); color: var(--primary); display: inline-flex; align-items: center; justify-content: center; }
+.admin-card-ic svg { width: 20px; height: 20px; }
+.admin-guide { margin: 0; padding-left: 20px; line-height: 1.9; font-size: 14px; }
+.admin-guide li { margin: 2px 0; }
+
 /* Lịch tháng */
 .cal-legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 4px 0 10px; font-size: 12.5px; color: var(--muted); }
 .cal-leg { display: inline-flex; align-items: center; gap: 6px; }

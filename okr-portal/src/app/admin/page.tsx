@@ -2,6 +2,7 @@ import Link from 'next/link';
 import HelpTip from '@/components/HelpTip';
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
+import NavIcon from '@/components/NavIcon';
 import { requireUser } from '@/lib/current-user';
 import { loadAccess, canManageSystem } from '@/lib/access';
 import { listUsers } from '@/lib/users';
@@ -10,6 +11,19 @@ import { listPeriods, getCurrentPeriod } from '@/lib/periods';
 import { listKpiMetrics } from '@/lib/kpi';
 import { syncKpiAction, sendDigestAction } from './actions';
 import ImportOkr from '@/components/ImportOkr';
+
+// Thẻ điều hướng có icon (trong Quản trị).
+function NavCard({ href, icon, title, desc }: { href: string; icon: string; title: string; desc: string }) {
+  return (
+    <Link className="card admin-card" href={href}>
+      <span className="admin-card-ic"><NavIcon name={icon} /></span>
+      <span>
+        <h3 style={{ margin: 0 }}>{title}</h3>
+        <p className="muted" style={{ margin: '4px 0 0' }}>{desc}</p>
+      </span>
+    </Link>
+  );
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -33,45 +47,33 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
       <SiteHeader active="admin" />
       <div className="wrap">
         <div className="pagetitle">Quản trị hệ thống<HelpTip k="admin" /></div>
-        <p className="subtitle">Chỉ CEO/CFO. Thiết lập cây tổ chức, người dùng và kỳ OKR.</p>
+        <p className="subtitle">Chỉ CEO/CFO. Thiết lập nền tảng · đo lường · tự động hoá.</p>
 
+        {/* 1) Nền tảng tổ chức */}
+        <div className="admin-sec-h">1 · Nền tảng tổ chức</div>
         <div className="grid two">
-          <Link className="card" href="/admin/users" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <h3 style={{ marginTop: 0 }}>Người dùng & phân quyền</h3>
-            <p className="muted" style={{ marginBottom: 0 }}>
-              {users.length} tài khoản · thêm/khoá, gán vai trò CEO/CFO · GĐ khối · Trưởng phòng · NV.
-            </p>
-          </Link>
-          <Link className="card" href="/admin/org" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <h3 style={{ marginTop: 0 }}>Cây tổ chức</h3>
-            <p className="muted" style={{ marginBottom: 0 }}>
-              {units.length} đơn vị · Công ty → Khối → Phòng ban.
-            </p>
-          </Link>
-          <Link className="card" href="/admin/periods" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <h3 style={{ marginTop: 0 }}>Kỳ OKR</h3>
-            <p className="muted" style={{ marginBottom: 0 }}>
-              {periods.length} kỳ · đặt kỳ hiện tại, đóng/mở kỳ.
-            </p>
-          </Link>
-          <Link className="card" href="/admin/permissions" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <h3 style={{ marginTop: 0 }}>Phân quyền (Nhóm quyền × Năng lực)</h3>
-            <p className="muted" style={{ marginBottom: 0 }}>
-              Cấu hình Nhóm quyền (Quản trị hệ thống · OKR Admin · Quản lý · Cộng tác · Người xem) từ Sổ năng lực tự cập nhật. Gán nhóm cho user ở Người dùng.
-            </p>
-          </Link>
-          <Link className="card" href="/admin/kpi" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <h3 style={{ marginTop: 0 }}>Thư viện KPI</h3>
-            <p className="muted" style={{ marginBottom: 0 }}>
-              Khai báo chỉ số đo dùng lại: viễn cảnh BSC · module (KRA) · tầng &amp; trọng số · nguồn (auto/tay) · ngưỡng W/A/E · chủ sở hữu.
-            </p>
-          </Link>
-          <Link className="card" href="/admin/settings" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <h3 style={{ marginTop: 0 }}>Cài đặt · Nhắc check-in</h3>
-            <p className="muted" style={{ marginBottom: 0 }}>
-              Bật/tắt email nhắc check-in, chọn thứ gửi · ngưỡng ngày · người nhận.
-            </p>
-          </Link>
+          <NavCard href="/admin/users" icon="user" title="Người dùng & phân quyền"
+            desc={`${users.length} tài khoản · thêm/khoá, gán vai trò CEO/CFO · GĐ khối · Trưởng phòng · NV.`} />
+          <NavCard href="/admin/org" icon="sliders" title="Cây tổ chức"
+            desc={`${units.length} đơn vị · Công ty → Khối → Phòng ban.`} />
+          <NavCard href="/admin/periods" icon="calendar" title="Kỳ OKR"
+            desc={`${periods.length} kỳ · đặt kỳ hiện tại, đóng/mở kỳ.`} />
+          <NavCard href="/admin/permissions" icon="sliders" title="Phân quyền (Nhóm quyền × Năng lực)"
+            desc="Nhóm quyền (Quản trị · OKR Admin · Quản lý · Cộng tác · Người xem) từ Sổ năng lực. Gán nhóm cho user ở Người dùng." />
+        </div>
+
+        {/* 2) Đo lường & thiết lập */}
+        <div className="admin-sec-h">2 · Đo lường &amp; thiết lập</div>
+        <div className="grid two">
+          <NavCard href="/admin/kpi" icon="chart" title="Thư viện KPI"
+            desc="Chỉ số đo dùng lại: viễn cảnh BSC · module (KRA) · tầng & trọng số · nguồn (auto/tay) · ngưỡng W/A/E · chủ sở hữu." />
+          <NavCard href="/admin/settings" icon="review" title="Cài đặt · Nhắc check-in"
+            desc="Bật/tắt email nhắc check-in, chọn thứ gửi · ngưỡng ngày · người nhận." />
+        </div>
+
+        {/* 3) Tự động hoá & trao đổi dữ liệu */}
+        <div className="admin-sec-h">3 · Tự động hoá &amp; trao đổi dữ liệu</div>
+        <div className="grid two">
           <div className="card">
             <h3 style={{ marginTop: 0 }}>Đồng bộ KPI (BigQuery)</h3>
             <p className="muted" style={{ marginTop: 0 }}>
@@ -137,15 +139,26 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
             </a>
             <ImportOkr />
           </div>
+        </div>
 
-          <div className="card">
-            <h3 style={{ marginTop: 0 }}>Hướng dẫn nhanh</h3>
-            <ol className="muted" style={{ margin: 0, paddingLeft: 18 }}>
-              <li>Tạo cây tổ chức (khối, phòng).</li>
-              <li>Thêm người dùng + gán vai trò & đơn vị.</li>
-              <li>Tạo kỳ OKR và đặt “hiện tại”.</li>
-              <li>Bắt đầu tạo OKR ở mục “OKR”.</li>
-            </ol>
+        {/* 4) Bắt đầu nhanh (richer) */}
+        <div className="admin-sec-h">4 · Bắt đầu nhanh</div>
+        <div className="card">
+          <p className="muted" style={{ marginTop: 0 }}>
+            Trình tự thiết lập hệ thống từ đầu — bấm từng bước để mở đúng nơi:
+          </p>
+          <ol className="admin-guide">
+            <li><Link href="/admin/org">Tạo cây tổ chức</Link> (Công ty → Khối → Phòng).</li>
+            <li><Link href="/admin/users">Thêm người dùng</Link> + gán vai trò &amp; đơn vị.</li>
+            <li><Link href="/admin/permissions">Cấu hình nhóm quyền</Link> (nếu cần siết/mở quyền theo nhóm).</li>
+            <li><Link href="/admin/periods">Tạo kỳ OKR</Link> và đặt “hiện tại”.</li>
+            <li><Link href="/admin/kpi">Khai báo Thư viện KPI</Link> (viễn cảnh BSC · trọng số · ngưỡng · nguồn).</li>
+            <li><Link href="/strategy">Khai báo Chiến lược</Link> → <Link href="/objectives">tạo OKR</Link> → gắn KPI → <Link href="/projects">Dự án</Link>/<Link href="/tasks">Công việc</Link>.</li>
+            <li>Thiết lập <Link href="/admin/settings">nhắc check-in</Link> &amp; bản tin tuần để duy trì nhịp điều hành.</li>
+          </ol>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+            <a className="btn" href="/?tour=1">🧭 Chạy hướng dẫn nhanh trên màn hình</a>
+            <Link className="btn ghost" href="/guide">📖 Xem hướng dẫn đầy đủ</Link>
           </div>
         </div>
       </div>
