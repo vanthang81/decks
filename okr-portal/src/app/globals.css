@@ -694,6 +694,9 @@ textarea.i { min-height: 70px; resize: vertical; }
 .stat .n { font-size: 26px; font-weight: 700; }
 .stat .l { color: var(--muted); font-size: 13px; }
 hr.sep { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
+/* Link trong ô bảng (tiêu đề OKR/việc/KPI) → bấm vào chi tiết; giữ dáng chữ, hover mới nổi */
+.tbl-link { color: var(--ink); font-weight: 600; text-decoration: none; }
+.tbl-link:hover { color: var(--primary); text-decoration: underline; }
 .flexbtw { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 /* Hàng tiêu đề có nút hành động ở GÓC PHẢI-TRÊN (nút canh đỉnh, không kéo giãn theo tiêu đề nhiều dòng) */
 .flexbtw-top { align-items: flex-start; }

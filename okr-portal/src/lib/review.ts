@@ -16,10 +16,11 @@ export type KpiAlert = {
   status: KpiStatus; actual: number | null; target: number | null; unit_label: string | null;
 };
 export type OkrAttention = {
-  code: string | null; title: string; level: string; unit: string | null;
+  id: string; code: string | null; title: string; level: string; unit: string | null;
   progress: number; owner: string | null; checked: boolean;
 };
 export type OverdueTask = {
+  id: string; objectiveId: string | null;
   code: string | null; title: string; owner: string | null; due: string | null; unit: string | null;
 };
 export type Insight = { tone: 'good' | 'watch' | 'risk'; observe: string; imply: string; recommend: string };
@@ -81,8 +82,8 @@ export async function reviewData(period: { id: string; name: string; starts_on: 
   }).filter((x) => x.n > 0);
 
   // Overdue tasks per unit + list
-  const overdueRows = await query<{ code: string | null; title: string; owner: string | null; due: string | null; unit_code: string | null; unit_name: string | null }>(
-    `SELECT i.code, i.title, ou.display_name AS owner, i.due_on::text AS due,
+  const overdueRows = await query<{ id: string; objective_id: string | null; code: string | null; title: string; owner: string | null; due: string | null; unit_code: string | null; unit_name: string | null }>(
+    `SELECT i.id, i.objective_id, i.code, i.title, ou.display_name AS owner, i.due_on::text AS due,
             u.code AS unit_code, u.name AS unit_name
        FROM okr_initiatives i
        JOIN okr_objectives o ON o.id=i.objective_id
@@ -152,12 +153,12 @@ export async function reviewData(period: { id: string; name: string; starts_on: 
     .sort((a, b) => a.progress - b.progress)
     .slice(0, 8)
     .map((o) => ({
-      code: o.code, title: o.title, level: o.level, unit: o.unit_name,
+      id: o.id, code: o.code, title: o.title, level: o.level, unit: o.unit_name,
       progress: Math.round(o.progress), owner: o.owner, checked: o.kr_checked > 0,
     }));
 
   const overdue: OverdueTask[] = overdueRows.slice(0, 12).map((r) => ({
-    code: r.code, title: r.title, owner: r.owner, due: r.due, unit: r.unit_name,
+    id: r.id, objectiveId: r.objective_id, code: r.code, title: r.title, owner: r.owner, due: r.due, unit: r.unit_name,
   }));
 
   const integrity = await integrityIssues(period.id).catch(() => []);

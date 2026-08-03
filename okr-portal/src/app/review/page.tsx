@@ -141,7 +141,7 @@ export default async function ReviewPage() {
                 <tbody>
                   {d.kpiAlerts.map((a, i) => (
                     <tr key={i}>
-                      <td>{a.code && <span className="okr-code" style={{ marginRight: 6 }}>{a.code}</span>}{a.name}</td>
+                      <td><Link href="/kpi" className="tbl-link">{a.code && <span className="okr-code" style={{ marginRight: 6 }}>{a.code}</span>}{a.name}</Link></td>
                       <td>{a.unit ?? '—'}</td>
                       <td className="right mono">{compact(a.actual, a.unit_label)}</td>
                       <td className="right mono">{compact(a.target, a.unit_label)}</td>
@@ -162,10 +162,12 @@ export default async function ReviewPage() {
               <table className="t">
                 <thead><tr><th style={{ textAlign: 'left' }}>OKR</th><th>Tiến độ</th><th>Check-in</th></tr></thead>
                 <tbody>
-                  {d.attention.map((o, i) => (
-                    <tr key={i}>
+                  {d.attention.map((o) => (
+                    <tr key={o.id}>
                       <td>
-                        {o.code && <span className="okr-code" style={{ marginRight: 6 }}>{o.code}</span>}{o.title}
+                        <Link href={`/objectives/${o.id}`} className="tbl-link">
+                          {o.code && <span className="okr-code" style={{ marginRight: 6 }}>{o.code}</span>}{o.title}
+                        </Link>
                         <div className="muted" style={{ fontSize: 11 }}>{LEVEL_LABEL[o.level as Level]}{o.unit ? ` · ${o.unit}` : ''}{o.owner ? ` · ${o.owner}` : ''}</div>
                       </td>
                       <td className="right mono" style={{ color: progressColor(o.progress) }}>{o.progress}%</td>
@@ -185,9 +187,14 @@ export default async function ReviewPage() {
                 <table className="t">
                   <thead><tr><th style={{ textAlign: 'left' }}>Công việc</th><th style={{ textAlign: 'left' }}>Phụ trách</th><th>Hạn</th></tr></thead>
                   <tbody>
-                    {d.overdue.map((t, i) => (
-                      <tr key={i}>
-                        <td>{t.code && <span className="okr-code" style={{ marginRight: 6 }}>{t.code}</span>}{t.title}<div className="muted" style={{ fontSize: 11 }}>{t.unit ?? ''}</div></td>
+                    {d.overdue.map((t) => (
+                      <tr key={t.id}>
+                        <td>
+                          <Link href={t.objectiveId ? `/objectives/${t.objectiveId}` : '/tasks'} className="tbl-link">
+                            {t.code && <span className="okr-code" style={{ marginRight: 6 }}>{t.code}</span>}{t.title}
+                          </Link>
+                          <div className="muted" style={{ fontSize: 11 }}>{t.unit ?? ''}</div>
+                        </td>
                         <td>{t.owner ?? '—'}</td>
                         <td className="right mono" style={{ color: '#dc2626' }}>{fmtDate(t.due)}</td>
                       </tr>
@@ -205,9 +212,16 @@ export default async function ReviewPage() {
             <h3 style={{ marginTop: 0 }}>⚠ Điểm hở chuỗi chiến lược → thực thi</h3>
             <ul className="intg-list">
               {d.integrity.map((it) => (
-                <li key={it.key}><span className="intg-n">{it.count}</span><span><b>{it.label}</b><span className="muted" style={{ display: 'block', fontSize: 12 }}>{it.hint}</span></span></li>
+                <li key={it.key}>
+                  <Link href={`/integrity#${it.key}`} className="intg-row">
+                    <span className="intg-n">{it.count}</span>
+                    <span className="intg-row-txt"><b>{it.label}</b><span className="muted" style={{ display: 'block', fontSize: 12 }}>{it.hint}</span></span>
+                    <span className="intg-item-go" aria-hidden>→</span>
+                  </Link>
+                </li>
               ))}
             </ul>
+            <Link href="/integrity" className="intg-all">Xem chi tiết từng mục để bịt lỗ hổng →</Link>
           </div>
         )}
       </div>
