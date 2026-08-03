@@ -13,8 +13,9 @@ export type BudgetOverview = {
   totalPlanned: number; totalActual: number; projects: BudgetProject[]; units: BudgetUnit[];
 };
 
-export async function budgetOverview(periodId: string): Promise<BudgetOverview> {
-  const rows = await listProjectsByPeriod(periodId);
+export async function budgetOverview(periodId: string, statusFilter?: ProjectStatus | 'all'): Promise<BudgetOverview> {
+  const all = await listProjectsByPeriod(periodId);
+  const rows = statusFilter && statusFilter !== 'all' ? all.filter((p) => p.status === statusFilter) : all;
   const projects: BudgetProject[] = rows.map((p) => ({
     id: p.id, code: p.code, name: p.name, unit_name: p.unit_name, status: p.status,
     planned: p.budget_planned, actual: p.task_budget_actual, taskPlanned: p.task_budget_planned,

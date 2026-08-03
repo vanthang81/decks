@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-03.64';
+export const GUIDE_VERSION = '2026-08-03.65';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -566,6 +566,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/08/2026 (Ngân sách: chọn kỳ + lọc trạng thái dự án)',
+    items: [
+      'Trang Ngân sách: thêm bộ chọn KỲ (mặc định kỳ hiện tại) và bộ lọc trạng thái dự án (Đang chạy/Tạm dừng/Hoàn thành/Lưu trữ/Tất cả) — mặc định "Đang chạy" cho gọn.',
+    ],
+  },
   {
     date: '03/08/2026 (Bổ sung layer dưới "Thương hiệu vàng Quốc dân")',
     items: [

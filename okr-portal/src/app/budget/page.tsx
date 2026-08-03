@@ -4,22 +4,40 @@ import SiteHeader from '@/components/SiteHeader';
 import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
 import { isExec } from '@/lib/rbac';
-import { getCurrentPeriod, listPeriods } from '@/lib/periods';
+import { getCurrentPeriod, listPeriods, getPeriod, orderPeriodsHierarchically, PERIOD_KIND_LABEL } from '@/lib/periods';
 import { budgetOverview } from '@/lib/budget';
-import { PROJECT_STATUS_LABEL, PROJECT_STATUS_CLS } from '@/lib/projects';
+import { PROJECT_STATUS_LABEL, PROJECT_STATUS_CLS, type ProjectStatus } from '@/lib/projects';
+import PeriodPicker from '@/components/PeriodPicker';
 import { fmtVnd, progressColor } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Quản trị ngân sách · BTMH OKR' };
 
 const pct = (a: number, p: number) => (p > 0 ? Math.round((a / p) * 100) : 0);
+// Bộ lọc trạng thái dự án (mặc định "Đang chạy" cho gọn).
+const STATUS_FILTERS: { key: ProjectStatus | 'all'; label: string }[] = [
+  { key: 'active', label: 'Đang chạy' },
+  { key: 'paused', label: 'Tạm dừng' },
+  { key: 'done', label: 'Hoàn thành' },
+  { key: 'archived', label: 'Lưu trữ' },
+  { key: 'all', label: 'Tất cả' },
+];
 
-export default async function BudgetPage() {
+export default async function BudgetPage({ searchParams }: { searchParams: { period?: string; status?: string } }) {
   const user = await requireUser();
   if (!isExec(user.role)) redirect('/'); // ngân sách: CEO/CFO xem toàn cảnh
 
-  const period = (await getCurrentPeriod()) ?? (await listPeriods())[0] ?? null;
-  const d = period ? await budgetOverview(period.id) : null;
+  const periods = await listPeriods();
+  const period = searchParams.period ? await getPeriod(searchParams.period) : (await getCurrentPeriod()) ?? periods[0] ?? null;
+  const statusF = (STATUS_FILTERS.some((s) => s.key === searchParams.status) ? searchParams.status : 'active') as ProjectStatus | 'all';
+  const d = period ? await budgetOverview(period.id, statusF) : null;
+  const qs = (o: Record<string, string>) => {
+    const p = new URLSearchParams();
+    if (period) p.set('period', period.id);
+    if (statusF) p.set('status', statusF);
+    for (const [k, v] of Object.entries(o)) p.set(k, v);
+    return `/budget?${p.toString()}`;
+  };
 
   const usedPct = d ? pct(d.totalActual, d.totalPlanned) : 0;
   const remaining = d ? d.totalPlanned - d.totalActual : 0;
@@ -28,11 +46,27 @@ export default async function BudgetPage() {
     <>
       <SiteHeader active="budget" />
       <div className="wrap">
-        <div className="pagetitle">Quản trị ngân sách<HelpTip k="budget" /></div>
-        <p className="subtitle">
-          Ngân sách kế hoạch vs thực chi theo dự án và khối{period ? <> · kỳ <b>{period.name}</b></> : null}.
-          "Đã chi" gom từ ngân sách thực chi của công việc trong mỗi dự án.
-        </p>
+        <div className="flexbtw flexbtw-top">
+          <div>
+            <div className="pagetitle">Quản trị ngân sách<HelpTip k="budget" /></div>
+            <p className="subtitle">
+              Ngân sách kế hoạch vs thực chi theo dự án và khối. "Đã chi" gom từ ngân sách thực chi của công việc trong mỗi dự án.
+            </p>
+          </div>
+          <PeriodPicker
+            periods={orderPeriodsHierarchically(periods).map(({ period: p, depth }) => ({
+              id: p.id, label: `${PERIOD_KIND_LABEL[p.kind]}: ${p.name}`, depth, isCurrent: p.is_current,
+            }))}
+            currentId={period?.id ?? null}
+            basePath="/budget"
+          />
+        </div>
+        <div className="cal-legend" style={{ marginBottom: 12 }}>
+          <span className="muted" style={{ fontSize: 12.5 }}>Lọc dự án:</span>
+          {STATUS_FILTERS.map((s) => (
+            <a key={s.key} href={qs({ status: s.key })} className={`chip${statusF === s.key ? ' chip-on' : ''}`}>{s.label}</a>
+          ))}
+        </div>
 
         {!d || d.projects.length === 0 ? (
           <div className="card"><p className="muted" style={{ margin: 0 }}>Chưa có dự án/ngân sách trong kỳ. Khai báo ngân sách khi tạo/sửa dự án hoặc công việc.</p></div>

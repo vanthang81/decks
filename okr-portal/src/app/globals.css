@@ -701,6 +701,12 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
 /* Link trong ô bảng (tiêu đề OKR/việc/KPI) → bấm vào chi tiết; giữ dáng chữ, hover mới nổi */
 .tbl-link { color: var(--ink); font-weight: 600; text-decoration: none; }
 .tbl-link:hover { color: var(--primary); text-decoration: underline; }
+/* Chip lọc (vd lọc trạng thái dự án ở Ngân sách) */
+.chip { display: inline-block; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--ink); font-size: 12.5px; font-weight: 600; text-decoration: none; }
+.chip:hover { border-color: var(--primary); color: var(--primary); text-decoration: none; }
+.chip-on { background: var(--primary); border-color: var(--primary); color: #fff; }
+.chip-on:hover { color: #fff; }
+
 /* Trang Quản trị — nhóm mục theo phần + thẻ có icon + hướng dẫn */
 .admin-sec-h { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin: 20px 2px 8px; }
 .admin-sec-h:first-of-type { margin-top: 8px; }
