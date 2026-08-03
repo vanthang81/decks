@@ -701,6 +701,9 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
 /* Link trong ô bảng (tiêu đề OKR/việc/KPI) → bấm vào chi tiết; giữ dáng chữ, hover mới nổi */
 .tbl-link { color: var(--ink); font-weight: 600; text-decoration: none; }
 .tbl-link:hover { color: var(--primary); text-decoration: underline; }
+/* Link minh chứng ở check-in */
+.ci-evi { color: var(--primary); font-size: 12px; font-weight: 600; margin-left: 6px; white-space: nowrap; text-decoration: none; }
+.ci-evi:hover { text-decoration: underline; }
 
 /* Tour làm quen (product tour) — spotlight + bong bóng hướng dẫn */
 .tour-root { position: fixed; inset: 0; z-index: 200; }

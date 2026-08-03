@@ -235,6 +235,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                 confidenceLabel: CONFIDENCE_LABEL[ci.confidence],
                 confidenceColor: CONFIDENCE_COLOR[ci.confidence],
                 note: ci.note,
+                evidence_url: ci.evidence_url,
                 author: ci.author_name || ci.author_email || '—',
                 date: fmtDate(ci.created_at),
               }}
@@ -463,9 +464,13 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                         <option value="off_track">Chệch hướng</option>
                       </select>
                     </div>
-                    <div style={{ flex: 2 }}>
+                    <div style={{ flex: 2, minWidth: 180 }}>
                       <label className="f">Ghi chú</label>
                       <input className="i" name="note" placeholder="Diễn biến tuần này…" />
+                    </div>
+                    <div style={{ flex: 2, minWidth: 180 }}>
+                      <label className="f">Link minh chứng <span className="muted" style={{ fontWeight: 400 }}>(tùy chọn)</span></label>
+                      <input className="i" name="evidence_url" type="url" inputMode="url" placeholder="https://drive.google.com/…" />
                     </div>
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6 }}>
                       <button className="btn sm" type="submit">

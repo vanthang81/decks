@@ -11,6 +11,7 @@ export type CheckinRowData = {
   confidenceLabel: string;
   confidenceColor: string;
   note: string | null;
+  evidence_url: string | null;
   author: string;
   date: string;
 };
@@ -65,6 +66,9 @@ export default function CheckinRow({
             ● {ci.confidenceLabel}
           </span>
           {ci.note && <span className="ci-note">— {ci.note}</span>}
+          {ci.evidence_url && (
+            <a className="ci-evi" href={ci.evidence_url} target="_blank" rel="noopener noreferrer" title={ci.evidence_url}>🔗 Minh chứng</a>
+          )}
           {saved && <span className="ci-saved">✓ Đã lưu</span>}
         </div>
         <div className="ci-meta">
@@ -103,9 +107,13 @@ export default function CheckinRow({
                   <option value="off_track">Chệch hướng</option>
                 </select>
               </div>
-              <div style={{ flex: 2 }}>
+              <div style={{ flex: 2, minWidth: 160 }}>
                 <label className="f">Ghi chú</label>
                 <input className="i" name="note" defaultValue={ci.note ?? ''} />
+              </div>
+              <div style={{ flex: 2, minWidth: 160 }}>
+                <label className="f">Link minh chứng <span className="muted" style={{ fontWeight: 400 }}>(tùy chọn)</span></label>
+                <input className="i" name="evidence_url" type="url" inputMode="url" defaultValue={ci.evidence_url ?? ''} placeholder="https://…" />
               </div>
             </div>
             <input type="hidden" name="id" value={ci.id} />

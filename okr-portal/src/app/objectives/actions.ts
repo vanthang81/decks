@@ -46,6 +46,7 @@ import {
   updateCheckIn,
   deleteCheckIn,
   latestCheckinValue,
+  isValidUrl,
   type Confidence,
 } from '@/lib/checkins';
 import { isKpiMetric, syncKrKpi } from '@/lib/kpi';
@@ -255,12 +256,15 @@ export async function checkInAction(fd: FormData) {
       ? kr.current_value
       : num(fd, 'value', kr.current_value);
   if (!isAuto) await setKeyResultValue(krId, value);
+  const evidence = str(fd, 'evidence_url');
+  if (evidence && !isValidUrl(evidence)) throw new Error('Link minh chứng không hợp lệ (phải là http/https).');
   await addCheckIn({
     key_result_id: krId,
     objective_id: kr.objective_id,
     value,
     confidence: (str(fd, 'confidence') || 'on_track') as Confidence,
     note: orNull(str(fd, 'note')),
+    evidence_url: orNull(evidence),
     author_email: user.email,
   });
   revalidatePath(`/objectives/${kr.objective_id}`);
@@ -294,10 +298,13 @@ export async function editCheckInAction(fd: FormData) {
   }
   const valueStr = str(fd, 'value');
   const value = valueStr === '' ? null : num(fd, 'value');
+  const evidence = str(fd, 'evidence_url');
+  if (evidence && !isValidUrl(evidence)) throw new Error('Link minh chứng không hợp lệ (phải là http/https).');
   await updateCheckIn(id, {
     value,
     confidence: (str(fd, 'confidence') || 'on_track') as Confidence,
     note: orNull(str(fd, 'note')),
+    evidence_url: orNull(evidence),
   });
   if (ci.key_result_id) await resyncKrFromCheckins(ci.key_result_id);
   if (objId) revalidatePath(`/objectives/${objId}`);

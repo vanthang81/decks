@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-03.59';
+export const GUIDE_VERSION = '2026-08-03.60';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -550,6 +550,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/08/2026 (Lọc việc của tôi ở mọi màn · link minh chứng check-in)',
+    items: [
+      'Khu Dự án/Công việc trong OKR (và trang Công việc) đều có tick "👤 Việc của tôi" để lọc nhanh việc mình phụ trách.',
+      'Check-in KR: thêm ô "Link minh chứng" (tùy chọn) — nếu điền sẽ kiểm URL hợp lệ; hiển thị nút 🔗 Minh chứng ở dòng check-in.',
+    ],
+  },
   {
     date: '03/08/2026 (Điều lệ dự án — Project Charter)',
     items: [

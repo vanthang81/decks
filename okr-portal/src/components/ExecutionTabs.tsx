@@ -226,6 +226,7 @@ export default function ExecutionTabs({
   const [fStatus, setFStatus] = useState('');
   const [fPrio, setFPrio] = useState('');
   const [fOverdue, setFOverdue] = useState(false);
+  const [fMine, setFMine] = useState(false);
   const [hideDone, setHideDone] = useState(true); // mặc định ẩn việc đã xong cho gọn
 
   const owners = useMemo(() => {
@@ -240,10 +241,11 @@ export default function ExecutionTabs({
   }, [initiatives]);
 
   const qlc = q.trim().toLowerCase();
-  const fActive = !!(qlc || fOwner || fUnit || fStatus || fPrio || fOverdue);
+  const fActive = !!(qlc || fOwner || fUnit || fStatus || fPrio || fOverdue || fMine);
   const filtered = useMemo(
     () =>
       initiatives.filter((c) => {
+        if (fMine && c.owner_email?.toLowerCase() !== emailLc) return false;
         if (fOwner && c.owner_email !== fOwner) return false;
         if (fUnit && c.unit_id !== fUnit) return false;
         if (fStatus && c.status !== fStatus) return false;
@@ -256,7 +258,7 @@ export default function ExecutionTabs({
         }
         return true;
       }),
-    [initiatives, fOwner, fUnit, fStatus, fPrio, fOverdue, hideDone, qlc],
+    [initiatives, fMine, fOwner, fUnit, fStatus, fPrio, fOverdue, hideDone, qlc, emailLc],
   );
   const clearFilter = () => {
     setQ('');
@@ -265,6 +267,7 @@ export default function ExecutionTabs({
     setFStatus('');
     setFPrio('');
     setFOverdue(false);
+    setFMine(false);
   };
 
   return (
@@ -310,6 +313,9 @@ export default function ExecutionTabs({
         </select>
         <label className="fb-chk">
           <input type="checkbox" checked={fOverdue} onChange={(e) => setFOverdue(e.target.checked)} /> ⚠ Quá hạn
+        </label>
+        <label className="fb-chk">
+          <input type="checkbox" checked={fMine} onChange={(e) => setFMine(e.target.checked)} /> 👤 Việc của tôi
         </label>
         <label className="fb-chk">
           <input type="checkbox" checked={hideDone} onChange={(e) => setHideDone(e.target.checked)} /> Ẩn việc đã xong

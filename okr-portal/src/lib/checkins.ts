@@ -21,10 +21,21 @@ export type CheckIn = {
   value: number | null;
   confidence: Confidence;
   note: string | null;
+  evidence_url: string | null;
   author_email: string | null;
   author_name: string | null;
   created_at: string;
 };
+
+/** URL http(s) hợp lệ? (dùng để kiểm link minh chứng khi có nhập). */
+export function isValidUrl(s: string): boolean {
+  try {
+    const u = new URL(s.trim());
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
 
 export async function addCheckIn(input: {
   key_result_id: string | null;
@@ -32,17 +43,19 @@ export async function addCheckIn(input: {
   value: number | null;
   confidence: Confidence;
   note: string | null;
+  evidence_url: string | null;
   author_email: string;
 }): Promise<void> {
   await query(
-    `INSERT INTO okr_checkins (key_result_id, objective_id, value, confidence, note, author_email)
-     VALUES ($1,$2,$3,$4,$5,$6)`,
+    `INSERT INTO okr_checkins (key_result_id, objective_id, value, confidence, note, evidence_url, author_email)
+     VALUES ($1,$2,$3,$4,$5,$6,$7)`,
     [
       input.key_result_id,
       input.objective_id,
       input.value,
       input.confidence,
       input.note,
+      input.evidence_url,
       input.author_email,
     ],
   );
@@ -50,7 +63,7 @@ export async function addCheckIn(input: {
 
 const CI_SELECT = `
   SELECT ci.id, ci.key_result_id, ci.objective_id, ci.value::float8 AS value, ci.confidence, ci.note,
-         ci.author_email, u.display_name AS author_name, ci.created_at::text
+         ci.evidence_url, ci.author_email, u.display_name AS author_name, ci.created_at::text
     FROM okr_checkins ci
     LEFT JOIN okr_users u ON u.email = ci.author_email`;
 
@@ -69,13 +82,14 @@ export async function getCheckIn(id: string): Promise<CheckIn | null> {
 
 export async function updateCheckIn(
   id: string,
-  input: { value: number | null; confidence: Confidence; note: string | null },
+  input: { value: number | null; confidence: Confidence; note: string | null; evidence_url: string | null },
 ): Promise<void> {
-  await query('UPDATE okr_checkins SET value=$2, confidence=$3, note=$4 WHERE id=$1', [
+  await query('UPDATE okr_checkins SET value=$2, confidence=$3, note=$4, evidence_url=$5 WHERE id=$1', [
     id,
     input.value,
     input.confidence,
     input.note,
+    input.evidence_url,
   ]);
 }
 
