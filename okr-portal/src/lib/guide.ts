@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-03.63';
+export const GUIDE_VERSION = '2026-08-03.64';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -566,6 +566,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/08/2026 (Bổ sung layer dưới "Thương hiệu vàng Quốc dân")',
+    items: [
+      'Thêm 3 OKR con dưới CTY-011 "Thương hiệu vàng Quốc dân": Khách hàng (CTY-012) · Cửa hàng (CTY-013) · Doanh thu (CTY-014), mỗi cái 1 KR mốc theo Financial Model 2026 (CFO chỉnh mục tiêu năm nếu cần).',
+    ],
+  },
   {
     date: '03/08/2026 (Trang Quản trị gọn gàng theo nhóm + hướng dẫn bắt đầu)',
     items: [
