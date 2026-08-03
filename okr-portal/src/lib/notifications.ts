@@ -36,6 +36,28 @@ export function notifEnabled(prefs: Record<string, unknown> | null | undefined, 
   return !prefs || prefs[type] !== false;
 }
 
+/** Thông báo ĐƠN GIẢN (không gắn bình luận) — cho các sự kiện hệ thống (vd yêu cầu xem cuộc họp). */
+export async function notifySimple(input: {
+  recipients: string[]; type: string; actorEmail: string; actorName: string | null;
+  preview: string; link: string;
+}): Promise<void> {
+  const actorLc = input.actorEmail.toLowerCase();
+  const uniq = Array.from(new Set(input.recipients.map((r) => r.trim()).filter(Boolean)))
+    .filter((r) => r.toLowerCase() !== actorLc);
+  if (uniq.length === 0) return;
+  const active = await query<{ email: string }>(
+    `SELECT email FROM okr_users WHERE lower(email) = ANY($1) AND is_active=true`,
+    [uniq.map((e) => e.toLowerCase())],
+  );
+  for (const u of active) {
+    await query(
+      `INSERT INTO okr_notifications (recipient_email, type, actor_email, actor_name, preview, link)
+       VALUES ($1,$2,$3,$4,$5,$6)`,
+      [u.email, input.type, input.actorEmail, input.actorName, input.preview, input.link],
+    );
+  }
+}
+
 export async function unreadCount(email: string): Promise<number> {
   const r = await queryOne<{ n: number }>(
     `SELECT count(*)::int AS n FROM okr_notifications WHERE recipient_email=$1 AND is_read=false`,

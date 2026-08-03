@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-03.60';
+export const GUIDE_VERSION = '2026-08-03.61';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -474,6 +474,14 @@ export const FEATURES: Feature[] = [
       'Bấm vào tên bạn ở góc phải để mở Cài đặt cá nhân: xem hồ sơ (họ tên · vai trò · đơn vị — do quản trị viên quản lý) và tuỳ chọn thông báo. Mỗi loại (được nhắc @ · trả lời bình luận · bình luận ở mục bạn phụ trách · được giao việc) có công tắc riêng, thêm công tắc gửi email tổng. Lưu là áp dụng ngay.',
   },
   {
+    key: 'meetings',
+    title: 'Cuộc họp (biên bản + hành động)',
+    where: 'Menu "Tổng quan" → "Cuộc họp"',
+    help: 'Tổ chức cuộc họp, ghi biên bản, theo dõi hành động; nội dung bảo mật theo người tham gia.',
+    detail:
+      'Tạo cuộc họp theo loại (Check-in dự án · Điều hành tuần/tháng · Cấp khối/phòng · IBP…), chọn chủ trì/thư ký, người tham gia và phạm vi xem. Sau họp: chủ trì/thư ký ghi Biên bản & Quyết định; các công việc gắn cuộc họp hiện ở mục "Hành động". BẢO MẬT: chỉ người tham gia / được thêm (hoặc CEO/CFO) mới xem được nội dung; người ngoài có thể gửi "yêu cầu xem" → chủ trì/thư ký duyệt (có thông báo hai chiều).',
+  },
+  {
     key: 'project-charter',
     title: 'Điều lệ dự án (Project Charter)',
     where: 'Trang chi tiết Dự án · thẻ "Điều lệ dự án"',
@@ -550,6 +558,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/08/2026 (Module Cuộc họp — biên bản + hành động + phân quyền xem)',
+    items: [
+      'Thêm "Cuộc họp" (menu Tổng quan): tạo cuộc họp theo loại, ghi biên bản & quyết định, theo dõi hành động; danh sách + chi tiết chuyên nghiệp.',
+      'Bảo mật nội dung theo người tham gia/được thêm (hoặc toàn đơn vị/công ty). Người ngoài gửi "yêu cầu xem" → chủ trì/thư ký duyệt; có thông báo cho cả hai chiều.',
+    ],
+  },
   {
     date: '03/08/2026 (Lọc việc của tôi ở mọi màn · link minh chứng check-in)',
     items: [

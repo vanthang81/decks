@@ -26,6 +26,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
   const links = [
     { href: '/', label: 'Bảng điều khiển', key: 'home', group: 'overview', icon: 'home', show: true },
     { href: '/review', label: 'Họp điều hành', key: 'review', group: 'overview', icon: 'review', show: true },
+    { href: '/meetings', label: 'Cuộc họp', key: 'meetings', group: 'overview', icon: 'users', show: true },
     { href: '/strategy', label: 'Chiến lược', key: 'strategy', group: 'strategy', icon: 'compass', show: true },
     { href: '/map', label: 'Bản đồ', key: 'map', group: 'strategy', icon: 'map', show: true },
     { href: '/objectives', label: 'OKR', key: 'okr', group: 'strategy', icon: 'target', show: true },
