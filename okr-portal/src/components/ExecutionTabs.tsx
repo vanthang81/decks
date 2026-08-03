@@ -226,6 +226,7 @@ export default function ExecutionTabs({
   const [fStatus, setFStatus] = useState('');
   const [fPrio, setFPrio] = useState('');
   const [fOverdue, setFOverdue] = useState(false);
+  const [hideDone, setHideDone] = useState(true); // mặc định ẩn việc đã xong cho gọn
 
   const owners = useMemo(() => {
     const m = new Map<string, string>();
@@ -246,6 +247,7 @@ export default function ExecutionTabs({
         if (fOwner && c.owner_email !== fOwner) return false;
         if (fUnit && c.unit_id !== fUnit) return false;
         if (fStatus && c.status !== fStatus) return false;
+        if (hideDone && fStatus !== 'done' && c.status === 'done') return false;
         if (fPrio && c.priority !== fPrio) return false;
         if (fOverdue && deadlineInfo(c).state !== 'overdue') return false;
         if (qlc) {
@@ -254,7 +256,7 @@ export default function ExecutionTabs({
         }
         return true;
       }),
-    [initiatives, fOwner, fUnit, fStatus, fPrio, fOverdue, qlc],
+    [initiatives, fOwner, fUnit, fStatus, fPrio, fOverdue, hideDone, qlc],
   );
   const clearFilter = () => {
     setQ('');
@@ -308,6 +310,9 @@ export default function ExecutionTabs({
         </select>
         <label className="fb-chk">
           <input type="checkbox" checked={fOverdue} onChange={(e) => setFOverdue(e.target.checked)} /> ⚠ Quá hạn
+        </label>
+        <label className="fb-chk">
+          <input type="checkbox" checked={hideDone} onChange={(e) => setHideDone(e.target.checked)} /> Ẩn việc đã xong
         </label>
         {fActive && (
           <button type="button" className="btn ghost sm" onClick={clearFilter}>

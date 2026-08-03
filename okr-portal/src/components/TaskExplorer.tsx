@@ -136,6 +136,7 @@ export default function TaskExplorer({
   const [fPeriod, setFPeriod] = useState('');
   const [fOverdue, setFOverdue] = useState(false);
   const [fMine, setFMine] = useState(false);
+  const [hideDone, setHideDone] = useState(true); // mặc định ẩn việc đã xong cho gọn
 
   const emailLc = currentEmail.toLowerCase();
 
@@ -176,6 +177,7 @@ export default function TaskExplorer({
         if (fObj && t.objective_id !== fObj) return false;
         if (fProject && t.project_id !== fProject) return false;
         if (fStatus && t.status !== fStatus) return false;
+        if (hideDone && fStatus !== 'done' && t.status === 'done') return false;
         if (fPrio && t.priority !== fPrio) return false;
         if (fKind && t.kind !== fKind) return false;
         if (fPeriod && t.period_id !== fPeriod) return false;
@@ -186,7 +188,7 @@ export default function TaskExplorer({
         }
         return true;
       }),
-    [tasks, fMine, fOwner, fUnit, fObj, fProject, fStatus, fPrio, fKind, fPeriod, fOverdue, qlc, emailLc],
+    [tasks, fMine, fOwner, fUnit, fObj, fProject, fStatus, fPrio, fKind, fPeriod, fOverdue, hideDone, qlc, emailLc],
   );
   const clearFilter = () => {
     setQ(''); setFOwner(''); setFUnit(''); setFObj(''); setFProject('');
@@ -292,6 +294,9 @@ export default function TaskExplorer({
         </label>
         <label className="fb-chk">
           <input type="checkbox" checked={fMine} onChange={(e) => setFMine(e.target.checked)} /> 👤 Việc của tôi
+        </label>
+        <label className="fb-chk">
+          <input type="checkbox" checked={hideDone} onChange={(e) => setHideDone(e.target.checked)} /> Ẩn việc đã xong
         </label>
         {fActive && (
           <button type="button" className="btn ghost sm" onClick={clearFilter}>✕ Xoá lọc ({filtered.length})</button>

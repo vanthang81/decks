@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-03.56';
+export const GUIDE_VERSION = '2026-08-03.57';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -534,6 +534,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/08/2026 (Ẩn việc đã xong cho danh sách gọn)',
+    items: [
+      'Trang Công việc và khu Dự án/Công việc của OKR: thêm bộ lọc "Ẩn việc đã xong" — BẬT sẵn để danh sách gọn, bỏ chọn khi cần xem lại việc đã hoàn thành.',
+    ],
+  },
   {
     date: '03/08/2026 (Hướng dẫn nhanh trên màn hình cho người mới)',
     items: [
