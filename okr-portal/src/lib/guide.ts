@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-03.53';
+export const GUIDE_VERSION = '2026-08-03.54';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -526,6 +526,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/08/2026 (Tạo dự án bằng popup góc phải-trên)',
+    items: [
+      'Trang Dự án: bỏ form "Dự án mới" ở cuối trang → nút "Dự án mới" ở góc phải-trên mở popup (tạo xong tự đóng + hiện ngay). Chỉ người có quyền tạo mới thấy nút.',
+    ],
+  },
   {
     date: '03/08/2026 (Trace-back: bảng/danh sách bấm được vào chi tiết)',
     items: [

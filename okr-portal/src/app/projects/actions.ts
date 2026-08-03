@@ -50,6 +50,29 @@ export async function createProjectAction(fd: FormData) {
   redirect(`/projects/${id}`);
 }
 
+// Bản dùng cho popup "Dự án mới" (EditModal): tạo xong KHÔNG redirect (tránh vỡ luồng client),
+// chỉ revalidate để dự án mới hiện ngay trong danh sách + popup tự đóng.
+export async function createProjectInlineAction(fd: FormData) {
+  const user = await requireUser();
+  if (!canCreateProject(user, await loadAccess())) throw new Error('Bạn không có quyền tạo dự án.');
+  const name = str(fd, 'name');
+  if (!name) throw new Error('Thiếu tên dự án.');
+  await createProject({
+    period_id: orNull(str(fd, 'period_id')),
+    name,
+    description: orNull(str(fd, 'description')),
+    owner_email: orNull(str(fd, 'owner_email')) ?? user.email,
+    unit_id: orNull(str(fd, 'unit_id')),
+    status: (str(fd, 'status') || 'active') as ProjectStatus,
+    start_on: orNull(str(fd, 'start_on')),
+    due_on: orNull(str(fd, 'due_on')),
+    budget_planned: num(fd, 'budget_planned'),
+    budget_actual: num(fd, 'budget_actual'),
+    created_by: user.email,
+  });
+  revalidatePath('/projects');
+}
+
 export async function updateProjectAction(fd: FormData) {
   const user = await requireUser();
   const units = await listUnits();
