@@ -55,7 +55,7 @@ function sortVal(t: TaskRow, k: SortKey): string | number | null {
     case 'due': return t.due_on;
   }
 }
-const COLS: { key: SortKey; label: string; style?: CSSProperties }[] = [
+const COLS: { key: SortKey; label: string; style?: CSSProperties; hint?: string }[] = [
   { key: 'code', label: 'Mã' },
   { key: 'title', label: 'Công việc' },
   { key: 'status', label: 'Trạng thái' },
@@ -64,7 +64,7 @@ const COLS: { key: SortKey; label: string; style?: CSSProperties }[] = [
   { key: 'owner', label: 'Phụ trách' },
   { key: 'unit', label: 'Đơn vị' },
   { key: 'objective', label: 'OKR' },
-  { key: 'project', label: 'Dự án' },
+  { key: 'project', label: 'Thuộc dự án', hint: 'Dự án xuyên-OKR (mã PRJ) mà việc này được gom vào. Khác với nhãn "Loại: Dự án" (kiểu nút trong cây thực thi).' },
   { key: 'due', label: 'Hạn' },
 ];
 
@@ -262,7 +262,7 @@ export default function TaskExplorer({
           {objectives.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
         </select>
         <select className="i fb-sel" value={fProject} onChange={(e) => setFProject(e.target.value)}>
-          <option value="">Dự án: tất cả</option>
+          <option value="">Thuộc dự án: tất cả</option>
           {projectChoices.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <select className="i fb-sel" value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
@@ -308,7 +308,7 @@ export default function TaskExplorer({
                   className={`sortable${sortKey === c.key ? ' active' : ''}`}
                   style={c.style}
                   onClick={() => toggleSort(c.key)}
-                  title="Bấm để sắp xếp"
+                  title={c.hint ? `${c.hint}\n(Bấm để sắp xếp)` : 'Bấm để sắp xếp'}
                 >
                   {c.label}
                   {sortKey === c.key && <span className="sort-ar">{sortDir === 'asc' ? '▲' : '▼'}</span>}

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-03.51';
+export const GUIDE_VERSION = '2026-08-03.52';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -526,6 +526,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/08/2026 (Sửa icon dropdown · rõ nghĩa cột "Thuộc dự án" · tự-audit chính xác dữ liệu)',
+    items: [
+      'Sửa lỗi icon trong menu dropdown (trước render ra chữ tên icon) → nay hiện icon line maroon đúng chuẩn.',
+      'Trang Công việc: đổi tên cột "Dự án" → "Thuộc dự án" (dự án xuyên-OKR mã PRJ) để KHÔNG lẫn với nhãn "Loại: Dự án" (kiểu nút trong cây thực thi). Thêm chú thích cột.',
+      'Tự-audit độ chính xác: /integrity thêm rule "Việc gắn dự án khác kỳ với OKR gốc" — tự lộ việc gắn nhầm dự án khác kỳ.',
+    ],
+  },
   {
     date: '03/08/2026 (Icon menu đơn sắc chuyên nghiệp · nút thao tác gọn 1 dòng)',
     items: [

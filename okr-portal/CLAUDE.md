@@ -41,6 +41,28 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   lược & Đo lường · Thực thi · Cá nhân · Quản trị), cụm ≥2 mục = dropdown (hover/focus), cụm 1 mục =
   link thẳng; mobile giữ hamburger `<details>` phân nhóm. Thêm trang mới ⇒ thêm vào `links` với `group`
   phù hợp (KHÔNG nhồi thêm mục cấp 1 làm dài thanh menu). CSS `.nav-top/.nav-group/.nav-menu` ở globals.css.
+- **ICON = LINE ĐƠN SẮC, KHÔNG DÙNG EMOJI ở nav/nút (CFO 03/08)**: dùng `src/components/NavIcon.tsx`
+  (stroke=currentColor) → icon SẮC NÉT, đồng bộ, NỔI BẬT & hợp tông thương hiệu: **vàng `--accent` trên
+  nền maroon** (thanh menu), **maroon `--primary` trên nền trắng** (dropdown/mobile). Emoji đa sắc bị
+  chìm/thiếu chuyên nghiệp → tránh. Thêm icon mới ⇒ thêm path vào `NavIcon`, ĐỪNG truyền chuỗi tên vào
+  chỗ render text. CSS `.nav-ic` (SVG) + `.icon-btn` (nút icon vuông) ở globals.css.
+- **THAO TÁC SỬA/THÊM/XOÁ = nút GỌN ở GÓC PHẢI-TRÊN của đúng box → mở POPUP (CFO 03/08)**: dùng chung
+  `src/components/EditModal.tsx` (submit xong tự đóng + refresh; icon ReactNode; hỗ trợ nút chỉ-icon).
+  KHÔNG để khối form dài ở cuối trang / `<details>` bung trong bảng. Nhiều nút/hàng ⇒ gom `.row-actions`
+  (nowrap, KHÔNG để nút rớt xuống dòng) bằng `.icon-btn` (Sửa/Ẩn/Xoá). MỌI nút Sửa/Thêm/Xoá/Update
+  CHỈ render khi user CÓ QUYỀN (gác UI ở nơi gọi, ngoài guard server-side).
+- **TỰ QC BẮT BUỘC TRƯỚC KHI BÁO (CFO nhắc nhiều lần 03/08)**: mỗi lần đụng UI ⇒ `npm run build` +
+  chụp Chromium (globals.css thật) CẢ desktop (~1300px) LẪN mobile (~390px); rà: nút không xuống dòng,
+  icon nổi bật đúng nền, canh lề/khoảng cách đều. Khi đổi cách render icon/nút ⇒ **grep hết các chỗ
+  render cũ** (vd `{it.icon}`/`{l.icon}` trong `<span>`) kẻo sót 1 chỗ render ra chuỗi tên. Harness QC
+  phải phản ánh ĐÚNG JSX thật của component (đừng vẽ tay khác đi rồi tưởng OK). Chắc chắn OK mới báo CFO.
+- **TỰ AUDIT ĐỘ CHÍNH XÁC DỮ LIỆU (CFO 03/08)**: khi thêm bất kỳ liên kết/tổng hợp xuyên thực thể mới
+  (task↔project, KR↔KPI, OKR↔parent…) ⇒ thêm 1 rule kiểm tra tương ứng vào `src/lib/integrity.ts`
+  (+ trace-back) để lỗi lệch/mồ côi/khác-kỳ TỰ lộ ở `/integrity` — không đợi CFO phát hiện. Cẩn thận
+  nhãn trùng chữ gây hiểu nhầm (vd `kind='project'` "Dự án" ≠ cột "Thuộc dự án" = `project_id` PRJ).
+- **GUIDE + TOUR TỰ CẬP NHẬT (CFO 03/08)**: mỗi tính năng mới ⇒ tự cập nhật `src/lib/guide.ts`
+  (FEATURES/CHANGELOG + bump `GUIDE_VERSION`) VÀ bước hướng dẫn onboarding tour tương ứng — CFO không
+  phải nhắc.
 
 ## Vị trí & lý do
 - App Next.js **độc lập, self-contained** trong thư mục `okr-portal/` của repo `decks` (KHÔNG tạo

@@ -96,7 +96,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
                 <div className="nav-menu" role="menu">
                   {g.items.map((it) => (
                     <Link key={it.key} href={it.href} className={active === it.key ? 'active' : ''}>
-                      <span className="nav-ic" aria-hidden>{it.icon}</span>
+                      <NavIcon name={it.icon} />
                       {it.label}
                     </Link>
                   ))}

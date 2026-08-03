@@ -10,6 +10,7 @@ type Counts = {
   kpi_no_owner: number;
   kpi_no_value: number;
   proj_no_task: number;
+  task_project_period_mismatch: number;
 };
 
 const DEF: { key: keyof Counts; label: string; hint: string }[] = [
@@ -19,6 +20,7 @@ const DEF: { key: keyof Counts; label: string; hint: string }[] = [
   { key: 'kpi_no_owner', label: 'KPI thiếu chủ sở hữu / đơn vị', hint: 'Mỗi KPI cần business owner + đơn vị (KRA) chịu trách nhiệm.' },
   { key: 'kpi_no_value', label: 'KPI (có trọng số) chưa có số kỳ này', hint: 'Chưa nhập/đồng bộ mục tiêu·thực hiện trên Scorecard.' },
   { key: 'proj_no_task', label: 'Dự án chưa gắn công việc nào', hint: 'Dự án rỗng — chưa gom việc từ OKR vào.' },
+  { key: 'task_project_period_mismatch', label: 'Việc gắn dự án khác kỳ với OKR gốc', hint: 'Công việc được gom vào một dự án (PRJ) thuộc kỳ KHÁC với kỳ của OKR gốc — có thể đã gắn nhầm dự án.' },
 ];
 
 /** Đếm các vấn đề toàn vẹn trong 1 kỳ; chỉ trả về mục có count > 0. */
@@ -35,7 +37,13 @@ export async function integrityIssues(periodId: string): Promise<IntegrityIssue[
        (SELECT count(*) FROM okr_kpis k WHERE k.is_active AND k.weight>0
           AND NOT EXISTS (SELECT 1 FROM okr_kpi_values v WHERE v.kpi_id=k.id AND v.period_id=$1))::int AS kpi_no_value,
        (SELECT count(*) FROM okr_projects p WHERE p.period_id=$1
-          AND NOT EXISTS (SELECT 1 FROM okr_initiatives i WHERE i.project_id=p.id))::int AS proj_no_task`,
+          AND NOT EXISTS (SELECT 1 FROM okr_initiatives i WHERE i.project_id=p.id))::int AS proj_no_task,
+       (SELECT count(*) FROM okr_initiatives i
+          JOIN okr_projects p ON p.id = i.project_id
+          JOIN okr_objectives o ON o.id = COALESCE(i.objective_id,
+               (SELECT objective_id FROM okr_key_results WHERE id = i.key_result_id))
+         WHERE o.period_id=$1 AND p.period_id IS NOT NULL AND p.period_id <> $1)::int
+         AS task_project_period_mismatch`,
     [periodId],
   );
   const c = r[0] ?? ({} as Counts);
@@ -125,6 +133,27 @@ async function itemsFor(key: keyof Counts, periodId: string): Promise<IntegrityI
           [periodId],
         )
       ).map((p) => ({ code: p.code, title: p.name, href: `/projects/${p.id}` }));
+    case 'task_project_period_mismatch':
+      return (
+        await query<{ code: string | null; title: string; oid: string; pcode: string | null; pperiod: string | null }>(
+          `SELECT i.code, i.title,
+                  COALESCE(i.objective_id, (SELECT objective_id FROM okr_key_results WHERE id=i.key_result_id)) AS oid,
+                  p.code AS pcode, po.name AS pperiod
+             FROM okr_initiatives i
+             JOIN okr_projects p ON p.id = i.project_id
+             JOIN okr_objectives o ON o.id = COALESCE(i.objective_id,
+                  (SELECT objective_id FROM okr_key_results WHERE id=i.key_result_id))
+             LEFT JOIN okr_periods po ON po.id = p.period_id
+            WHERE o.period_id=$1 AND p.period_id IS NOT NULL AND p.period_id <> $1
+            ORDER BY i.code NULLS LAST, i.title LIMIT ${CAP}`,
+          [periodId],
+        )
+      ).map((t) => ({
+        code: t.code,
+        title: t.title,
+        href: `/objectives/${t.oid}`,
+        sub: [t.pcode ? `Dự án ${t.pcode}` : null, t.pperiod ? `kỳ ${t.pperiod}` : null].filter(Boolean).join(' · '),
+      }));
     default:
       return [];
   }
