@@ -88,7 +88,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
             }
             return (
               <div key={g.key} className="nav-group">
-                <button type="button" className={`nav-top nav-grp-btn ${groupActive ? 'active' : ''}`}>
+                <button type="button" data-tour={`nav-${g.key}`} className={`nav-top nav-grp-btn ${groupActive ? 'active' : ''}`}>
                   <NavIcon name={g.icon} />
                   {g.label}
                   <span className="nav-caret" aria-hidden>▾</span>
@@ -106,13 +106,13 @@ export default async function SiteHeader({ active }: { active?: string }) {
           })}
         </nav>
         <div className="spacer" />
-        {email && <NotifBell initialCount={notifCount} />}
+        {email && <span data-tour="tour-bell"><NotifBell initialCount={notifCount} /></span>}
         <div className="userchip userchip-desktop">
           {session?.user?.image && (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img className="hdr-av" src={session.user.image} alt="" referrerPolicy="no-referrer" />
           )}
-          <Link href="/settings" className="userchip-name" title="Cài đặt cá nhân">{who}</Link>
+          <Link href="/settings" data-tour="tour-user" className="userchip-name" title="Cài đặt cá nhân">{who}</Link>
           <form
             action={async () => {
               'use server';

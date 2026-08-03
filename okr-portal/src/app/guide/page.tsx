@@ -50,6 +50,9 @@ export default async function GuidePage() {
             OKR BTMH.
           </p>
           <span className="ver">Phiên bản tài liệu · {GUIDE_VERSION}</span>
+          <div style={{ marginTop: 12 }}>
+            <a className="btn ghost sm" href="/?tour=1">🧭 Chạy lại hướng dẫn nhanh trên màn hình</a>
+          </div>
         </div>
 
         <div className="guide-layout">

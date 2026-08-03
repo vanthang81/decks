@@ -17,6 +17,7 @@ import { reviewData } from '@/lib/review';
 import { unitIcon } from '@/lib/unit-icons';
 import { fmtNumber, progressColor } from '@/lib/format';
 import { Donut, BarList, Legend } from '@/components/charts';
+import ProductTour, { TourButton } from '@/components/ProductTour';
 
 const PROG_C = { done: '#16a34a', ahead: '#2563eb', behind: '#f59e0b', notStarted: '#cbd5e1' };
 const CONF_C = { on_track: '#16a34a', at_risk: '#d97706', off_track: '#dc2626', none: '#cbd5e1' };
@@ -26,7 +27,7 @@ const TONE_ICON = { good: '✅', watch: '⚠️', risk: '🔴' } as const;
 
 export const dynamic = 'force-dynamic';
 
-export default async function Dashboard() {
+export default async function Dashboard({ searchParams }: { searchParams: { tour?: string } }) {
   const user = await requireUser();
   const period = (await getCurrentPeriod()) ?? (await listPeriods())[0] ?? null;
 
@@ -100,9 +101,12 @@ export default async function Dashboard() {
               )}
             </p>
           </div>
-          <Link className="btn" href="/objectives">
-            Xem toàn bộ OKR
-          </Link>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <TourButton />
+            <Link className="btn" href="/objectives" data-tour="tour-all-okr">
+              Xem toàn bộ OKR
+            </Link>
+          </div>
         </div>
 
         {!period && (
@@ -368,6 +372,7 @@ export default async function Dashboard() {
           </>
         )}
       </div>
+      <ProductTour userKey={user.email} force={searchParams.tour === '1'} />
     </>
   );
 }

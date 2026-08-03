@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-03.55';
+export const GUIDE_VERSION = '2026-08-03.56';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -534,6 +534,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/08/2026 (Hướng dẫn nhanh trên màn hình cho người mới)',
+    items: [
+      'Thêm "Hướng dẫn nhanh" (product tour): tự chạy lần đầu đăng nhập, chỉ từng bước ngay trên giao diện (spotlight + bong bóng), có Tiếp/Quay lại/Bỏ qua + phím mũi tên.',
+      'Bật lại bất cứ lúc nào: nút "🧭 Hướng dẫn nhanh" ở Bảng điều khiển, hoặc trong trang Hướng dẫn.',
+    ],
+  },
   {
     date: '03/08/2026 (Trang Cài đặt cá nhân · thông báo chi tiết theo loại)',
     items: [
