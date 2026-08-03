@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import ConfirmButton from '@/components/ConfirmButton';
+import EditUserModal from '@/components/EditUserModal';
 import { requireUser } from '@/lib/current-user';
 import { ROLE_LABEL, ROLES } from '@/lib/rbac';
 import { loadAccess, canManageSystem, canAssignPerms } from '@/lib/access';
@@ -138,6 +139,21 @@ export default async function AdminUsers() {
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: 6 }}>
+                        <EditUserModal
+                          user={{
+                            email: u.email,
+                            display_name: u.display_name,
+                            title: u.title,
+                            role: u.role,
+                            unit_id: u.unit_id,
+                            perm_group: u.perm_group,
+                          }}
+                          units={units.map((x) => ({ id: x.id, name: x.name, type: x.type }))}
+                          roles={ROLES.map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
+                          groups={DEFAULT_GROUPS.map((g) => ({ key: g.key, icon: g.icon, label: g.label, desc: g.desc }))}
+                          assignPerms={assignPerms}
+                          action={saveUserAction}
+                        />
                         <form action={toggleUserAction}>
                           <input type="hidden" name="email" value={u.email} />
                           <input type="hidden" name="active" value={u.is_active ? '0' : '1'} />

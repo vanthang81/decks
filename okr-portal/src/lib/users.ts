@@ -82,7 +82,6 @@ export async function upsertUser(input: {
        role         = EXCLUDED.role,
        unit_id      = EXCLUDED.unit_id,
        perm_group   = EXCLUDED.perm_group,
-       is_active    = true,
        updated_at   = now()`,
     [input.email, input.display_name, input.title, input.role, input.unit_id, input.perm_group ?? null],
   );

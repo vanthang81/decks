@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-03.47';
+export const GUIDE_VERSION = '2026-08-03.48';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -526,6 +526,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/08/2026 (Sửa quyền người dùng ngay tại bảng)',
+    items: [
+      'Màn hình "Người dùng & phân quyền": mỗi dòng thêm nút "Sửa" mở popup chỉnh Vai trò · Đơn vị · Nhóm quyền · Họ tên · Chức danh (dùng lại saveUserAction; Nhóm quyền chỉ người có quyền phân quyền đổi được).',
+      'Sửa thông tin KHÔNG còn tự mở khoá tài khoản đang bị khoá (trạng thái do nút Khoá/Mở quyết định).',
+    ],
+  },
   {
     date: '03/08/2026 (Trang Chiến lược: chuỗi & 4 viễn cảnh bấm được)',
     items: [
