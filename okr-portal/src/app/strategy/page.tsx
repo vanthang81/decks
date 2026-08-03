@@ -40,11 +40,13 @@ export default async function StrategyPage() {
 
         {/* Chuỗi phương pháp luận */}
         <div className="card strat-chain">
-          <span className="sc-step apex">🧭 Chiến lược</span><span className="sc-arr">→</span>
-          <span className="sc-step">🎯 BSC (4 viễn cảnh)</span><span className="sc-arr">→</span>
-          <span className="sc-step">📌 OKR (Công ty→Khối→Phòng)</span><span className="sc-arr">→</span>
-          <span className="sc-step">📐 KRA / KR</span><span className="sc-arr">→</span>
-          <span className="sc-step">📊 KPI · 🗂 Dự án · ✅ Công việc</span>
+          <Link className="sc-step apex" href="#pillars">🧭 Chiến lược</Link><span className="sc-arr">→</span>
+          <Link className="sc-step" href="/map?v=strategy">🎯 BSC (4 viễn cảnh)</Link><span className="sc-arr">→</span>
+          <Link className="sc-step" href="/map?v=flow">📌 OKR (Công ty→Khối→Phòng)</Link><span className="sc-arr">→</span>
+          <Link className="sc-step" href="/objectives">📐 KRA / KR</Link><span className="sc-arr">→</span>
+          <span className="sc-step sc-multi">
+            <Link href="/kpi">📊 KPI</Link> · <Link href="/projects">🗂 Dự án</Link> · <Link href="/tasks">✅ Công việc</Link>
+          </span>
         </div>
 
         {!has && (
@@ -99,7 +101,7 @@ export default async function StrategyPage() {
         )}
 
         {/* Trụ cột chiến lược = OKR multiyear công ty */}
-        <div className="card">
+        <div className="card" id="pillars" style={{ scrollMarginTop: 84 }}>
           <div className="flexbtw">
             <h3 style={{ margin: 0 }}>Trụ cột chiến lược {speriod ? <span className="muted" style={{ fontSize: 13, fontWeight: 400 }}>· {speriod.name}</span> : null}</h3>
             {isExec && speriod && (
@@ -135,13 +137,14 @@ export default async function StrategyPage() {
         {/* 4 viễn cảnh BSC */}
         <div className="card">
           <h3 style={{ marginTop: 0 }}>Bốn viễn cảnh Balanced Scorecard<HelpTip k="bsc" /></h3>
+          <p className="muted" style={{ marginTop: 0, fontSize: 12.5 }}>Bấm một viễn cảnh để xem sơ đồ chiến lược BSC tầng tương ứng.</p>
           <div className="strat-bsc">
             {BSC_PERSPECTIVES.map((b) => (
-              <div key={b} className={`strat-bsc-cell bsc-${b}`}>
+              <Link key={b} href={`/map?v=strategy#smap-${b}`} className={`strat-bsc-cell bsc-${b}`}>
                 <div className="strat-bsc-ic">{BSC_PERSPECTIVE_ICON[b]}</div>
                 <div className="strat-bsc-lbl">{BSC_PERSPECTIVE_LABEL[b]}</div>
                 <div className="strat-bsc-n">{pillars.filter((p) => p.bsc_perspective === b).length} trụ cột</div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

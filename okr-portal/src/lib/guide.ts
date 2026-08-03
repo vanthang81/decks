@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-02.46';
+export const GUIDE_VERSION = '2026-08-03.47';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -526,6 +526,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/08/2026 (Trang Chiến lược: chuỗi & 4 viễn cảnh bấm được)',
+    items: [
+      'Sơ đồ chuỗi trên trang Chiến lược nay BẤM ĐƯỢC từng bước: Chiến lược→#Trụ cột · BSC→Sơ đồ BSC · OKR→Sơ đồ flow · KRA/KR→OKR · KPI/Dự án/Công việc→trang tương ứng.',
+      '4 box viễn cảnh BSC bấm để nhảy tới đúng tầng trên Sơ đồ chiến lược BSC (/map?v=strategy#smap-<viễn cảnh>).',
+    ],
+  },
   {
     date: '02/08/2026 (Tinh chỉnh mũi tên sơ đồ flow)',
     items: [

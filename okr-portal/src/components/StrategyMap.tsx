@@ -103,7 +103,7 @@ export default function StrategyMap({ objectives, manageableIds = [] }: { object
         const arr = byBsc.get(p) ?? [];
         const a = avg(arr);
         return (
-          <div key={p} data-band={p} className={`smap-band bsc-${p} ${hot === p && drag ? 'drop-hot' : ''}`}>
+          <div key={p} id={`smap-${p}`} data-band={p} className={`smap-band bsc-${p} ${hot === p && drag ? 'drop-hot' : ''}`}>
             <div className="smap-side">
               <span className="smap-ic" aria-hidden>{BSC_PERSPECTIVE_ICON[p]}</span>
               <div>

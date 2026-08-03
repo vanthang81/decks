@@ -1301,7 +1301,7 @@ body.flow-panning, body.flow-panning * { cursor: grabbing !important; user-selec
 .smap { display: flex; flex-direction: column; }
 .smap-note { margin: 0 0 14px; font-size: 12.5px; }
 .smap-band {
-  position: relative; display: grid; grid-template-columns: 250px 1fr; gap: 16px;
+  position: relative; display: grid; grid-template-columns: 250px 1fr; gap: 16px; scroll-margin-top: 84px;
   background: #fff; border: 1px solid var(--line); border-left: 5px solid var(--line);
   border-radius: 14px; padding: 15px; margin-bottom: 34px;
 }
@@ -1345,8 +1345,13 @@ body.flow-panning, body.flow-panning * { cursor: grabbing !important; user-selec
 
 /* ===== Trang Chiến lược công ty ===== */
 .strat-chain { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 14px; }
-.strat-chain .sc-step { display: inline-flex; align-items: center; gap: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; }
+.strat-chain .sc-step { display: inline-flex; align-items: center; gap: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; color: var(--ink); text-decoration: none; transition: background .12s, border-color .12s, box-shadow .12s; }
+a.sc-step:hover { background: var(--primary-tint); border-color: var(--primary); color: var(--primary); text-decoration: none; box-shadow: 0 2px 8px rgba(124,3,18,.12); }
 .strat-chain .sc-step.apex { background: var(--primary); color: #fff; border-color: var(--primary); }
+a.sc-step.apex:hover { background: var(--primary-dark, #5E0210); color: #fff; }
+.strat-chain .sc-step.sc-multi { gap: 3px; }
+.strat-chain .sc-step.sc-multi a { color: var(--ink); text-decoration: none; padding: 1px 4px; border-radius: 6px; }
+.strat-chain .sc-step.sc-multi a:hover { background: var(--primary-tint); color: var(--primary); }
 .strat-chain .sc-arr { color: var(--muted); font-weight: 700; }
 .strat-card .strat-k { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-top: 12px; }
 .strat-card .strat-k:first-child { margin-top: 0; }
@@ -1354,7 +1359,8 @@ body.flow-panning, body.flow-panning * { cursor: grabbing !important; user-selec
 .strat-values { margin: 4px 0 0; padding-left: 20px; }
 .strat-values li { margin: 4px 0; font-size: 14.5px; }
 .strat-bsc { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.strat-bsc-cell { border-radius: 12px; padding: 14px; text-align: center; border: 1px solid var(--line); border-top: 4px solid var(--line); }
+.strat-bsc-cell { display: block; border-radius: 12px; padding: 14px; text-align: center; border: 1px solid var(--line); border-top: 4px solid var(--line); color: var(--ink); text-decoration: none; transition: box-shadow .12s, transform .12s; }
+a.strat-bsc-cell:hover { text-decoration: none; box-shadow: 0 6px 18px rgba(0,0,0,.10); transform: translateY(-2px); }
 .strat-bsc-cell.bsc-financial { border-top-color: #b45309; background: #fffaf3; }
 .strat-bsc-cell.bsc-customer { border-top-color: #2563eb; background: #f5f8ff; }
 .strat-bsc-cell.bsc-process { border-top-color: #0f766e; background: #f2fbf9; }
