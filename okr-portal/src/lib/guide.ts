@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-03.50';
+export const GUIDE_VERSION = '2026-08-03.51';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -526,6 +526,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/08/2026 (Icon menu đơn sắc chuyên nghiệp · nút thao tác gọn 1 dòng)',
+    items: [
+      'Thay icon emoji ở menu bằng ICON LINE đơn sắc theo tông thương hiệu: vàng BTMH trên nền maroon (thanh menu), maroon trên nền trắng (dropdown/mobile) — sắc nét, đồng bộ, nổi bật.',
+      'Thư viện KPI: cụm nút thao tác mỗi hàng gom thành 3 nút icon vuông gọn (Sửa · Ẩn/Bật · Xoá) trên MỘT dòng — hết cảnh nút Xoá bị rớt xuống dòng.',
+    ],
+  },
   {
     date: '03/08/2026 (Sửa gọn bằng popup ở góc phải-trên · Thư viện KPI đẹp hơn)',
     items: [

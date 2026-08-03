@@ -94,14 +94,29 @@ a:hover { text-decoration: underline; }
 .nav-div { width: 1px; height: 16px; background: rgba(255,255,255,.24); margin: 0 5px; flex: 0 0 auto; border-radius: 1px; }
 .mobile-nav-group { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 12px 12px 4px; }
 .mobile-nav-group:first-child { padding-top: 4px; }
-/* Icon nhận diện nhanh trong menu (dropdown desktop + panel mobile) */
-.nav-ic { flex: 0 0 auto; line-height: 1; }
-.nav-top .nav-ic { font-size: 14px; }
+/* Icon LINE đơn sắc trong menu — stroke theo currentColor (đặt qua `color`):
+   VÀNG BTMH trên nền maroon (nav trên) · MAROON trên nền trắng (dropdown/mobile) → sắc nét & nổi bật. */
+.nav-ic { flex: 0 0 auto; display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; }
+/* icon + nhãn trong nút thường (vd "Thêm KPI", "Sửa chiến lược") */
+.btn > .nav-ic { margin-right: 6px; width: 1.05em; height: 1.05em; }
+.nav-top .nav-ic { width: 16px; height: 16px; color: var(--accent); }
+.nav-top:hover .nav-ic, .nav-top.active .nav-ic { color: #E7C979; }
 .nav-menu a { display: flex; align-items: center; gap: 9px; }
-.nav-menu a .nav-ic { width: 18px; text-align: center; font-size: 15px; }
+.nav-menu a .nav-ic { width: 18px; height: 18px; color: var(--primary); }
 .mobile-nav a { display: flex; align-items: center; gap: 10px; }
-.mobile-nav a .nav-ic { width: 20px; text-align: center; font-size: 16px; }
-.mobile-nav-group .nav-ic { width: auto; font-size: 12px; margin-right: 1px; }
+.mobile-nav a .nav-ic { width: 19px; height: 19px; color: var(--primary); }
+.mobile-nav-group { display: flex; align-items: center; gap: 6px; }
+.mobile-nav-group .nav-ic { width: 14px; height: 14px; color: var(--accent); }
+
+/* Nút icon vuông gọn (Sửa · Ẩn/Bật · Xoá) — 1 hàng, không xuống dòng, đồng bộ toàn app */
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  width: 30px; height: 30px; padding: 0; border: 1px solid var(--line); background: #fff;
+  color: var(--muted); border-radius: 8px; cursor: pointer; transition: border-color .12s, color .12s, background .12s;
+}
+.icon-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-tint); }
+.icon-btn.danger:hover { border-color: #dc2626; color: #dc2626; background: #fee2e2; }
+.icon-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; }
 .spacer { flex: 1; }
 .userchip { font-size: 13px; color: rgba(255,255,255,.85); display: flex; align-items: center; gap: 8px; }
 .hdr-av { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(255,255,255,.5); flex: 0 0 auto; }
@@ -300,9 +315,10 @@ table.t th.sortable.active { color: var(--primary); }
 .kpi-editactions { display: flex; justify-content: flex-end; margin-top: 12px; }
 .kpi-delform { margin-top: 6px; }
 
-/* Nhóm nút thao tác gọn trên 1 dòng bảng (Sửa · Ẩn · Xoá) — góc phải mỗi hàng */
-.row-actions { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+/* Nhóm nút thao tác gọn trên 1 dòng bảng (Sửa · Ẩn · Xoá) — góc phải mỗi hàng, KHÔNG xuống dòng */
+.row-actions { display: inline-flex; align-items: center; gap: 6px; flex-wrap: nowrap; justify-content: flex-end; white-space: nowrap; }
 .row-actions form { display: inline-flex; margin: 0; }
+td:has(> .row-actions) { white-space: nowrap; width: 1%; }
 
 /* Cột "Kết quả" ở Thư viện KPI — chip hiện số thực + % đạt, bấm mở popup xu hướng */
 .th-sub { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: none; letter-spacing: 0; margin-top: 1px; }

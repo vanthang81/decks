@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 export default function EditModal({
   title,
   label = 'Sửa',
-  icon = '✏️',
+  icon,
   submitLabel = 'Lưu',
   action,
   children,
@@ -21,7 +21,7 @@ export default function EditModal({
 }: {
   title: string;
   label?: string;
-  icon?: string;
+  icon?: React.ReactNode;
   submitLabel?: string;
   action: (fd: FormData) => Promise<void | { error?: string }>;
   children: React.ReactNode;
@@ -51,8 +51,15 @@ export default function EditModal({
 
   return (
     <>
-      <button type="button" className={triggerClass} onClick={() => setOpen(true)} title={title}>
-        <span aria-hidden>{icon}</span> {label}
+      <button
+        type="button"
+        className={triggerClass}
+        onClick={() => setOpen(true)}
+        title={title}
+        aria-label={label || title}
+      >
+        {icon}
+        {label ? <span>{label}</span> : null}
       </button>
       {open && (
         <div className="okr-modal-backdrop" onMouseDown={() => setOpen(false)}>

@@ -8,6 +8,7 @@ import { getCompanyStrategy, listStrategicPillars, strategicPeriod } from '@/lib
 import { BSC_PERSPECTIVE_LABEL, BSC_PERSPECTIVE_ICON, BSC_PERSPECTIVES } from '@/lib/okr';
 import { progressColor } from '@/lib/format';
 import EditModal from '@/components/EditModal';
+import NavIcon from '@/components/NavIcon';
 import { saveStrategyAction } from './actions';
 
 // Ô nhập form chiến lược — dùng lại trong popup Sửa (góc phải-trên).
@@ -56,7 +57,7 @@ export default async function StrategyPage() {
             </p>
           </div>
           {isExec && (
-            <EditModal title="Khai báo / sửa chiến lược công ty" label={has ? 'Sửa chiến lược' : 'Khai báo chiến lược'} submitLabel="Lưu chiến lược" action={saveStrategyAction}>
+            <EditModal title="Khai báo / sửa chiến lược công ty" label={has ? 'Sửa chiến lược' : 'Khai báo chiến lược'} icon={<NavIcon name="pencil" />} submitLabel="Lưu chiến lược" action={saveStrategyAction}>
               <StrategyFields strat={strat} />
             </EditModal>
           )}

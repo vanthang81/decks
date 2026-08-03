@@ -11,6 +11,7 @@ import { getCurrentPeriod } from '@/lib/periods';
 import { listKpiResults } from '@/lib/kpi-values';
 import KpiResultCell from '@/components/KpiResultCell';
 import EditModal from '@/components/EditModal';
+import NavIcon from '@/components/NavIcon';
 import { BSC_PERSPECTIVES, BSC_PERSPECTIVE_LABEL, BSC_PERSPECTIVE_ICON } from '@/lib/okr';
 import type { Unit } from '@/lib/org';
 import type { OkrUser } from '@/lib/users';
@@ -197,7 +198,7 @@ export default async function KpiLibraryPage() {
               tổng trọng số đang hoạt động: <b>{totalWeight}</b>.
             </p>
           </div>
-          <EditModal title="Thêm KPI mới" label="Thêm KPI" icon="＋" submitLabel="Tạo KPI" action={createKpiAction} wide>
+          <EditModal title="Thêm KPI mới" label="Thêm KPI" icon={<NavIcon name="plus" />} submitLabel="Tạo KPI" action={createKpiAction} wide>
             <KpiFields units={units} users={users} />
           </EditModal>
         </div>
@@ -247,10 +248,11 @@ export default async function KpiLibraryPage() {
                       <div className="row-actions">
                         <EditModal
                           title={`Sửa KPI · ${k.name}`}
-                          label="Sửa"
+                          label=""
+                          icon={<NavIcon name="pencil" />}
                           submitLabel="Lưu KPI"
                           action={updateKpiAction}
-                          triggerClass="btn ghost sm"
+                          triggerClass="icon-btn"
                           wide
                         >
                           <input type="hidden" name="id" value={k.id} />
@@ -259,13 +261,15 @@ export default async function KpiLibraryPage() {
                         <form action={toggleKpiActiveAction}>
                           <input type="hidden" name="id" value={k.id} />
                           <input type="hidden" name="active" value={k.is_active ? '0' : '1'} />
-                          <button className="btn ghost sm" type="submit" title={k.is_active ? 'Ẩn khỏi hệ thống' : 'Bật lại'}>{k.is_active ? 'Ẩn' : 'Bật'}</button>
+                          <button className="icon-btn" type="submit" title={k.is_active ? 'Đang hiển thị — bấm để ẩn' : 'Đang ẩn — bấm để bật lại'} aria-label={k.is_active ? 'Ẩn KPI' : 'Bật KPI'}>
+                            <NavIcon name={k.is_active ? 'eye' : 'eyeOff'} />
+                          </button>
                         </form>
                         <form action={deleteKpiAction}>
                           <input type="hidden" name="id" value={k.id} />
                           <ConfirmButton
-                            label="🗑"
-                            className="btn ghost sm danger"
+                            label={<NavIcon name="trash" />}
+                            className="icon-btn danger"
                             title="Xoá KPI"
                             message={`Xoá KPI "${k.name}"? Không hoàn tác.`}
                           />

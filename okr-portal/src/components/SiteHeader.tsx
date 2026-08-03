@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { auth, signOut } from '@/auth';
 import { LOGO_WORDMARK } from '@/lib/brand';
 import { ROLE_LABEL, type Role } from '@/lib/rbac';
+import NavIcon from '@/components/NavIcon';
 import NotifBell from '@/components/NotifBell';
 import { unreadCount } from '@/lib/notifications';
 import { getUser } from '@/lib/users';
@@ -22,17 +23,17 @@ export default async function SiteHeader({ active }: { active?: string }) {
   // Sắp xếp theo dòng chảy: Tổng quan → Chiến lược & Đo lường → Thực thi → Cá nhân → Quản trị.
   // icon = biểu tượng nhận diện nhanh (hiện ở cả dropdown desktop lẫn menu mobile).
   const links = [
-    { href: '/', label: 'Bảng điều khiển', key: 'home', group: 'overview', icon: '🏠', show: true },
-    { href: '/review', label: 'Họp điều hành', key: 'review', group: 'overview', icon: '📋', show: true },
-    { href: '/strategy', label: 'Chiến lược', key: 'strategy', group: 'strategy', icon: '🧭', show: true },
-    { href: '/map', label: 'Bản đồ', key: 'map', group: 'strategy', icon: '🗺️', show: true },
-    { href: '/objectives', label: 'OKR', key: 'okr', group: 'strategy', icon: '🎯', show: true },
-    { href: '/kpi', label: 'KPI', key: 'kpi', group: 'strategy', icon: '📊', show: true },
-    { href: '/projects', label: 'Dự án', key: 'projects', group: 'exec', icon: '🗂️', show: true },
-    { href: '/tasks', label: 'Công việc', key: 'tasks', group: 'exec', icon: '✅', show: true },
-    { href: '/my', label: 'Của tôi', key: 'my', group: 'personal', icon: '👤', show: true },
-    { href: '/guide', label: 'Hướng dẫn', key: 'guide', group: 'personal', icon: '📖', show: true },
-    { href: '/admin', label: 'Quản trị', key: 'admin', group: 'admin', icon: '⚙️', show: showAdmin },
+    { href: '/', label: 'Bảng điều khiển', key: 'home', group: 'overview', icon: 'home', show: true },
+    { href: '/review', label: 'Họp điều hành', key: 'review', group: 'overview', icon: 'review', show: true },
+    { href: '/strategy', label: 'Chiến lược', key: 'strategy', group: 'strategy', icon: 'compass', show: true },
+    { href: '/map', label: 'Bản đồ', key: 'map', group: 'strategy', icon: 'map', show: true },
+    { href: '/objectives', label: 'OKR', key: 'okr', group: 'strategy', icon: 'target', show: true },
+    { href: '/kpi', label: 'KPI', key: 'kpi', group: 'strategy', icon: 'chart', show: true },
+    { href: '/projects', label: 'Dự án', key: 'projects', group: 'exec', icon: 'folder', show: true },
+    { href: '/tasks', label: 'Công việc', key: 'tasks', group: 'exec', icon: 'check', show: true },
+    { href: '/my', label: 'Của tôi', key: 'my', group: 'personal', icon: 'user', show: true },
+    { href: '/guide', label: 'Hướng dẫn', key: 'guide', group: 'personal', icon: 'book', show: true },
+    { href: '/admin', label: 'Quản trị', key: 'admin', group: 'admin', icon: 'sliders', show: showAdmin },
   ].filter((l) => l.show);
 
   const GROUP_LABEL: Record<string, string> = {
@@ -43,11 +44,11 @@ export default async function SiteHeader({ active }: { active?: string }) {
     admin: 'Quản trị',
   };
   const GROUP_ICON: Record<string, string> = {
-    overview: '🏠',
-    strategy: '🧭',
-    exec: '🚀',
-    personal: '👤',
-    admin: '⚙️',
+    overview: 'home',
+    strategy: 'compass',
+    exec: 'bolt',
+    personal: 'user',
+    admin: 'sliders',
   };
 
   // Desktop: gom link thành CỤM DROPDOWN (giống Control Tower) → thanh menu gọn 1 hàng.
@@ -80,7 +81,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
               const it = g.items[0];
               return (
                 <Link key={g.key} href={it.href} className={`nav-top ${groupActive ? 'active' : ''}`}>
-                  <span className="nav-ic" aria-hidden>{it.icon}</span>
+                  <NavIcon name={it.icon} />
                   {it.label}
                 </Link>
               );
@@ -88,7 +89,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
             return (
               <div key={g.key} className="nav-group">
                 <button type="button" className={`nav-top nav-grp-btn ${groupActive ? 'active' : ''}`}>
-                  <span className="nav-ic" aria-hidden>{g.icon}</span>
+                  <NavIcon name={g.icon} />
                   {g.label}
                   <span className="nav-caret" aria-hidden>▾</span>
                 </button>
@@ -138,11 +139,11 @@ export default async function SiteHeader({ active }: { active?: string }) {
                 <Fragment key={l.key}>
                   {(i === 0 || links[i - 1].group !== l.group) && (
                     <div className="mobile-nav-group">
-                      <span className="nav-ic" aria-hidden>{GROUP_ICON[l.group]}</span> {GROUP_LABEL[l.group]}
+                      <NavIcon name={GROUP_ICON[l.group]} /> {GROUP_LABEL[l.group]}
                     </div>
                   )}
                   <Link href={l.href} className={active === l.key ? 'active' : ''}>
-                    <span className="nav-ic" aria-hidden>{l.icon}</span>
+                    <NavIcon name={l.icon} />
                     {l.label}
                   </Link>
                 </Fragment>
