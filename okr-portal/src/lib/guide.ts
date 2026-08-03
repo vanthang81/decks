@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-03.58';
+export const GUIDE_VERSION = '2026-08-03.59';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -474,6 +474,14 @@ export const FEATURES: Feature[] = [
       'Bấm vào tên bạn ở góc phải để mở Cài đặt cá nhân: xem hồ sơ (họ tên · vai trò · đơn vị — do quản trị viên quản lý) và tuỳ chọn thông báo. Mỗi loại (được nhắc @ · trả lời bình luận · bình luận ở mục bạn phụ trách · được giao việc) có công tắc riêng, thêm công tắc gửi email tổng. Lưu là áp dụng ngay.',
   },
   {
+    key: 'project-charter',
+    title: 'Điều lệ dự án (Project Charter)',
+    where: 'Trang chi tiết Dự án · thẻ "Điều lệ dự án"',
+    help: 'Khai báo điều lệ chuẩn PM: mục tiêu · phạm vi · bàn giao · cột mốc · bên liên quan · rủi ro.',
+    detail:
+      'Mỗi dự án có Điều lệ (Charter) theo best-practice quản trị dự án: Bối cảnh & lý do · Mục tiêu · Trong/Ngoài phạm vi · Sản phẩm bàn giao · Cột mốc chính · Các bên liên quan · Nhà tài trợ · Rủi ro & giả định · Tiêu chí thành công. Người quản lý dự án bấm "Khai báo/Sửa điều lệ" ở góc phải-trên thẻ; nội dung đã điền hiển thị gọn theo lưới ngay khi mở dự án. Giúp thống nhất mục tiêu & phạm vi trước khi thực thi.',
+  },
+  {
     key: 'budget',
     title: 'Quản trị ngân sách',
     where: 'Menu "Thực thi" → "Ngân sách" (chỉ CEO/CFO)',
@@ -542,6 +550,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/08/2026 (Điều lệ dự án — Project Charter)',
+    items: [
+      'Mỗi dự án có thẻ "Điều lệ dự án (Project Charter)" theo best-practice: Bối cảnh · Mục tiêu · Trong/Ngoài phạm vi · Sản phẩm bàn giao · Cột mốc · Các bên liên quan · Nhà tài trợ · Rủi ro & giả định · Tiêu chí thành công. Khai báo/sửa bằng popup ở góc phải-trên; hiển thị gọn khi mở dự án.',
+    ],
+  },
   {
     date: '03/08/2026 (Trang Quản trị ngân sách)',
     items: [

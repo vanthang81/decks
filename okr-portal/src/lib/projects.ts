@@ -44,6 +44,7 @@ export type ProjectRow = Project & {
   progress: number;
   task_budget_planned: number;
   task_budget_actual: number;
+  charter: import('./charter').Charter;
 };
 
 const SELECT = `
@@ -57,7 +58,8 @@ const SELECT = `
          COALESCE((SELECT avg(i.progress) FROM okr_initiatives i
                     WHERE i.project_id = p.id AND i.status <> 'canceled'), 0)::float8 AS progress,
          COALESCE((SELECT sum(i.budget_planned) FROM okr_initiatives i WHERE i.project_id = p.id), 0)::float8 AS task_budget_planned,
-         COALESCE((SELECT sum(i.budget_actual) FROM okr_initiatives i WHERE i.project_id = p.id), 0)::float8 AS task_budget_actual
+         COALESCE((SELECT sum(i.budget_actual) FROM okr_initiatives i WHERE i.project_id = p.id), 0)::float8 AS task_budget_actual,
+         COALESCE(p.charter, '{}'::jsonb) AS charter
     FROM okr_projects p
     LEFT JOIN okr_users ou ON ou.email = p.owner_email
     LEFT JOIN okr_units un ON un.id = p.unit_id`;
@@ -183,6 +185,10 @@ export async function updateProject(
     [id, input.name, input.description, input.owner_email, input.unit_id, input.status,
      input.start_on, input.due_on, input.budget_planned, input.budget_actual],
   );
+}
+
+export async function setProjectCharter(id: string, charter: import('./charter').Charter): Promise<void> {
+  await query('UPDATE okr_projects SET charter=$2, updated_at=now() WHERE id=$1', [id, JSON.stringify(charter)]);
 }
 
 export async function deleteProject(id: string): Promise<void> {

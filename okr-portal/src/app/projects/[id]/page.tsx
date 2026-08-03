@@ -28,7 +28,32 @@ import {
   createInitiativeAction,
   moveInitiativeAction,
 } from '../../objectives/actions';
-import { updateProjectAction, deleteProjectAction, createProjectForInitiativeAction } from '../actions';
+import { updateProjectAction, deleteProjectAction, createProjectForInitiativeAction, saveProjectCharterAction } from '../actions';
+import EditModal from '@/components/EditModal';
+import NavIcon from '@/components/NavIcon';
+import { CHARTER_FIELDS, charterFilled, type Charter } from '@/lib/charter';
+
+// Ô nhập điều lệ dự án (dùng trong popup Sửa điều lệ).
+function CharterFields({ id, charter }: { id: string; charter: Charter }) {
+  return (
+    <>
+      <input type="hidden" name="id" value={id} />
+      {CHARTER_FIELDS.map((f) => (
+        <div key={f.key}>
+          <label className="f">{f.label}</label>
+          <textarea className="i" name={`ch_${f.key}`} rows={f.rows} defaultValue={charter[f.key] ?? ''} placeholder={f.ph} />
+        </div>
+      ))}
+    </>
+  );
+}
+
+// Hiển thị 1 trường điều lệ: trường "list" render mỗi dòng thành gạch đầu dòng.
+function CharterValue({ value, list }: { value: string; list: boolean }) {
+  const lines = value.split('\n').map((s) => s.trim()).filter(Boolean);
+  if (list && lines.length > 1) return <ul className="charter-ul">{lines.map((l, i) => <li key={i}>{l}</li>)}</ul>;
+  return <p className="charter-p">{value}</p>;
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -121,6 +146,39 @@ export default async function ProjectDetail({ params }: { params: { id: string }
               </div>
             </div>
           </div>
+        </div>
+
+        {/* ---- Điều lệ dự án (Project Charter) ---- */}
+        <div className="card">
+          <div className="flexbtw flexbtw-top">
+            <h3 style={{ marginTop: 0 }}>Điều lệ dự án (Project Charter)<HelpTip k="project-charter" /></h3>
+            {canManage && (
+              <EditModal
+                title="Điều lệ dự án (Project Charter)"
+                label={charterFilled(p.charter) ? 'Sửa điều lệ' : 'Khai báo điều lệ'}
+                icon={<NavIcon name="pencil" />}
+                submitLabel="Lưu điều lệ"
+                action={saveProjectCharterAction}
+                wide
+              >
+                <CharterFields id={p.id} charter={p.charter} />
+              </EditModal>
+            )}
+          </div>
+          {charterFilled(p.charter) ? (
+            <div className="charter-grid">
+              {CHARTER_FIELDS.filter((f) => (p.charter[f.key] ?? '').trim()).map((f) => (
+                <div key={f.key} className="charter-item">
+                  <div className="charter-k">{f.label}</div>
+                  <CharterValue value={p.charter[f.key]!.trim()} list={f.list} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="muted" style={{ margin: 0 }}>
+              Chưa khai báo điều lệ. {canManage ? 'Bấm "Khai báo điều lệ" ở góc phải-trên để nhập mục tiêu · phạm vi · sản phẩm bàn giao · cột mốc · các bên liên quan · rủi ro · tiêu chí thành công.' : 'Điều lệ dự án sẽ hiển thị tại đây khi được khai báo.'}
+            </p>
+          )}
         </div>
 
         {/* ---- Việc thuộc dự án: List / Kanban / Dòng thời gian + bấm để sửa ---- */}

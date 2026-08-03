@@ -10,6 +10,7 @@ import {
   updateProject,
   deleteProject,
   getProject,
+  setProjectCharter,
   setInitiativeProject,
   canCreateProject,
   canManageProject,
@@ -94,6 +95,24 @@ export async function updateProjectAction(fd: FormData) {
   });
   revalidatePath(`/projects/${id}`);
   revalidatePath('/projects');
+}
+
+export async function saveProjectCharterAction(fd: FormData) {
+  const user = await requireUser();
+  const units = await listUnits();
+  const id = str(fd, 'id');
+  const p = await getProject(id);
+  if (!p) throw new Error('Không tìm thấy dự án.');
+  if (!canManageProject(user, p, units, await loadAccess()))
+    throw new Error('Bạn không có quyền sửa điều lệ dự án này.');
+  const { CHARTER_FIELDS } = await import('@/lib/charter');
+  const charter: Record<string, string> = {};
+  for (const f of CHARTER_FIELDS) {
+    const v = str(fd, `ch_${f.key}`);
+    if (v) charter[f.key] = v;
+  }
+  await setProjectCharter(id, charter);
+  revalidatePath(`/projects/${id}`);
 }
 
 export async function deleteProjectAction(fd: FormData) {
