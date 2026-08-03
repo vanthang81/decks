@@ -7,7 +7,26 @@ import { loadAccess, canManageSystem } from '@/lib/access';
 import { getCompanyStrategy, listStrategicPillars, strategicPeriod } from '@/lib/strategy';
 import { BSC_PERSPECTIVE_LABEL, BSC_PERSPECTIVE_ICON, BSC_PERSPECTIVES } from '@/lib/okr';
 import { progressColor } from '@/lib/format';
+import EditModal from '@/components/EditModal';
 import { saveStrategyAction } from './actions';
+
+// Ô nhập form chiến lược — dùng lại trong popup Sửa (góc phải-trên).
+function StrategyFields({ strat }: { strat: Awaited<ReturnType<typeof getCompanyStrategy>> }) {
+  return (
+    <>
+      <label className="f">Chân trời chiến lược (vd 2026–2030)</label>
+      <input className="i" name="horizon" defaultValue={strat.horizon} placeholder="2026–2030" />
+      <label className="f">Tầm nhìn (Vision)</label>
+      <textarea className="i" name="vision" rows={2} defaultValue={strat.vision} placeholder="Trở thành…" />
+      <label className="f">Sứ mệnh (Mission)</label>
+      <textarea className="i" name="mission" rows={2} defaultValue={strat.mission} placeholder="Chúng tôi tồn tại để…" />
+      <label className="f">Khát vọng / Định vị chiến lược</label>
+      <textarea className="i" name="ambition" rows={2} defaultValue={strat.ambition} placeholder="Dẫn đầu bán lẻ VBĐQ…" />
+      <label className="f">Giá trị cốt lõi (mỗi dòng một giá trị)</label>
+      <textarea className="i" name="values" rows={4} defaultValue={strat.values.join('\n')} placeholder={'Chính trực\nKhách hàng là trọng tâm\nXuất sắc vận hành'} />
+    </>
+  );
+}
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Chiến lược công ty · BTMH OKR' };
@@ -28,7 +47,7 @@ export default async function StrategyPage() {
     <>
       <SiteHeader active="strategy" />
       <div className="wrap">
-        <div className="flexbtw">
+        <div className="flexbtw flexbtw-top">
           <div>
             <div className="pagetitle">Chiến lược công ty<HelpTip k="company-strategy" /></div>
             <p className="subtitle">
@@ -36,6 +55,11 @@ export default async function StrategyPage() {
               {strat.horizon ? <> · chân trời <b>{strat.horizon}</b></> : null} — rồi rải xuống OKR.
             </p>
           </div>
+          {isExec && (
+            <EditModal title="Khai báo / sửa chiến lược công ty" label={has ? 'Sửa chiến lược' : 'Khai báo chiến lược'} submitLabel="Lưu chiến lược" action={saveStrategyAction}>
+              <StrategyFields strat={strat} />
+            </EditModal>
+          )}
         </div>
 
         {/* Chuỗi phương pháp luận */}
@@ -52,7 +76,7 @@ export default async function StrategyPage() {
         {!has && (
           <div className="card" style={{ borderLeft: '4px solid var(--accent)' }}>
             <p style={{ margin: 0 }}>
-              <b>Chưa khai báo chiến lược.</b> {isExec ? 'Mở "Khai báo/sửa chiến lược" bên dưới để nhập Tầm nhìn · Sứ mệnh · Giá trị cốt lõi.' : 'CEO/CFO sẽ khai báo Tầm nhìn · Sứ mệnh · Giá trị cốt lõi tại đây.'}
+              <b>Chưa khai báo chiến lược.</b> {isExec ? 'Bấm "Khai báo chiến lược" ở góc phải-trên để nhập Tầm nhìn · Sứ mệnh · Giá trị cốt lõi.' : 'CEO/CFO sẽ khai báo Tầm nhìn · Sứ mệnh · Giá trị cốt lõi tại đây.'}
             </p>
           </div>
         )}
@@ -149,25 +173,6 @@ export default async function StrategyPage() {
           </div>
         </div>
 
-        {/* Khai báo / sửa (exec) */}
-        {isExec && (
-          <details className="card strat-edit">
-            <summary><b>✏️ Khai báo / sửa chiến lược</b> <span className="muted">(chỉ CEO/CFO)</span></summary>
-            <form action={saveStrategyAction} className="strat-form">
-              <label className="f">Chân trời chiến lược (vd 2026–2030)</label>
-              <input className="i" name="horizon" defaultValue={strat.horizon} placeholder="2026–2030" />
-              <label className="f">Tầm nhìn (Vision)</label>
-              <textarea className="i" name="vision" rows={2} defaultValue={strat.vision} placeholder="Trở thành…" />
-              <label className="f">Sứ mệnh (Mission)</label>
-              <textarea className="i" name="mission" rows={2} defaultValue={strat.mission} placeholder="Chúng tôi tồn tại để…" />
-              <label className="f">Khát vọng / Định vị chiến lược</label>
-              <textarea className="i" name="ambition" rows={2} defaultValue={strat.ambition} placeholder="Dẫn đầu bán lẻ VBĐQ…" />
-              <label className="f">Giá trị cốt lõi (mỗi dòng một giá trị)</label>
-              <textarea className="i" name="values" rows={4} defaultValue={strat.values.join('\n')} placeholder={'Chính trực\nKhách hàng là trọng tâm\nXuất sắc vận hành'} />
-              <div style={{ marginTop: 10 }}><button className="btn" type="submit">Lưu chiến lược</button></div>
-            </form>
-          </details>
-        )}
       </div>
     </>
   );

@@ -10,6 +10,7 @@ import { listUsers } from '@/lib/users';
 import { getCurrentPeriod } from '@/lib/periods';
 import { listKpiResults } from '@/lib/kpi-values';
 import KpiResultCell from '@/components/KpiResultCell';
+import EditModal from '@/components/EditModal';
 import { BSC_PERSPECTIVES, BSC_PERSPECTIVE_LABEL, BSC_PERSPECTIVE_ICON } from '@/lib/okr';
 import type { Unit } from '@/lib/org';
 import type { OkrUser } from '@/lib/users';
@@ -187,12 +188,19 @@ export default async function KpiLibraryPage() {
         <p className="subtitle" style={{ marginBottom: 6 }}>
           <Link href="/admin">← Quản trị</Link>
         </p>
-        <div className="pagetitle">Thư viện KPI<HelpTip k="kpi-library" /></div>
-        <p className="subtitle">
-          Khai báo chỉ số đo dùng lại cho toàn hệ thống: viễn cảnh BSC · module (KRA) · tầng &amp; trọng số ·
-          nguồn (tự động/nhập tay) · ngưỡng Watch/Alert/Escalate · chủ sở hữu. {kpis.length} KPI ·
-          tổng trọng số đang hoạt động: <b>{totalWeight}</b>.
-        </p>
+        <div className="flexbtw flexbtw-top">
+          <div>
+            <div className="pagetitle">Thư viện KPI<HelpTip k="kpi-library" /></div>
+            <p className="subtitle">
+              Khai báo chỉ số đo dùng lại cho toàn hệ thống: viễn cảnh BSC · module (KRA) · tầng &amp; trọng số ·
+              nguồn (tự động/nhập tay) · ngưỡng Watch/Alert/Escalate · chủ sở hữu. {kpis.length} KPI ·
+              tổng trọng số đang hoạt động: <b>{totalWeight}</b>.
+            </p>
+          </div>
+          <EditModal title="Thêm KPI mới" label="Thêm KPI" icon="＋" submitLabel="Tạo KPI" action={createKpiAction} wide>
+            <KpiFields units={units} users={users} />
+          </EditModal>
+        </div>
 
         <div className="card">
           <div className="table-scroll">
@@ -215,25 +223,6 @@ export default async function KpiLibraryPage() {
                     <td>
                       <b>{k.name}</b>
                       {k.module && <div className="muted" style={{ fontSize: 11.5 }}>{k.module}</div>}
-                      <details style={{ marginTop: 4 }}>
-                        <summary className="linkbtn" style={{ fontSize: 12 }}>✏️ Sửa</summary>
-                        <form action={updateKpiAction} className="kpi-editform">
-                          <input type="hidden" name="id" value={k.id} />
-                          <KpiFields kpi={k} units={units} users={users} />
-                          <div className="kpi-editactions">
-                            <button className="btn sm" type="submit">Lưu KPI</button>
-                          </div>
-                        </form>
-                        <form action={deleteKpiAction} className="kpi-delform">
-                          <input type="hidden" name="id" value={k.id} />
-                          <ConfirmButton
-                            label="🗑 Xoá KPI"
-                            className="btn ghost sm danger"
-                            title="Xoá KPI"
-                            message={`Xoá KPI "${k.name}"? Không hoàn tác.`}
-                          />
-                        </form>
-                      </details>
                     </td>
                     <td>
                       {k.bsc_perspective
@@ -255,27 +244,39 @@ export default async function KpiLibraryPage() {
                         : `${k.threshold_watch ?? '·'} / ${k.threshold_alert ?? '·'} / ${k.threshold_escalate ?? '·'}`}
                     </td>
                     <td>
-                      <form action={toggleKpiActiveAction}>
-                        <input type="hidden" name="id" value={k.id} />
-                        <input type="hidden" name="active" value={k.is_active ? '0' : '1'} />
-                        <button className="btn ghost sm" type="submit">{k.is_active ? 'Ẩn' : 'Bật'}</button>
-                      </form>
+                      <div className="row-actions">
+                        <EditModal
+                          title={`Sửa KPI · ${k.name}`}
+                          label="Sửa"
+                          submitLabel="Lưu KPI"
+                          action={updateKpiAction}
+                          triggerClass="btn ghost sm"
+                          wide
+                        >
+                          <input type="hidden" name="id" value={k.id} />
+                          <KpiFields kpi={k} units={units} users={users} />
+                        </EditModal>
+                        <form action={toggleKpiActiveAction}>
+                          <input type="hidden" name="id" value={k.id} />
+                          <input type="hidden" name="active" value={k.is_active ? '0' : '1'} />
+                          <button className="btn ghost sm" type="submit" title={k.is_active ? 'Ẩn khỏi hệ thống' : 'Bật lại'}>{k.is_active ? 'Ẩn' : 'Bật'}</button>
+                        </form>
+                        <form action={deleteKpiAction}>
+                          <input type="hidden" name="id" value={k.id} />
+                          <ConfirmButton
+                            label="🗑"
+                            className="btn ghost sm danger"
+                            title="Xoá KPI"
+                            message={`Xoá KPI "${k.name}"? Không hoàn tác.`}
+                          />
+                        </form>
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
-
-        <div className="card">
-          <h3 style={{ marginTop: 0 }}>＋ Thêm KPI</h3>
-          <form action={createKpiAction}>
-            <KpiFields units={units} users={users} />
-            <div style={{ marginTop: 14 }}>
-              <button className="btn" type="submit">Tạo KPI</button>
-            </div>
-          </form>
         </div>
       </div>
     </>

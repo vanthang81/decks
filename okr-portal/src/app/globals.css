@@ -300,6 +300,10 @@ table.t th.sortable.active { color: var(--primary); }
 .kpi-editactions { display: flex; justify-content: flex-end; margin-top: 12px; }
 .kpi-delform { margin-top: 6px; }
 
+/* Nhóm nút thao tác gọn trên 1 dòng bảng (Sửa · Ẩn · Xoá) — góc phải mỗi hàng */
+.row-actions { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.row-actions form { display: inline-flex; margin: 0; }
+
 /* Cột "Kết quả" ở Thư viện KPI — chip hiện số thực + % đạt, bấm mở popup xu hướng */
 .th-sub { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: none; letter-spacing: 0; margin-top: 1px; }
 .kpi-result-chip {
@@ -675,6 +679,9 @@ textarea.i { min-height: 70px; resize: vertical; }
 .stat .l { color: var(--muted); font-size: 13px; }
 hr.sep { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
 .flexbtw { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+/* Hàng tiêu đề có nút hành động ở GÓC PHẢI-TRÊN (nút canh đỉnh, không kéo giãn theo tiêu đề nhiều dòng) */
+.flexbtw-top { align-items: flex-start; }
+.okr-modal.okr-modal-wide { max-width: 760px; }
 details.inline { margin-top: 10px; }
 details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 600; font-size: 14px; }
 

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-03.49';
+export const GUIDE_VERSION = '2026-08-03.50';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -526,6 +526,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/08/2026 (Sửa gọn bằng popup ở góc phải-trên · Thư viện KPI đẹp hơn)',
+    items: [
+      'Chuẩn hoá thao tác Sửa/Khai báo: nút gọn đặt ở GÓC PHẢI-TRÊN của đúng box, bấm mở popup — thay cho khối form dài ở cuối trang. Áp cho trang Chiến lược (nút "Sửa chiến lược") và sẽ nhân rộng toàn hệ thống. Nút Sửa/Xoá/Thêm chỉ hiện với người có quyền.',
+      'Thư viện KPI: bỏ form bung dài trong bảng; mỗi hàng có cụm nút gọn Sửa (popup) · Ẩn · Xoá; nút "Thêm KPI" ở góc phải-trên. Gọn gàng, chuyên nghiệp hơn.',
+    ],
+  },
   {
     date: '03/08/2026 (Tách CEO/CFO · icon menu · kết quả KPI tại chỗ)',
     items: [
