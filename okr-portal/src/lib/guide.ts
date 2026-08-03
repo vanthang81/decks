@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-03.61';
+export const GUIDE_VERSION = '2026-08-03.62';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -474,6 +474,14 @@ export const FEATURES: Feature[] = [
       'Bấm vào tên bạn ở góc phải để mở Cài đặt cá nhân: xem hồ sơ (họ tên · vai trò · đơn vị — do quản trị viên quản lý) và tuỳ chọn thông báo. Mỗi loại (được nhắc @ · trả lời bình luận · bình luận ở mục bạn phụ trách · được giao việc) có công tắc riêng, thêm công tắc gửi email tổng. Lưu là áp dụng ngay.',
   },
   {
+    key: 'calendar',
+    title: 'Lịch',
+    where: 'Menu "Tổng quan" → "Lịch"',
+    help: 'Xem theo tháng: công việc (hạn), cuộc họp, check-in OKR trên một lịch.',
+    detail:
+      'Lịch tháng gom mọi mốc thời gian: công việc theo HẠN (đỏ), cuộc họp theo giờ họp (xanh dương, chỉ cuộc họp bạn được xem), check-in KR theo ngày (xanh lá). Bấm từng sự kiện để mở chi tiết. Chuyển tháng bằng ← Trước / Sau → hoặc về "Hôm nay". Giúp thấy bức tranh lịch điều hành để không bỏ sót.',
+  },
+  {
     key: 'meetings',
     title: 'Cuộc họp (biên bản + hành động)',
     where: 'Menu "Tổng quan" → "Cuộc họp"',
@@ -558,6 +566,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/08/2026 (Lịch tháng — công việc · cuộc họp · check-in)',
+    items: [
+      'Thêm trang "Lịch" (menu Tổng quan): lịch tháng gom công việc theo hạn, cuộc họp, check-in OKR; bấm sự kiện mở chi tiết; chuyển tháng / về Hôm nay.',
+    ],
+  },
   {
     date: '03/08/2026 (Module Cuộc họp — biên bản + hành động + phân quyền xem)',
     items: [
