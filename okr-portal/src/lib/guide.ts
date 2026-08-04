@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-04.79';
+export const GUIDE_VERSION = '2026-08-04.80';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -477,9 +477,9 @@ export const FEATURES: Feature[] = [
     key: 'calendar',
     title: 'Lịch',
     where: 'Menu "Tổng quan" → "Lịch"',
-    help: 'Lịch tháng kiểu Google/Apple: công việc (hạn), cuộc họp, check-in; bấm ngày để xem chi tiết & thêm nhanh.',
+    help: 'Lịch kiểu Google/Apple, xem theo Ngày/Tuần/Tháng: công việc (hạn), cuộc họp, check-in; bấm ngày để xem chi tiết & thêm nhanh.',
     detail:
-      'Lịch tháng gom mọi mốc thời gian: công việc theo HẠN (đỏ), cuộc họp theo giờ họp (xanh dương), check-in KR theo ngày (xanh lá). Các ô ngày ĐỀU KÍCH THƯỚC, sự kiện dài tự cắt gọn "…" (điện thoại hiện dạng chấm màu). BẤM VÀO MỘT NGÀY để mở chi tiết: xem đầy đủ danh sách sự kiện (mỗi mục bấm mở trang gốc) và THÊM NHANH cuộc họp hoặc công việc ngay trong ngày đó (đã điền sẵn ngày). PHẠM VI HIỂN THỊ: chọn "Của tôi" (mặc định — chỉ việc/cuộc họp/check-in mình phụ trách hoặc tham gia) hay "Tất cả bộ phận" (chỉ CEO/CFO — toàn cảnh mọi khối/phòng). Chuyển tháng bằng ← / → hoặc về "Hôm nay". Giúp thấy bức tranh lịch điều hành để không bỏ sót.',
+      'Lịch gom mọi mốc thời gian: công việc theo HẠN (đỏ), cuộc họp theo giờ họp (xanh dương), check-in KR theo ngày (xanh lá). BA CHẾ ĐỘ XEM (nút Ngày · Tuần · Tháng, mặc định Tháng): Tháng = lưới ô đều, sự kiện cắt gọn "…"; Tuần = 7 cột Thứ 2→Chủ nhật, ô cao hơn để xem nhiều sự kiện; Ngày = danh sách chi tiết trong ngày. Trên điện thoại, ô Tháng/Tuần hiện sự kiện dạng CHẤM MÀU cho gọn. BẤM VÀO MỘT NGÀY (ở Tháng/Tuần) để mở chi tiết: danh sách sự kiện (mỗi mục bấm mở trang gốc) và THÊM NHANH cuộc họp / công việc ngay trong ngày đó (điền sẵn ngày). PHẠM VI HIỂN THỊ: "Của tôi" (mặc định — chỉ việc/cuộc họp/check-in mình phụ trách hoặc tham gia) hay "Tất cả" (chỉ CEO/CFO — toàn cảnh mọi khối/phòng). Điều hướng ← / → (lùi/tiến theo ngày/tuần/tháng tuỳ chế độ) hoặc về "Hôm nay".',
   },
   {
     key: 'meetings',
@@ -582,6 +582,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/08/2026 (Lịch xem Ngày/Tuần/Tháng)',
+    items: [
+      'Trang Lịch thêm 3 chế độ xem: Ngày (danh sách chi tiết) · Tuần (7 cột) · Tháng (lưới, mặc định). Điều hướng ← / → lùi–tiến theo đúng chế độ đang xem.',
+    ],
+  },
   {
     date: '04/08/2026 (Chọn người tham gia họp nhanh)',
     items: [

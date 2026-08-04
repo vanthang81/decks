@@ -784,7 +784,12 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
 .admin-guide { margin: 0; padding-left: 20px; line-height: 1.9; font-size: 14px; }
 .admin-guide li { margin: 2px 0; }
 
-/* Lịch tháng — kiểu Google/Apple: ô đều nhau, sự kiện cắt gọn "…", bấm ngày để xem chi tiết */
+/* Lịch — kiểu Google/Apple: xem Ngày/Tuần/Tháng, ô đều nhau, sự kiện cắt gọn "…", bấm ngày để xem chi tiết */
+.cal-toolbar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; justify-content: space-between; margin: 4px 0 2px; }
+.cal-views { display: inline-flex; background: var(--primary-tint); border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; }
+.cal-view-btn { font-size: 12.5px; font-weight: 700; padding: 5px 15px; border-radius: 999px; color: var(--primary); text-decoration: none; white-space: nowrap; }
+.cal-view-btn:hover { text-decoration: none; background: #fff; }
+.cal-view-btn.on { background: var(--primary); color: #fff; }
 .cal-scope { display: inline-flex; background: var(--primary-tint); border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; }
 .cal-scope-btn { font-size: 12.5px; font-weight: 700; padding: 5px 13px; border-radius: 999px; color: var(--primary); text-decoration: none; white-space: nowrap; }
 .cal-scope-btn:hover { text-decoration: none; background: #fff; }
@@ -798,7 +803,12 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
 .cal-card { padding: 0; overflow: hidden; }
 .cal-wdrow { display: grid; grid-template-columns: repeat(7, 1fr); }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 116px; }
+.cal-grid-week { grid-auto-rows: 248px; }
 .cal-wd { background: var(--primary); color: rgba(255,255,255,.92); font-weight: 700; font-size: 12px; text-align: center; padding: 8px 4px; }
+.cal-wd-today { background: var(--primary-dark); box-shadow: inset 0 -3px 0 var(--accent); }
+/* Xem theo NGÀY (agenda) */
+.cal-day-card { padding: 16px 18px; }
+.cal-day-head { font-weight: 800; font-size: 16px; margin-bottom: 8px; }
 .cal-cell { height: 116px; min-width: 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 4px; display: flex; flex-direction: column; gap: 3px; align-items: stretch; text-align: left; background: #fff; font: inherit; cursor: pointer; overflow: hidden; }
 .cal-cell:nth-child(7n) { border-right: 0; }
 .cal-cell.cal-has:hover, .cal-cell:hover { background: var(--primary-tint); }
@@ -835,9 +845,12 @@ i.cal-task, .cal-dot.cal-task { background: var(--primary); } i.cal-meeting, .ca
 .form-err { color: #b91c1c; font-size: 12.5px; margin: 6px 0 0; }
 @media (max-width: 640px) {
   .cal-grid { grid-auto-rows: 72px; }
+  .cal-grid-week { grid-auto-rows: 116px; }
   .cal-cell { height: 72px; padding: 3px 2px; gap: 4px; }
-  .cal-wd { font-size: 10.5px; padding: 6px 2px; }
-  .cal-nav { width: 100%; justify-content: space-between; margin-top: 8px; }
+  .cal-grid-week .cal-cell { height: 116px; }
+  .cal-wd { font-size: 9.5px; padding: 6px 1px; }
+  .cal-nav { justify-content: center; }
+  .cal-toolbar { gap: 8px; }
   /* Điện thoại: sự kiện thu thành CHẤM màu (giống Apple/Google) — bấm ngày để xem đầy đủ */
   .cal-events { flex-direction: row; flex-wrap: wrap; gap: 3px; align-content: flex-start; }
   .cal-ev { width: 7px; height: 7px; padding: 0; border-radius: 50%; font-size: 0; line-height: 0; overflow: hidden; flex: 0 0 auto; }
