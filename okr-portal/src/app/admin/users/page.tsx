@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import ConfirmButton from '@/components/ConfirmButton';
 import EditUserModal from '@/components/EditUserModal';
+import UserSearchBox from '@/components/UserSearchBox';
 import { requireUser } from '@/lib/current-user';
 import { ROLE_LABEL, ROLES, isExec } from '@/lib/rbac';
 import { loadAccess, canManageSystem, canAssignPerms } from '@/lib/access';
@@ -92,6 +93,7 @@ export default async function AdminUsers() {
         </div>
 
         <div className="card">
+          <UserSearchBox targetId="users-tbody" total={users.length} />
           <div className="table-scroll">
             <table className="t">
               <thead>
@@ -105,9 +107,9 @@ export default async function AdminUsers() {
                   <th></th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="users-tbody">
                 {users.map((u) => (
-                  <tr key={u.email}>
+                  <tr key={u.email} data-s={`${u.display_name ?? ''} ${u.email} ${u.title ?? ''}`.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase()}>
                     <td className="mono">{u.email}</td>
                     <td>
                       <Link href={`/users/${encodeURIComponent(u.email)}`} className="tbl-link" title="Xem hồ sơ 360°">

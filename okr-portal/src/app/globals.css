@@ -229,6 +229,16 @@ img.cmt-avatar, img.cmt-mm-av, img.ntf-av { object-fit: cover; }
 .ts-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; align-items: center; }
 .ts-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--ink); }
 
+/* Ô tìm người dùng (Quản trị → Người dùng) */
+.usr-search { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.usr-search-box { position: relative; flex: 1; min-width: 220px; max-width: 480px; display: flex; align-items: center; }
+.usr-search-ic { position: absolute; left: 11px; color: var(--muted); display: inline-flex; pointer-events: none; }
+.usr-search-input { width: 100%; padding: 9px 32px 9px 34px; border: 1px solid var(--line); border-radius: 10px; font: inherit; font-size: 14px; background: #fff; color: var(--ink); }
+.usr-search-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-tint); }
+.usr-search-x { position: absolute; right: 8px; border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 12px; padding: 4px; border-radius: 50%; }
+.usr-search-x:hover { background: var(--primary-tint); color: var(--primary); }
+.usr-search-cnt { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+
 /* Droplist có tìm kiếm (SearchSelect / combobox) */
 .ss { position: relative; }
 .ss-control { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; text-align: left; cursor: pointer; }
