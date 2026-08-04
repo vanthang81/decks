@@ -2,6 +2,7 @@ import {
   MEETING_TYPE_LABEL, MEETING_TYPES, VISIBILITY_LABEL, type Meeting,
 } from '@/lib/meetings';
 import ParticipantsPicker from '@/components/ParticipantsPicker';
+import SearchSelect from '@/components/SearchSelect';
 
 // Bộ ô nhập cuộc họp — dùng chung cho popup Tạo & Sửa (server component).
 export default function MeetingFields({
@@ -42,16 +43,13 @@ export default function MeetingFields({
       <div className="row">
         <div>
           <label className="f">Chủ trì</label>
-          <select className="i" name="owner_email" defaultValue={m?.owner_email ?? defaultOwner}>
-            {users.map((u) => <option key={u.email} value={u.email}>{u.display_name || u.email}</option>)}
-          </select>
+          <SearchSelect name="owner_email" defaultValue={m?.owner_email ?? defaultOwner}
+            options={users.map((u) => ({ value: u.email, label: u.display_name || u.email }))} />
         </div>
         <div>
           <label className="f">Thư ký</label>
-          <select className="i" name="secretary_email" defaultValue={m?.secretary_email ?? ''}>
-            <option value="">— Chưa chọn —</option>
-            {users.map((u) => <option key={u.email} value={u.email}>{u.display_name || u.email}</option>)}
-          </select>
+          <SearchSelect name="secretary_email" defaultValue={m?.secretary_email ?? ''} emptyLabel="— Chưa chọn —"
+            options={users.map((u) => ({ value: u.email, label: u.display_name || u.email }))} />
         </div>
         <div>
           <label className="f">Trạng thái</label>
@@ -65,17 +63,13 @@ export default function MeetingFields({
       <div className="row">
         <div>
           <label className="f">Khối / Phòng liên quan</label>
-          <select className="i" name="unit_id" defaultValue={m?.unit_id ?? ''}>
-            <option value="">— Không gắn —</option>
-            {units.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.type === 'division' ? 'Khối' : u.type === 'department' ? 'Phòng' : 'Công ty'})</option>)}
-          </select>
+          <SearchSelect name="unit_id" defaultValue={m?.unit_id ?? ''} emptyLabel="— Không gắn —"
+            options={units.map((u) => ({ value: u.id, label: `${u.name} (${u.type === 'division' ? 'Khối' : u.type === 'department' ? 'Phòng' : 'Công ty'})` }))} />
         </div>
         <div>
           <label className="f">Dự án liên quan</label>
-          <select className="i" name="project_id" defaultValue={m?.project_id ?? ''}>
-            <option value="">— Không gắn —</option>
-            {projects.map((p) => <option key={p.id} value={p.id}>{p.code ? `${p.code} · ` : ''}{p.name}</option>)}
-          </select>
+          <SearchSelect name="project_id" defaultValue={m?.project_id ?? ''} emptyLabel="— Không gắn —"
+            options={projects.map((p) => ({ value: p.id, label: `${p.code ? p.code + ' · ' : ''}${p.name}` }))} />
         </div>
         <div>
           <label className="f">Ai được xem</label>
@@ -89,12 +83,8 @@ export default function MeetingFields({
       {meetings && meetings.length > 0 && (
         <>
           <label className="f">Cuộc họp trước (nối chuỗi) <span className="muted" style={{ fontWeight: 400 }}>— vd chuỗi check-in dự án hàng tuần</span></label>
-          <select className="i" name="previous_meeting_id" defaultValue={m?.previous_meeting_id ?? ''}>
-            <option value="">— Không nối —</option>
-            {meetings.filter((x) => x.id !== m?.id).map((x) => (
-              <option key={x.id} value={x.id}>{x.code ? `${x.code} · ` : ''}{x.title}</option>
-            ))}
-          </select>
+          <SearchSelect name="previous_meeting_id" defaultValue={m?.previous_meeting_id ?? ''} emptyLabel="— Không nối —"
+            options={meetings.filter((x) => x.id !== m?.id).map((x) => ({ value: x.id, label: `${x.code ? x.code + ' · ' : ''}${x.title}` }))} />
         </>
       )}
       <label className="f">Người tham gia / theo dõi <span className="muted" style={{ fontWeight: 400 }}>(gõ tên để chọn nhanh, hoặc nhập email người ngoài)</span></label>

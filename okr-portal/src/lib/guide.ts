@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-04.83';
+export const GUIDE_VERSION = '2026-08-04.84';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -582,6 +582,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/08/2026 (Droplist có tìm kiếm)',
+    items: [
+      'Form cuộc họp: các ô chọn danh sách dài (Chủ trì · Thư ký · Khối/Phòng · Dự án · Cuộc họp trước) nay CÓ Ô TÌM KIẾM — gõ vài chữ (không cần dấu) để lọc nhanh thay vì cuộn cả danh sách.',
+    ],
+  },
   {
     date: '04/08/2026 (Ngân sách: bấm đơn vị xem chi tiết)',
     items: [
