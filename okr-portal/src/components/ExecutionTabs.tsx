@@ -524,9 +524,11 @@ function EditModal({
       <div className="okr-modal" onMouseDown={(e) => e.stopPropagation()}>
         <div className="okr-modal-head">
           <div>
-            <span className={`badge ${KIND_CLS[mKind]}`} style={{ fontSize: 11 }}>
-              {KIND_LABEL[mKind]}
-            </span>{' '}
+            {mKind !== 'action' && (
+              <><span className={`badge ${KIND_CLS[mKind]}`} style={{ fontSize: 11 }}>
+                {KIND_LABEL[mKind]}
+              </span>{' '}</>
+            )}
             {card.code && <span className="okr-code">{card.code}</span>}
           </div>
           <button type="button" className="okr-modal-x" onClick={onClose} aria-label="Đóng">
@@ -1025,9 +1027,11 @@ function ListView({
             >
               <div className="il-main">
                 <div className="il-ttl">
-                  <span className={`badge ${KIND_CLS[effKind(n, childParents)]}`} style={{ fontSize: 10.5 }}>
-                    {KIND_LABEL[effKind(n, childParents)]}
-                  </span>
+                  {effKind(n, childParents) !== 'action' && (
+                    <span className={`badge ${KIND_CLS[effKind(n, childParents)]}`} style={{ fontSize: 10.5 }}>
+                      {KIND_LABEL[effKind(n, childParents)]}
+                    </span>
+                  )}
                   {n.code && <span className="okr-code">{n.code}</span>}
                   <b>{n.title}</b>
                   <span className={`badge ${STATUS_CLS[n.status]}`} style={{ fontSize: 10.5 }}>
@@ -1171,16 +1175,20 @@ function KanbanView({
                       }}
                       title={editable ? 'Bấm để sửa · kéo để đổi trạng thái' : 'Bấm để xem'}
                     >
-                      <div className="kb-card-top">
-                        <span className={`badge ${KIND_CLS[effKind(c, childParents)]}`} style={{ fontSize: 10 }}>
-                          {KIND_LABEL[effKind(c, childParents)]}
-                        </span>
-                        {c.priority === 'high' && (
-                          <span className="badge red" style={{ fontSize: 10 }}>
-                            Ưu tiên
-                          </span>
-                        )}
-                      </div>
+                      {(effKind(c, childParents) !== 'action' || c.priority === 'high') && (
+                        <div className="kb-card-top">
+                          {effKind(c, childParents) !== 'action' && (
+                            <span className={`badge ${KIND_CLS[effKind(c, childParents)]}`} style={{ fontSize: 10 }}>
+                              {KIND_LABEL[effKind(c, childParents)]}
+                            </span>
+                          )}
+                          {c.priority === 'high' && (
+                            <span className="badge red" style={{ fontSize: 10 }}>
+                              Ưu tiên
+                            </span>
+                          )}
+                        </div>
+                      )}
                       <div className="kb-card-title">
                         {c.code && <span className="okr-code" style={{ fontSize: 10, marginRight: 4 }}>{c.code}</span>}
                         {c.title}
@@ -1301,9 +1309,11 @@ function TimelineView({
               title={canEdit(c) ? 'Bấm để sửa' : 'Bấm để xem'}
             >
               <div className="gantt-labelcol" title={c.title}>
-                <span className={`badge ${KIND_CLS[effKind(c, childParents)]}`} style={{ fontSize: 10 }}>
-                  {KIND_LABEL[effKind(c, childParents)]}
-                </span>{' '}
+                {effKind(c, childParents) !== 'action' && (
+                  <><span className={`badge ${KIND_CLS[effKind(c, childParents)]}`} style={{ fontSize: 10 }}>
+                    {KIND_LABEL[effKind(c, childParents)]}
+                  </span>{' '}</>
+                )}
                 {c.code && <span className="okr-code" style={{ fontSize: 9.5, marginRight: 3 }}>{c.code}</span>}
                 {dl !== 'none' && <><DeadlineBadge c={c} /> </>}
                 <span className="gantt-name">{c.title}</span>

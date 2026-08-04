@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-04.74';
+export const GUIDE_VERSION = '2026-08-04.75';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -579,7 +579,7 @@ export const CHANGELOG: ChangeLog[] = [
     items: [
       'Trang Công việc (/tasks) thêm 2 chế độ xem: Kanban (kéo–thả đổi trạng thái) và Dòng thời gian (Gantt) — như trang Dự án/OKR. Nhớ lựa chọn ở máy.',
       'Mỗi công việc nay có khung BÌNH LUẬN ngay trong popup sửa (ở mọi màn hình việc).',
-      'Nhãn "Dự án"/"Tiểu dự án" chỉ hiện khi nút THỰC SỰ có việc con; nút không có con hiển thị "Công việc" — tránh nhầm với cột "Thuộc dự án" (gói PRJ).',
+      'Nhãn loại chỉ hiện khi nút THỰC SỰ có việc con ("Dự án"/"Tiểu dự án"); việc lẻ KHÔNG hiện nhãn "Công việc" (thừa) — tiêu đề chảy inline, không xuống dòng lệch. Áp ở trang Công việc + list/kanban/gantt + popup.',
     ],
   },
   {

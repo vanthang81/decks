@@ -354,15 +354,12 @@ export default function TaskExplorer({
               <tr key={t.id} className="te-row" onClick={() => setEditing(t)} title="Bấm để cập nhật / sửa / xoá">
                 <td>{t.code && <span className="okr-code">{t.code}</span>}</td>
                 <td>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    {(() => {
-                      // Nút 'Dự án'/'Tiểu dự án' KHÔNG có con = thực chất chỉ là 1 công việc → hiện "Công việc"
-                      // (tránh gây hiểu nhầm với cột "Thuộc dự án" = gói PRJ).
-                      const ek = t.kind !== 'action' && !t.has_children ? 'action' : t.kind;
-                      return <span className={`badge ${KIND_CLS[ek]}`} style={{ fontSize: 10.5 }}>{KIND_LABEL[ek]}</span>;
-                    })()}
-                    <b>{t.title}</b>
-                  </div>
+                  {/* CHỈ hiện nhãn khi là NHÓM (Dự án/Tiểu dự án có việc con) — việc lẻ không cần
+                      nhãn "Công việc" (thừa). Nhãn inline để tiêu đề dài chảy tự nhiên, không xuống dòng lệch. */}
+                  {effKindT(t) !== 'action' && (
+                    <span className={`badge ${KIND_CLS[effKindT(t)]}`} style={{ fontSize: 10.5, marginRight: 6 }}>{KIND_LABEL[effKindT(t)]}</span>
+                  )}
+                  <b>{t.title}</b>
                 </td>
                 <td><span className={`badge ${STATUS_CLS[t.status]}`}>{STATUS_LABEL[t.status]}</span></td>
                 <td>
@@ -510,10 +507,12 @@ function TasksKanban({
                       onDragEnd={() => { lastDragEnd.current = Date.now(); setDragId(null); }}
                       onClick={() => { if (Date.now() - lastDragEnd.current < 250) return; onOpen(c); }}
                       title={editable ? 'Bấm để sửa · kéo để đổi trạng thái' : 'Bấm để xem'}>
-                      <div className="kb-card-top">
-                        <span className={`badge ${KIND_CLS[ek]}`} style={{ fontSize: 10 }}>{KIND_LABEL[ek]}</span>
-                        {c.priority === 'high' && <span className="badge red" style={{ fontSize: 10 }}>Ưu tiên</span>}
-                      </div>
+                      {(ek !== 'action' || c.priority === 'high') && (
+                        <div className="kb-card-top">
+                          {ek !== 'action' && <span className={`badge ${KIND_CLS[ek]}`} style={{ fontSize: 10 }}>{KIND_LABEL[ek]}</span>}
+                          {c.priority === 'high' && <span className="badge red" style={{ fontSize: 10 }}>Ưu tiên</span>}
+                        </div>
+                      )}
                       <div className="kb-card-title">
                         {c.code && <span className="okr-code" style={{ fontSize: 10, marginRight: 4 }}>{c.code}</span>}{c.title}
                       </div>
@@ -589,7 +588,7 @@ function TasksGantt({ tasks, onOpen }: { tasks: TaskRow[]; onOpen: (t: TaskRow) 
           return (
             <div key={c.id} className="gantt-row" onClick={() => onOpen(c)} style={{ cursor: 'pointer' }} title="Bấm để mở">
               <div className="gantt-labelcol" title={c.title}>
-                <span className={`badge ${KIND_CLS[ek]}`} style={{ fontSize: 10 }}>{KIND_LABEL[ek]}</span>{' '}
+                {ek !== 'action' && <><span className={`badge ${KIND_CLS[ek]}`} style={{ fontSize: 10 }}>{KIND_LABEL[ek]}</span>{' '}</>}
                 {c.code && <span className="okr-code" style={{ fontSize: 9.5, marginRight: 3 }}>{c.code}</span>}
                 {dl !== 'none' && <><DeadlineBadge t={c} /> </>}
                 <span className="gantt-name">{c.title}</span>

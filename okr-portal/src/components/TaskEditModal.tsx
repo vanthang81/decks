@@ -87,7 +87,8 @@ export default function TaskEditModal({
         <div className="okr-modal-head">
           <b>
             {task.code && <span className="okr-code" style={{ marginRight: 6 }}>{task.code}</span>}
-            {KIND_LABEL[task.kind]}
+            {/* Chỉ hiện 'Dự án'/'Tiểu dự án' khi thực sự có việc con; việc lẻ không cần chữ "Công việc". */}
+            {task.kind !== 'action' && task.has_children && KIND_LABEL[task.kind]}
           </b>
           <button type="button" className="okr-modal-x" onClick={onClose} aria-label="Đóng">✕</button>
         </div>
