@@ -19,7 +19,7 @@ import { getCurrentPeriod } from '@/lib/periods';
 import {
   getMeeting, canViewMeeting, canManageMeeting, listParticipants, listMeetingOptions, listFollowUpMeetings,
   listAccessRequests, myAccessRequest,
-  MEETING_TYPE_LABEL, MEETING_STATUS_LABEL, MEETING_STATUS_CLS, VISIBILITY_LABEL,
+  MEETING_TYPE_LABEL, meetingStatusView, VISIBILITY_LABEL,
 } from '@/lib/meetings';
 import { listInitiativesForMeeting } from '@/lib/initiatives';
 import { fmtDateTime } from '@/lib/format';
@@ -103,7 +103,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
               </div>
               <div className="obj-meta">
                 <span className="badge blue" style={{ marginRight: 6 }}>{MEETING_TYPE_LABEL[m.type]}</span>
-                <span className={`badge ${MEETING_STATUS_CLS[m.status]}`} style={{ marginRight: 6 }}>{MEETING_STATUS_LABEL[m.status]}</span>
+                {(() => { const sv = meetingStatusView(m); return <span className={`badge ${sv.cls}`} style={{ marginRight: 6 }}>{sv.label}</span>; })()}
                 {m.meeting_at ? `🕑 ${fmtDateTime(m.meeting_at)}` : ''}{m.location ? ` · 📍 ${m.location}` : ''}
               </div>
               <div className="obj-meta" style={{ marginTop: 4 }}>

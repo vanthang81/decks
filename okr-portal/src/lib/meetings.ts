@@ -20,6 +20,18 @@ export const MEETING_TYPE_LABEL: Record<MeetingType, string> = {
 export const MEETING_TYPES = Object.keys(MEETING_TYPE_LABEL) as MeetingType[];
 export const MEETING_STATUS_LABEL: Record<MeetingStatus, string> = { scheduled: 'Đã lên lịch', held: 'Đã họp', cancelled: 'Đã huỷ' };
 export const MEETING_STATUS_CLS: Record<MeetingStatus, string> = { scheduled: 'blue', held: 'green', cancelled: 'gray' };
+
+// Trạng thái HIỂN THỊ (khác trạng thái lưu): cuộc họp còn 'Đã lên lịch' nhưng giờ họp đã QUA
+// thì hiện "Đã diễn ra" cho đúng thực tế (không đổi dữ liệu — chủ trì vẫn có thể đánh dấu "Đã họp"
+// khi ghi biên bản). 'Đã họp'/'Đã huỷ' giữ nguyên.
+export function meetingStatusView(
+  m: { status: MeetingStatus; meeting_at: string | null },
+): { label: string; cls: string } {
+  if (m.status === 'scheduled' && m.meeting_at && new Date(m.meeting_at).getTime() < Date.now()) {
+    return { label: 'Đã diễn ra', cls: 'slate' };
+  }
+  return { label: MEETING_STATUS_LABEL[m.status], cls: MEETING_STATUS_CLS[m.status] };
+}
 export const VISIBILITY_LABEL: Record<MeetingVisibility, string> = {
   participants: 'Chỉ người tham gia/được thêm',
   unit: 'Cả đơn vị (khối/phòng)',

@@ -9,7 +9,7 @@ import { listUsers } from '@/lib/users';
 import { listUnits } from '@/lib/org';
 import { listAllProjectOptions } from '@/lib/projects';
 import {
-  listMeetings, MEETING_TYPE_LABEL, MEETING_STATUS_LABEL, MEETING_STATUS_CLS,
+  listMeetings, MEETING_TYPE_LABEL, meetingStatusView,
 } from '@/lib/meetings';
 import { fmtDateTime } from '@/lib/format';
 import { createMeetingAction } from './actions';
@@ -70,7 +70,7 @@ export default async function MeetingsPage() {
                       <td style={{ fontSize: 12.5 }}>{m.owner_name ?? m.owner_email ?? '—'}</td>
                       <td className="right mono">{m.participant_count}</td>
                       <td className="right mono">{m.action_count}</td>
-                      <td><span className={`badge ${MEETING_STATUS_CLS[m.status]}`}>{MEETING_STATUS_LABEL[m.status]}</span></td>
+                      <td>{(() => { const sv = meetingStatusView(m); return <span className={`badge ${sv.cls}`}>{sv.label}</span>; })()}</td>
                     </tr>
                   ))}
                 </tbody>

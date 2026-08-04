@@ -308,6 +308,7 @@ img.cmt-avatar, img.cmt-mm-av, img.ntf-av { object-fit: cover; }
 .badge.amber { background: #fef3c7; color: #92400e; }
 .badge.red { background: #fee2e2; color: #991b1b; }
 .badge.blue { background: #e0f2fe; color: #075985; }
+.badge.slate { background: #e2e8f0; color: #334155; }
 
 /* Progress bar */
 .pbar { height: 8px; border-radius: 999px; background: #EFEAE3; overflow: hidden; }
