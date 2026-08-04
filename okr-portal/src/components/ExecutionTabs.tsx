@@ -79,6 +79,10 @@ export type PersonOpt = { email: string; name: string; avatar?: string | null };
 export type UnitOpt = { id: string; name: string; type: 'company' | 'division' | 'department' };
 export type ProjectOpt = { id: string; code: string | null; name: string };
 export type MeetingOpt = { id: string; code: string | null; title: string };
+export type ObjOpt = {
+  id: string; code: string | null; title: string; unit_name: string | null;
+  krs: { id: string; code: string | null; title: string }[];
+};
 
 type View = 'list' | 'kanban' | 'timeline';
 
@@ -200,6 +204,7 @@ export default function ExecutionTabs({
   units,
   projects,
   meetings = [],
+  objectives = [],
   manageStructure = true,
   context = 'objective',
   children,
@@ -217,6 +222,7 @@ export default function ExecutionTabs({
   units: UnitOpt[];
   projects: ProjectOpt[];
   meetings?: MeetingOpt[];
+  objectives?: ObjOpt[];
   manageStructure?: boolean;
   context?: Ctx;
   children: React.ReactNode;
@@ -379,6 +385,7 @@ export default function ExecutionTabs({
           units={units}
           projects={projects}
           meetings={meetings}
+          objectives={objectives}
           save={save}
           del={del}
           createChild={createChild}
@@ -402,6 +409,7 @@ function EditModal({
   units,
   projects,
   meetings,
+  objectives,
   save,
   del,
   createChild,
@@ -418,6 +426,7 @@ function EditModal({
   units: UnitOpt[];
   projects: ProjectOpt[];
   meetings: MeetingOpt[];
+  objectives: ObjOpt[];
   save: (fd: FormData) => Promise<void>;
   del: (fd: FormData) => Promise<void>;
   createChild: (fd: FormData) => Promise<void>;
@@ -436,6 +445,10 @@ function EditModal({
   const [selProject, setSelProject] = useState<string>(card.project_id ?? '');
   const [inMeeting, setInMeeting] = useState<boolean>(!!card.meeting_id);
   const [selMeeting, setSelMeeting] = useState<string>(card.meeting_id ?? '');
+  const [inOkr, setInOkr] = useState<boolean>(!!card.objective_id);
+  const [selObjective, setSelObjective] = useState<string>(card.objective_id ?? '');
+  const [selKr, setSelKr] = useState<string>(card.key_result_id ?? '');
+  const krOptions = objectives.find((o) => o.id === selObjective)?.krs ?? [];
   const childKinds = CHILD_KIND[card.kind];
 
   useEffect(() => {
@@ -563,6 +576,84 @@ function EditModal({
                   </select>
                 </div>
               </div>
+            )}
+
+            {canManage && objectives.length > 0 && (
+              <div style={{ marginTop: 8 }}>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 13.5, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={inOkr}
+                    onChange={(e) => {
+                      setInOkr(e.target.checked);
+                      if (!e.target.checked) { setSelObjective(''); setSelKr(''); }
+                    }}
+                  />
+                  🎯 Thuộc OKR
+                </label>
+                {inOkr && (
+                  <>
+                    <div className="row" style={{ marginTop: 6 }}>
+                      <div style={{ flex: 2 }}>
+                        <select
+                          className="i"
+                          name="objective_id"
+                          value={selObjective}
+                          onChange={(e) => { setSelObjective(e.target.value); setSelKr(''); }}
+                        >
+                          <option value="">— Chọn OKR —</option>
+                          {selObjective && !objectives.some((o) => o.id === selObjective) && (
+                            // OKR hiện tại ở kỳ khác (không có trong danh sách) → giữ làm option để không bị xoá khi lưu.
+                            <option value={selObjective}>{card.objective_code ? `${card.objective_code} · ` : ''}(OKR hiện tại)</option>
+                          )}
+                          {objectives.map((o) => (
+                            <option key={o.id} value={o.id}>
+                              {o.code ? `${o.code} · ` : ''}
+                              {o.unit_name ? `[${o.unit_name}] ` : ''}
+                              {o.title}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6 }}>
+                        {selObjective && (
+                          <Link className="btn ghost sm" href={`/objectives/${selObjective}`} target="_blank" rel="noopener" title="Mở OKR ở tab mới">
+                            ↗ Mở
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                    {selObjective && krOptions.length > 0 && (
+                      <select className="i" name="key_result_id" value={selKr} onChange={(e) => setSelKr(e.target.value)} style={{ marginTop: 6 }}>
+                        <option value="">— Gắn ở cấp Objective (không chọn Key Result) —</option>
+                        {krOptions.map((k) => (
+                          <option key={k.id} value={k.id}>
+                            {k.code ? `${k.code} · ` : ''}
+                            {k.title}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    {(!selObjective || krOptions.length === 0) && (
+                      // Không hiện chọn KR → giữ KR hiện tại nếu vẫn cùng OKR, ngược lại bỏ.
+                      <input type="hidden" name="key_result_id" value={selObjective && selObjective === card.objective_id ? (card.key_result_id ?? '') : ''} />
+                    )}
+                  </>
+                )}
+                {!inOkr && (
+                  <>
+                    <input type="hidden" name="objective_id" value="" />
+                    <input type="hidden" name="key_result_id" value="" />
+                  </>
+                )}
+              </div>
+            )}
+            {canManage && objectives.length === 0 && (
+              // Không có danh sách OKR để chọn → giữ nguyên liên kết OKR hiện có.
+              <>
+                <input type="hidden" name="objective_id" value={card.objective_id ?? ''} />
+                <input type="hidden" name="key_result_id" value={card.key_result_id ?? ''} />
+              </>
             )}
 
             {canManage && (

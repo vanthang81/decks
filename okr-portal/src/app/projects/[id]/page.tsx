@@ -240,6 +240,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
               units={unitOpts}
               projects={projectOpts}
               meetings={meetingOpts}
+              objectives={objectiveOpts}
               manageStructure={false}
               context="project"
             >

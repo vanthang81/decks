@@ -14,6 +14,7 @@ import { listUnits } from '@/lib/org';
 import { listUsers } from '@/lib/users';
 import {
   getObjective,
+  listObjectivesWithKrs,
   listKeyResults,
   listChildObjectives,
   computeKrProgress,
@@ -118,6 +119,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
   const kpiSources = listKpiMetrics();
   const projectOpts = await listProjectOptions(obj.period_id);
   const meetingOpts = await listMeetingOptions(user);
+  const objectiveOpts = obj.period_id ? await listObjectivesWithKrs(obj.period_id) : [];
 
   // Check-in gom theo KR để hiện NGAY tại từng KR; check-in cấp Objective để ở mục lịch sử.
   const emailLc = user.email.toLowerCase();
@@ -641,6 +643,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
             units={unitOpts}
             projects={projectOpts}
             meetings={meetingOpts}
+            objectives={objectiveOpts}
           >
             {canManage && (
               <details className="inline" style={{ marginTop: 14 }}>

@@ -450,12 +450,27 @@ export async function editInitiativeAction(fd: FormData) {
   const perm = canUpdateInitiative(user, init, manage);
   if (!perm.manage && !perm.assignee) throw new Error('Bạn không có quyền cập nhật việc này.');
   if (perm.manage) {
+    // Gắn/đổi OKR: nếu chọn OKR mới (khác hiện tại) → phải có quyền sửa OKR đó.
+    let objectiveId = orNull(str(fd, 'objective_id'));
+    let keyResultId = orNull(str(fd, 'key_result_id'));
+    if (objectiveId && objectiveId !== init.objective_id) {
+      const [obj, units, access] = await Promise.all([getObjective(objectiveId), listUnits(), loadAccess()]);
+      if (!obj) throw new Error('OKR đã chọn không tồn tại.');
+      if (!canEditObjective(user, obj, units, access))
+        throw new Error('Bạn không có quyền gắn việc vào OKR đã chọn.');
+    }
+    if (!objectiveId) keyResultId = null; // không gắn OKR thì bỏ KR
+    // Việc PHẢI còn ít nhất một điểm neo (OKR / KR / dự án / cuộc họp) — tránh vi phạm ràng buộc DB.
+    const anchored = objectiveId || keyResultId || orNull(str(fd, 'project_id')) || orNull(str(fd, 'meeting_id'));
+    if (!anchored) throw new Error('Việc phải gắn ít nhất một OKR, dự án hoặc cuộc họp.');
     await editInitiative(id, {
       title: str(fd, 'title') || init.title,
       description: orNull(str(fd, 'description')),
       unit_id: orNull(str(fd, 'unit_id')),
       project_id: orNull(str(fd, 'project_id')),
       meeting_id: orNull(str(fd, 'meeting_id')),
+      objective_id: objectiveId,
+      key_result_id: keyResultId,
       owner_email: orNull(str(fd, 'owner_email')),
       status: (str(fd, 'status') || 'todo') as InitStatus,
       progress: num(fd, 'progress'),
@@ -472,9 +487,13 @@ export async function editInitiativeAction(fd: FormData) {
     });
   }
   revalidateTask(init);
-  // meeting_id có thể vừa đổi → revalidate cả cuộc họp mới chọn.
+  // meeting_id / objective_id có thể vừa đổi → revalidate cả mục mới chọn.
   const newMeeting = orNull(str(fd, 'meeting_id'));
   if (newMeeting && newMeeting !== init.meeting_id) revalidatePath(`/meetings/${newMeeting}`);
+  const newObjective = orNull(str(fd, 'objective_id'));
+  if (newObjective && newObjective !== init.objective_id) revalidatePath(`/objectives/${newObjective}`);
+  const newProject = orNull(str(fd, 'project_id'));
+  if (newProject && newProject !== init.project_id) revalidatePath(`/projects/${newProject}`);
 }
 
 export async function deleteInitiativeAction(fd: FormData) {

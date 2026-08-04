@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-04.72';
+export const GUIDE_VERSION = '2026-08-04.73';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -574,6 +574,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/08/2026 (Gắn/đổi OKR cho công việc ngay trong popup sửa)',
+    items: [
+      'Popup sửa công việc (trang OKR/Dự án/Cuộc họp) thêm mục "🎯 Thuộc OKR": chọn OKR (và Key Result tuỳ chọn) để map việc vào đúng OKR — kể cả việc thuần cuộc họp/dự án chưa gắn OKR. Có kiểm quyền: chỉ gắn được vào OKR bạn có quyền sửa; việc luôn còn ít nhất một điểm neo (OKR/dự án/cuộc họp).',
+    ],
+  },
   {
     date: '04/08/2026 (Sửa lỗi bố cục popup Sửa cuộc họp + link Cuộc họp ở chuỗi chiến lược)',
     items: [

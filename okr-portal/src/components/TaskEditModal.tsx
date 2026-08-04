@@ -44,6 +44,11 @@ export default function TaskEditModal({
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     fd.set('id', task.id);
+    // GIỮ nguyên các liên kết không có ô chọn trong form này (OKR/KR/cuộc họp) — nếu không set,
+    // editInitiativeAction sẽ đọc null và XOÁ liên kết. (project_id đã có select riêng.)
+    if (!fd.has('objective_id')) fd.set('objective_id', task.objective_id ?? '');
+    if (!fd.has('key_result_id')) fd.set('key_result_id', task.key_result_id ?? '');
+    if (!fd.has('meeting_id')) fd.set('meeting_id', task.meeting_id ?? '');
     setErr('');
     start(async () => {
       try {

@@ -351,6 +351,8 @@ export async function editInitiative(
     unit_id: string | null;
     project_id: string | null;
     meeting_id: string | null;
+    objective_id: string | null;
+    key_result_id: string | null;
     owner_email: string | null;
     status: InitStatus;
     progress: number;
@@ -366,12 +368,13 @@ export async function editInitiative(
     `UPDATE okr_initiatives SET title=$2, description=$3, unit_id=$4, owner_email=$5,
         status=$6, progress=$7, priority=$8, start_on=$9, due_on=$10,
         budget_planned=$11, budget_actual=$12, project_id=$13, meeting_id=$14,
+        objective_id=$15, key_result_id=$16,
         done_on = CASE WHEN $6='done' AND done_on IS NULL THEN now()::date
                        WHEN $6<>'done' THEN NULL ELSE done_on END,
         updated_at=now() WHERE id=$1`,
     [id, input.title, input.description, input.unit_id, input.owner_email, input.status, prog,
      input.priority, input.start_on, input.due_on, input.budget_planned, input.budget_actual,
-     input.project_id, input.meeting_id],
+     input.project_id, input.meeting_id, input.objective_id, input.key_result_id],
   );
   await recomputeInitiativeUp(id);
 }
