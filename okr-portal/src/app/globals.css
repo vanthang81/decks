@@ -1299,6 +1299,32 @@ details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 
 .map-lane-avg { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted); }
 .map-mini { display: inline-block; width: 60px; height: 6px; border-radius: 4px; background: var(--line); overflow: hidden; vertical-align: middle; }
 .map-mini i { display: block; height: 100%; border-radius: 4px; }
+
+/* ===== Ngân sách: thanh công cụ + popup chi tiết ===== */
+.bud-filterbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.bud-tools { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; margin-left: auto; }
+/* Toolbar ngân sách: display:flex (không inline-flex) để lấp đầy cột khi mobile → xuống dòng được */
+.bud-tools .row-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; }
+.btn-ic { width: 15px; height: 15px; vertical-align: -2px; margin-right: 3px; }
+.btn.ghost.sm .btn-ic { color: var(--primary); }
+.bud-msg { font-size: 12px; padding: 5px 9px; border-radius: 7px; max-width: 460px; text-align: right; }
+.bud-ok { background: #dcfce7; color: #166534; }
+.bud-warn { background: #fef3c7; color: #92400e; }
+.bud-err { background: #fee2e2; color: #991b1b; }
+.bud-detail-link { background: none; border: 0; cursor: pointer; font: inherit; padding: 0; }
+.bud-detail-list { display: flex; flex-direction: column; gap: 12px; }
+.bud-detail-proj { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.bud-detail-projhead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bud-detail-nums { margin-left: auto; font-size: 12.5px; color: var(--muted); }
+.bud-detail-lines { margin-top: 8px; font-size: 12.5px; }
+.bud-detail-lines th, .bud-detail-lines td { padding: 5px 8px; }
+@media (max-width: 640px) {
+  .bud-filterbar { flex-direction: column; align-items: stretch; }
+  .bud-tools { align-items: stretch; margin-left: 0; }
+  .bud-tools .row-actions { justify-content: flex-start; }
+  .bud-msg { max-width: none; text-align: left; }
+  .bud-detail-nums { margin-left: 0; width: 100%; }
+}
 .map-lane-body {
   padding: 12px; display: grid; gap: 12px;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));

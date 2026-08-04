@@ -11,6 +11,7 @@ type Counts = {
   kpi_no_value: number;
   proj_no_task: number;
   task_project_period_mismatch: number;
+  budget_line_mismatch: number;
 };
 
 const DEF: { key: keyof Counts; label: string; hint: string }[] = [
@@ -21,6 +22,7 @@ const DEF: { key: keyof Counts; label: string; hint: string }[] = [
   { key: 'kpi_no_value', label: 'KPI (có trọng số) chưa có số kỳ này', hint: 'Chưa nhập/đồng bộ mục tiêu·thực hiện trên Scorecard.' },
   { key: 'proj_no_task', label: 'Dự án chưa gắn công việc nào', hint: 'Dự án rỗng — chưa gom việc từ OKR vào.' },
   { key: 'task_project_period_mismatch', label: 'Việc gắn dự án khác kỳ với OKR gốc', hint: 'Công việc được gom vào một dự án (PRJ) thuộc kỳ KHÁC với kỳ của OKR gốc — có thể đã gắn nhầm dự án.' },
+  { key: 'budget_line_mismatch', label: 'Ngân sách chi tiết lệch với ngân sách dự án', hint: 'Tổng kế hoạch các dòng chi tiết (sổ ngân sách) khác ngân sách khai báo của dự án >5% — cập nhật ngân sách dự án cho khớp để các trang khác hiển thị đúng.' },
 ];
 
 /** Đếm các vấn đề toàn vẹn trong 1 kỳ; chỉ trả về mục có count > 0. */
@@ -38,6 +40,12 @@ export async function integrityIssues(periodId: string): Promise<IntegrityIssue[
           AND NOT EXISTS (SELECT 1 FROM okr_kpi_values v WHERE v.kpi_id=k.id AND v.period_id=$1))::int AS kpi_no_value,
        (SELECT count(*) FROM okr_projects p WHERE p.period_id=$1
           AND NOT EXISTS (SELECT 1 FROM okr_initiatives i WHERE i.project_id=p.id))::int AS proj_no_task,
+       (SELECT count(*) FROM okr_projects p
+          JOIN (SELECT project_id, SUM(planned)::float8 AS lp FROM okr_budget_lines GROUP BY project_id) bl
+            ON bl.project_id = p.id
+         WHERE p.period_id=$1 AND GREATEST(bl.lp, p.budget_planned::float8) > 0
+           AND abs(bl.lp - p.budget_planned::float8) > 0.05 * GREATEST(bl.lp, p.budget_planned::float8))::int
+         AS budget_line_mismatch,
        (SELECT count(*) FROM okr_initiatives i
           JOIN okr_projects p ON p.id = i.project_id
           JOIN okr_objectives o ON o.id = COALESCE(i.objective_id,
@@ -133,6 +141,24 @@ async function itemsFor(key: keyof Counts, periodId: string): Promise<IntegrityI
           [periodId],
         )
       ).map((p) => ({ code: p.code, title: p.name, href: `/projects/${p.id}` }));
+    case 'budget_line_mismatch':
+      return (
+        await query<{ id: string; code: string | null; name: string; lp: number; bp: number }>(
+          `SELECT p.id, p.code, p.name, bl.lp, p.budget_planned::float8 AS bp
+             FROM okr_projects p
+             JOIN (SELECT project_id, SUM(planned)::float8 AS lp FROM okr_budget_lines GROUP BY project_id) bl
+               ON bl.project_id = p.id
+            WHERE p.period_id=$1 AND GREATEST(bl.lp, p.budget_planned::float8) > 0
+              AND abs(bl.lp - p.budget_planned::float8) > 0.05 * GREATEST(bl.lp, p.budget_planned::float8)
+            ORDER BY abs(bl.lp - p.budget_planned::float8) DESC LIMIT ${CAP}`,
+          [periodId],
+        )
+      ).map((p) => ({
+        code: p.code,
+        title: p.name,
+        href: `/projects/${p.id}`,
+        sub: `sổ chi tiết ${Math.round(p.lp / 1e6)}tr · dự án khai ${Math.round(p.bp / 1e6)}tr`,
+      }));
     case 'task_project_period_mismatch':
       return (
         await query<{ code: string | null; title: string; oid: string; pcode: string | null; pperiod: string | null }>(

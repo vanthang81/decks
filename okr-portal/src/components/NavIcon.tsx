@@ -86,6 +86,15 @@ const P: Record<string, ReactNode> = {
       <path d="M16 5.2a3 3 0 0 1 0 5.6M17.5 19c0-2.6-1.2-4.2-3-4.8" />
     </>
   ),
+  download: <><path d="M12 4v11" /><path d="M8 11.5l4 4 4-4" /><path d="M5 20h14" /></>,
+  upload: <><path d="M12 20V9" /><path d="M8 12.5l4-4 4 4" /><path d="M5 4h14" /></>,
+  database: (
+    <>
+      <ellipse cx="12" cy="5.5" rx="7" ry="2.8" />
+      <path d="M5 5.5v6c0 1.55 3.13 2.8 7 2.8s7-1.25 7-2.8v-6" />
+      <path d="M5 11.5v6c0 1.55 3.13 2.8 7 2.8s7-1.25 7-2.8v-6" />
+    </>
+  ),
 };
 
 export default function NavIcon({ name, className = 'nav-ic' }: { name: string; className?: string }) {

@@ -8,6 +8,7 @@ import { getCurrentPeriod, listPeriods, getPeriod, orderPeriodsHierarchically, P
 import { budgetOverview } from '@/lib/budget';
 import { PROJECT_STATUS_LABEL, PROJECT_STATUS_CLS, type ProjectStatus } from '@/lib/projects';
 import PeriodPicker from '@/components/PeriodPicker';
+import { BudgetToolbar, UnitDetailButton, type UnitProject } from '@/components/BudgetTools';
 import { fmtVnd, progressColor } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
@@ -42,6 +43,21 @@ export default async function BudgetPage({ searchParams }: { searchParams: { per
   const usedPct = d ? pct(d.totalActual, d.totalPlanned) : 0;
   const remaining = d ? d.totalPlanned - d.totalActual : 0;
 
+  // Gom danh sách dự án theo đơn vị (cho popup "Chi tiết" theo khối).
+  const projByUnit = new Map<string, UnitProject[]>();
+  if (d) {
+    for (const p of d.projects) {
+      const key = p.unit_name ?? '— Chưa gắn đơn vị —';
+      const arr = projByUnit.get(key) ?? [];
+      arr.push({
+        id: p.id, code: p.code, name: p.name, status: p.status,
+        statusLabel: PROJECT_STATUS_LABEL[p.status], statusCls: PROJECT_STATUS_CLS[p.status],
+        planned: p.planned, actual: p.actual, lines: p.lines,
+      });
+      projByUnit.set(key, arr);
+    }
+  }
+
   return (
     <>
       <SiteHeader active="budget" />
@@ -61,11 +77,14 @@ export default async function BudgetPage({ searchParams }: { searchParams: { per
             basePath="/budget"
           />
         </div>
-        <div className="cal-legend" style={{ marginBottom: 12 }}>
-          <span className="muted" style={{ fontSize: 12.5 }}>Lọc dự án:</span>
-          {STATUS_FILTERS.map((s) => (
-            <a key={s.key} href={qs({ status: s.key })} className={`chip${statusF === s.key ? ' chip-on' : ''}`}>{s.label}</a>
-          ))}
+        <div className="bud-filterbar">
+          <div className="cal-legend" style={{ margin: 0 }}>
+            <span className="muted" style={{ fontSize: 12.5 }}>Lọc dự án:</span>
+            {STATUS_FILTERS.map((s) => (
+              <a key={s.key} href={qs({ status: s.key })} className={`chip${statusF === s.key ? ' chip-on' : ''}`}>{s.label}</a>
+            ))}
+          </div>
+          {period && <BudgetToolbar periodId={period.id} status={statusF} />}
         </div>
 
         {!d || d.projects.length === 0 ? (
@@ -127,7 +146,7 @@ export default async function BudgetPage({ searchParams }: { searchParams: { per
                 <h3 style={{ marginTop: 0 }}>Theo khối / đơn vị</h3>
                 <div className="table-scroll">
                   <table className="t">
-                    <thead><tr><th style={{ textAlign: 'left' }}>Đơn vị</th><th className="right">Số dự án</th><th className="right">Kế hoạch</th><th className="right">Đã chi</th><th>Đã dùng</th></tr></thead>
+                    <thead><tr><th style={{ textAlign: 'left' }}>Đơn vị</th><th className="right">Số dự án</th><th className="right">Kế hoạch</th><th className="right">Đã chi</th><th>Đã dùng</th><th></th></tr></thead>
                     <tbody>
                       {d.units.map((u) => {
                         const up = pct(u.actual, u.planned);
@@ -141,6 +160,7 @@ export default async function BudgetPage({ searchParams }: { searchParams: { per
                               <span className="map-mini"><i style={{ width: `${Math.min(up, 100)}%`, background: up > 100 ? '#dc2626' : 'var(--primary)' }} /></span>
                               <span className="muted mono" style={{ fontSize: 11 }}>{up}%</span>
                             </td>
+                            <td className="right"><UnitDetailButton unit={u.unit} projects={projByUnit.get(u.unit) ?? []} /></td>
                           </tr>
                         );
                       })}

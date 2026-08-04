@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-04.66';
+export const GUIDE_VERSION = '2026-08-04.67';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -501,9 +501,9 @@ export const FEATURES: Feature[] = [
     key: 'budget',
     title: 'Quản trị ngân sách',
     where: 'Menu "Thực thi" → "Ngân sách" (chỉ CEO/CFO)',
-    help: 'Ngân sách kế hoạch vs đã chi theo dự án & khối.',
+    help: 'Ngân sách kế hoạch vs đã chi theo dự án & khối; sổ chi tiết theo hạng mục, template CSV.',
     detail:
-      'Tổng hợp ngân sách toàn kỳ: Kế hoạch · Đã chi · Còn lại · % đã dùng; bảng theo từng dự án (bấm vào chi tiết dự án) và theo khối/đơn vị. "Đã chi" gom từ ngân sách thực chi của các công việc trong mỗi dự án — khai báo ngân sách khi tạo/sửa dự án và công việc. Chỉ CEO/CFO xem toàn cảnh.',
+      'Tổng hợp ngân sách theo KỲ (mặc định kỳ hiện tại) với bộ lọc trạng thái dự án (mặc định "Đang chạy"): Kế hoạch · Đã chi · Còn lại · % đã dùng; bảng theo dự án và theo khối/đơn vị. SỔ CHI TIẾT (hạng mục): mỗi dự án có thể tách ngân sách thành nhiều dòng theo hạng mục — khi đã tách, Kế hoạch/Đã chi lấy theo tổng các dòng; chưa tách thì Kế hoạch = ngân sách dự án + Đã chi = gom thực chi từ công việc. Bấm "Chi tiết" ở mỗi khối/đơn vị để xem popup cơ cấu chi phí (dự án + hạng mục). TEMPLATE CSV: nút "Xuất template" tải CSV (mở Excel sửa) → "Import CSV" nạp lại (khớp theo mã dự án + hạng mục; hàng "(tổng)" ghi thẳng ngân sách dự án). "Đồng bộ BigQuery" là đường nạp thực chi tự động (đang chờ BI chốt nguồn chi phí gắn mã dự án). Chỉ CEO/CFO. (Lệch giữa sổ chi tiết và ngân sách khai báo tự hiện ở trang Toàn vẹn.)',
   },
   {
     key: 'admin',
@@ -566,6 +566,16 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/08/2026 (Ngân sách: sổ chi tiết + template CSV + popup theo khối)',
+    items: [
+      'Sổ CHI TIẾT ngân sách theo hạng mục (okr_budget_lines): dự án tách được nhiều dòng hạng mục kế hoạch/thực chi.',
+      'Popup "Chi tiết" ở mỗi khối/đơn vị: xem cơ cấu chi phí (dự án + hạng mục) — trace-back.',
+      'Template CSV: "Xuất template" tải CSV (sửa Excel) · "Import CSV" nạp lại theo mã dự án + hạng mục.',
+      'Nút "Đồng bộ BigQuery" cho thực chi (plumbing sẵn, chờ BI chốt nguồn chi phí gắn mã dự án).',
+      'Trang Toàn vẹn: thêm cảnh báo "Ngân sách chi tiết lệch với ngân sách dự án" (>5%).',
+    ],
+  },
   {
     date: '04/08/2026 (Gắn công việc vào cuộc họp)',
     items: [
