@@ -51,7 +51,7 @@ export async function getUserProfile(email: string, full: boolean): Promise<User
        (SELECT count(*) FROM okr_initiatives i WHERE lower(i.owner_email)=lower($1) AND i.status NOT IN ('done','canceled'))::int AS "tasksOpen",
        (SELECT count(*) FROM okr_initiatives i WHERE lower(i.owner_email)=lower($1)
           AND i.due_on < current_date AND i.status NOT IN ('done','canceled'))::int AS "tasksOverdue",
-       (SELECT count(*) FROM okr_checkins c WHERE lower(c.created_by)=lower($1))::int AS checkins,
+       (SELECT count(*) FROM okr_checkins c WHERE lower(c.author_email)=lower($1))::int AS checkins,
        (SELECT count(*) FROM okr_meetings m WHERE lower(m.owner_email)=lower($1) OR lower(m.secretary_email)=lower($1)
           OR EXISTS (SELECT 1 FROM okr_meeting_participants mp WHERE mp.meeting_id=m.id AND lower(mp.email)=lower($1)))::int AS meetings`,
     [e],
@@ -95,7 +95,7 @@ export async function getUserProfile(email: string, full: boolean): Promise<User
          FROM okr_checkins c
          LEFT JOIN okr_key_results k ON k.id=c.key_result_id
          LEFT JOIN okr_objectives o ON o.id=c.objective_id
-        WHERE lower(c.created_by)=lower($1) ORDER BY c.created_at DESC LIMIT 20`, [e]),
+        WHERE lower(c.author_email)=lower($1) ORDER BY c.created_at DESC LIMIT 20`, [e]),
     query<ProfileListItem>(
       `SELECT m.id, m.code, m.title,
               to_char(m.meeting_at,'DD/MM/YYYY') AS sub, ('/meetings/'||m.id) AS href, NULL AS badge, NULL AS "badgeCls"

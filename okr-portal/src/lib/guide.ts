@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-04.76';
+export const GUIDE_VERSION = '2026-08-04.77';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -477,9 +477,9 @@ export const FEATURES: Feature[] = [
     key: 'calendar',
     title: 'Lịch',
     where: 'Menu "Tổng quan" → "Lịch"',
-    help: 'Xem theo tháng: công việc (hạn), cuộc họp, check-in OKR trên một lịch.',
+    help: 'Lịch tháng kiểu Google/Apple: công việc (hạn), cuộc họp, check-in; bấm ngày để xem chi tiết & thêm nhanh.',
     detail:
-      'Lịch tháng gom mọi mốc thời gian: công việc theo HẠN (đỏ), cuộc họp theo giờ họp (xanh dương, chỉ cuộc họp bạn được xem), check-in KR theo ngày (xanh lá). Bấm từng sự kiện để mở chi tiết. Chuyển tháng bằng ← Trước / Sau → hoặc về "Hôm nay". Giúp thấy bức tranh lịch điều hành để không bỏ sót.',
+      'Lịch tháng gom mọi mốc thời gian: công việc theo HẠN (đỏ), cuộc họp theo giờ họp (xanh dương), check-in KR theo ngày (xanh lá). Các ô ngày ĐỀU KÍCH THƯỚC, sự kiện dài tự cắt gọn "…" (điện thoại hiện dạng chấm màu). BẤM VÀO MỘT NGÀY để mở chi tiết: xem đầy đủ danh sách sự kiện (mỗi mục bấm mở trang gốc) và THÊM NHANH cuộc họp hoặc công việc ngay trong ngày đó (đã điền sẵn ngày). PHẠM VI HIỂN THỊ: chọn "Của tôi" (mặc định — chỉ việc/cuộc họp/check-in mình phụ trách hoặc tham gia) hay "Tất cả bộ phận" (chỉ CEO/CFO — toàn cảnh mọi khối/phòng). Chuyển tháng bằng ← / → hoặc về "Hôm nay". Giúp thấy bức tranh lịch điều hành để không bỏ sót.',
   },
   {
     key: 'meetings',
@@ -582,6 +582,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/08/2026 (Lịch nâng cấp kiểu Google/Apple)',
+    items: [
+      'Trang Lịch làm lại: ô ngày ĐỀU kích thước, sự kiện cắt gọn "…" (điện thoại hiện chấm màu). BẤM VÀO NGÀY mở chi tiết + THÊM NHANH cuộc họp/công việc (điền sẵn ngày). Bộ lọc phạm vi "Của tôi" (mặc định) / "Tất cả bộ phận" (chỉ CEO/CFO).',
+    ],
+  },
   {
     date: '04/08/2026 (Hồ sơ 360° người dùng)',
     items: [
