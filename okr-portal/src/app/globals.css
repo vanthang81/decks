@@ -552,6 +552,7 @@ a.ctx-chip:hover { text-decoration: underline; }
 .ctx-o { color: #8a6d1a; background: var(--gold-tint); }
 .ctx-kr { color: #245b5e; background: #e2f1f1; }
 .ctx-proj { color: var(--primary); background: var(--primary-tint); }
+.ctx-mtg { color: #6d3a8a; background: #f0e6f7; }
 
 /* ===== Timeline check-in dưới mỗi KR ===== */
 .ci-list {

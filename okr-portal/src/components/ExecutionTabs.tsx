@@ -59,6 +59,9 @@ export type Card = {
   project_id: string | null;
   project_name: string | null;
   project_code: string | null;
+  meeting_id: string | null;
+  meeting_code: string | null;
+  meeting_title: string | null;
   objective_id?: string | null;
   objective_code?: string | null;
   key_result_id?: string | null;
@@ -75,6 +78,7 @@ export type Card = {
 export type PersonOpt = { email: string; name: string; avatar?: string | null };
 export type UnitOpt = { id: string; name: string; type: 'company' | 'division' | 'department' };
 export type ProjectOpt = { id: string; code: string | null; name: string };
+export type MeetingOpt = { id: string; code: string | null; title: string };
 
 type View = 'list' | 'kanban' | 'timeline';
 
@@ -148,6 +152,11 @@ function ContextChips({ c, context }: { c: Card; context: Ctx }) {
             🔑 {c.key_result_code}
           </Link>
         )}
+        {c.meeting_id && (
+          <Link href={`/meetings/${c.meeting_id}`} className="ctx-chip ctx-mtg" onClick={stop} target="_blank" rel="noopener" title="Mở cuộc họp (tab mới)">
+            🗓 {c.meeting_code || c.meeting_title}
+          </Link>
+        )}
       </>
     );
   }
@@ -159,6 +168,11 @@ function ContextChips({ c, context }: { c: Card; context: Ctx }) {
       {c.project_id && c.project_name && (
         <Link href={`/projects/${c.project_id}`} className="ctx-chip ctx-proj" onClick={stop} target="_blank" rel="noopener" title="Mở dự án (tab mới)">
           🗂 {c.project_name}
+        </Link>
+      )}
+      {c.meeting_id && (
+        <Link href={`/meetings/${c.meeting_id}`} className="ctx-chip ctx-mtg" onClick={stop} target="_blank" rel="noopener" title="Mở cuộc họp (tab mới)">
+          🗓 {c.meeting_code || c.meeting_title}
         </Link>
       )}
     </>
@@ -178,6 +192,7 @@ export default function ExecutionTabs({
   users,
   units,
   projects,
+  meetings = [],
   manageStructure = true,
   context = 'objective',
   children,
@@ -194,6 +209,7 @@ export default function ExecutionTabs({
   users: PersonOpt[];
   units: UnitOpt[];
   projects: ProjectOpt[];
+  meetings?: MeetingOpt[];
   manageStructure?: boolean;
   context?: Ctx;
   children: React.ReactNode;
@@ -355,6 +371,7 @@ export default function ExecutionTabs({
           users={users}
           units={units}
           projects={projects}
+          meetings={meetings}
           save={save}
           del={del}
           createChild={createChild}
@@ -377,6 +394,7 @@ function EditModal({
   users,
   units,
   projects,
+  meetings,
   save,
   del,
   createChild,
@@ -392,6 +410,7 @@ function EditModal({
   users: PersonOpt[];
   units: UnitOpt[];
   projects: ProjectOpt[];
+  meetings: MeetingOpt[];
   save: (fd: FormData) => Promise<void>;
   del: (fd: FormData) => Promise<void>;
   createChild: (fd: FormData) => Promise<void>;
@@ -408,6 +427,8 @@ function EditModal({
   const [newProj, setNewProj] = useState(false);
   const [newProjName, setNewProjName] = useState('');
   const [selProject, setSelProject] = useState<string>(card.project_id ?? '');
+  const [inMeeting, setInMeeting] = useState<boolean>(!!card.meeting_id);
+  const [selMeeting, setSelMeeting] = useState<string>(card.meeting_id ?? '');
   const childKinds = CHILD_KIND[card.kind];
 
   useEffect(() => {
@@ -621,6 +642,57 @@ function EditModal({
                 )}
                 {!inProject && <input type="hidden" name="project_id" value="" />}
               </div>
+            )}
+
+            {canManage && meetings.length > 0 && (
+              <div style={{ marginTop: 8 }}>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 13.5, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={inMeeting}
+                    onChange={(e) => setInMeeting(e.target.checked)}
+                  />
+                  🗓 Thuộc cuộc họp
+                </label>
+                {inMeeting && (
+                  <div className="row" style={{ marginTop: 6 }}>
+                    <div style={{ flex: 2 }}>
+                      <select
+                        className="i"
+                        name="meeting_id"
+                        value={selMeeting}
+                        onChange={(e) => setSelMeeting(e.target.value)}
+                      >
+                        <option value="">— Chọn cuộc họp —</option>
+                        {meetings.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.code ? `${m.code} · ` : ''}
+                            {m.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6 }}>
+                      {selMeeting && (
+                        <Link
+                          className="btn ghost sm"
+                          href={`/meetings/${selMeeting}`}
+                          target="_blank"
+                          rel="noopener"
+                          title="Mở cuộc họp ở tab mới"
+                        >
+                          ↗ Mở
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {!inMeeting && <input type="hidden" name="meeting_id" value="" />}
+              </div>
+            )}
+            {canManage && meetings.length === 0 && (
+              // Không có cuộc họp nào để chọn → giữ nguyên liên kết hiện có, tránh bị xoá khi lưu.
+              <input type="hidden" name="meeting_id" value={card.meeting_id ?? ''} />
             )}
 
             <div className="row">

@@ -44,6 +44,9 @@ export type Initiative = {
   project_id: string | null;
   project_name: string | null;
   project_code: string | null;
+  meeting_id: string | null;
+  meeting_code: string | null;
+  meeting_title: string | null;
   objective_code: string | null;
   key_result_code: string | null;
   status: InitStatus;
@@ -65,6 +68,7 @@ const SELECT = `
   SELECT i.id, i.code, i.objective_id, i.key_result_id, i.parent_id, i.kind, i.title, i.description,
          i.owner_email, u.display_name AS owner_name, i.unit_id, un.name AS unit_name,
          i.project_id, pr.name AS project_name, pr.code AS project_code,
+         i.meeting_id, mt.code AS meeting_code, mt.title AS meeting_title,
          obj.code AS objective_code, kr.code AS key_result_code,
          i.status, i.priority,
          i.progress::float8 AS progress, i.start_on::text, i.due_on::text, i.done_on::text,
@@ -74,6 +78,7 @@ const SELECT = `
     LEFT JOIN okr_users u ON u.email = i.owner_email
     LEFT JOIN okr_units un ON un.id = i.unit_id
     LEFT JOIN okr_projects pr ON pr.id = i.project_id
+    LEFT JOIN okr_meetings mt ON mt.id = i.meeting_id
     LEFT JOIN okr_objectives obj ON obj.id = i.objective_id
     LEFT JOIN okr_key_results kr ON kr.id = i.key_result_id`;
 
@@ -325,6 +330,7 @@ export async function editInitiative(
     description: string | null;
     unit_id: string | null;
     project_id: string | null;
+    meeting_id: string | null;
     owner_email: string | null;
     status: InitStatus;
     progress: number;
@@ -339,13 +345,13 @@ export async function editInitiative(
   await query(
     `UPDATE okr_initiatives SET title=$2, description=$3, unit_id=$4, owner_email=$5,
         status=$6, progress=$7, priority=$8, start_on=$9, due_on=$10,
-        budget_planned=$11, budget_actual=$12, project_id=$13,
+        budget_planned=$11, budget_actual=$12, project_id=$13, meeting_id=$14,
         done_on = CASE WHEN $6='done' AND done_on IS NULL THEN now()::date
                        WHEN $6<>'done' THEN NULL ELSE done_on END,
         updated_at=now() WHERE id=$1`,
     [id, input.title, input.description, input.unit_id, input.owner_email, input.status, prog,
      input.priority, input.start_on, input.due_on, input.budget_planned, input.budget_actual,
-     input.project_id],
+     input.project_id, input.meeting_id],
   );
   await recomputeInitiativeUp(id);
 }

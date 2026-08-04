@@ -80,6 +80,19 @@ export async function getMeeting(id: string): Promise<MeetingRow | null> {
   return queryOne<MeetingRow>(`${SELECT} WHERE m.id=$1`, [id]);
 }
 
+/** Danh sách gọn cuộc họp user được xem — cho dropdown gắn việc vào cuộc họp. */
+export async function listMeetingOptions(
+  user: OkrUser,
+): Promise<{ id: string; code: string | null; title: string }[]> {
+  const v = viewClause(user, 1);
+  return query<{ id: string; code: string | null; title: string }>(
+    `SELECT m.id, m.code, m.title FROM okr_meetings m
+      WHERE m.status <> 'cancelled' AND ${v.sql}
+      ORDER BY m.meeting_at DESC NULLS LAST, m.created_at DESC LIMIT 200`,
+    v.params,
+  );
+}
+
 export async function listParticipants(meetingId: string): Promise<Participant[]> {
   return query<Participant>(
     `SELECT p.email, p.role, u.display_name AS name FROM okr_meeting_participants p

@@ -19,6 +19,7 @@ import {
   PROJECT_STATUS_CLS,
 } from '@/lib/projects';
 import { listInitiativesForProject } from '@/lib/initiatives';
+import { listMeetingOptions } from '@/lib/meetings';
 import { StackedBar } from '@/components/charts';
 import { loadAccess } from '@/lib/access';
 import { fmtVnd, fmtDate } from '@/lib/format';
@@ -69,6 +70,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
   ]);
   const canManage = canManageProject(user, p, units, await loadAccess());
   const projectOpts = p.period_id ? await listProjectOptions(p.period_id) : [];
+  const meetingOpts = await listMeetingOptions(user);
   const objectiveOpts = p.period_id ? await listObjectivesWithKrs(p.period_id) : [];
   const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url }));
   const unitOpts = units.filter((u) => u.type !== 'company').map((u) => ({ id: u.id, name: u.name, type: u.type }));
@@ -237,6 +239,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
               users={personOpts}
               units={unitOpts}
               projects={projectOpts}
+              meetings={meetingOpts}
               manageStructure={false}
               context="project"
             >

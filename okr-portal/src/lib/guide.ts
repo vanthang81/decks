@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-03.65';
+export const GUIDE_VERSION = '2026-08-04.66';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -487,7 +487,7 @@ export const FEATURES: Feature[] = [
     where: 'Menu "Tổng quan" → "Cuộc họp"',
     help: 'Tổ chức cuộc họp, ghi biên bản, theo dõi hành động; nội dung bảo mật theo người tham gia.',
     detail:
-      'Tạo cuộc họp theo loại (Check-in dự án · Điều hành tuần/tháng · Cấp khối/phòng · IBP…), chọn chủ trì/thư ký, người tham gia và phạm vi xem. Sau họp: chủ trì/thư ký ghi Biên bản & Quyết định; các công việc gắn cuộc họp hiện ở mục "Hành động". BẢO MẬT: chỉ người tham gia / được thêm (hoặc CEO/CFO) mới xem được nội dung; người ngoài có thể gửi "yêu cầu xem" → chủ trì/thư ký duyệt (có thông báo hai chiều).',
+      'Tạo cuộc họp theo loại (Check-in dự án · Điều hành tuần/tháng · Cấp khối/phòng · IBP…), chọn chủ trì/thư ký, người tham gia và phạm vi xem. Sau họp: chủ trì/thư ký ghi Biên bản & Quyết định; các công việc gắn cuộc họp hiện ở mục "Hành động". GẮN VIỆC VÀO CUỘC HỌP: khi sửa một công việc (ở trang OKR hoặc Dự án), tick "🗓 Thuộc cuộc họp" rồi chọn cuộc họp → công việc đó trở thành một "hành động" của cuộc họp và hiện chip 🗓 để truy vết ngược. BẢO MẬT: chỉ người tham gia / được thêm (hoặc CEO/CFO) mới xem được nội dung; người ngoài có thể gửi "yêu cầu xem" → chủ trì/thư ký duyệt (có thông báo hai chiều).',
   },
   {
     key: 'project-charter',
@@ -566,6 +566,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/08/2026 (Gắn công việc vào cuộc họp)',
+    items: [
+      'Sửa công việc (trang OKR / Dự án) có thêm mục "🗓 Thuộc cuộc họp" → chọn cuộc họp để biến công việc thành một "hành động" của cuộc họp; hiện ở mục "Hành động" của cuộc họp + chip 🗓 truy vết ngược trên thẻ việc.',
+    ],
+  },
   {
     date: '03/08/2026 (Ngân sách: chọn kỳ + lọc trạng thái dự án)',
     items: [

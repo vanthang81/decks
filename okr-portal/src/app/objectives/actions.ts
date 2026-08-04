@@ -422,6 +422,7 @@ export async function editInitiativeAction(fd: FormData) {
       description: orNull(str(fd, 'description')),
       unit_id: orNull(str(fd, 'unit_id')),
       project_id: orNull(str(fd, 'project_id')),
+      meeting_id: orNull(str(fd, 'meeting_id')),
       owner_email: orNull(str(fd, 'owner_email')),
       status: (str(fd, 'status') || 'todo') as InitStatus,
       progress: num(fd, 'progress'),

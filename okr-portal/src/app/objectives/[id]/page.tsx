@@ -33,6 +33,7 @@ import {
   INIT_KIND_LABEL,
 } from '@/lib/initiatives';
 import { listProjectOptions } from '@/lib/projects';
+import { listMeetingOptions } from '@/lib/meetings';
 import { listKpis } from '@/lib/kpis';
 import { listCheckInsForObjective, CONFIDENCE_LABEL, CONFIDENCE_COLOR } from '@/lib/checkins';
 import { listKpiMetrics } from '@/lib/kpi';
@@ -116,6 +117,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
   const parent = obj.parent_id ? await getObjective(obj.parent_id) : null;
   const kpiSources = listKpiMetrics();
   const projectOpts = await listProjectOptions(obj.period_id);
+  const meetingOpts = await listMeetingOptions(user);
 
   // Check-in gom theo KR để hiện NGAY tại từng KR; check-in cấp Objective để ở mục lịch sử.
   const emailLc = user.email.toLowerCase();
@@ -638,6 +640,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
             users={personOpts}
             units={unitOpts}
             projects={projectOpts}
+            meetings={meetingOpts}
           >
             {canManage && (
               <details className="inline" style={{ marginTop: 14 }}>
