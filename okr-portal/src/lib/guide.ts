@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-04.75';
+export const GUIDE_VERSION = '2026-08-04.76';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -490,6 +490,14 @@ export const FEATURES: Feature[] = [
       'Tạo cuộc họp theo loại (Check-in dự án · Điều hành tuần/tháng · Cấp khối/phòng · IBP…), chọn chủ trì/thư ký, người tham gia và phạm vi xem. Sau họp: chủ trì/thư ký ghi Biên bản & Quyết định; các công việc gắn cuộc họp hiện ở mục "Hành động". GẮN VIỆC VÀO CUỘC HỌP: khi sửa một công việc (ở trang OKR hoặc Dự án), tick "🗓 Thuộc cuộc họp" rồi chọn cuộc họp → công việc đó trở thành một "hành động" của cuộc họp và hiện chip 🗓 để truy vết ngược. CHUỖI CUỘC HỌP: mỗi cuộc họp có thể chọn "Cuộc họp trước" để nối chuỗi (vd chuỗi check-in dự án hàng tuần) — trang chi tiết hiện link "← Trước" và "Tiếp →" để đi lại giữa các kỳ họp. BẢO MẬT: chỉ người tham gia / được thêm (hoặc CEO/CFO) mới xem được nội dung; người ngoài có thể gửi "yêu cầu xem" → chủ trì/thư ký duyệt (có thông báo hai chiều).',
   },
   {
+    key: 'user-profile',
+    title: 'Hồ sơ 360° người dùng',
+    where: 'Bấm tên người dùng (vd ở Quản trị → Người dùng)',
+    help: 'Xem toàn cảnh 1 người: đơn vị, số OKR/dự án/việc, và (chỉ quản trị) chi tiết + đăng nhập.',
+    detail:
+      'Bấm vào tên một người để mở hồ sơ 360°. QUẢN TRỊ (CEO/CFO) xem ĐẦY ĐỦ: định danh (đơn vị, chức danh, email, ngày tham gia, số lần & lần đăng nhập gần nhất), số liệu (OKR chủ trì · Key Result · dự án · công việc được giao — kèm đang mở/quá hạn/đã xong · check-in · cuộc họp), và CHI TIẾT danh sách OKR/dự án/việc/check-in/cuộc họp + hoạt động gần đây (đều bấm mở được). Người KHÔNG phải quản trị chỉ xem định danh + SỐ LƯỢNG (không xem chi tiết nhiệm vụ/đăng nhập) để bảo vệ quyền riêng tư.',
+  },
+  {
     key: 'meeting-tasks',
     title: 'Việc (hành động) của cuộc họp',
     where: 'Trang chi tiết Cuộc họp · thẻ "Hành động (next actions)"',
@@ -574,6 +582,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/08/2026 (Hồ sơ 360° người dùng)',
+    items: [
+      'Bấm tên người dùng (Quản trị → Người dùng) mở hồ sơ 360°: định danh + số OKR/dự án/việc/họp. QUẢN TRỊ xem thêm CHI TIẾT (danh sách + hoạt động) và ĐĂNG NHẬP (số lần, gần nhất — theo dõi từ nay). Người thường chỉ xem số lượng.',
+    ],
+  },
   {
     date: '04/08/2026 (Trang Công việc: Kanban + Gantt · bình luận · rõ nhãn Dự án)',
     items: [

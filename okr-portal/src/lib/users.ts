@@ -13,6 +13,14 @@ export type OkrUser = {
   perm_group: string | null;
 };
 
+/** Ghi nhận ĐĂNG NHẬP (gọi ở callback signIn). Best-effort. */
+export async function recordLogin(email: string): Promise<void> {
+  await query(
+    'UPDATE okr_users SET last_login_at=now(), login_count=login_count+1 WHERE lower(email)=lower($1)',
+    [email],
+  );
+}
+
 /** Cập nhật avatar Google (gọi lúc đăng nhập). Best-effort, chỉ ghi khi đổi. */
 export async function setUserAvatar(email: string, url: string): Promise<void> {
   await query(

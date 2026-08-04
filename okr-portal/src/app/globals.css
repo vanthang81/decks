@@ -812,6 +812,20 @@ i.cal-task { background: var(--primary); } i.cal-meeting { background: #2563eb; 
 .rte-view p { margin: 0 0 8px; }
 .rte-view :last-child { margin-bottom: 0; }
 .rte-view li { margin: 2px 0; }
+
+/* ===== Hồ sơ 360° người dùng ===== */
+.prof-head { display: flex; align-items: center; gap: 16px; }
+.prof-avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; border: 2px solid var(--line); }
+.prof-avatar-ph { display: flex; align-items: center; justify-content: center; background: var(--primary); color: #fff; font-size: 26px; font-weight: 700; }
+.prof-tiles { gap: 20px 28px; }
+.prof-list { display: flex; flex-direction: column; }
+.prof-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 4px; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink, #1f2937); }
+.prof-row:last-child { border-bottom: 0; }
+a.prof-row:hover { background: var(--primary-tint); border-radius: 6px; }
+.prof-row-main { min-width: 0; display: flex; align-items: baseline; gap: 2px; flex-wrap: wrap; }
+.prof-row-ttl { font-weight: 600; font-size: 13.5px; }
+.prof-row-sub { font-size: 12px; }
+@media (max-width: 640px) { .prof-head { gap: 12px; } .prof-avatar { width: 52px; height: 52px; } }
 .charter-ul { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.55; }
 .charter-ul li { margin: 1px 0; }
 @media (max-width: 760px) { .charter-grid { grid-template-columns: 1fr; } }

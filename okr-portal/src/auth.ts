@@ -1,6 +1,6 @@
 import NextAuth from 'next-auth';
 import { authConfig } from '@/auth.config';
-import { getUser, setUserAvatar } from '@/lib/users';
+import { getUser, setUserAvatar, recordLogin } from '@/lib/users';
 import type { Role } from '@/lib/rbac';
 
 // Instance ĐẦY ĐỦ (Node runtime, chạm DB). Dùng ở server components + API.
@@ -13,6 +13,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (!email) return false;
       const u = await getUser(email);
       if (!u || !u.is_active) return '/login?error=AccessDenied';
+      try { await recordLogin(email); } catch { /* best-effort */ }
       if (user.image) {
         try {
           await setUserAvatar(email, user.image);

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import ConfirmButton from '@/components/ConfirmButton';
@@ -109,7 +110,9 @@ export default async function AdminUsers() {
                   <tr key={u.email}>
                     <td className="mono">{u.email}</td>
                     <td>
-                      {u.display_name || '—'}
+                      <Link href={`/users/${encodeURIComponent(u.email)}`} className="tbl-link" title="Xem hồ sơ 360°">
+                        {u.display_name || u.email}
+                      </Link>
                       {u.title ? <div className="obj-meta">{u.title}</div> : null}
                     </td>
                     <td>
