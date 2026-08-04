@@ -144,15 +144,16 @@ export default async function BudgetPage({ searchParams }: { searchParams: { per
             {d.units.length > 0 && (
               <div className="card">
                 <h3 style={{ marginTop: 0 }}>Theo khối / đơn vị</h3>
+                <p className="muted" style={{ margin: '0 0 8px', fontSize: 12.5 }}>Bấm vào tên đơn vị để mở chi tiết các dự án &amp; hạng mục ngân sách của đơn vị đó.</p>
                 <div className="table-scroll">
                   <table className="t">
-                    <thead><tr><th style={{ textAlign: 'left' }}>Đơn vị</th><th className="right">Số dự án</th><th className="right">Kế hoạch</th><th className="right">Đã chi</th><th>Đã dùng</th><th></th></tr></thead>
+                    <thead><tr><th style={{ textAlign: 'left' }}>Đơn vị</th><th className="right">Số dự án</th><th className="right">Kế hoạch</th><th className="right">Đã chi</th><th>Đã dùng</th></tr></thead>
                     <tbody>
                       {d.units.map((u) => {
                         const up = pct(u.actual, u.planned);
                         return (
                           <tr key={u.unit}>
-                            <td>{u.unit}</td>
+                            <td><UnitDetailButton unit={u.unit} projects={projByUnit.get(u.unit) ?? []} triggerLabel={u.unit} /></td>
                             <td className="right mono">{u.nProjects}</td>
                             <td className="right mono">{fmtVnd(u.planned)}</td>
                             <td className="right mono">{fmtVnd(u.actual)}</td>
@@ -160,7 +161,6 @@ export default async function BudgetPage({ searchParams }: { searchParams: { per
                               <span className="map-mini"><i style={{ width: `${Math.min(up, 100)}%`, background: up > 100 ? '#dc2626' : 'var(--primary)' }} /></span>
                               <span className="muted mono" style={{ fontSize: 11 }}>{up}%</span>
                             </td>
-                            <td className="right"><UnitDetailButton unit={u.unit} projects={projByUnit.get(u.unit) ?? []} /></td>
                           </tr>
                         );
                       })}

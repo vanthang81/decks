@@ -1469,6 +1469,10 @@ details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 
 .bud-warn { background: #fef3c7; color: #92400e; }
 .bud-err { background: #fee2e2; color: #991b1b; }
 .bud-detail-link { background: none; border: 0; cursor: pointer; font: inherit; padding: 0; }
+.bud-unit-trigger { display: inline-flex; align-items: center; gap: 4px; background: none; border: 0; cursor: pointer; font: inherit; padding: 0; color: var(--primary); font-weight: 600; text-align: left; }
+.bud-unit-name { text-decoration: underline; text-decoration-color: #d9b4b8; text-underline-offset: 2px; }
+.bud-unit-trigger:hover .bud-unit-name { text-decoration-color: var(--primary); }
+.bud-unit-caret { font-size: 16px; line-height: 1; color: var(--primary); font-weight: 700; }
 .bud-detail-list { display: flex; flex-direction: column; gap: 12px; }
 .bud-detail-proj { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
 .bud-detail-projhead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }

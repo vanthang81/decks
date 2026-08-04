@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-04.82';
+export const GUIDE_VERSION = '2026-08-04.83';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -582,6 +582,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/08/2026 (Ngân sách: bấm đơn vị xem chi tiết)',
+    items: [
+      'Bảng "Ngân sách theo khối/đơn vị": bấm vào TÊN ĐƠN VỊ để mở popup liệt kê các dự án của đơn vị đó + hạng mục ngân sách (kế hoạch/đã chi/%) — thay cho nút "Chi tiết" ở cột cuối hay bị khuất trên điện thoại.',
+    ],
+  },
   {
     date: '04/08/2026 (Cuộc họp: trạng thái "Đã diễn ra")',
     items: [

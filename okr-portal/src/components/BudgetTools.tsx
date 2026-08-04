@@ -84,15 +84,22 @@ export function BudgetToolbar({ periodId, status }: { periodId: string; status: 
 }
 
 // ── Nút "Chi tiết" theo khối/đơn vị → popup cơ cấu chi phí (dự án + hạng mục) ──
-export function UnitDetailButton({ unit, projects }: { unit: string; projects: UnitProject[] }) {
+export function UnitDetailButton({ unit, projects, triggerLabel }: { unit: string; projects: UnitProject[]; triggerLabel?: string }) {
   const [open, setOpen] = useState(false);
   const planned = projects.reduce((a, p) => a + p.planned, 0);
   const actual = projects.reduce((a, p) => a + p.actual, 0);
   return (
     <>
-      <button type="button" className="tbl-link bud-detail-link" onClick={() => setOpen(true)}>
-        Chi tiết
-      </button>
+      {triggerLabel ? (
+        <button type="button" className="bud-unit-trigger" onClick={() => setOpen(true)} title="Bấm để xem chi tiết dự án & hạng mục ngân sách">
+          <span className="bud-unit-name">{triggerLabel}</span>
+          <span className="bud-unit-caret" aria-hidden>›</span>
+        </button>
+      ) : (
+        <button type="button" className="tbl-link bud-detail-link" onClick={() => setOpen(true)}>
+          Chi tiết
+        </button>
+      )}
       {open && (
         <div className="okr-modal-backdrop" onMouseDown={() => setOpen(false)}>
           <div className="okr-modal" onMouseDown={(e) => e.stopPropagation()} style={{ maxWidth: 720 }}>
