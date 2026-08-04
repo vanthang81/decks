@@ -9,6 +9,7 @@ import { listUsers } from '@/lib/users';
 import { listUnits } from '@/lib/org';
 import { listPeriods, getCurrentPeriod } from '@/lib/periods';
 import { listKpiMetrics } from '@/lib/kpi';
+import { unresolvedErrorCount } from '@/lib/errlog';
 import { syncKpiAction, sendDigestAction } from './actions';
 import ImportOkr from '@/components/ImportOkr';
 
@@ -32,11 +33,12 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
   const access = await loadAccess();
   if (!canManageSystem(user, access)) redirect('/');
 
-  const [users, units, periods, curPeriod] = await Promise.all([
+  const [users, units, periods, curPeriod, errCount] = await Promise.all([
     listUsers(),
     listUnits(),
     listPeriods(),
     getCurrentPeriod(),
+    unresolvedErrorCount().catch(() => 0),
   ]);
   const metrics = listKpiMetrics();
   const kpiMsg = searchParams.kpi;
@@ -69,6 +71,8 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
             desc="Chỉ số đo dùng lại: viễn cảnh BSC · module (KRA) · tầng & trọng số · nguồn (auto/tay) · ngưỡng W/A/E · chủ sở hữu." />
           <NavCard href="/admin/settings" icon="review" title="Cài đặt · Nhắc check-in"
             desc="Bật/tắt email nhắc check-in, chọn thứ gửi · ngưỡng ngày · người nhận." />
+          <NavCard href="/admin/errors" icon="review" title={errCount > 0 ? `Nhật ký lỗi hệ thống · ${errCount} lỗi mới` : 'Nhật ký lỗi hệ thống'}
+            desc="Tự ghi lỗi server/render (digest) để phát hiện & sửa nhanh. Tra digest trong log container để lấy chi tiết." />
         </div>
 
         {/* 3) Tự động hoá & trao đổi dữ liệu */}

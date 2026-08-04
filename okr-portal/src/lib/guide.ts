@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-04.87';
+export const GUIDE_VERSION = '2026-08-04.88';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -582,6 +582,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/08/2026 (Sửa lỗi tạo OKR + Nhật ký lỗi hệ thống)',
+    items: [
+      'SỬA lỗi không tạo được OKR (nhất là cấp Công ty): bộ đếm mã bị lệch so với mã đã seed → sinh trùng mã (lỗi 23505). Nay sinh mã TỰ CHỐNG LỆCH (ép qua số lớn nhất đang tồn tại) cho OKR/KR/Việc/Dự án.',
+      'Thêm NHẬT KÝ LỖI hệ thống: lỗi server/render tự ghi lại (qua error boundary → /api/errlog) kèm digest; xem ở Quản trị → "Nhật ký lỗi hệ thống" (đếm lỗi mới), đánh dấu đã xử lý. Người dùng gặp lỗi thấy thông báo thân thiện + nút thử lại thay vì trang lỗi trơ.',
+    ],
+  },
   {
     date: '04/08/2026 (Sắp xếp trụ cột chiến lược)',
     items: [
