@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition, type CSSProperties
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ProgressBar } from '@/components/ui';
-import { StackedBar } from '@/components/charts';
+import { StackedBar, Donut } from '@/components/charts';
 import TaskEditModal from '@/components/TaskEditModal';
 import { fmtDate } from '@/lib/format';
 import type { TaskRow } from '@/lib/initiatives';
@@ -149,6 +149,8 @@ export default function TaskExplorer({
   const [fOverdue, setFOverdue] = useState(false);
   const [fMine, setFMine] = useState(false);
   const [hideDone, setHideDone] = useState(true); // mặc định ẩn việc đã xong cho gọn
+  const [repOpen, setRepOpen] = useState(true); // hiện báo cáo tổng quan
+  const [dim, setDim] = useState<'unit' | 'project' | 'owner' | 'prio'>('unit'); // chiều phân bổ (breakout)
 
   const emailLc = currentEmail.toLowerCase();
 
@@ -241,9 +243,148 @@ export default function TaskExplorer({
     label: STATUS_LABEL[s],
   }));
 
+  // ── Báo cáo tổng quan trên TOÀN BỘ việc (không phụ thuộc bộ lọc) — bấm để drill-down.
+  type Grp = { key: string; label: string; total: number; done: number; openNo: number; overdue: number; canceled: number };
+  const report = useMemo(() => {
+    const st: Record<Status, number> = { todo: 0, in_progress: 0, blocked: 0, done: 0, canceled: 0 };
+    let overdue = 0, done = 0, inProg = 0, open = 0;
+    const mk = () => new Map<string, Grp>();
+    const g = { unit: mk(), project: mk(), owner: mk(), prio: mk() };
+    const bump = (m: Map<string, Grp>, key: string, label: string, t: TaskRow, od: boolean) => {
+      let x = m.get(key);
+      if (!x) { x = { key, label, total: 0, done: 0, openNo: 0, overdue: 0, canceled: 0 }; m.set(key, x); }
+      x.total++;
+      if (t.status === 'done') x.done++;
+      else if (t.status === 'canceled') x.canceled++;
+      else if (od) x.overdue++;
+      else x.openNo++;
+    };
+    for (const t of tasks) {
+      st[t.status]++;
+      if (t.status === 'done') done++;
+      else if (t.status === 'canceled') { /* loại khỏi mở */ }
+      else { open++; if (t.status === 'in_progress') inProg++; }
+      const od = deadlineInfo(t).state === 'overdue';
+      if (od) overdue++;
+      bump(g.unit, t.unit_id ?? '', t.unit_name ?? 'Chưa gán đơn vị', t, od);
+      if (t.project_id) bump(g.project, t.project_id, `${t.project_code ? t.project_code + ' · ' : ''}${t.project_name ?? 'Dự án'}`, t, od);
+      bump(g.owner, t.owner_email ?? '', t.owner_name || t.owner_email || 'Chưa giao', t, od);
+      bump(g.prio, t.priority, PRIO_LABEL[t.priority] ?? t.priority, t, od);
+    }
+    const top = (m: Map<string, Grp>) => [...m.values()].sort((a, b) => b.total - a.total).slice(0, 8);
+    return { st, overdue, done, inProg, open, total: tasks.length, unit: top(g.unit), project: top(g.project), owner: top(g.owner), prio: top(g.prio) };
+  }, [tasks]);
+
+  const scrollToList = () => {
+    if (typeof document !== 'undefined') document.getElementById('task-list-top')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  const pickDim = (key: string) => {
+    if (!key) return; // nhóm rỗng (Chưa gán/Chưa giao) không lọc được
+    clearFilter();
+    if (dim === 'unit') setFUnit(key);
+    else if (dim === 'project') setFProject(key);
+    else if (dim === 'owner') setFOwner(key);
+    else setFPrio(key);
+    setHideDone(false);
+    scrollToList();
+  };
+  const statusSegs = COLUMNS.filter((s) => report.st[s] > 0).map((s) => ({ value: report.st[s], color: STATUS_COLOR[s], label: STATUS_LABEL[s] }));
+  const donePct = report.total ? Math.round((report.done / report.total) * 100) : 0;
+  const dimRows = report[dim];
+  const dimMax = Math.max(1, ...dimRows.map((r) => r.total));
+  const DIMS: { k: typeof dim; label: string }[] = [
+    { k: 'unit', label: 'Bộ phận' }, { k: 'project', label: 'Dự án' },
+    { k: 'owner', label: 'Người phụ trách' }, { k: 'prio', label: 'Ưu tiên' },
+  ];
+
   return (
     <div>
-      <div className="card task-summary" style={{ marginBottom: 14 }}>
+      {tasks.length > 0 && (
+        <div className="card rep-card">
+          <div className="flexbtw" style={{ alignItems: 'center' }}>
+            <h3 style={{ margin: 0 }}>Báo cáo tổng quan công việc</h3>
+            <button type="button" className="btn ghost sm" onClick={() => setRepOpen((v) => !v)}>
+              {repOpen ? 'Thu gọn ▲' : 'Mở rộng ▼'}
+            </button>
+          </div>
+
+          {repOpen && (
+            <>
+              <div className="rep-tiles">
+                <button type="button" className="rep-tile" onClick={() => { clearFilter(); scrollToList(); }}>
+                  <span className="rep-tile-n">{report.total}</span><span className="rep-tile-l">Tổng công việc</span>
+                </button>
+                <button type="button" className="rep-tile" onClick={() => { clearFilter(); setFStatus('in_progress'); scrollToList(); }}>
+                  <span className="rep-tile-n" style={{ color: '#2563eb' }}>{report.inProg}</span><span className="rep-tile-l">Đang làm</span>
+                </button>
+                <button type="button" className="rep-tile" onClick={() => { clearFilter(); setFOverdue(true); scrollToList(); }}>
+                  <span className="rep-tile-n" style={{ color: '#dc2626' }}>{report.overdue}</span><span className="rep-tile-l">Quá hạn</span>
+                </button>
+                <button type="button" className="rep-tile" onClick={() => { clearFilter(); setFStatus('done'); setHideDone(false); scrollToList(); }}>
+                  <span className="rep-tile-n" style={{ color: '#16a34a' }}>{report.done}</span><span className="rep-tile-l">Hoàn thành · {donePct}%</span>
+                </button>
+              </div>
+
+              <div className="rep-grid">
+                <div className="rep-box">
+                  <h4 className="rep-h">Theo trạng thái</h4>
+                  <div className="rep-donut">
+                    <Donut segments={statusSegs} size={128} thickness={16} centerTop={report.total} centerSub="việc" />
+                    <div className="rep-legend">
+                      {COLUMNS.filter((s) => report.st[s] > 0).map((s) => (
+                        <button key={s} type="button" className="rep-lg" onClick={() => { clearFilter(); setFStatus(s); if (s === 'done') setHideDone(false); scrollToList(); }}>
+                          <span className="rep-lg-dot" style={{ background: STATUS_COLOR[s] }} />
+                          <span className="rep-lg-lbl">{STATUS_LABEL[s]}</span>
+                          <b>{report.st[s]}</b>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rep-box">
+                  <div className="flexbtw" style={{ alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                    <h4 className="rep-h" style={{ margin: 0 }}>Phân bổ theo</h4>
+                    <div className="rep-seg">
+                      {DIMS.map((d) => (
+                        <button key={d.k} type="button" className={`rep-seg-b${dim === d.k ? ' on' : ''}`} onClick={() => setDim(d.k)}>{d.label}</button>
+                      ))}
+                    </div>
+                  </div>
+                  {dimRows.length === 0 ? (
+                    <p className="muted" style={{ margin: '10px 0 0', fontSize: 13 }}>Chưa có dữ liệu.</p>
+                  ) : (
+                    <div className="rep-bars">
+                      {dimRows.map((r) => (
+                        <button key={r.key} type="button" className={`rep-bar${r.key ? '' : ' rep-bar-off'}`} onClick={() => pickDim(r.key)} title={r.key ? `Lọc: ${r.label}` : undefined}>
+                          <span className="rep-bar-lbl" title={r.label}>{r.label}</span>
+                          <span className="rep-bar-track">
+                            <span className="rep-bar-fill" style={{ width: `${(r.total / dimMax) * 100}%` }}>
+                              {r.done > 0 && <i style={{ flex: r.done, background: '#16a34a' }} />}
+                              {r.openNo > 0 && <i style={{ flex: r.openNo, background: '#2563eb' }} />}
+                              {r.overdue > 0 && <i style={{ flex: r.overdue, background: '#dc2626' }} />}
+                              {r.canceled > 0 && <i style={{ flex: r.canceled, background: '#cbd5e1' }} />}
+                            </span>
+                          </span>
+                          <span className="rep-bar-val">{r.total}{r.overdue > 0 && <em className="rep-bar-od"> ⚠{r.overdue}</em>}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <div className="rep-foot">
+                    <span><i className="rep-sw" style={{ background: '#16a34a' }} />Xong</span>
+                    <span><i className="rep-sw" style={{ background: '#2563eb' }} />Đang mở</span>
+                    <span><i className="rep-sw" style={{ background: '#dc2626' }} />Quá hạn</span>
+                    <span className="muted">Bấm một mục để lọc danh sách bên dưới</span>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      <div className="card task-summary" id="task-list-top" style={{ marginBottom: 14 }}>
         <div className="flexbtw" style={{ gap: 10, flexWrap: 'wrap', alignItems: 'baseline' }}>
           <h3 style={{ margin: 0 }}>Tổng quan ({filtered.length} việc)</h3>
           {byStatus.overdue > 0 && (

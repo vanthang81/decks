@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-04.77';
+export const GUIDE_VERSION = '2026-08-04.78';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -361,7 +361,7 @@ export const FEATURES: Feature[] = [
     help: 'Liệt kê MỌI dự án/tiểu dự án/công việc từ tất cả OKR & dự án, đầy đủ bộ lọc + sắp xếp theo cột + header đóng băng khi cuộn. Chỉ hiện việc bạn được phép xem.',
     detail: [
       'Một bảng duy nhất gom toàn bộ công việc (dự án → tiểu dự án → công việc) từ mọi OKR, Key Result và Dự án.',
-      'Tổng quan đầu trang: cơ cấu trạng thái + số việc quá hạn.',
+      'BÁO CÁO TỔNG QUAN (đầu trang, thu gọn được): 4 ô chỉ số (Tổng · Đang làm · Quá hạn · Hoàn thành %); biểu đồ tròn cơ cấu trạng thái; và biểu đồ phân bổ theo chiều CHỌN được — Bộ phận · Dự án · Người phụ trách · Ưu tiên (thanh xếp chồng Xong/Đang mở/Quá hạn). BẤM một ô chỉ số / một nhánh trạng thái / một thanh → tự LỌC danh sách bên dưới đúng nhóm đó (drill-down, truy vết tận từng việc).',
       'Đầy đủ bộ lọc: tìm kiếm (tên/mã/OKR/dự án), Phụ trách, Đơn vị, OKR, Dự án, Trạng thái, Ưu tiên, Loại, Kỳ, "⚠ Quá hạn" và "👤 Việc của tôi".',
       'Bấm tiêu đề cột để sắp xếp (bấm lại đổi chiều); header cột đóng băng khi cuộn cả trang. Mỗi dòng liên kết thẳng tới OKR/dự án gốc.',
       'Bấm vào một dòng để mở cửa sổ cập nhật / sửa / xoá công việc (theo phân quyền của bạn).',
@@ -582,6 +582,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/08/2026 (Báo cáo tổng quan Công việc)',
+    items: [
+      'Trang Công việc thêm BÁO CÁO TỔNG QUAN: 4 ô chỉ số + biểu đồ tròn trạng thái + biểu đồ phân bổ theo Bộ phận/Dự án/Người/Ưu tiên. Bấm ô/nhánh/thanh để LỌC nhanh danh sách (drill-down truy vết).',
+    ],
+  },
   {
     date: '04/08/2026 (Lịch nâng cấp kiểu Google/Apple)',
     items: [
