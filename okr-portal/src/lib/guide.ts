@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-04.85';
+export const GUIDE_VERSION = '2026-08-04.86';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -582,6 +582,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/08/2026 (Menu mobile gọn hơn)',
+    items: [
+      'Ẩn nút "lên đầu trang" khi đang mở menu trên điện thoại để không che các mục cuối (Quản trị / Đăng xuất). Menu mobile hiện đủ 5 nhóm theo phân quyền.',
+    ],
+  },
   {
     date: '04/08/2026 (Tìm người dùng ở Phân quyền)',
     items: [

@@ -704,6 +704,8 @@ a.ctx-chip:hover { text-decoration: underline; }
   transition: opacity .2s ease, transform .2s ease, background .15s;
 }
 .backtop.show { opacity: 1; transform: none; pointer-events: auto; }
+/* Ẩn nút "lên đầu trang" khi menu mobile đang mở để không đè lên các mục cuối (Quản trị / Đăng xuất) */
+body:has(.mobile-menu[open]) .backtop { display: none; }
 .backtop:hover { background: var(--primary-dark); box-shadow: 0 8px 24px rgba(124, 3, 18, .45); }
 .backtop:active { transform: scale(.94); }
 @media (max-width: 760px) { .backtop { right: 14px; bottom: 14px; width: 42px; height: 42px; } }
