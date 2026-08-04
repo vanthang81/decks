@@ -775,6 +775,33 @@ i.cal-task { background: var(--primary); } i.cal-meeting { background: #2563eb; 
 .charter-item { min-width: 0; }
 .charter-k { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 3px; }
 .charter-p { margin: 0; font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; }
+
+/* ===== Rich text editor (WYSIWYG) + hiển thị nội dung ===== */
+.rte { border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--card); }
+.rte-tb { display: flex; flex-wrap: wrap; gap: 2px; padding: 5px 6px; border-bottom: 1px solid var(--line); background: var(--panel, #faf7f2); }
+.rte-btn {
+  min-width: 30px; height: 28px; padding: 0 7px; border: 1px solid transparent; border-radius: 6px;
+  background: transparent; color: var(--ink, #1f2937); font-size: 13px; line-height: 1; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.rte-btn:hover { background: var(--primary-tint); border-color: var(--line); color: var(--primary); }
+.rte-ed { border: 0 !important; border-radius: 0 !important; outline: none; overflow-y: auto; max-height: 420px; }
+.rte-ed:focus { box-shadow: none !important; }
+.rte-ed:empty::before { content: attr(data-ph); color: var(--muted); pointer-events: none; }
+.rte-ed p { margin: 0 0 8px; }
+.rte-ed h3, .rte-view h3 { font-size: 15px; margin: 6px 0 6px; }
+.rte-ed h4, .rte-view h4 { font-size: 13.5px; margin: 6px 0 4px; }
+.rte-ed ul, .rte-ed ol, .rte-view ul, .rte-view ol { margin: 4px 0 8px; padding-left: 22px; }
+.rte-ed blockquote, .rte-view blockquote {
+  margin: 6px 0; padding: 4px 12px; border-left: 3px solid var(--accent); color: var(--muted);
+}
+.rte-ed a, .rte-view a { color: var(--primary); text-decoration: underline; }
+
+/* Hiển thị nội dung đã lưu (biên bản/quyết định) */
+.rte-view { font-size: 13.5px; line-height: 1.6; }
+.rte-view p { margin: 0 0 8px; }
+.rte-view :last-child { margin-bottom: 0; }
+.rte-view li { margin: 2px 0; }
 .charter-ul { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.55; }
 .charter-ul li { margin: 1px 0; }
 @media (max-width: 760px) { .charter-grid { grid-template-columns: 1fr; } }

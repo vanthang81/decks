@@ -8,6 +8,8 @@ import ConfirmButton from '@/components/ConfirmButton';
 import MeetingFields from '@/components/MeetingFields';
 import ExecutionTabs from '@/components/ExecutionTabs';
 import AddTaskToMeeting from '@/components/AddTaskToMeeting';
+import RichEditor from '@/components/RichEditor';
+import { sanitizeRichHtml } from '@/lib/sanitizeHtml';
 import { requireUser } from '@/lib/current-user';
 import { listUsers } from '@/lib/users';
 import { listUnits } from '@/lib/org';
@@ -156,19 +158,21 @@ export default async function MeetingDetail({ params }: { params: { id: string }
               <EditModal title="Ghi biên bản cuộc họp" label={m.minutes || m.decisions ? 'Sửa biên bản' : 'Ghi biên bản'} icon={<NavIcon name="pencil" />} submitLabel="Lưu biên bản" action={saveMinutesAction} wide>
                 <input type="hidden" name="id" value={m.id} />
                 <label className="f">Biên bản (minutes)</label>
-                <textarea className="i" name="minutes" rows={8} defaultValue={m.minutes ?? ''} placeholder="Nội dung trao đổi, ý kiến, kết luận…" />
-                <label className="f">Quyết định chính</label>
-                <textarea className="i" name="decisions" rows={4} defaultValue={m.decisions ?? ''} placeholder="Các quyết định đã chốt…" />
+                <RichEditor name="minutes" defaultValue={m.minutes ?? ''} placeholder="Nội dung trao đổi, ý kiến, kết luận…" minHeight={180} />
+                <label className="f" style={{ marginTop: 12 }}>Quyết định chính</label>
+                <RichEditor name="decisions" defaultValue={m.decisions ?? ''} placeholder="Các quyết định đã chốt…" minHeight={120} />
               </EditModal>
             )}
           </div>
           {m.minutes || m.decisions ? (
             <>
-              {m.minutes && <p className="charter-p" style={{ marginTop: 6 }}>{m.minutes}</p>}
+              {m.minutes && (
+                <div className="rte-view" style={{ marginTop: 6 }} dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(m.minutes) }} />
+              )}
               {m.decisions && (
                 <div style={{ marginTop: 12 }}>
                   <div className="charter-k">Quyết định chính</div>
-                  <p className="charter-p">{m.decisions}</p>
+                  <div className="rte-view" dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(m.decisions) }} />
                 </div>
               )}
             </>

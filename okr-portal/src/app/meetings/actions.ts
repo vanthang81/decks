@@ -15,6 +15,7 @@ import { getObjective } from '@/lib/okr';
 import { canEditObjective, loadAccess } from '@/lib/access';
 import { listUnits } from '@/lib/org';
 import { parseNum } from '@/lib/num';
+import { sanitizeRichHtml, isRichEmpty } from '@/lib/sanitizeHtml';
 
 function str(fd: FormData, k: string): string { return String(fd.get(k) ?? '').trim(); }
 function orNull(s: string): string | null { return s === '' ? null : s; }
@@ -91,7 +92,10 @@ export async function updateMeetingAction(fd: FormData) {
 export async function saveMinutesAction(fd: FormData) {
   const id = str(fd, 'id');
   await guardManage(id);
-  await updateMinutes(id, orNull(str(fd, 'minutes')), orNull(str(fd, 'decisions')));
+  // LÀM SẠCH HTML rich-text trước khi lưu (chống XSS); rỗng → NULL.
+  const minutes = sanitizeRichHtml(str(fd, 'minutes'));
+  const decisions = sanitizeRichHtml(str(fd, 'decisions'));
+  await updateMinutes(id, isRichEmpty(minutes) ? null : minutes, isRichEmpty(decisions) ? null : decisions);
   revalidatePath(`/meetings/${id}`);
 }
 
