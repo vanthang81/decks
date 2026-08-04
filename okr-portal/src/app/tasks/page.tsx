@@ -23,7 +23,8 @@ export default async function TasksPage() {
   const ctx = buildTaskViewCtx(user, all, units, access);
   const visible = all.filter((t) => canViewInitiative(user, t, ctx));
 
-  // Việc mà user có quyền QUẢN LÝ (sửa mọi trường + xoá) = quản OKR gốc của việc.
+  // Việc mà user có quyền QUẢN LÝ (sửa mọi trường + xoá) = quản OKR gốc HOẶC dự án HOẶC cuộc họp của việc.
+  const emailLc = user.email.toLowerCase();
   const manageIds = visible
     .filter((t) =>
       canEditObjective(
@@ -31,7 +32,10 @@ export default async function TasksPage() {
         { unit_id: t.objective_unit_id, owner_email: t.objective_owner, created_by: t.objective_created_by },
         units,
         access,
-      ),
+      ) ||
+      (t.project_id && ctx.myProjects.has(t.project_id)) ||
+      (t.meeting_owner && t.meeting_owner.toLowerCase() === emailLc) ||
+      (t.meeting_secretary && t.meeting_secretary.toLowerCase() === emailLc),
     )
     .map((t) => t.id);
 

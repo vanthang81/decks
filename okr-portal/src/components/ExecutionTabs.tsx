@@ -786,9 +786,9 @@ function EditModal({
             </div>
           </form>
 
-          {canManage && manageStructure && (
+          {canManage && (
             <div className="okr-modal-manage">
-              {childKinds.length > 0 &&
+              {manageStructure && childKinds.length > 0 &&
                 (addKid ? (
                   <form onSubmit={submitChild} style={{ marginTop: 4 }}>
                     <div className="row">

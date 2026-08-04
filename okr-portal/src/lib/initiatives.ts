@@ -139,6 +139,8 @@ export type TaskRow = {
   meeting_id: string | null;
   meeting_code: string | null;
   meeting_title: string | null;
+  meeting_owner: string | null;
+  meeting_secretary: string | null;
   objective_id: string | null; // OKR gốc HIỆU LỰC (i.objective_id hoặc kr.objective_id)
   objective_code: string | null;
   objective_title: string | null;
@@ -161,6 +163,7 @@ const TASK_SELECT = `
          i.unit_id, un.name AS unit_name,
          i.project_id, pr.code AS project_code, pr.name AS project_name, pr.owner_email AS project_owner,
          i.meeting_id, mtg.code AS meeting_code, mtg.title AS meeting_title,
+         mtg.owner_email AS meeting_owner, mtg.secretary_email AS meeting_secretary,
          eo.id AS objective_id, eo.code AS objective_code, eo.title AS objective_title,
          eo.owner_email AS objective_owner, eo.unit_id AS objective_unit_id, eo.created_by AS objective_created_by,
          i.key_result_id, kr.code AS key_result_code,

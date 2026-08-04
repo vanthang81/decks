@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-04.69';
+export const GUIDE_VERSION = '2026-08-04.70';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -580,6 +580,7 @@ export const CHANGELOG: ChangeLog[] = [
       'Mỗi cuộc họp thêm được CÔNG VIỆC (next action) ngay tại thẻ "Hành động" (gắn OKR tuỳ chọn); xem theo Danh sách/Kanban/Gantt như trang Dự án (kéo–thả, bộ lọc đầy đủ).',
       'Nối CHUỖI cuộc họp: chọn "Cuộc họp trước" khi tạo/sửa → link "← Trước / Tiếp →" đi lại giữa các kỳ họp.',
       'Việc thuần của cuộc họp (không gắn OKR) nay lưu được (nới ràng buộc) và hiện chip 🗓 truy vết ở trang Công việc.',
+      'Nút "🗑 Xoá công việc" nay có ở MỌI màn hình việc (OKR · Dự án · Cuộc họp · trang Công việc) cho người có quyền quản lý (tách khỏi thao tác thêm mục con).',
     ],
   },
   {
