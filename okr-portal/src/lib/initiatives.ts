@@ -136,6 +136,9 @@ export type TaskRow = {
   project_code: string | null;
   project_name: string | null;
   project_owner: string | null;
+  meeting_id: string | null;
+  meeting_code: string | null;
+  meeting_title: string | null;
   objective_id: string | null; // OKR gốc HIỆU LỰC (i.objective_id hoặc kr.objective_id)
   objective_code: string | null;
   objective_title: string | null;
@@ -157,6 +160,7 @@ const TASK_SELECT = `
          i.owner_email, u.display_name AS owner_name, u.avatar_url AS owner_avatar, i.created_by,
          i.unit_id, un.name AS unit_name,
          i.project_id, pr.code AS project_code, pr.name AS project_name, pr.owner_email AS project_owner,
+         i.meeting_id, mtg.code AS meeting_code, mtg.title AS meeting_title,
          eo.id AS objective_id, eo.code AS objective_code, eo.title AS objective_title,
          eo.owner_email AS objective_owner, eo.unit_id AS objective_unit_id, eo.created_by AS objective_created_by,
          i.key_result_id, kr.code AS key_result_code,
@@ -166,6 +170,7 @@ const TASK_SELECT = `
     LEFT JOIN okr_users u ON u.email = i.owner_email
     LEFT JOIN okr_units un ON un.id = i.unit_id
     LEFT JOIN okr_projects pr ON pr.id = i.project_id
+    LEFT JOIN okr_meetings mtg ON mtg.id = i.meeting_id
     LEFT JOIN okr_key_results kr ON kr.id = i.key_result_id
     LEFT JOIN okr_objectives eo ON eo.id = COALESCE(i.objective_id, kr.objective_id)
     LEFT JOIN okr_periods per ON per.id = eo.period_id`;

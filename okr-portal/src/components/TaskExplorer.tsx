@@ -359,6 +359,10 @@ export default function TaskExplorer({
                     <Link href={`/objectives/${t.objective_id}`} style={{ fontSize: 12.5 }} onClick={(e) => e.stopPropagation()}>
                       {t.objective_code ? <span className="okr-code">{t.objective_code}</span> : 'Mở OKR'}
                     </Link>
+                  ) : t.meeting_id ? (
+                    <Link href={`/meetings/${t.meeting_id}`} className="ctx-chip ctx-mtg" style={{ fontSize: 11 }} onClick={(e) => e.stopPropagation()} title="Việc thuần của cuộc họp">
+                      🗓 {t.meeting_code || t.meeting_title}
+                    </Link>
                   ) : <span className="muted">—</span>}
                 </td>
                 <td>
