@@ -6,6 +6,7 @@
   --gold-tint: #FBF3E0;      /* nền gold nhạt */
   --ink: #241C1A;
   --muted: #7A6F6A;
+  --label: #9A3A44;          /* nhãn ô nhập (đầu đề trường) — maroon dịu, tách rõ với chữ nhập màu --ink */
   --line: #EDE7E0;
   --bg: #FAF6F0;             /* ivory BTMH */
   --card: #ffffff;
@@ -735,7 +736,7 @@ a.ctx-chip:hover { text-decoration: underline; }
 }
 
 /* Forms */
-label.f { display: block; font-size: 13px; color: var(--muted); font-weight: 600; margin: 10px 0 4px; }
+label.f { display: block; font-size: 13px; color: var(--label); font-weight: 700; margin: 10px 0 4px; letter-spacing: .01em; }
 input.i, select.i, textarea.i {
   width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
   font-size: 14px; font-family: inherit; background: #fff; color: var(--ink);
@@ -1729,8 +1730,8 @@ a.strat-bsc-cell:hover { text-decoration: none; box-shadow: 0 6px 18px rgba(0,0,
 .strat-bsc-n { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .strat-edit summary { cursor: pointer; }
 .strat-form { margin-top: 12px; display: flex; flex-direction: column; }
-.strat-form .f { font-weight: 700; font-size: 13px; margin: 10px 0 4px; }
-.strat-form .i { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; font-family: inherit; }
+.strat-form .f { font-weight: 700; font-size: 13px; margin: 10px 0 4px; color: var(--label); }
+.strat-form .i { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; font-family: inherit; color: var(--ink); }
 .strat-form textarea.i { resize: vertical; line-height: 1.5; }
 @media (max-width: 640px) { .strat-bsc { grid-template-columns: 1fr 1fr; } }
 
