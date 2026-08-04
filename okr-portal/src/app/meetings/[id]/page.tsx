@@ -6,21 +6,29 @@ import EditModal from '@/components/EditModal';
 import NavIcon from '@/components/NavIcon';
 import ConfirmButton from '@/components/ConfirmButton';
 import MeetingFields from '@/components/MeetingFields';
+import ExecutionTabs from '@/components/ExecutionTabs';
+import AddTaskToMeeting from '@/components/AddTaskToMeeting';
 import { requireUser } from '@/lib/current-user';
 import { listUsers } from '@/lib/users';
 import { listUnits } from '@/lib/org';
 import { listAllProjectOptions } from '@/lib/projects';
+import { listObjectivesWithKrs } from '@/lib/okr';
+import { getCurrentPeriod } from '@/lib/periods';
 import {
-  getMeeting, canViewMeeting, canManageMeeting, listParticipants, listActionItems,
+  getMeeting, canViewMeeting, canManageMeeting, listParticipants, listMeetingOptions, listFollowUpMeetings,
   listAccessRequests, myAccessRequest,
   MEETING_TYPE_LABEL, MEETING_STATUS_LABEL, MEETING_STATUS_CLS, VISIBILITY_LABEL,
 } from '@/lib/meetings';
-import { INIT_STATUS_LABEL } from '@/lib/initiatives';
-import { fmtDateTime, fmtDate } from '@/lib/format';
+import { listInitiativesForMeeting } from '@/lib/initiatives';
+import { fmtDateTime } from '@/lib/format';
 import {
   updateMeetingAction, saveMinutesAction, deleteMeetingAction,
-  requestMeetingAccessAction, decideMeetingAccessAction,
+  requestMeetingAccessAction, decideMeetingAccessAction, createMeetingTaskAction,
 } from '../actions';
+import {
+  editInitiativeAction, deleteInitiativeAction, createInitiativeAction, moveInitiativeAction,
+} from '../../objectives/actions';
+import { createProjectForInitiativeAction } from '@/app/projects/actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,14 +74,17 @@ export default async function MeetingDetail({ params }: { params: { id: string }
     );
   }
 
-  const [participants, actions, pending, users, units, projects] = await Promise.all([
-    listParticipants(m.id), listActionItems(m.id),
+  const [participants, tasks, pending, users, units, projectOpts, meetingOpts, followUps] = await Promise.all([
+    listParticipants(m.id), listInitiativesForMeeting(m.id),
     canManage ? listAccessRequests(m.id, 'pending') : Promise.resolve([]),
-    canManage ? listUsers() : Promise.resolve([]),
-    canManage ? listUnits() : Promise.resolve([]),
-    canManage ? listAllProjectOptions() : Promise.resolve([]),
+    listUsers(), listUnits(), listAllProjectOptions(), listMeetingOptions(user), listFollowUpMeetings(m.id, user),
   ]);
   const participantsText = participants.filter((p) => p.role === 'participant' || p.role === 'watcher').map((p) => p.email).join(', ');
+  const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url }));
+  const unitOpts = units.filter((u) => u.type !== 'company').map((u) => ({ id: u.id, name: u.name, type: u.type }));
+  // OKR để gắn khi thêm việc: theo kỳ của cuộc họp (fallback kỳ hiện tại).
+  const periodForObjs = m.period_id ?? (await getCurrentPeriod())?.id ?? null;
+  const objectiveOpts = periodForObjs ? await listObjectivesWithKrs(periodForObjs) : [];
 
   return (
     <>
@@ -100,11 +111,25 @@ export default async function MeetingDetail({ params }: { params: { id: string }
                 {m.project_name ? ` · 🗂 ${m.project_name}` : ''}
                 {` · 👁 ${VISIBILITY_LABEL[m.visibility]}`}
               </div>
+              {(m.previous_meeting_id || followUps.length > 0) && (
+                <div className="obj-meta mtg-chain" style={{ marginTop: 6 }}>
+                  {m.previous_meeting_id && (
+                    <Link href={`/meetings/${m.previous_meeting_id}`} className="ctx-chip ctx-mtg" title="Cuộc họp trước trong chuỗi">
+                      ← Trước: {m.prev_code || m.prev_title}
+                    </Link>
+                  )}
+                  {followUps.map((f) => (
+                    <Link key={f.id} href={`/meetings/${f.id}`} className="ctx-chip ctx-mtg" title="Cuộc họp nối tiếp">
+                      Tiếp: {f.code || f.title} →
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
             {canManage && (
               <div className="row-actions">
                 <EditModal title="Sửa cuộc họp" label="Sửa" icon={<NavIcon name="pencil" />} submitLabel="Lưu cuộc họp" action={updateMeetingAction} wide>
-                  <MeetingFields users={users} units={units} projects={projects} defaultOwner={user.email} meeting={m} participantsText={participantsText} />
+                  <MeetingFields users={users} units={units} projects={projectOpts} meetings={meetingOpts} defaultOwner={user.email} meeting={m} participantsText={participantsText} />
                 </EditModal>
                 <form action={deleteMeetingAction}>
                   <input type="hidden" name="id" value={m.id} />
@@ -152,31 +177,38 @@ export default async function MeetingDetail({ params }: { params: { id: string }
           )}
         </div>
 
-        {/* Hành động (next actions) */}
+        {/* Hành động (next actions) — thêm việc + xem list/kanban/gantt như trang dự án */}
         <div className="card">
-          <h3 style={{ marginTop: 0 }}>Hành động (next actions) — {actions.length} việc</h3>
-          {actions.length === 0 ? (
-            <p className="muted" style={{ margin: 0 }}>Chưa có hành động nào gắn cuộc họp. Các công việc (task) được gắn với cuộc họp sẽ hiển thị ở đây kèm link mở chi tiết.</p>
+          <div className="flexbtw flexbtw-top">
+            <h3 style={{ marginTop: 0 }}>Hành động (next actions) — {tasks.length} việc<HelpTip k="meeting-tasks" /></h3>
+            {canManage && (
+              <AddTaskToMeeting meetingId={m.id} objectives={objectiveOpts} users={personOpts} units={unitOpts} create={createMeetingTaskAction} />
+            )}
+          </div>
+          {tasks.length === 0 ? (
+            <p className="muted" style={{ margin: 0 }}>
+              Chưa có hành động nào. {canManage ? 'Bấm “＋ Thêm việc” để thêm next action cho cuộc họp (gắn OKR tuỳ chọn).' : 'Các công việc gắn cuộc họp sẽ hiển thị ở đây.'}
+            </p>
           ) : (
-            <div className="table-scroll">
-              <table className="t">
-                <thead><tr><th style={{ textAlign: 'left' }}>Công việc</th><th style={{ textAlign: 'left' }}>Phụ trách</th><th>Hạn</th><th>Trạng thái</th></tr></thead>
-                <tbody>
-                  {actions.map((a) => (
-                    <tr key={a.id}>
-                      <td>
-                        <Link href={a.objective_id ? `/objectives/${a.objective_id}` : a.project_id ? `/projects/${a.project_id}` : '/tasks'} className="tbl-link">
-                          {a.code && <span className="okr-code" style={{ marginRight: 6 }}>{a.code}</span>}{a.title}
-                        </Link>
-                      </td>
-                      <td style={{ fontSize: 12.5 }}>{a.owner_name ?? '—'}</td>
-                      <td className="mono" style={{ fontSize: 12.5 }}>{fmtDate(a.due_on)}</td>
-                      <td><span className="badge gray">{INIT_STATUS_LABEL[a.status as keyof typeof INIT_STATUS_LABEL] ?? a.status}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ExecutionTabs
+              initiatives={tasks}
+              canManage={canManage}
+              currentEmail={user.email}
+              move={moveInitiativeAction}
+              save={editInitiativeAction}
+              del={deleteInitiativeAction}
+              createChild={createInitiativeAction}
+              createProjectForInit={createProjectForInitiativeAction}
+              objectiveId=""
+              users={personOpts}
+              units={unitOpts}
+              projects={projectOpts}
+              meetings={meetingOpts}
+              manageStructure={false}
+              context="meeting"
+            >
+              <></>
+            </ExecutionTabs>
           )}
         </div>
 

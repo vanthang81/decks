@@ -50,6 +50,10 @@ import {
   type Confidence,
 } from '@/lib/checkins';
 import { isKpiMetric, syncKrKpi } from '@/lib/kpi';
+import { getMeeting, canManageMeeting } from '@/lib/meetings';
+import { getProject, canManageProject } from '@/lib/projects';
+import type { Initiative } from '@/lib/initiatives';
+import type { OkrUser } from '@/lib/users';
 import { canManageObjectiveId, withinEditWindow } from '@/lib/moderation';
 import {
   loadAccess,
@@ -177,6 +181,38 @@ async function assertCanManageObjective(objectiveId: string) {
   if (!canEditObjective(user, obj, units, access))
     throw new Error('Bạn không có quyền sửa OKR này.');
   return { user, obj };
+}
+
+/**
+ * Quyền QUẢN LÝ 1 công việc bất kể nó gắn OKR / cuộc họp / dự án:
+ *  - gắn OKR → quyền sửa OKR đó;
+ *  - gắn cuộc họp (vd việc "next action" không gắn OKR) → chủ trì/thư ký/điều hành cuộc họp;
+ *  - gắn dự án → quyền quản lý dự án.
+ * Trả true nếu thoả BẤT KỲ nguồn nào (việc có thể vừa thuộc OKR vừa thuộc cuộc họp).
+ */
+async function canManageTaskLoose(user: OkrUser, init: Initiative): Promise<boolean> {
+  const [units, access] = await Promise.all([listUnits(), loadAccess()]);
+  if (init.objective_id) {
+    const obj = await getObjective(init.objective_id);
+    if (obj && canEditObjective(user, obj, units, access)) return true;
+  }
+  if (init.meeting_id) {
+    const mt = await getMeeting(init.meeting_id);
+    if (mt && canManageMeeting(user, mt)) return true;
+  }
+  if (init.project_id) {
+    const pr = await getProject(init.project_id);
+    if (pr && canManageProject(user, pr, units, access)) return true;
+  }
+  return false;
+}
+
+/** Revalidate mọi trang liên quan tới 1 công việc (OKR gốc + cuộc họp + dự án + danh sách việc). */
+function revalidateTask(init: Pick<Initiative, 'objective_id' | 'meeting_id' | 'project_id'>) {
+  if (init.objective_id) revalidatePath(`/objectives/${init.objective_id}`);
+  if (init.meeting_id) revalidatePath(`/meetings/${init.meeting_id}`);
+  if (init.project_id) revalidatePath(`/projects/${init.project_id}`);
+  revalidatePath('/tasks');
 }
 
 export async function createKeyResultAction(fd: FormData) {
@@ -407,13 +443,10 @@ export async function updateInitiativeAction(fd: FormData) {
 // người được giao chỉ đổi trạng thái + tiến độ việc của mình.
 export async function editInitiativeAction(fd: FormData) {
   const user = await requireUser();
-  const units = await listUnits();
   const id = str(fd, 'id');
   const init = await getInitiative(id);
   if (!init) throw new Error('Không tìm thấy công việc.');
-  const obj = init.objective_id ? await getObjective(init.objective_id) : null;
-  if (!obj) throw new Error('Công việc chưa gắn OKR.');
-  const manage = canEditObjective(user, obj, units, await loadAccess());
+  const manage = await canManageTaskLoose(user, init);
   const perm = canUpdateInitiative(user, init, manage);
   if (!perm.manage && !perm.assignee) throw new Error('Bạn không có quyền cập nhật việc này.');
   if (perm.manage) {
@@ -438,30 +471,30 @@ export async function editInitiativeAction(fd: FormData) {
       progress: num(fd, 'progress'),
     });
   }
-  revalidatePath(`/objectives/${obj.id}`);
-  revalidatePath('/tasks');
+  revalidateTask(init);
+  // meeting_id có thể vừa đổi → revalidate cả cuộc họp mới chọn.
+  const newMeeting = orNull(str(fd, 'meeting_id'));
+  if (newMeeting && newMeeting !== init.meeting_id) revalidatePath(`/meetings/${newMeeting}`);
 }
 
 export async function deleteInitiativeAction(fd: FormData) {
-  const objectiveId = str(fd, 'objective_id');
-  await assertCanManageObjective(objectiveId);
-  await deleteInitiative(str(fd, 'id'));
-  revalidatePath(`/objectives/${objectiveId}`);
-  revalidatePath('/tasks');
+  const user = await requireUser();
+  const id = str(fd, 'id');
+  const init = await getInitiative(id);
+  if (!init) return;
+  if (!(await canManageTaskLoose(user, init))) throw new Error('Bạn không có quyền xoá việc này.');
+  await deleteInitiative(id);
+  revalidateTask(init);
 }
 
 // Kéo-thả Kanban: đổi trạng thái 1 việc. Kiểm quyền (quản lý HOẶC người được giao).
 export async function moveInitiativeAction(id: string, status: InitStatus) {
   const user = await requireUser();
-  const units = await listUnits();
   const init = await getInitiative(id);
   if (!init) throw new Error('Không tìm thấy công việc.');
-  const obj = init.objective_id ? await getObjective(init.objective_id) : null;
-  if (!obj) throw new Error('Công việc chưa gắn OKR.');
-  const manage = canEditObjective(user, obj, units, await loadAccess());
+  const manage = await canManageTaskLoose(user, init);
   const perm = canUpdateInitiative(user, init, manage);
   if (!perm.manage && !perm.assignee) throw new Error('Bạn không có quyền cập nhật việc này.');
   await setInitiativeStatus(id, status);
-  revalidatePath(`/objectives/${obj.id}`);
-  revalidatePath('/tasks');
+  revalidateTask(init);
 }

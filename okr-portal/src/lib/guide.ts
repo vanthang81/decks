@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-04.67';
+export const GUIDE_VERSION = '2026-08-04.68';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -487,7 +487,15 @@ export const FEATURES: Feature[] = [
     where: 'Menu "Tổng quan" → "Cuộc họp"',
     help: 'Tổ chức cuộc họp, ghi biên bản, theo dõi hành động; nội dung bảo mật theo người tham gia.',
     detail:
-      'Tạo cuộc họp theo loại (Check-in dự án · Điều hành tuần/tháng · Cấp khối/phòng · IBP…), chọn chủ trì/thư ký, người tham gia và phạm vi xem. Sau họp: chủ trì/thư ký ghi Biên bản & Quyết định; các công việc gắn cuộc họp hiện ở mục "Hành động". GẮN VIỆC VÀO CUỘC HỌP: khi sửa một công việc (ở trang OKR hoặc Dự án), tick "🗓 Thuộc cuộc họp" rồi chọn cuộc họp → công việc đó trở thành một "hành động" của cuộc họp và hiện chip 🗓 để truy vết ngược. BẢO MẬT: chỉ người tham gia / được thêm (hoặc CEO/CFO) mới xem được nội dung; người ngoài có thể gửi "yêu cầu xem" → chủ trì/thư ký duyệt (có thông báo hai chiều).',
+      'Tạo cuộc họp theo loại (Check-in dự án · Điều hành tuần/tháng · Cấp khối/phòng · IBP…), chọn chủ trì/thư ký, người tham gia và phạm vi xem. Sau họp: chủ trì/thư ký ghi Biên bản & Quyết định; các công việc gắn cuộc họp hiện ở mục "Hành động". GẮN VIỆC VÀO CUỘC HỌP: khi sửa một công việc (ở trang OKR hoặc Dự án), tick "🗓 Thuộc cuộc họp" rồi chọn cuộc họp → công việc đó trở thành một "hành động" của cuộc họp và hiện chip 🗓 để truy vết ngược. CHUỖI CUỘC HỌP: mỗi cuộc họp có thể chọn "Cuộc họp trước" để nối chuỗi (vd chuỗi check-in dự án hàng tuần) — trang chi tiết hiện link "← Trước" và "Tiếp →" để đi lại giữa các kỳ họp. BẢO MẬT: chỉ người tham gia / được thêm (hoặc CEO/CFO) mới xem được nội dung; người ngoài có thể gửi "yêu cầu xem" → chủ trì/thư ký duyệt (có thông báo hai chiều).',
+  },
+  {
+    key: 'meeting-tasks',
+    title: 'Việc (hành động) của cuộc họp',
+    where: 'Trang chi tiết Cuộc họp · thẻ "Hành động (next actions)"',
+    help: 'Thêm việc cho cuộc họp và xem theo Danh sách/Kanban/Gantt như trang Dự án.',
+    detail:
+      'Mỗi cuộc họp có thể THÊM công việc (next action) ngay tại thẻ "Hành động": bấm "＋ Thêm việc", đặt tên, giao người, hạn, ưu tiên; gắn OKR là TUỲ CHỌN (gắn thì việc hiện cả ở action plan của OKR đó, không gắn thì là hành động thuần của cuộc họp). Các việc hiển thị theo 3 kiểu như trang Dự án: Danh sách · Kanban (kéo–thả đổi trạng thái) · Dòng thời gian (Gantt), có bộ lọc (phụ trách/đơn vị/trạng thái/quá hạn/việc của tôi/ẩn việc xong). Chủ trì/thư ký/điều hành quản lý mọi việc; người được giao cập nhật việc của mình.',
   },
   {
     key: 'project-charter',
@@ -566,6 +574,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/08/2026 (Cuộc họp: thêm việc + view list/kanban/gantt + nối chuỗi)',
+    items: [
+      'Mỗi cuộc họp thêm được CÔNG VIỆC (next action) ngay tại thẻ "Hành động" (gắn OKR tuỳ chọn); xem theo Danh sách/Kanban/Gantt như trang Dự án (kéo–thả, bộ lọc đầy đủ).',
+      'Nối CHUỖI cuộc họp: chọn "Cuộc họp trước" khi tạo/sửa → link "← Trước / Tiếp →" đi lại giữa các kỳ họp.',
+    ],
+  },
   {
     date: '04/08/2026 (Ngân sách: sổ chi tiết + template CSV + popup theo khối)',
     items: [

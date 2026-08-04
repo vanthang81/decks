@@ -33,10 +33,12 @@ export type Meeting = {
   meeting_at: string | null; location: string | null;
   status: MeetingStatus; visibility: MeetingVisibility;
   agenda: string | null; minutes: string | null; decisions: string | null;
+  previous_meeting_id: string | null;
   created_by: string | null;
 };
 export type MeetingRow = Meeting & {
   owner_name: string | null; unit_name: string | null; project_name: string | null;
+  prev_code: string | null; prev_title: string | null;
   participant_count: number; action_count: number; pending_requests: number;
 };
 export type Participant = { email: string; role: string; name: string | null };
@@ -45,15 +47,17 @@ export type AccessRequest = { id: string; requester_email: string; requester_nam
 const SELECT = `
   SELECT m.id, m.code, m.title, m.type, m.period_id, m.unit_id, m.project_id,
          m.owner_email, m.secretary_email, m.meeting_at::text AS meeting_at, m.location,
-         m.status, m.visibility, m.agenda, m.minutes, m.decisions, m.created_by,
+         m.status, m.visibility, m.agenda, m.minutes, m.decisions, m.previous_meeting_id, m.created_by,
          ou.display_name AS owner_name, un.name AS unit_name, pr.name AS project_name,
+         pm.code AS prev_code, pm.title AS prev_title,
          (SELECT count(*) FROM okr_meeting_participants p WHERE p.meeting_id=m.id)::int AS participant_count,
          (SELECT count(*) FROM okr_initiatives i WHERE i.meeting_id=m.id)::int AS action_count,
          (SELECT count(*) FROM okr_meeting_access_requests r WHERE r.meeting_id=m.id AND r.status='pending')::int AS pending_requests
     FROM okr_meetings m
     LEFT JOIN okr_users ou ON ou.email=m.owner_email
     LEFT JOIN okr_units un ON un.id=m.unit_id
-    LEFT JOIN okr_projects pr ON pr.id=m.project_id`;
+    LEFT JOIN okr_projects pr ON pr.id=m.project_id
+    LEFT JOIN okr_meetings pm ON pm.id=m.previous_meeting_id`;
 
 /** Điều kiện SQL "user được XEM cuộc họp" — trả mảnh WHERE + params bổ sung. */
 function viewClause(user: OkrUser, startIdx: number): { sql: string; params: unknown[] } {
@@ -135,17 +139,18 @@ async function nextMeetingCode(): Promise<string> {
 export type MeetingInput = {
   title: string; type: MeetingType; period_id: string | null; unit_id: string | null; project_id: string | null;
   owner_email: string | null; secretary_email: string | null; meeting_at: string | null; location: string | null;
-  status: MeetingStatus; visibility: MeetingVisibility; agenda: string | null;
+  status: MeetingStatus; visibility: MeetingVisibility; agenda: string | null; previous_meeting_id: string | null;
 };
 
 export async function createMeeting(input: MeetingInput, createdBy: string): Promise<string> {
   const code = await nextMeetingCode();
   const row = await queryOne<{ id: string }>(
     `INSERT INTO okr_meetings (code, title, type, period_id, unit_id, project_id, owner_email, secretary_email,
-        meeting_at, location, status, visibility, agenda, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id`,
+        meeting_at, location, status, visibility, agenda, previous_meeting_id, created_by)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING id`,
     [code, input.title, input.type, input.period_id, input.unit_id, input.project_id, input.owner_email,
-     input.secretary_email, input.meeting_at || null, input.location, input.status, input.visibility, input.agenda, createdBy],
+     input.secretary_email, input.meeting_at || null, input.location, input.status, input.visibility, input.agenda,
+     input.previous_meeting_id, createdBy],
   );
   return row!.id;
 }
@@ -153,10 +158,25 @@ export async function createMeeting(input: MeetingInput, createdBy: string): Pro
 export async function updateMeeting(id: string, input: MeetingInput): Promise<void> {
   await query(
     `UPDATE okr_meetings SET title=$2, type=$3, period_id=$4, unit_id=$5, project_id=$6, owner_email=$7,
-        secretary_email=$8, meeting_at=$9, location=$10, status=$11, visibility=$12, agenda=$13, updated_at=now()
+        secretary_email=$8, meeting_at=$9, location=$10, status=$11, visibility=$12, agenda=$13,
+        previous_meeting_id=$14, updated_at=now()
       WHERE id=$1`,
     [id, input.title, input.type, input.period_id, input.unit_id, input.project_id, input.owner_email,
-     input.secretary_email, input.meeting_at || null, input.location, input.status, input.visibility, input.agenda],
+     input.secretary_email, input.meeting_at || null, input.location, input.status, input.visibility, input.agenda,
+     input.previous_meeting_id],
+  );
+}
+
+/** Cuộc họp NỐI TIẾP (follow-up) = các cuộc họp có previous_meeting_id = id này (lọc quyền xem). */
+export async function listFollowUpMeetings(
+  meetingId: string, user: OkrUser,
+): Promise<{ id: string; code: string | null; title: string; meeting_at: string | null }[]> {
+  const v = viewClause(user, 2);
+  return query<{ id: string; code: string | null; title: string; meeting_at: string | null }>(
+    `SELECT m.id, m.code, m.title, m.meeting_at::text AS meeting_at FROM okr_meetings m
+      WHERE m.previous_meeting_id=$1 AND ${v.sql}
+      ORDER BY m.meeting_at DESC NULLS LAST, m.created_at DESC`,
+    [meetingId, ...v.params],
   );
 }
 

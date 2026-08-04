@@ -103,6 +103,16 @@ export async function listInitiativesForProject(projectId: string): Promise<Init
   );
 }
 
+/** Toàn bộ task (hành động) gắn 1 CUỘC HỌP — phẳng, dựng cây bằng buildInitiativeTree. */
+export async function listInitiativesForMeeting(meetingId: string): Promise<Initiative[]> {
+  return query<Initiative>(
+    `${SELECT} WHERE i.meeting_id=$1
+     ORDER BY CASE i.kind WHEN 'project' THEN 0 WHEN 'subproject' THEN 1 ELSE 2 END,
+              i.due_on NULLS LAST, i.sort, i.created_at`,
+    [meetingId],
+  );
+}
+
 // ---- Danh sách TOÀN BỘ công việc (xuyên mọi OKR/KR/dự án) cho trang /tasks ----
 // Kèm đủ trường để lọc + kiểm quyền XEM (need-to-know): người giao (created_by),
 // chủ trì OKR gốc + đơn vị OKR (COALESCE objective/kr→objective), chủ trì dự án, kỳ.
@@ -223,6 +233,7 @@ export async function createInitiative(input: {
   owner_email: string | null;
   unit_id: string | null;
   project_id: string | null;
+  meeting_id?: string | null;
   status: InitStatus;
   priority: Priority;
   start_on: string | null;
@@ -235,8 +246,8 @@ export async function createInitiative(input: {
   const code = await nextInitCode(input.objective_id);
   const row = await queryOne<{ id: string }>(
     `INSERT INTO okr_initiatives (objective_id, key_result_id, parent_id, kind, title, description,
-        owner_email, unit_id, project_id, status, priority, start_on, due_on, budget_planned, budget_actual, budget_source, created_by, code)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING id`,
+        owner_email, unit_id, project_id, meeting_id, status, priority, start_on, due_on, budget_planned, budget_actual, budget_source, created_by, code)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING id`,
     [
       input.objective_id,
       input.key_result_id,
@@ -247,6 +258,7 @@ export async function createInitiative(input: {
       input.owner_email,
       input.unit_id,
       input.project_id,
+      input.meeting_id ?? null,
       input.status,
       input.priority,
       input.start_on,

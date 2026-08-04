@@ -131,7 +131,7 @@ function DeadlineBadge({ c }: { c: Card }) {
   return null;
 }
 
-type Ctx = 'objective' | 'project';
+type Ctx = 'objective' | 'project' | 'meeting';
 
 // Chip ngữ cảnh: hiện thông tin CÓ Ý NGHĨA theo nơi đang xem, ẩn cái hiển nhiên.
 // - Trong DỰ ÁN: hiện Objective + Key Result gốc (link) — ẩn tên dự án (đang ở trong nó).
@@ -139,7 +139,9 @@ type Ctx = 'objective' | 'project';
 function ContextChips({ c, context }: { c: Card; context: Ctx }) {
   const stop = (e: React.MouseEvent) => e.stopPropagation();
   const oLink = c.objective_id ? `/objectives/${c.objective_id}` : null;
-  if (context === 'project') {
+  if (context === 'project' || context === 'meeting') {
+    // Trong DỰ ÁN / CUỘC HỌP: hiện OKR + KR gốc (link); dự án hiện khi đang ở cuộc họp; ẩn chip
+    // của chính nơi đang xem (dự án khi ở dự án, cuộc họp khi ở cuộc họp).
     return (
       <>
         {oLink && c.objective_code && (
@@ -152,7 +154,12 @@ function ContextChips({ c, context }: { c: Card; context: Ctx }) {
             🔑 {c.key_result_code}
           </Link>
         )}
-        {c.meeting_id && (
+        {context === 'meeting' && c.project_id && c.project_name && (
+          <Link href={`/projects/${c.project_id}`} className="ctx-chip ctx-proj" onClick={stop} target="_blank" rel="noopener" title="Mở dự án (tab mới)">
+            🗂 {c.project_name}
+          </Link>
+        )}
+        {context === 'project' && c.meeting_id && (
           <Link href={`/meetings/${c.meeting_id}`} className="ctx-chip ctx-mtg" onClick={stop} target="_blank" rel="noopener" title="Mở cuộc họp (tab mới)">
             🗓 {c.meeting_code || c.meeting_title}
           </Link>

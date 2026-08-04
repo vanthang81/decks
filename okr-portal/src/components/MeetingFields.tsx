@@ -4,11 +4,12 @@ import {
 
 // Bộ ô nhập cuộc họp — dùng chung cho popup Tạo & Sửa (server component).
 export default function MeetingFields({
-  users, units, projects, defaultOwner, meeting, participantsText,
+  users, units, projects, meetings, defaultOwner, meeting, participantsText,
 }: {
   users: { email: string; display_name: string | null }[];
   units: { id: string; name: string; type: string }[];
   projects: { id: string; code: string | null; name: string }[];
+  meetings?: { id: string; code: string | null; title: string }[];
   defaultOwner: string;
   meeting?: Meeting | null;
   participantsText?: string;
@@ -84,6 +85,17 @@ export default function MeetingFields({
           </select>
         </div>
       </div>
+      {meetings && meetings.length > 0 && (
+        <>
+          <label className="f">Cuộc họp trước (nối chuỗi) <span className="muted" style={{ fontWeight: 400 }}>— vd chuỗi check-in dự án hàng tuần</span></label>
+          <select className="i" name="previous_meeting_id" defaultValue={m?.previous_meeting_id ?? ''}>
+            <option value="">— Không nối —</option>
+            {meetings.filter((x) => x.id !== m?.id).map((x) => (
+              <option key={x.id} value={x.id}>{x.code ? `${x.code} · ` : ''}{x.title}</option>
+            ))}
+          </select>
+        </>
+      )}
       <label className="f">Người tham gia / theo dõi <span className="muted" style={{ fontWeight: 400 }}>(email, mỗi dòng hoặc cách nhau bằng dấu phẩy)</span></label>
       <textarea className="i" name="participants" rows={2} defaultValue={participantsText ?? ''} placeholder="an@btmh.vn, binh@btmh.vn" />
       <label className="f">Nội dung / Chương trình (agenda)</label>

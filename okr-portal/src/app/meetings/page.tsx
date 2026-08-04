@@ -36,7 +36,7 @@ export default async function MeetingsPage() {
             </p>
           </div>
           <EditModal title="Tạo cuộc họp mới" label="Cuộc họp mới" icon={<NavIcon name="plus" />} submitLabel="Tạo cuộc họp" action={createMeetingAction} wide>
-            <MeetingFields users={users} units={units} projects={projects} defaultOwner={user.email} />
+            <MeetingFields users={users} units={units} projects={projects} meetings={meetings.map((mm) => ({ id: mm.id, code: mm.code, title: mm.title }))} defaultOwner={user.email} />
           </EditModal>
         </div>
 

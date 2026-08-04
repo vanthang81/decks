@@ -10,6 +10,11 @@ import {
   type MeetingInput, type MeetingType, type MeetingStatus, type MeetingVisibility, MEETING_TYPES,
 } from '@/lib/meetings';
 import { notifySimple } from '@/lib/notifications';
+import { createInitiative } from '@/lib/initiatives';
+import { getObjective } from '@/lib/okr';
+import { canEditObjective, loadAccess } from '@/lib/access';
+import { listUnits } from '@/lib/org';
+import { parseNum } from '@/lib/num';
 
 function str(fd: FormData, k: string): string { return String(fd.get(k) ?? '').trim(); }
 function orNull(s: string): string | null { return s === '' ? null : s; }
@@ -30,6 +35,7 @@ function readInput(fd: FormData): MeetingInput {
     status: ONE<MeetingStatus>(str(fd, 'status'), ['scheduled', 'held', 'cancelled'], 'scheduled'),
     visibility: ONE<MeetingVisibility>(str(fd, 'visibility'), ['participants', 'unit', 'company'], 'participants'),
     agenda: orNull(str(fd, 'agenda')),
+    previous_meeting_id: orNull(str(fd, 'previous_meeting_id')),
   };
 }
 
@@ -97,6 +103,50 @@ export async function deleteMeetingAction(fd: FormData) {
   }
   await deleteMeeting(id);
   redirect('/meetings?deleted=1');
+}
+
+/**
+ * Thêm CÔNG VIỆC (hành động) cho 1 cuộc họp. Chủ trì/thư ký/điều hành thêm được.
+ * Có thể gắn kèm OKR (tuỳ chọn) — nếu gắn thì phải có quyền quản OKR đó; nếu không thì
+ * việc là "next action" thuần của cuộc họp (objective_id NULL), vẫn quản lý/kéo-thả theo quyền họp.
+ */
+export async function createMeetingTaskAction(fd: FormData) {
+  const { user, m } = await guardManage(str(fd, 'id'));
+  const title = str(fd, 'title');
+  if (!title) throw new Error('Thiếu tên công việc.');
+  const objectiveId = orNull(str(fd, 'objective_id'));
+  let keyResultId = orNull(str(fd, 'key_result_id'));
+  if (objectiveId) {
+    const [obj, units, access] = await Promise.all([getObjective(objectiveId), listUnits(), loadAccess()]);
+    if (!obj) throw new Error('Không tìm thấy OKR đã chọn.');
+    if (!canEditObjective(user, obj, units, access))
+      throw new Error('Bạn không có quyền gắn việc vào OKR đã chọn.');
+  } else {
+    keyResultId = null; // không gắn OKR thì bỏ KR
+  }
+  await createInitiative({
+    objective_id: objectiveId,
+    key_result_id: keyResultId,
+    parent_id: null,
+    kind: 'action',
+    title,
+    description: orNull(str(fd, 'description')),
+    owner_email: orNull(str(fd, 'owner_email')),
+    unit_id: orNull(str(fd, 'unit_id')),
+    project_id: orNull(str(fd, 'project_id')),
+    meeting_id: m.id,
+    status: 'todo',
+    priority: (str(fd, 'priority') || 'medium') as 'low' | 'medium' | 'high',
+    start_on: orNull(str(fd, 'start_on')),
+    due_on: orNull(str(fd, 'due_on')),
+    budget_planned: parseNum(fd.get('budget_planned'), 0),
+    budget_actual: 0,
+    budget_source: null,
+    created_by: user.email,
+  });
+  revalidatePath(`/meetings/${m.id}`);
+  if (objectiveId) revalidatePath(`/objectives/${objectiveId}`);
+  revalidatePath('/tasks');
 }
 
 export async function requestMeetingAccessAction(fd: FormData) {
