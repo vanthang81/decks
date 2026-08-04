@@ -1,6 +1,7 @@
 import {
   MEETING_TYPE_LABEL, MEETING_TYPES, VISIBILITY_LABEL, type Meeting,
 } from '@/lib/meetings';
+import ParticipantsPicker from '@/components/ParticipantsPicker';
 
 // Bộ ô nhập cuộc họp — dùng chung cho popup Tạo & Sửa (server component).
 export default function MeetingFields({
@@ -96,8 +97,8 @@ export default function MeetingFields({
           </select>
         </>
       )}
-      <label className="f">Người tham gia / theo dõi <span className="muted" style={{ fontWeight: 400 }}>(email, mỗi dòng hoặc cách nhau bằng dấu phẩy)</span></label>
-      <textarea className="i" name="participants" rows={2} defaultValue={participantsText ?? ''} placeholder="an@btmh.vn, binh@btmh.vn" />
+      <label className="f">Người tham gia / theo dõi <span className="muted" style={{ fontWeight: 400 }}>(gõ tên để chọn nhanh, hoặc nhập email người ngoài)</span></label>
+      <ParticipantsPicker users={users} initial={participantsText ?? ''} />
       <label className="f">Nội dung / Chương trình (agenda)</label>
       <textarea className="i" name="agenda" rows={3} defaultValue={m?.agenda ?? ''} placeholder="Các nội dung sẽ trao đổi…" />
     </>

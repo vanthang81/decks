@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-04.78';
+export const GUIDE_VERSION = '2026-08-04.79';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -582,6 +582,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/08/2026 (Chọn người tham gia họp nhanh)',
+    items: [
+      'Ô "Người tham gia" của cuộc họp: gõ tên/email → GỢI Ý từ danh sách người dùng để chọn nhanh (hiển thị dạng thẻ). Người chưa có trong hệ thống thì tự nhập; nếu thiếu "@" sẽ tự điền đuôi @baotinmanhhai.vn.',
+    ],
+  },
   {
     date: '04/08/2026 (Báo cáo tổng quan Công việc)',
     items: [
