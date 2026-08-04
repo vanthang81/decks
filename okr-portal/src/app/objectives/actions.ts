@@ -90,7 +90,7 @@ export async function createObjectiveAction(fd: FormData) {
   const id = await createObjective({
     period_id: periodId,
     level,
-    unit_id: level === 'individual' ? null : unitId,
+    unit_id: level === 'individual' || level === 'company' ? null : unitId,
     owner_email: ownerEmail,
     parent_id: orNull(str(fd, 'parent_id')),
     title,
@@ -100,6 +100,34 @@ export async function createObjectiveAction(fd: FormData) {
     bsc_perspective: (orNull(str(fd, 'bsc_perspective')) as BscPerspective | null),
     created_by: user.email,
   });
+
+  // KR nhập ngay tại form tạo (JSON) — tạo luôn để OKR có thước đo từ đầu (best-effort từng KR).
+  try {
+    const rows = JSON.parse(str(fd, 'krs') || '[]') as Array<Record<string, unknown>>;
+    for (const k of Array.isArray(rows) ? rows : []) {
+      const kt = String(k.title ?? '').trim();
+      if (!kt) continue;
+      const mt = (['number', 'percent', 'currency', 'boolean'].includes(String(k.metric_type)) ? k.metric_type : 'number') as MetricType;
+      const start = Number(k.start_value ?? 0) || 0;
+      const target = Number(k.target_value ?? (mt === 'boolean' ? 1 : 100)) || (mt === 'boolean' ? 1 : 100);
+      await createKeyResult({
+        objective_id: id,
+        title: kt,
+        metric_type: mt,
+        direction: (k.direction === 'decrease' ? 'decrease' : 'increase') as Direction,
+        unit_label: k.unit_label ? String(k.unit_label) : null,
+        start_value: start,
+        target_value: target,
+        current_value: start,
+        weight: Number(k.weight ?? 1) || 1,
+        kpi_source: null,
+        indicator: (k.indicator === 'leading' ? 'leading' : 'lagging') as Indicator,
+      }).catch(() => {});
+    }
+  } catch {
+    /* krs không hợp lệ → bỏ qua, OKR vẫn tạo */
+  }
+
   redirect(`/objectives/${id}`);
 }
 

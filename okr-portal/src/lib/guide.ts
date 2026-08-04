@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-04.88';
+export const GUIDE_VERSION = '2026-08-04.89';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -582,6 +582,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/08/2026 (Form tạo OKR làm lại theo cascade)',
+    items: [
+      'Form tạo OKR đi theo đúng chuỗi: Cấp OKR → (Đơn vị nếu Khối/Phòng) → Viễn cảnh BSC → Liên kết lên OKR CHA (chỉ hiện cấp TRÊN hợp lệ: Công ty→Trụ cột chiến lược 5 năm; Khối→OKR Công ty; Phòng→OKR Khối — lọc theo thẻ BSC, có nút xem tất cả) → Mục tiêu → Key Results (nhập ngay tại form, không giới hạn) → Loại OKR → Mô tả → Chủ trì.',
+      'Ẩn ô Đơn vị khi cấp Công ty/Cá nhân; chỉ hiện Cấp OKR mà bạn có quyền tạo; chủ trì mặc định thông minh (Công ty→CEO, Khối→GĐ khối, Phòng→TP, Cá nhân→mình) nhưng vẫn assign được; bỏ ô Trạng thái (mặc định Đang chạy).',
+    ],
+  },
   {
     date: '04/08/2026 (Sửa lỗi tạo OKR + Nhật ký lỗi hệ thống)',
     items: [
