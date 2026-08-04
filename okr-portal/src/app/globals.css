@@ -319,7 +319,10 @@ table.t th.sortable.active { color: var(--primary); }
 
 /* Nhóm nút thao tác gọn trên 1 dòng bảng (Sửa · Ẩn · Xoá) — góc phải mỗi hàng, KHÔNG xuống dòng */
 .row-actions { display: inline-flex; align-items: center; gap: 6px; flex-wrap: nowrap; justify-content: flex-end; white-space: nowrap; }
-.row-actions form { display: inline-flex; margin: 0; }
+/* CHỈ form là CON TRỰC TIẾP của .row-actions (vd form nút Xoá) — KHÔNG lan tới form
+   bên trong popup EditModal (modal là con trong DOM nên selector con-bất-kỳ sẽ dính,
+   biến form modal thành inline-flex làm vỡ layout). */
+.row-actions > form { display: inline-flex; margin: 0; }
 td:has(> .row-actions) { white-space: nowrap; width: 1%; }
 
 /* Cột "Kết quả" ở Thư viện KPI — chip hiện số thực + % đạt, bấm mở popup xu hướng */
@@ -517,6 +520,10 @@ td:has(> .row-actions) { white-space: nowrap; width: 1%; }
   position: fixed; inset: 0; z-index: 60; background: rgba(20, 14, 12, .42);
   display: flex; align-items: flex-start; justify-content: center; padding: 6vh 16px 24px;
   overflow-y: auto; animation: okrFade .12s ease;
+  /* RESET các thuộc tính KẾ THỪA từ nơi đặt nút mở popup (vd .row-actions có
+     white-space:nowrap) — modal là position:fixed nhưng vẫn là con trong DOM nên
+     sẽ thừa kế; nowrap làm vỡ layout .row/label bên trong. Ép về bình thường. */
+  white-space: normal; text-align: left;
 }
 @keyframes okrFade { from { opacity: 0; } to { opacity: 1; } }
 .okr-modal {
@@ -527,6 +534,9 @@ td:has(> .row-actions) { white-space: nowrap; width: 1%; }
   font-weight: 400; /* reset — modal có thể nằm trong tiêu đề in đậm (.pagetitle) → thừa kế bold */
 }
 .okr-modal label.f { text-align: left; }
+/* Phòng thủ: form trong modal LUÔN là block (đừng để rule ancestor như
+   .row-actions form biến nó thành flex → vỡ bố cục các .row/label). */
+.okr-modal form { display: block; }
 @keyframes okrPop { from { transform: translateY(-6px); opacity: .6; } to { transform: none; opacity: 1; } }
 .okr-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
 .okr-modal-x {

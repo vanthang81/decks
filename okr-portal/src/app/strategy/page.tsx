@@ -70,7 +70,7 @@ export default async function StrategyPage() {
           <Link className="sc-step" href="/map?v=flow">📌 OKR (Công ty→Khối→Phòng)</Link><span className="sc-arr">→</span>
           <Link className="sc-step" href="/objectives">📐 KRA / KR</Link><span className="sc-arr">→</span>
           <span className="sc-step sc-multi">
-            <Link href="/kpi">📊 KPI</Link> · <Link href="/projects">🗂 Dự án</Link> · <Link href="/tasks">✅ Công việc</Link>
+            <Link href="/kpi">📊 KPI</Link> · <Link href="/projects">🗂 Dự án</Link> · <Link href="/tasks">✅ Công việc</Link> · <Link href="/meetings">🗓 Cuộc họp</Link>
           </span>
         </div>
 
