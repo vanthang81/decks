@@ -154,10 +154,13 @@ export type TaskRow = {
   period_name: string | null;
   budget_planned: number;
   budget_actual: number;
+  parent_id: string | null;
+  has_children: boolean; // có nút con trong cây thực thi → mới thực sự là "nhóm/dự án"
 };
 
 const TASK_SELECT = `
-  SELECT i.id, i.code, i.kind, i.title, i.status, i.priority, i.description,
+  SELECT i.id, i.code, i.kind, i.title, i.status, i.priority, i.description, i.parent_id,
+         EXISTS (SELECT 1 FROM okr_initiatives c WHERE c.parent_id = i.id) AS has_children,
          i.progress::float8 AS progress, i.start_on::text, i.due_on::text,
          i.owner_email, u.display_name AS owner_name, u.avatar_url AS owner_avatar, i.created_by,
          i.unit_id, un.name AS unit_name,

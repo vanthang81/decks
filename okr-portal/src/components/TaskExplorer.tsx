@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition, type CSSProperties } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ProgressBar } from '@/components/ui';
 import { StackedBar } from '@/components/charts';
@@ -101,6 +102,7 @@ export default function TaskExplorer({
   projects,
   editAction,
   deleteAction,
+  move,
 }: {
   tasks: TaskRow[];
   currentEmail: string;
@@ -112,9 +114,19 @@ export default function TaskExplorer({
   projects: ProjectOpt[];
   editAction: (fd: FormData) => Promise<void>;
   deleteAction: (fd: FormData) => Promise<void>;
+  move: (id: string, status: Status) => Promise<void>;
 }) {
   const manageSet = useMemo(() => new Set(manageIds), [manageIds]);
   const [editing, setEditing] = useState<TaskRow | null>(null);
+  const [view, setView] = useState<'list' | 'kanban' | 'timeline'>('list');
+  useEffect(() => {
+    const v = typeof window !== 'undefined' ? localStorage.getItem('okrTasksView') : null;
+    if (v === 'list' || v === 'kanban' || v === 'timeline') setView(v);
+  }, []);
+  const pickView = (v: 'list' | 'kanban' | 'timeline') => {
+    setView(v);
+    if (typeof window !== 'undefined') localStorage.setItem('okrTasksView', v);
+  };
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const toggleSort = (k: SortKey) => {
@@ -303,6 +315,22 @@ export default function TaskExplorer({
         )}
       </div>
 
+      <div className="exec-tabs" style={{ marginTop: 2 }}>
+        {([['list', '📋', 'Danh sách'], ['kanban', '🗂️', 'Kanban'], ['timeline', '📅', 'Dòng thời gian']] as const).map(([k, ic, lb]) => (
+          <button key={k} type="button" className={`exec-tab ${view === k ? 'active' : ''}`} onClick={() => pickView(k)}>
+            <span aria-hidden>{ic}</span> {lb}
+          </button>
+        ))}
+      </div>
+
+      {view === 'kanban' && (
+        <TasksKanban tasks={sorted} canEditT={(t) => manageSet.has(t.id) || t.owner_email?.toLowerCase() === emailLc} move={move} onOpen={(t) => setEditing(t)} />
+      )}
+      {view === 'timeline' && (
+        <TasksGantt tasks={sorted} onOpen={(t) => setEditing(t)} />
+      )}
+
+      {view === 'list' && <>
       <div className="table-sticky">
         <table className="t task-table">
           <thead>
@@ -327,7 +355,12 @@ export default function TaskExplorer({
                 <td>{t.code && <span className="okr-code">{t.code}</span>}</td>
                 <td>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <span className={`badge ${KIND_CLS[t.kind]}`} style={{ fontSize: 10.5 }}>{KIND_LABEL[t.kind]}</span>
+                    {(() => {
+                      // Nút 'Dự án'/'Tiểu dự án' KHÔNG có con = thực chất chỉ là 1 công việc → hiện "Công việc"
+                      // (tránh gây hiểu nhầm với cột "Thuộc dự án" = gói PRJ).
+                      const ek = t.kind !== 'action' && !t.has_children ? 'action' : t.kind;
+                      return <span className={`badge ${KIND_CLS[ek]}`} style={{ fontSize: 10.5 }}>{KIND_LABEL[ek]}</span>;
+                    })()}
                     <b>{t.title}</b>
                   </div>
                 </td>
@@ -388,6 +421,7 @@ export default function TaskExplorer({
       {filtered.length === 0 && (
         <div className="card"><p className="muted" style={{ margin: 0 }}>Không có công việc nào khớp bộ lọc.</p></div>
       )}
+      </>}
       {!seeAll && (
         <p className="muted" style={{ fontSize: 12.5, marginTop: 10 }}>
           Bạn đang xem {tasks.length} việc liên quan đến bạn (được giao / bạn giao / OKR bạn chủ trì /
@@ -407,6 +441,173 @@ export default function TaskExplorer({
           deleteAction={deleteAction}
           onClose={() => setEditing(null)}
         />
+      )}
+    </div>
+  );
+}
+
+// ───────── Kanban cho /tasks (kéo–thả đổi trạng thái, bấm mở popup) ─────────
+function effKindT(t: TaskRow): 'project' | 'subproject' | 'action' {
+  return t.kind !== 'action' && !t.has_children ? 'action' : t.kind;
+}
+function TasksKanban({
+  tasks, canEditT, move, onOpen,
+}: {
+  tasks: TaskRow[];
+  canEditT: (t: TaskRow) => boolean;
+  move: (id: string, status: Status) => Promise<void>;
+  onOpen: (t: TaskRow) => void;
+}) {
+  const router = useRouter();
+  const [cards, setCards] = useState<TaskRow[]>(tasks);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overCol, setOverCol] = useState<Status | null>(null);
+  const [, startTransition] = useTransition();
+  const lastDragEnd = useRef<number>(0);
+  useEffect(() => setCards(tasks), [tasks]);
+
+  const drop = (status: Status) => {
+    const id = dragId;
+    setOverCol(null);
+    setDragId(null);
+    if (!id) return;
+    const card = cards.find((c) => c.id === id);
+    if (!card || card.status === status || !canEditT(card)) return;
+    setCards((prev) => prev.map((c) => (c.id === id ? { ...c, status, progress: status === 'done' ? 100 : c.progress } : c)));
+    startTransition(async () => {
+      try { await move(id, status); router.refresh(); }
+      catch (e) { setCards(tasks); alert('Không cập nhật được: ' + (e instanceof Error ? e.message : String(e))); }
+    });
+  };
+
+  if (tasks.length === 0) return <p className="muted">Không có công việc nào khớp bộ lọc.</p>;
+  return (
+    <>
+      <p className="muted" style={{ fontSize: 12.5, marginTop: 4 }}>
+        Bấm thẻ để mở &amp; sửa. Kéo–thả giữa các cột để đổi trạng thái (chỉ việc bạn quản lý hoặc được giao).
+      </p>
+      <div className="kb-board">
+        {COLUMNS.map((col) => {
+          const list = cards.filter((c) => c.status === col);
+          return (
+            <div key={col} className={`kb-col ${overCol === col ? 'over' : ''}`}
+              onDragOver={(e) => { e.preventDefault(); if (overCol !== col) setOverCol(col); }}
+              onDragLeave={() => setOverCol((o) => (o === col ? null : o))}
+              onDrop={() => drop(col)}>
+              <div className="kb-col-h" style={{ borderTopColor: STATUS_COLOR[col] }}>
+                {STATUS_LABEL[col]} <span className="kb-count">{list.length}</span>
+              </div>
+              <div className="kb-col-body">
+                {list.map((c) => {
+                  const editable = canEditT(c);
+                  const dl = deadlineInfo(c).state;
+                  const ek = effKindT(c);
+                  return (
+                    <div key={c.id}
+                      className={`kb-card ${dragId === c.id ? 'dragging' : ''} ${editable ? '' : 'locked'} ${dl === 'overdue' ? 'kb-over' : dl === 'today' || dl === 'soon' ? 'kb-soon' : ''}`}
+                      draggable={editable}
+                      onDragStart={(e) => { setDragId(c.id); e.dataTransfer.effectAllowed = 'move'; }}
+                      onDragEnd={() => { lastDragEnd.current = Date.now(); setDragId(null); }}
+                      onClick={() => { if (Date.now() - lastDragEnd.current < 250) return; onOpen(c); }}
+                      title={editable ? 'Bấm để sửa · kéo để đổi trạng thái' : 'Bấm để xem'}>
+                      <div className="kb-card-top">
+                        <span className={`badge ${KIND_CLS[ek]}`} style={{ fontSize: 10 }}>{KIND_LABEL[ek]}</span>
+                        {c.priority === 'high' && <span className="badge red" style={{ fontSize: 10 }}>Ưu tiên</span>}
+                      </div>
+                      <div className="kb-card-title">
+                        {c.code && <span className="okr-code" style={{ fontSize: 10, marginRight: 4 }}>{c.code}</span>}{c.title}
+                      </div>
+                      {c.unit_name && <div className="kb-card-unit">🏢 {c.unit_name}</div>}
+                      <div className="kb-card-ctx">
+                        {c.objective_code && <span className="ctx-chip ctx-o">🎯 {c.objective_code}</span>}
+                        {c.project_id && <span className="ctx-chip ctx-proj">🗂 {c.project_code || c.project_name}</span>}
+                        {!c.objective_id && c.meeting_id && <span className="ctx-chip ctx-mtg">🗓 {c.meeting_code || c.meeting_title}</span>}
+                      </div>
+                      <div className="kb-card-foot">
+                        <span>{c.owner_name || 'Chưa giao'}</span>
+                        {c.due_on && <span>· {fmtDate(c.due_on)}</span>}
+                        <span className="kb-card-prog">{c.progress.toFixed(0)}%</span>
+                      </div>
+                      {dl !== 'none' && <div className="kb-card-dl"><DeadlineBadge t={c} /></div>}
+                      <div className="kb-mini"><span style={{ width: `${Math.max(0, Math.min(100, c.progress))}%` }} /></div>
+                    </div>
+                  );
+                })}
+                {list.length === 0 && <div className="kb-empty">—</div>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
+// ───────── Gantt cho /tasks (read-only, bấm mở popup) ─────────
+function TasksGantt({ tasks, onOpen }: { tasks: TaskRow[]; onOpen: (t: TaskRow) => void }) {
+  const parseD = (s: string) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+  const dayDiff = (a: Date, b: Date) => Math.round((b.getTime() - a.getTime()) / 86400000);
+  const dated = tasks.filter((c) => c.start_on || c.due_on);
+  const undated = tasks.filter((c) => !c.start_on && !c.due_on);
+  if (dated.length === 0)
+    return <p className="muted" style={{ marginTop: 4 }}>Chưa có việc nào đặt lịch (ngày bắt đầu/hạn). Thêm hạn để hiện trên dòng thời gian.</p>;
+
+  const ds: Date[] = [];
+  dated.forEach((c) => { if (c.start_on) ds.push(parseD(c.start_on)); if (c.due_on) ds.push(parseD(c.due_on)); });
+  let min = ds[0], max = ds[0];
+  ds.forEach((d) => { if (d < min) min = d; if (d > max) max = d; });
+  min = new Date(min.getTime() - 2 * 86400000);
+  max = new Date(max.getTime() + 2 * 86400000);
+  const total = Math.max(1, dayDiff(min, max));
+  const ticks: { left: number; label: string }[] = [];
+  const t = new Date(min.getFullYear(), min.getMonth(), 1);
+  while (t <= max) {
+    const off = dayDiff(min, t);
+    if (off >= 0) ticks.push({ left: (off / total) * 100, label: `T${t.getMonth() + 1}/${t.getFullYear() % 100}` });
+    t.setMonth(t.getMonth() + 1);
+  }
+  const today = new Date();
+  const todayLeft = today >= min && today <= max ? (dayDiff(min, today) / total) * 100 : null;
+
+  return (
+    <div className="gantt-wrap">
+      <div className="gantt">
+        <div className="gantt-axis">
+          <div className="gantt-labelcol" />
+          <div className="gantt-track gantt-axis-track">
+            {ticks.map((tk, i) => <span key={i} className="gantt-tick" style={{ left: `${tk.left}%` }}>{tk.label}</span>)}
+            {todayLeft !== null && <span className="gantt-today" style={{ left: `${todayLeft}%` }} title="Hôm nay" />}
+          </div>
+        </div>
+        {dated.map((c) => {
+          const s = c.start_on ? parseD(c.start_on) : parseD(c.due_on!);
+          const e = c.due_on ? parseD(c.due_on) : parseD(c.start_on!);
+          const left = (dayDiff(min, s) / total) * 100;
+          const width = Math.max(1.5, (Math.max(0, dayDiff(s, e)) / total) * 100);
+          const dl = deadlineInfo(c).state;
+          const ek = effKindT(c);
+          return (
+            <div key={c.id} className="gantt-row" onClick={() => onOpen(c)} style={{ cursor: 'pointer' }} title="Bấm để mở">
+              <div className="gantt-labelcol" title={c.title}>
+                <span className={`badge ${KIND_CLS[ek]}`} style={{ fontSize: 10 }}>{KIND_LABEL[ek]}</span>{' '}
+                {c.code && <span className="okr-code" style={{ fontSize: 9.5, marginRight: 3 }}>{c.code}</span>}
+                {dl !== 'none' && <><DeadlineBadge t={c} /> </>}
+                <span className="gantt-name">{c.title}</span>
+              </div>
+              <div className="gantt-track">
+                {todayLeft !== null && <span className="gantt-today" style={{ left: `${todayLeft}%` }} />}
+                <span className={`gantt-bar ${dl === 'overdue' ? 'gantt-over' : dl === 'today' || dl === 'soon' ? 'gantt-soon' : ''}`}
+                  style={{ left: `${left}%`, width: `${width}%`, background: STATUS_COLOR[c.status] }}>
+                  <span className="gantt-bar-fill" style={{ width: `${Math.max(0, Math.min(100, c.progress))}%` }} />
+                  <span className="gantt-bar-txt">{c.progress.toFixed(0)}%</span>
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {undated.length > 0 && (
+        <p className="muted" style={{ fontSize: 12.5, marginTop: 10 }}>Chưa đặt lịch ({undated.length}): {undated.map((c) => c.title).join(' · ')}</p>
       )}
     </div>
   );

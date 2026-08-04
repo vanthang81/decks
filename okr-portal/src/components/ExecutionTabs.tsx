@@ -23,6 +23,11 @@ const KIND_LABEL: Record<Kind, string> = {
   action: 'Công việc',
 };
 const KIND_CLS: Record<Kind, string> = { project: 'blue', subproject: 'amber', action: 'gray' };
+// Nút 'Dự án'/'Tiểu dự án' KHÔNG có con = thực chất là 1 công việc → hiển thị "Công việc"
+// (tránh nhầm với "Thuộc dự án" = gói PRJ). childParents = tập id các nút có con.
+function effKind(c: { id: string; kind: Kind }, childParents: Set<string>): Kind {
+  return c.kind !== 'action' && !childParents.has(c.id) ? 'action' : c.kind;
+}
 // Loại con hợp lệ (đồng bộ CHILD_KIND ở lib) — khai lại để không kéo pg vào client.
 const CHILD_KIND: Record<Kind, Kind[]> = {
   project: ['subproject', 'action'],
@@ -248,6 +253,12 @@ export default function ExecutionTabs({
     { key: 'timeline', label: 'Dòng thời gian', icon: '📅' },
   ];
 
+  // Tập id các nút CÓ con (từ danh sách ĐẦY ĐỦ, không phải đã lọc) → để relabel nút lá.
+  const childParents = useMemo(
+    () => new Set(initiatives.map((i) => i.parent_id).filter(Boolean) as string[]),
+    [initiatives],
+  );
+
   // ----- Bộ lọc việc (áp cho cả 3 view) -----
   const [q, setQ] = useState('');
   const [fOwner, setFOwner] = useState('');
@@ -358,13 +369,14 @@ export default function ExecutionTabs({
 
       {view === 'list' && (
         <div>
-          <ListView initiatives={filtered} canEdit={canEdit} context={context} onOpen={(c) => setEditing(c)} />
+          <ListView initiatives={filtered} childParents={childParents} canEdit={canEdit} context={context} onOpen={(c) => setEditing(c)} />
           {children}
         </div>
       )}
       {view === 'kanban' && (
         <KanbanView
           initiatives={filtered}
+          childParents={childParents}
           canEdit={canEdit}
           context={context}
           move={move}
@@ -372,7 +384,7 @@ export default function ExecutionTabs({
         />
       )}
       {view === 'timeline' && (
-        <TimelineView initiatives={filtered} canEdit={canEdit} onOpen={(c) => setEditing(c)} />
+        <TimelineView initiatives={filtered} childParents={childParents} canEdit={canEdit} onOpen={(c) => setEditing(c)} />
       )}
 
       {editing && (
@@ -450,6 +462,8 @@ function EditModal({
   const [selKr, setSelKr] = useState<string>(card.key_result_id ?? '');
   const krOptions = objectives.find((o) => o.id === selObjective)?.krs ?? [];
   const childKinds = CHILD_KIND[card.kind];
+  // Nút không có con = hiển thị như "Công việc" (khớp cách hiện ở list/kanban/gantt).
+  const mKind: Kind = card.kind !== 'action' && !hasChildren ? 'action' : card.kind;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -510,8 +524,8 @@ function EditModal({
       <div className="okr-modal" onMouseDown={(e) => e.stopPropagation()}>
         <div className="okr-modal-head">
           <div>
-            <span className={`badge ${KIND_CLS[card.kind]}`} style={{ fontSize: 11 }}>
-              {KIND_LABEL[card.kind]}
+            <span className={`badge ${KIND_CLS[mKind]}`} style={{ fontSize: 11 }}>
+              {KIND_LABEL[mKind]}
             </span>{' '}
             {card.code && <span className="okr-code">{card.code}</span>}
           </div>
@@ -932,9 +946,9 @@ function EditModal({
 
               <ConfirmButton
                 className="btn ghost sm danger"
-                label={`🗑 Xoá ${KIND_LABEL[card.kind].toLowerCase()}`}
-                title={`Xoá ${KIND_LABEL[card.kind].toLowerCase()}`}
-                message={`Xoá ${KIND_LABEL[card.kind].toLowerCase()} này${card.parent_id ? '' : ' và mọi mục con bên dưới'}? Hành động không thể hoàn tác.`}
+                label={`🗑 Xoá ${KIND_LABEL[mKind].toLowerCase()}`}
+                title={`Xoá ${KIND_LABEL[mKind].toLowerCase()}`}
+                message={`Xoá ${KIND_LABEL[mKind].toLowerCase()} này${card.parent_id ? '' : hasChildren ? ' và mọi mục con bên dưới' : ''}? Hành động không thể hoàn tác.`}
                 confirmLabel="Xoá hẳn"
                 onConfirm={doDelete}
                 disabled={pending}
@@ -979,11 +993,13 @@ function orderTree(cards: Card[]): ListNode[] {
 
 function ListView({
   initiatives,
+  childParents,
   canEdit,
   context,
   onOpen,
 }: {
   initiatives: Card[];
+  childParents: Set<string>;
   canEdit: (c: Card) => boolean;
   context: Ctx;
   onOpen: (c: Card) => void;
@@ -1009,8 +1025,8 @@ function ListView({
             >
               <div className="il-main">
                 <div className="il-ttl">
-                  <span className={`badge ${KIND_CLS[n.kind]}`} style={{ fontSize: 10.5 }}>
-                    {KIND_LABEL[n.kind]}
+                  <span className={`badge ${KIND_CLS[effKind(n, childParents)]}`} style={{ fontSize: 10.5 }}>
+                    {KIND_LABEL[effKind(n, childParents)]}
                   </span>
                   {n.code && <span className="okr-code">{n.code}</span>}
                   <b>{n.title}</b>
@@ -1055,12 +1071,14 @@ function ListView({
 // ---------------- Kanban (kéo-thả + bấm mở popup) ----------------
 function KanbanView({
   initiatives,
+  childParents,
   canEdit,
   context,
   move,
   onOpen,
 }: {
   initiatives: Card[];
+  childParents: Set<string>;
   canEdit: (c: Card) => boolean;
   context: Ctx;
   move: (id: string, status: Status) => Promise<void>;
@@ -1154,8 +1172,8 @@ function KanbanView({
                       title={editable ? 'Bấm để sửa · kéo để đổi trạng thái' : 'Bấm để xem'}
                     >
                       <div className="kb-card-top">
-                        <span className={`badge ${KIND_CLS[c.kind]}`} style={{ fontSize: 10 }}>
-                          {KIND_LABEL[c.kind]}
+                        <span className={`badge ${KIND_CLS[effKind(c, childParents)]}`} style={{ fontSize: 10 }}>
+                          {KIND_LABEL[effKind(c, childParents)]}
                         </span>
                         {c.priority === 'high' && (
                           <span className="badge red" style={{ fontSize: 10 }}>
@@ -1203,10 +1221,12 @@ function KanbanView({
 // ---------------- Dòng thời gian (Gantt, bấm mở popup) ----------------
 function TimelineView({
   initiatives,
+  childParents,
   canEdit,
   onOpen,
 }: {
   initiatives: Card[];
+  childParents: Set<string>;
   canEdit: (c: Card) => boolean;
   onOpen: (c: Card) => void;
 }) {
@@ -1281,8 +1301,8 @@ function TimelineView({
               title={canEdit(c) ? 'Bấm để sửa' : 'Bấm để xem'}
             >
               <div className="gantt-labelcol" title={c.title}>
-                <span className={`badge ${KIND_CLS[c.kind]}`} style={{ fontSize: 10 }}>
-                  {KIND_LABEL[c.kind]}
+                <span className={`badge ${KIND_CLS[effKind(c, childParents)]}`} style={{ fontSize: 10 }}>
+                  {KIND_LABEL[effKind(c, childParents)]}
                 </span>{' '}
                 {c.code && <span className="okr-code" style={{ fontSize: 9.5, marginRight: 3 }}>{c.code}</span>}
                 {dl !== 'none' && <><DeadlineBadge c={c} /> </>}

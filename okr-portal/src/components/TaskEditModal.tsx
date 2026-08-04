@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ConfirmButton from '@/components/ConfirmButton';
+import CommentThread from '@/components/CommentThread';
 import type { TaskRow } from '@/lib/initiatives';
 import type { PersonOpt, UnitOpt, ProjectOpt } from '@/components/ExecutionTabs';
 
@@ -250,6 +251,10 @@ export default function TaskEditModal({
             </div>
           </div>
         </form>
+
+        <div className="okr-modal-cmt">
+          <CommentThread entityType="initiative" entityId={task.id} users={users} defaultOpen canModerate={canManage} />
+        </div>
       </div>
     </div>
   );

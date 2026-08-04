@@ -7,7 +7,7 @@ import { listUsers } from '@/lib/users';
 import { listAllProjectOptions } from '@/lib/projects';
 import { listAllInitiatives } from '@/lib/initiatives';
 import { loadAccess, buildTaskViewCtx, canViewInitiative, canEditObjective } from '@/lib/access';
-import { editInitiativeAction, deleteInitiativeAction } from '@/app/objectives/actions';
+import { editInitiativeAction, deleteInitiativeAction, moveInitiativeAction } from '@/app/objectives/actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,6 +71,7 @@ export default async function TasksPage() {
           projects={projects}
           editAction={editInitiativeAction}
           deleteAction={deleteInitiativeAction}
+          move={moveInitiativeAction}
         />
       </div>
     </>
