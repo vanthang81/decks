@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-04.89';
+export const GUIDE_VERSION = '2026-08-04.90';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -171,6 +171,18 @@ export const FEATURES: Feature[] = [
     help: 'Cây mục tiêu Công ty → Khối → Phòng → Cá nhân, thu gọn/mở rộng + BỘ LỌC (khối/phòng, cấp, trạng thái, loại, tìm kiếm).',
     detail:
       'Trang OKR hiển thị toàn bộ mục tiêu trong kỳ dạng cây theo alignment. Có THANH LỌC: tìm theo tên/mã/người chủ trì + lọc theo Khối/Phòng, Cấp, Trạng thái, Loại OKR — khi lọc sẽ hiện danh sách kết quả khớp (kèm số lượng), bỏ lọc để về lại cây. Mỗi nút CÓ cấp con hiện mũi tên ▸ để thu gọn/mở rộng (kèm số OKR con); có nút "Mở rộng tất cả / Thu gọn tất cả". Mặc định mở tới cấp Khối, thu gọn từ Phòng trở xuống. Khi tạo OKR, chọn cấp, đơn vị, người chủ trì và "Liên kết lên" một OKR cấp trên để tạo dòng chảy chiến lược.',
+  },
+  {
+    key: 'okr-import',
+    title: 'Form mẫu & Nhập OKR hàng loạt (Excel)',
+    where: 'Trang OKR → "⬇ Form mẫu" + "Nhập OKR hàng loạt từ Excel"',
+    help: 'Tải form Excel mẫu (có sheet Hướng dẫn + ví dụ), điền nhiều OKR/KR/công việc rồi nhập lại để tạo nhanh — không cần khai từng cái.',
+    detail: [
+      'Bấm "⬇ Form mẫu" để tải file Excel mẫu gồm 4 sheet: Hướng dẫn (giá trị hợp lệ cho từng cột) + Objectives + KeyResults + Initiatives, mỗi sheet có dòng ví dụ "(VD)" để tham chiếu.',
+      'Điền nhiều mục tiêu cùng lúc: ĐỂ TRỐNG cột "Mã" ở dòng nào thì dòng đó TẠO MỚI. Muốn nối KR/công việc vào một Objective mới, đặt "MÃ TẠM" (vd T1, T2) ở cột Mã của sheet Objectives rồi ghi lại mã tạm đó ở cột "Mã Objective" của KeyResults/Initiatives.',
+      'Nếu điền MÃ THẬT đã có (lấy từ nút "Xuất Excel") thì hệ thống CẬP NHẬT mục đó thay vì tạo mới — dùng để sửa hàng loạt.',
+      'Bấm "⬆ Nhập Excel" để nạp file. Kết quả báo rõ số mục TẠO MỚI và CẬP NHẬT cho OKR·KR·công việc, kèm danh sách dòng lỗi (nếu có) để sửa lại. Chỉ người có quyền nhập dữ liệu mới thấy mục này.',
+    ],
   },
   {
     key: 'bsc',
@@ -582,6 +594,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/08/2026 (Form mẫu & Nhập OKR hàng loạt qua Excel)',
+    items: [
+      'Trang OKR thêm nút "⬇ Form mẫu": tải file Excel mẫu (4 sheet Hướng dẫn/Objectives/KeyResults/Initiatives + dòng ví dụ + bảng giá trị hợp lệ) để điền rồi nhập lại — khai nhiều OKR/KR/công việc một lượt cho nhanh.',
+      'Nhập Excel nay TẠO MỚI được cả Objective và Key Result (trước chỉ tạo mới công việc): để trống cột "Mã" = tạo mới; đặt "mã tạm" (vd T1) ở Objective để nối KR/việc vào OKR mới; điền mã thật đã có = cập nhật. Kết quả báo rõ số tạo mới & cập nhật cho từng loại.',
+    ],
+  },
   {
     date: '04/08/2026 (Form tạo OKR làm lại theo cascade)',
     items: [

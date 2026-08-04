@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
 import { query, queryOne } from './db';
-import { computeKrProgress, recomputeUp, type MetricType, type Direction, type Indicator, type OkrType, type ObjStatus } from './okr';
+import { computeKrProgress, recomputeUp, createObjective, createKeyResult, type MetricType, type Direction, type Indicator, type OkrType, type ObjStatus, type Level, type BscPerspective } from './okr';
 import { recomputeInitiativeUp, initIdByCode } from './initiatives';
 import { nextInitCode } from './codes';
 import { parseNum } from './num';
@@ -58,6 +58,55 @@ export async function buildOkrWorkbook(periodId: string | null, unitId: string |
   return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
 }
 
+// ============ FORM MẪU (TEMPLATE) để điền rồi import ============
+export function buildOkrTemplateWorkbook(): Buffer {
+  const guide = [
+    ['HƯỚNG DẪN NHẬP OKR THEO MẪU'],
+    [''],
+    ['1) Điền vào 3 sheet: Objectives (Mục tiêu) · KeyResults (thước đo) · Initiatives (công việc).'],
+    ['2) Cột "Mã": ĐỂ TRỐNG để TẠO MỚI. Muốn nối KR/việc vào một Objective mới, đặt "MÃ TẠM" (vd T1, T2)'],
+    ['   ở cột Mã của sheet Objectives, rồi ghi lại mã tạm đó ở cột "Mã Objective" của KeyResults/Initiatives.'],
+    ['   (Nếu điền MÃ THẬT đã có — lấy từ nút "Xuất Excel" — hệ thống sẽ CẬP NHẬT mục đó thay vì tạo mới.)'],
+    ['3) Xoá các dòng ví dụ "(VD)" trước khi nhập. Cột "Tiến độ %" để trống khi tạo mới.'],
+    [''],
+    ['GIÁ TRỊ HỢP LỆ'],
+    ['Cấp (Objective)', 'company (Công ty) · division (Khối) · department (Phòng) · individual (Cá nhân)'],
+    ['Khối/Phòng', 'Mã đơn vị (vd KD, TC) — chỉ cần khi Cấp = Khối/Phòng. Xem ở Quản trị → Cây tổ chức.'],
+    ['Kỳ', 'Tên kỳ (vd "Năm 2026"). Để trống = kỳ hiện tại.'],
+    ['Mã OKR cha', 'Mã (thật hoặc mã tạm) của OKR cấp trên để liên kết (alignment). Công ty→trụ cột chiến lược.'],
+    ['Loại OKR', 'committed · aspirational · learning'],
+    ['Trạng thái (Objective)', 'active · draft · done · archived'],
+    ['Viễn cảnh (BSC)', 'financial · customer · process · learning'],
+    ['Loại đo (KR)', 'number · percent · currency · boolean'],
+    ['Hướng (KR)', 'increase (tăng) · decrease (giảm)'],
+    ['Chỉ số (KR)', 'leading (dẫn dắt) · lagging (kết quả)'],
+    ['Loại (Initiative)', 'project · subproject · action'],
+    ['Trạng thái (việc)', 'todo · in_progress · blocked · done · canceled'],
+    ['Ưu tiên (việc)', 'high · medium · low'],
+  ];
+  const objAoa = [
+    [...OBJ_HEAD, 'Viễn cảnh'],
+    ['T1', '', 'company', '', '', '(VD) Tăng trưởng doanh thu bán lẻ vượt kế hoạch', '', 'committed', 'active', '', '', 'financial'],
+    ['T2', '', 'division', 'KD', '', '(VD) Dẫn đầu bán lẻ & mở rộng mạng lưới có kỷ luật', '', 'committed', 'active', '', 'T1', 'customer'],
+  ];
+  const krAoa = [
+    KR_HEAD,
+    ['', 'T1', '(VD) Doanh thu bán lẻ đạt 1.859 tỷ', 'number', 'increase', 'tỷ', 0, 0, 1859, 1, '', 'lagging', ''],
+    ['', 'T1', '(VD) Số hoá đơn tăng 20%', 'percent', 'increase', '%', 0, 0, 20, 1, '', 'leading', ''],
+    ['', 'T2', '(VD) Mở 80 điểm bán mới', 'number', 'increase', 'điểm', 0, 0, 80, 1, '', 'lagging', ''],
+  ];
+  const initAoa = [
+    INIT_HEAD,
+    ['', 'T1', '', 'action', '(VD) Triển khai chương trình khuyến mãi Q1', '', '', 'todo', 'medium', 0, '', '', '', ''],
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(guide), 'Hướng dẫn');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(objAoa), 'Objectives');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(krAoa), 'KeyResults');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(initAoa), 'Initiatives');
+  return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+}
+
 // ============ EXPORT SCORECARD KPI ============
 const SC_HEAD = ['Kỳ', 'Đơn vị', 'Mã KPI', 'KPI', 'Viễn cảnh', 'Tầng', 'Trọng số', 'Hướng', 'Mục tiêu', 'Thực hiện', '% Đạt', 'Trạng thái', 'Ghi chú'];
 const BSC_VN: Record<string, string> = { financial: 'Tài chính', customer: 'Khách hàng', process: 'Quy trình nội bộ', learning: 'Học hỏi & Phát triển' };
@@ -108,9 +157,18 @@ export async function buildScorecardWorkbook(periodId: string | null, unitId: st
 }
 
 // ============ IMPORT ============
-export type ImportResult = { objUpdated: number; krUpdated: number; initUpdated: number; initCreated: number; skipped: number; errors: string[] };
+export type ImportResult = { objUpdated: number; objCreated: number; krUpdated: number; krCreated: number; initUpdated: number; initCreated: number; skipped: number; errors: string[] };
+
+// Chuẩn hoá giá trị enum nhập từ Excel (chấp nhận cả nhãn tiếng Việt lẫn mã tiếng Anh).
+const LEVEL_MAP: Record<string, Level> = { 'công ty': 'company', 'cong ty': 'company', company: 'company', 'khối': 'division', khoi: 'division', division: 'division', 'phòng': 'department', 'phòng ban': 'department', phong: 'department', department: 'department', 'cá nhân': 'individual', ca_nhan: 'individual', individual: 'individual' };
+const METRIC_MAP: Record<string, MetricType> = { 'số': 'number', so: 'number', number: 'number', '%': 'percent', percent: 'percent', 'phần trăm': 'percent', 'tiền': 'currency', tien: 'currency', currency: 'currency', 'vnd': 'currency', 'có/không': 'boolean', boolean: 'boolean', 'co/khong': 'boolean' };
+const DIR_MAP: Record<string, Direction> = { 'tăng': 'increase', tang: 'increase', increase: 'increase', up: 'increase', 'giảm': 'decrease', giam: 'decrease', decrease: 'decrease', down: 'decrease' };
+const IND_MAP: Record<string, Indicator> = { 'dẫn dắt': 'leading', leading: 'leading', 'kết quả': 'lagging', lagging: 'lagging' };
+const en = <T extends string>(v: unknown, map: Record<string, T>, def: T): T => map[s(v).toLowerCase()] ?? def;
 
 function s(v: unknown): string { return v == null ? '' : String(v).trim(); }
+// Dòng ví dụ trong form mẫu bắt đầu bằng "(VD)" — bỏ qua khi tạo mới để lỡ quên xoá cũng không sinh rác.
+function isExample(title: string): boolean { return /^\(VD\)/i.test(title.trim()); }
 function n(v: unknown): number { return parseNum(v, 0); }
 function normDate(v: unknown): string | null {
   const t = s(v);
@@ -133,41 +191,106 @@ function rowsOf(wb: XLSX.WorkBook, name: string): Record<string, unknown>[] {
 
 export async function importOkrWorkbook(buf: Buffer): Promise<ImportResult> {
   const wb = XLSX.read(buf, { type: 'buffer' });
-  const res: ImportResult = { objUpdated: 0, krUpdated: 0, initUpdated: 0, initCreated: 0, skipped: 0, errors: [] };
+  const res: ImportResult = { objUpdated: 0, objCreated: 0, krUpdated: 0, krCreated: 0, initUpdated: 0, initCreated: 0, skipped: 0, errors: [] };
   const touchedObjs = new Set<string>(); // objective ids cần recompute
+  // alias: 'Mã' (mã thật HOẶC mã tạm do người dùng đặt, vd T1) → objective id — để KR/việc trỏ tới OKR mới tạo.
+  const alias = new Map<string, string>();
+  const curPeriod = await queryOne<{ id: string }>(`SELECT id FROM okr_periods WHERE is_current=true LIMIT 1`);
+  const periodIdByName = async (name: string): Promise<string | null> => {
+    if (!name) return curPeriod?.id ?? null;
+    const r = await queryOne<{ id: string }>(`SELECT id FROM okr_periods WHERE name=$1 LIMIT 1`, [name]);
+    return r?.id ?? curPeriod?.id ?? null;
+  };
+  const unitIdByCode = async (code: string): Promise<string | null> => {
+    if (!code) return null;
+    const r = await queryOne<{ id: string }>(`SELECT id FROM okr_units WHERE code=$1 LIMIT 1`, [code]);
+    return r?.id ?? null;
+  };
 
-  // 1) Objectives — cập nhật theo Mã (tiêu đề, mô tả, loại, trạng thái)
+  // 1) Objectives — Mã khớp OKR có sẵn → CẬP NHẬT; Mã trống/không khớp + có Cấp & Tiêu đề → TẠO MỚI.
   for (const r of rowsOf(wb, 'Objectives')) {
     const code = s(r['Mã']);
-    if (!code) { res.skipped++; continue; }
-    const o = await queryOne<{ id: string }>('SELECT id FROM okr_objectives WHERE code=$1', [code]);
-    if (!o) { res.skipped++; continue; }
-    await query(
-      `UPDATE okr_objectives SET title=COALESCE(NULLIF($2,''),title), description=$3,
-          okr_type=COALESCE(NULLIF($4,''),okr_type), status=COALESCE(NULLIF($5,''),status), updated_at=now()
-        WHERE id=$1`,
-      [o.id, s(r['Tiêu đề']), s(r['Mô tả']) || null, s(r['Loại OKR']) as OkrType, s(r['Trạng thái']) as ObjStatus],
-    );
-    res.objUpdated++;
+    const title = s(r['Tiêu đề']);
+    const o = code ? await queryOne<{ id: string }>('SELECT id FROM okr_objectives WHERE code=$1', [code]) : null;
+    if (o) {
+      await query(
+        `UPDATE okr_objectives SET title=COALESCE(NULLIF($2,''),title), description=$3,
+            okr_type=COALESCE(NULLIF($4,''),okr_type), status=COALESCE(NULLIF($5,''),status), updated_at=now()
+          WHERE id=$1`,
+        [o.id, title, s(r['Mô tả']) || null, s(r['Loại OKR']) as OkrType, s(r['Trạng thái']) as ObjStatus],
+      );
+      res.objUpdated++;
+      if (code) alias.set(code, o.id);
+      continue;
+    }
+    // TẠO MỚI (cần Tiêu đề). Cấp mặc định 'department' nếu để trống. Bỏ qua dòng ví dụ "(VD)".
+    if (!title || isExample(title)) { res.skipped++; continue; }
+    try {
+      const level = en(r['Cấp'], LEVEL_MAP, 'department');
+      const periodId = await periodIdByName(s(r['Kỳ']));
+      if (!periodId) { res.errors.push(`Không xác định được Kỳ cho OKR mới "${title}"`); res.skipped++; continue; }
+      const unitId = level === 'company' || level === 'individual' ? null : await unitIdByCode(s(r['Khối/Phòng']));
+      const parentRaw = s(r['Mã OKR cha']);
+      let parentId: string | null = parentRaw ? (alias.get(parentRaw) ?? null) : null;
+      if (parentRaw && !parentId) {
+        const pr = await queryOne<{ id: string }>('SELECT id FROM okr_objectives WHERE code=$1', [parentRaw]);
+        parentId = pr?.id ?? null;
+      }
+      const newId = await createObjective({
+        period_id: periodId, level, unit_id: unitId, owner_email: s(r['Người chủ trì (email)']) || null,
+        parent_id: parentId, title, description: s(r['Mô tả']) || null,
+        status: (s(r['Trạng thái']) || 'active') as ObjStatus, okr_type: (s(r['Loại OKR']) || 'committed') as OkrType,
+        bsc_perspective: (s(r['Viễn cảnh']) || null) as BscPerspective | null, created_by: 'import',
+      });
+      res.objCreated++;
+      alias.set(code || `#row${res.objCreated}`, newId);
+      if (code) alias.set(code, newId);
+    } catch (e) {
+      res.errors.push(`Lỗi tạo OKR "${title}": ${e instanceof Error ? e.message : String(e)}`);
+      res.skipped++;
+    }
   }
 
-  // 2) KeyResults — cập nhật giá trị & tính lại progress
+  // 2) KeyResults — Mã khớp KR có sẵn → CẬP NHẬT; ngược lại + có 'Mã Objective' (khớp alias/mã) → TẠO MỚI.
   for (const r of rowsOf(wb, 'KeyResults')) {
     const code = s(r['Mã']);
-    if (!code) { res.skipped++; continue; }
-    const k = await queryOne<{ id: string; objective_id: string; metric_type: MetricType; direction: Direction }>(
-      'SELECT id, objective_id, metric_type, direction FROM okr_key_results WHERE code=$1', [code]);
-    if (!k) { res.skipped++; continue; }
-    const start = n(r['Bắt đầu']); const cur = n(r['Hiện tại']); const tgt = n(r['Mục tiêu']);
-    const prog = computeKrProgress({ metric_type: k.metric_type, direction: k.direction, start_value: start, target_value: tgt, current_value: cur });
-    await query(
-      `UPDATE okr_key_results SET title=COALESCE(NULLIF($2,''),title), unit_label=$3,
-          start_value=$4, current_value=$5, target_value=$6, weight=$7,
-          indicator=COALESCE(NULLIF($8,''),indicator), progress=$9, updated_at=now() WHERE id=$1`,
-      [k.id, s(r['Tiêu đề']), s(r['Đơn vị']) || null, start, cur, tgt, n(r['Trọng số']) || 1, s(r['Chỉ số']) as Indicator, prog],
-    );
-    res.krUpdated++;
-    touchedObjs.add(k.objective_id);
+    const k = code ? await queryOne<{ id: string; objective_id: string; metric_type: MetricType; direction: Direction }>(
+      'SELECT id, objective_id, metric_type, direction FROM okr_key_results WHERE code=$1', [code]) : null;
+    if (k) {
+      const start = n(r['Bắt đầu']); const cur = n(r['Hiện tại']); const tgt = n(r['Mục tiêu']);
+      const prog = computeKrProgress({ metric_type: k.metric_type, direction: k.direction, start_value: start, target_value: tgt, current_value: cur });
+      await query(
+        `UPDATE okr_key_results SET title=COALESCE(NULLIF($2,''),title), unit_label=$3,
+            start_value=$4, current_value=$5, target_value=$6, weight=$7,
+            indicator=COALESCE(NULLIF($8,''),indicator), progress=$9, updated_at=now() WHERE id=$1`,
+        [k.id, s(r['Tiêu đề']), s(r['Đơn vị']) || null, start, cur, tgt, n(r['Trọng số']) || 1, s(r['Chỉ số']) as Indicator, prog],
+      );
+      res.krUpdated++;
+      touchedObjs.add(k.objective_id);
+      continue;
+    }
+    // TẠO MỚI
+    const objRef = s(r['Mã Objective']);
+    const title = s(r['Tiêu đề']);
+    if (!objRef || !title || isExample(title)) { res.skipped++; continue; }
+    let objId = alias.get(objRef) ?? null;
+    if (!objId) { const or = await queryOne<{ id: string }>('SELECT id FROM okr_objectives WHERE code=$1', [objRef]); objId = or?.id ?? null; }
+    if (!objId) { res.errors.push(`Không tìm thấy Objective "${objRef}" cho KR mới "${title}"`); res.skipped++; continue; }
+    try {
+      const metric = en(r['Loại đo'], METRIC_MAP, 'number');
+      const start = n(r['Bắt đầu']);
+      await createKeyResult({
+        objective_id: objId, title, metric_type: metric, direction: en(r['Hướng'], DIR_MAP, 'increase'),
+        unit_label: s(r['Đơn vị']) || null, start_value: start, current_value: n(r['Hiện tại']) || start,
+        target_value: n(r['Mục tiêu']) || (metric === 'boolean' ? 1 : 100), weight: n(r['Trọng số']) || 1,
+        kpi_source: s(r['Nguồn KPI']) || null, indicator: en(r['Chỉ số'], IND_MAP, 'lagging'),
+      });
+      res.krCreated++;
+      touchedObjs.add(objId);
+    } catch (e) {
+      res.errors.push(`Lỗi tạo KR "${title}": ${e instanceof Error ? e.message : String(e)}`);
+      res.skipped++;
+    }
   }
 
   // 3) Initiatives — cập nhật theo Mã; nếu Mã trống + có Mã Objective → tạo mới
@@ -192,8 +315,9 @@ export async function importOkrWorkbook(buf: Buffer): Promise<ImportResult> {
     } else {
       const objCode = s(r['Mã Objective']);
       const title = s(r['Tiêu đề']);
-      if (!objCode || !title) { res.skipped++; continue; }
-      const o = await queryOne<{ id: string }>('SELECT id FROM okr_objectives WHERE code=$1', [objCode]);
+      if (!objCode || !title || isExample(title)) { res.skipped++; continue; }
+      const aliasId = alias.get(objCode);
+      const o = aliasId ? { id: aliasId } : await queryOne<{ id: string }>('SELECT id FROM okr_objectives WHERE code=$1', [objCode]);
       if (!o) { res.errors.push(`Không tìm thấy Objective "${objCode}" cho công việc mới "${title}"`); res.skipped++; continue; }
       const parent = await initIdByCode(o.id, s(r['Mã cha']));
       const newCode = await nextInitCode(o.id);

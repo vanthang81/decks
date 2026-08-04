@@ -3,7 +3,9 @@ import SiteHeader from '@/components/SiteHeader';
 import ObjectiveTree, { type TreeObjective } from '@/components/ObjectiveTree';
 import PeriodPicker from '@/components/PeriodPicker';
 import HelpTip from '@/components/HelpTip';
+import ImportOkr from '@/components/ImportOkr';
 import { requireUser } from '@/lib/current-user';
+import { loadAccess, canImportData } from '@/lib/access';
 import {
   getCurrentPeriod,
   listPeriods,
@@ -24,12 +26,13 @@ export default async function ObjectivesPage({
 }: {
   searchParams: { period?: string };
 }) {
-  await requireUser();
+  const user = await requireUser();
   const periods = await listPeriods();
   const period = searchParams.period
     ? await getPeriod(searchParams.period)
     : (await getCurrentPeriod()) ?? periods[0] ?? null;
 
+  const canImport = canImportData(user, await loadAccess());
   const objectives = period ? await listObjectivesByPeriod(period.id) : [];
   const overLimit = period ? await ownersOverObjectiveLimit(period.id) : [];
 
@@ -72,6 +75,11 @@ export default async function ObjectivesPage({
               currentId={period?.id ?? null}
               basePath="/objectives"
             />
+            {canImport && (
+              <a className="btn ghost" href="/api/export?template=1" title="Tải form Excel mẫu (có sheet Hướng dẫn + ví dụ) để điền rồi nhập lại cho nhanh">
+                ⬇ Form mẫu
+              </a>
+            )}
             {period && (
               <a className="btn ghost" href={`/api/export?period=${period.id}`} title="Xuất toàn bộ OKR kỳ này ra Excel">
                 ⬇ Xuất Excel
@@ -102,6 +110,18 @@ export default async function ObjectivesPage({
           )}
           {period && objectives.length > 0 && <ObjectiveTree objectives={treeData} />}
         </div>
+
+        {canImport && (
+          <div className="card">
+            <div className="pagetitle" style={{ fontSize: 16 }}>
+              Nhập OKR hàng loạt từ Excel<HelpTip k="okr-import" />
+            </div>
+            <p className="subtitle" style={{ marginTop: 2 }}>
+              Tải <b>Form mẫu</b> ở trên → điền nhiều OKR/KR/công việc → nhập lại để tạo nhanh (không cần khai từng cái).
+            </p>
+            <ImportOkr />
+          </div>
+        )}
       </div>
     </>
   );

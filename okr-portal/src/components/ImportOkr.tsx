@@ -7,7 +7,9 @@ type Result = {
   ok?: boolean;
   error?: string;
   objUpdated?: number;
+  objCreated?: number;
   krUpdated?: number;
+  krCreated?: number;
   initUpdated?: number;
   initCreated?: number;
   skipped?: number;
@@ -49,8 +51,9 @@ export default function ImportOkr() {
         </button>
       </form>
       <p className="muted" style={{ fontSize: 12.5, marginTop: 8 }}>
-        Tải file đã <b>Xuất Excel</b> ở trang OKR, sửa trên Excel rồi nhập lại. Khớp theo cột <b>Mã</b>:
-        có Mã → cập nhật; công việc để trống Mã (kèm Mã Objective) → tạo mới. Không xoá dòng nào.
+        Dùng <b>Form mẫu</b> (hoặc file đã <b>Xuất Excel</b>) rồi nhập lại. Khớp theo cột <b>Mã</b>:
+        có Mã → cập nhật; để trống Mã (kèm Tiêu đề / Mã Objective) → <b>tạo mới</b> OKR·KR·công việc.
+        Đặt <b>mã tạm</b> (vd T1) ở Objective để nối KR/việc vào OKR mới. Xem sheet <b>Hướng dẫn</b>.
       </p>
       {res && (
         <div
@@ -65,8 +68,9 @@ export default function ImportOkr() {
             <>❌ {res.error}</>
           ) : (
             <>
-              ✅ Đã nhập: cập nhật {res.objUpdated ?? 0} OKR · {res.krUpdated ?? 0} KR ·{' '}
-              {res.initUpdated ?? 0} công việc; tạo mới {res.initCreated ?? 0} công việc
+              ✅ Đã nhập — <b>tạo mới</b>: {res.objCreated ?? 0} OKR · {res.krCreated ?? 0} KR ·{' '}
+              {res.initCreated ?? 0} công việc; <b>cập nhật</b>: {res.objUpdated ?? 0} OKR ·{' '}
+              {res.krUpdated ?? 0} KR · {res.initUpdated ?? 0} công việc
               {res.skipped ? ` · bỏ qua ${res.skipped}` : ''}.
               {res.errors && res.errors.length > 0 && (
                 <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
