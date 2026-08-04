@@ -9,7 +9,8 @@ import { BSC_PERSPECTIVE_LABEL, BSC_PERSPECTIVE_ICON, BSC_PERSPECTIVES } from '@
 import { progressColor } from '@/lib/format';
 import EditModal from '@/components/EditModal';
 import NavIcon from '@/components/NavIcon';
-import { saveStrategyAction } from './actions';
+import PillarList from '@/components/PillarList';
+import { saveStrategyAction, reorderPillarsAction } from './actions';
 
 // Ô nhập form chiến lược — dùng lại trong popup Sửa (góc phải-trên).
 function StrategyFields({ strat }: { strat: Awaited<ReturnType<typeof getCompanyStrategy>> }) {
@@ -138,25 +139,21 @@ export default async function StrategyPage() {
           </p>
           <hr className="sep" />
           {pillars.length === 0 && <p className="muted">Chưa có trụ cột chiến lược nào. {isExec ? 'Tạo kỳ "Chiến lược nhiều năm" ở Quản trị → Kỳ, rồi thêm OKR cấp Công ty.' : ''}</p>}
-          {pillars.map((p) => (
-            <div key={p.id} className="obj-row obj-row-link">
-              <Link className="stretch-link" href={`/objectives/${p.id}`} aria-label={p.title} />
-              <div className="obj-main">
-                <div className="ttl">
-                  {p.code && <span className="okr-code">{p.code}</span>}
-                  {p.bsc_perspective && <span className="badge bsc" title={BSC_PERSPECTIVE_LABEL[p.bsc_perspective]}>{BSC_PERSPECTIVE_ICON[p.bsc_perspective]} {BSC_PERSPECTIVE_LABEL[p.bsc_perspective]}</span>}
-                  <span className="ttl-txt">{p.title}</span>
-                </div>
-                <div className="obj-meta">
-                  {p.owner ? `Chủ trì: ${p.owner} · ` : ''}{p.child_count} OKR năm liên kết lên
-                </div>
-              </div>
-              <div className="obj-prog">
-                <span className="map-mini"><i style={{ width: `${Math.round(p.progress)}%`, background: progressColor(p.progress) }} /></span>
-                <div className="right muted mono" style={{ fontSize: 12 }}>{Math.round(p.progress)}%</div>
-              </div>
-            </div>
-          ))}
+          {pillars.length > 0 && (
+            <>
+              {isExec && <p className="muted" style={{ margin: '0 0 8px', fontSize: 12.5 }}>Kéo tay cầm ⠿ (máy tính) hoặc bấm ▲/▼ để sắp xếp lại trụ cột theo logic — thứ tự được lưu tự động.</p>}
+              <PillarList
+                canEdit={isExec}
+                reorder={reorderPillarsAction}
+                pillars={pillars.map((p) => ({
+                  id: p.id, code: p.code, title: p.title,
+                  bscLabel: p.bsc_perspective ? BSC_PERSPECTIVE_LABEL[p.bsc_perspective] : null,
+                  bscIcon: p.bsc_perspective ? BSC_PERSPECTIVE_ICON[p.bsc_perspective] : null,
+                  owner: p.owner, childCount: p.child_count, progress: p.progress, progColor: progressColor(p.progress),
+                }))}
+              />
+            </>
+          )}
         </div>
 
         {/* 4 viễn cảnh BSC */}

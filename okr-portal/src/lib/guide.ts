@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-04.86';
+export const GUIDE_VERSION = '2026-08-04.87';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -582,6 +582,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/08/2026 (Sắp xếp trụ cột chiến lược)',
+    items: [
+      'Trang Chiến lược: CEO/CFO sắp xếp lại thứ tự các trụ cột (OKR 5 năm cấp Công ty) theo logic — KÉO–THẢ tay cầm ⠿ trên máy tính hoặc bấm ▲/▼ (chạy tốt trên điện thoại). Thứ tự lưu tự động (cột sort).',
+    ],
+  },
   {
     date: '04/08/2026 (Menu mobile gọn hơn)',
     items: [

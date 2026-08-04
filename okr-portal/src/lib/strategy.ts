@@ -76,7 +76,20 @@ export async function listStrategicPillars(): Promise<Pillar[]> {
        JOIN okr_periods p ON p.id=o.period_id AND p.kind='multiyear'
        LEFT JOIN okr_users ou ON ou.email=o.owner_email
       WHERE o.level='company'
-      ORDER BY o.code`,
+      ORDER BY o.sort NULLS LAST, o.code`,
+  );
+}
+
+/** Sắp xếp lại trụ cột chiến lược theo thứ tự id truyền vào (ghi cột sort). Chỉ OKR cấp Công ty kỳ
+ *  chiến lược nhiều năm mới bị ảnh hưởng (chặn ghi nhầm objective khác). */
+export async function reorderPillars(orderedIds: string[]): Promise<void> {
+  if (orderedIds.length === 0) return;
+  await query(
+    `UPDATE okr_objectives o SET sort = v.ord - 1
+       FROM (SELECT unnest($1::uuid[]) AS id, generate_subscripts($1::uuid[], 1) AS ord) v
+      WHERE o.id = v.id AND o.level='company'
+        AND o.period_id IN (SELECT id FROM okr_periods WHERE kind='multiyear')`,
+    [orderedIds],
   );
 }
 

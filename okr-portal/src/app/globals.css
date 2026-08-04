@@ -520,6 +520,26 @@ td:has(> .row-actions) { white-space: nowrap; width: 1%; }
 .obj-row-link:hover { background: var(--primary-tint); }
 .obj-row-link .stretch-link { position: absolute; inset: 0; z-index: 2; text-indent: -9999px; overflow: hidden; }
 .obj-row-link .obj-prog { position: relative; z-index: 1; } /* thanh tiến độ nằm trên để vẫn thấy rõ */
+
+/* Sắp xếp trụ cột chiến lược (kéo–thả + nút ↑/↓) */
+.pil-list.pil-saving { opacity: .75; }
+.pil-item { border-radius: 8px; padding: 10px 8px; margin: 0 -8px; transition: background .12s, box-shadow .12s; }
+.pil-item.pil-editable:hover { background: var(--primary-tint); }
+.pil-item.pil-over { box-shadow: inset 0 2px 0 var(--primary); background: var(--primary-tint); }
+.pil-item.pil-dragging { opacity: .5; }
+.pil-main { text-decoration: none; }
+.pil-main:hover { text-decoration: none; }
+.pil-ctrls { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+.pil-handle { cursor: grab; color: var(--muted); font-size: 18px; line-height: 1; padding: 2px 3px; user-select: none; touch-action: none; }
+.pil-handle:active { cursor: grabbing; }
+.pil-arrows { display: inline-flex; flex-direction: column; gap: 2px; }
+.pil-mv { width: 24px; height: 20px; border: 1px solid var(--line); background: #fff; color: var(--primary); border-radius: 5px; cursor: pointer; font-size: 9px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.pil-mv:hover:not(:disabled) { background: var(--primary-tint); border-color: var(--primary); }
+.pil-mv:disabled { opacity: .35; cursor: default; }
+@media (max-width: 760px) {
+  .pil-handle { display: none; } /* điện thoại không kéo–thả native được → dùng nút ▲/▼ */
+  .pil-mv { width: 30px; height: 26px; font-size: 11px; }
+}
 .obj-row-link:hover .ttl-txt { text-decoration: underline; }
 .obj-prog { width: 160px; flex-shrink: 0; }
 /* Mobile: thanh tiến độ xuống dòng full-width dưới tiêu đề (không bóp hẹp tiêu đề) */

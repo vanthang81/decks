@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/current-user';
 import { loadAccess, canManageSystem } from '@/lib/access';
-import { setCompanyStrategy } from '@/lib/strategy';
+import { setCompanyStrategy, reorderPillars } from '@/lib/strategy';
 
 // Chỉ CEO/CFO (quản trị hệ thống) mới khai báo/sửa chiến lược công ty.
 async function requireExec() {
@@ -28,4 +28,11 @@ export async function saveStrategyAction(fd: FormData) {
   });
   revalidatePath('/strategy');
   revalidatePath('/');
+}
+
+// Sắp xếp lại thứ tự trụ cột chiến lược (kéo–thả / nút lên–xuống). Chỉ CEO/CFO.
+export async function reorderPillarsAction(orderedIds: string[]) {
+  await requireExec();
+  await reorderPillars(orderedIds);
+  revalidatePath('/strategy');
 }
