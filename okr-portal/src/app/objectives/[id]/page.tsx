@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import HelpTip from '@/components/HelpTip';
 import ExecutionTabs from '@/components/ExecutionTabs';
+import ResettableForm from '@/components/ResettableForm';
+import SearchSelect from '@/components/SearchSelect';
 import CommentThread from '@/components/CommentThread';
 import CheckinRow from '@/components/CheckinRow';
 import ObjectiveEditButton from '@/components/ObjectiveEditButton';
@@ -496,7 +498,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
           {canManage && (
             <details className="inline" style={{ marginTop: 14 }}>
               <summary>+ Thêm Key Result</summary>
-              <form action={createKeyResultAction} style={{ marginTop: 10 }}>
+              <ResettableForm action={createKeyResultAction} doneLabel="Đã thêm KR" style={{ marginTop: 10 }}>
                 <input type="hidden" name="objective_id" value={obj.id} />
                 <label className="f">Tên KR</label>
                 <input className="i" name="title" placeholder="VD: Đạt doanh thu 500 tỷ" required />
@@ -561,7 +563,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                     Thêm KR
                   </button>
                 </div>
-              </form>
+              </ResettableForm>
             </details>
           )}
         </div>
@@ -648,7 +650,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
             {canManage && (
               <details className="inline" style={{ marginTop: 14 }}>
                 <summary>+ Thêm dự án / công việc</summary>
-              <form action={createInitiativeAction} style={{ marginTop: 10 }}>
+              <ResettableForm action={createInitiativeAction} doneLabel="Đã thêm" style={{ marginTop: 10 }}>
                 <input type="hidden" name="objective_id" value={obj.id} />
                 <div className="row">
                   <div style={{ maxWidth: 180 }}>
@@ -664,26 +666,13 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                   </div>
                 </div>
                 <label className="f">Gắn vào Key Result (tuỳ chọn)</label>
-                <select className="i" name="key_result_id" defaultValue="">
-                  <option value="">— Gắn ở cấp Objective —</option>
-                  {krs.map((kr) => (
-                    <option key={kr.id} value={kr.id}>
-                      {kr.title}
-                    </option>
-                  ))}
-                </select>
+                <SearchSelect name="key_result_id" defaultValue="" emptyLabel="— Gắn ở cấp Objective —"
+                  options={krs.map((kr) => ({ value: kr.id, label: kr.title }))} />
                 {projectOpts.length > 0 && (
                   <>
                     <label className="f">🗂 Thuộc dự án (tuỳ chọn)</label>
-                    <select className="i" name="project_id" defaultValue="">
-                      <option value="">— Không thuộc dự án —</option>
-                      {projectOpts.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.code ? `${p.code} · ` : ''}
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
+                    <SearchSelect name="project_id" defaultValue="" emptyLabel="— Không thuộc dự án —"
+                      options={projectOpts.map((p) => ({ value: p.id, label: `${p.code ? p.code + ' · ' : ''}${p.name}` }))} />
                   </>
                 )}
                 <div className="row">
@@ -693,14 +682,8 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                   </div>
                   <div>
                     <label className="f">Giao cho (cá nhân)</label>
-                    <select className="i" name="owner_email" defaultValue="">
-                      <option value="">— Chưa giao —</option>
-                      {users.map((u) => (
-                        <option key={u.email} value={u.email}>
-                          {u.display_name || u.email}
-                        </option>
-                      ))}
-                    </select>
+                    <SearchSelect name="owner_email" defaultValue="" emptyLabel="— Chưa giao —"
+                      options={users.map((u) => ({ value: u.email, label: u.display_name || u.email }))} />
                   </div>
                 </div>
                 <div className="row">
@@ -732,7 +715,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                     Thêm
                   </button>
                 </div>
-              </form>
+              </ResettableForm>
               </details>
             )}
           </ExecutionTabs>
