@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-05.91';
+export const GUIDE_VERSION = '2026-08-05.92';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -594,6 +594,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '05/08/2026 (Ô chọn OKR/người/dự án có TÌM KIẾM)',
+    items: [
+      'Mọi danh sách dài (OKR, người phụ trách, dự án, đơn vị) khi tạo/sửa việc, cuộc họp, OKR, dự án nay là ô chọn CÓ TÌM KIẾM: bấm vào gõ vài chữ để lọc nhanh (không phân biệt dấu — "doanh thu" khớp cả có dấu), thay vì cuộn cả danh sách.',
+      'Áp dụng cho: Thêm/sửa việc (cuộc họp · dự án · Kanban/Danh sách · Lịch), tạo/sửa OKR, tạo/sửa dự án — chọn OKR, Key Result, người, đơn vị, dự án đều gõ để tìm.',
+    ],
+  },
   {
     date: '05/08/2026 (Lịch tháng đẹp & chuyên nghiệp hơn)',
     items: [

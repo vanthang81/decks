@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import SearchSelect from '@/components/SearchSelect';
 
 type Kr = { id: string; code: string | null; title: string };
 export type ObjOpt = { id: string; code: string | null; title: string; unit_name: string | null; krs: Kr[] };
@@ -47,6 +48,7 @@ export default function AddTaskToProject({
     const fd = new FormData(e.currentTarget);
     fd.set('project_id', projectId);
     fd.set('kind', 'action');
+    if (!objId) { setErr('Vui lòng chọn OKR của bộ phận để gắn việc.'); return; }
     setErr(null);
     startTransition(async () => {
       try {
@@ -77,36 +79,30 @@ export default function AddTaskToProject({
             </div>
             <form onSubmit={submit}>
               <label className="f">Gắn vào OKR của bộ phận (bắt buộc)</label>
-              <select
-                className="i"
+              <SearchSelect
                 name="objective_id"
-                required
-                value={objId}
-                onChange={(e) => setObjId(e.target.value)}
-              >
-                <option value="">— Chọn Objective —</option>
-                {objectives.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.code ? `${o.code} · ` : ''}
-                    {o.unit_name ? `[${o.unit_name}] ` : ''}
-                    {o.title}
-                  </option>
-                ))}
-              </select>
+                defaultValue=""
+                emptyLabel="— Chọn Objective —"
+                placeholder="— Chọn Objective —"
+                onChange={setObjId}
+                options={objectives.map((o) => ({
+                  value: o.id,
+                  label: `${o.code ? o.code + ' · ' : ''}${o.unit_name ? `[${o.unit_name}] ` : ''}${o.title}`,
+                }))}
+              />
               <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>
                 Việc sẽ hiện ở “Dự án &amp; Kế hoạch hành động” của OKR bộ phận đã chọn.
               </p>
 
               <label className="f">Gắn vào Key Result (tuỳ chọn)</label>
-              <select className="i" name="key_result_id" defaultValue="" disabled={!objId}>
-                <option value="">— Gắn ở cấp Objective —</option>
-                {krs.map((k) => (
-                  <option key={k.id} value={k.id}>
-                    {k.code ? `${k.code} · ` : ''}
-                    {k.title}
-                  </option>
-                ))}
-              </select>
+              <SearchSelect
+                key={objId}
+                name="key_result_id"
+                defaultValue=""
+                emptyLabel="— Gắn ở cấp Objective —"
+                disabled={!objId}
+                options={krs.map((k) => ({ value: k.id, label: `${k.code ? k.code + ' · ' : ''}${k.title}` }))}
+              />
 
               <label className="f">Tên việc</label>
               <input className="i" name="title" required placeholder="VD: Tích hợp API thanh toán" />
@@ -114,28 +110,24 @@ export default function AddTaskToProject({
               <div className="row">
                 <div>
                   <label className="f">Giao cho (cá nhân)</label>
-                  <select className="i" name="owner_email" defaultValue="">
-                    <option value="">— Chưa giao —</option>
-                    {users.map((u) => (
-                      <option key={u.email} value={u.email}>{u.name}</option>
-                    ))}
-                  </select>
+                  <SearchSelect
+                    name="owner_email"
+                    defaultValue=""
+                    emptyLabel="— Chưa giao —"
+                    options={users.map((u) => ({ value: u.email, label: u.name }))}
+                  />
                 </div>
                 <div>
                   <label className="f">Đơn vị phụ trách (Khối / Phòng)</label>
-                  <select className="i" name="unit_id" defaultValue="">
-                    <option value="">— Không gắn —</option>
-                    {divisions.length > 0 && (
-                      <optgroup label="Khối">
-                        {divisions.map((u) => (<option key={u.id} value={u.id}>{u.name}</option>))}
-                      </optgroup>
-                    )}
-                    {departments.length > 0 && (
-                      <optgroup label="Phòng ban">
-                        {departments.map((u) => (<option key={u.id} value={u.id}>{u.name}</option>))}
-                      </optgroup>
-                    )}
-                  </select>
+                  <SearchSelect
+                    name="unit_id"
+                    defaultValue=""
+                    emptyLabel="— Không gắn —"
+                    options={[
+                      ...divisions.map((u) => ({ value: u.id, label: `${u.name} (Khối)` })),
+                      ...departments.map((u) => ({ value: u.id, label: `${u.name} (Phòng)` })),
+                    ]}
+                  />
                 </div>
               </div>
               <div className="row">

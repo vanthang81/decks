@@ -1,6 +1,7 @@
 import HelpTip from '@/components/HelpTip';
 import SiteHeader from '@/components/SiteHeader';
 import ProjectsList from '@/components/ProjectsList';
+import SearchSelect from '@/components/SearchSelect';
 import PeriodPicker from '@/components/PeriodPicker';
 import { requireUser } from '@/lib/current-user';
 import { listUnits } from '@/lib/org';
@@ -40,27 +41,16 @@ function ProjectFields({
       <div className="row">
         <div>
           <label className="f">Chủ trì (cá nhân)</label>
-          <select className="i" name="owner_email" defaultValue={user.email}>
-            {users.map((u) => (
-              <option key={u.email} value={u.email}>{u.display_name || u.email}</option>
-            ))}
-          </select>
+          <SearchSelect name="owner_email" defaultValue={user.email}
+            options={users.map((u) => ({ value: u.email, label: u.display_name || u.email }))} />
         </div>
         <div>
           <label className="f">Đơn vị chủ trì (Khối / Phòng)</label>
-          <select className="i" name="unit_id" defaultValue="">
-            <option value="">— Không gắn —</option>
-            {divisionUnits.length > 0 && (
-              <optgroup label="Khối">
-                {divisionUnits.map((u) => (<option key={u.id} value={u.id}>{u.name}</option>))}
-              </optgroup>
-            )}
-            {deptUnits.length > 0 && (
-              <optgroup label="Phòng ban">
-                {deptUnits.map((u) => (<option key={u.id} value={u.id}>{u.name}</option>))}
-              </optgroup>
-            )}
-          </select>
+          <SearchSelect name="unit_id" defaultValue="" emptyLabel="— Không gắn —"
+            options={[
+              ...divisionUnits.map((u) => ({ value: u.id, label: `${u.name} (Khối)` })),
+              ...deptUnits.map((u) => ({ value: u.id, label: `${u.name} (Phòng)` })),
+            ]} />
         </div>
         <div>
           <label className="f">Trạng thái</label>

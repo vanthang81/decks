@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ConfirmButton from '@/components/ConfirmButton';
+import SearchSelect from '@/components/SearchSelect';
 import CommentThread from '@/components/CommentThread';
 import type { TaskRow } from '@/lib/initiatives';
 import type { PersonOpt, UnitOpt, ProjectOpt } from '@/components/ExecutionTabs';
@@ -116,28 +117,16 @@ export default function TaskEditModal({
               <div className="row">
                 <div>
                   <label className="f">Người phụ trách</label>
-                  <select className="i" name="owner_email" defaultValue={task.owner_email ?? ''}>
-                    <option value="">— Chưa giao —</option>
-                    {users.map((u) => (
-                      <option key={u.email} value={u.email}>{u.name}</option>
-                    ))}
-                  </select>
+                  <SearchSelect name="owner_email" defaultValue={task.owner_email ?? ''} emptyLabel="— Chưa giao —"
+                    options={users.map((u) => ({ value: u.email, label: u.name }))} />
                 </div>
                 <div>
                   <label className="f">Đơn vị phụ trách</label>
-                  <select className="i" name="unit_id" defaultValue={task.unit_id ?? ''}>
-                    <option value="">— Không gắn —</option>
-                    {divisions.length > 0 && (
-                      <optgroup label="Khối">
-                        {divisions.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-                      </optgroup>
-                    )}
-                    {depts.length > 0 && (
-                      <optgroup label="Phòng ban">
-                        {depts.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-                      </optgroup>
-                    )}
-                  </select>
+                  <SearchSelect name="unit_id" defaultValue={task.unit_id ?? ''} emptyLabel="— Không gắn —"
+                    options={[
+                      ...divisions.map((u) => ({ value: u.id, label: `${u.name} (Khối)` })),
+                      ...depts.map((u) => ({ value: u.id, label: `${u.name} (Phòng)` })),
+                    ]} />
                 </div>
               </div>
               <div className="row">
@@ -171,12 +160,8 @@ export default function TaskEditModal({
                 </div>
                 <div>
                   <label className="f">Thuộc dự án</label>
-                  <select className="i" name="project_id" defaultValue={task.project_id ?? ''}>
-                    <option value="">— Không —</option>
-                    {projects.map((p) => (
-                      <option key={p.id} value={p.id}>{p.code ? `${p.code} · ` : ''}{p.name}</option>
-                    ))}
-                  </select>
+                  <SearchSelect name="project_id" defaultValue={task.project_id ?? ''} emptyLabel="— Không —"
+                    options={projects.map((p) => ({ value: p.id, label: `${p.code ? p.code + ' · ' : ''}${p.name}` }))} />
                 </div>
               </div>
               <div className="row">

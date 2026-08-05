@@ -10,20 +10,23 @@ const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/
 // Droplist CÓ TÌM KIẾM (combobox): gõ để lọc nhanh theo tên (không phân biệt dấu). Giá trị gửi
 // theo form qua input ẩn name=... (khớp mọi server action đang đọc select cũ).
 export default function SearchSelect({
-  name, options, defaultValue = '', emptyLabel, placeholder = '— Chọn —', disabled,
+  name, options, defaultValue = '', value: controlledValue, emptyLabel, placeholder = '— Chọn —', disabled, onChange,
 }: {
   name: string;
   options: SSOption[];
-  defaultValue?: string;
+  defaultValue?: string;      // giá trị ban đầu (chế độ không kiểm soát)
+  value?: string;             // truyền → chế độ KIỂM SOÁT (cha giữ giá trị, vd default động theo cấp)
   emptyLabel?: string;        // có → thêm mục rỗng (vd "— Không gắn —")
   placeholder?: string;
   disabled?: boolean;
+  onChange?: (value: string) => void;  // báo cho form cha khi đổi (vd OKR đổi → nạp lại danh sách KR)
 }) {
   const all = useMemo<SSOption[]>(
     () => (emptyLabel != null ? [{ value: '', label: emptyLabel }, ...options] : options),
     [options, emptyLabel],
   );
-  const [value, setValue] = useState(defaultValue);
+  const [inner, setInner] = useState(defaultValue);
+  const value = controlledValue !== undefined ? controlledValue : inner; // kiểm soát nếu có `value`
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const [active, setActive] = useState(0);
@@ -47,7 +50,7 @@ export default function SearchSelect({
     return () => document.removeEventListener('mousedown', onDoc);
   }, [open]);
 
-  const pick = (o: SSOption) => { setValue(o.value); setOpen(false); setQ(''); setActive(0); };
+  const pick = (o: SSOption) => { if (controlledValue === undefined) setInner(o.value); onChange?.(o.value); setOpen(false); setQ(''); setActive(0); };
 
   const onKey = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') { e.preventDefault(); setActive((i) => Math.min(i + 1, filtered.length - 1)); }

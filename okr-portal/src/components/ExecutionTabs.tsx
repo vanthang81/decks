@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import CommentThread from '@/components/CommentThread';
 import ConfirmButton from '@/components/ConfirmButton';
+import SearchSelect from '@/components/SearchSelect';
 
 // Hằng số lặp lại từ lib (KHÔNG import initiatives.ts để tránh kéo pg vào client bundle).
 type Status = 'todo' | 'in_progress' | 'blocked' | 'done' | 'canceled';
@@ -558,38 +559,16 @@ function EditModal({
               <div className="row">
                 <div>
                   <label className="f">Đơn vị phụ trách (Khối / Phòng)</label>
-                  <select className="i" name="unit_id" defaultValue={card.unit_id ?? ''}>
-                    <option value="">— Không gắn đơn vị —</option>
-                    {divisions.length > 0 && (
-                      <optgroup label="Khối">
-                        {divisions.map((u) => (
-                          <option key={u.id} value={u.id}>
-                            {u.name}
-                          </option>
-                        ))}
-                      </optgroup>
-                    )}
-                    {departments.length > 0 && (
-                      <optgroup label="Phòng ban">
-                        {departments.map((u) => (
-                          <option key={u.id} value={u.id}>
-                            {u.name}
-                          </option>
-                        ))}
-                      </optgroup>
-                    )}
-                  </select>
+                  <SearchSelect name="unit_id" defaultValue={card.unit_id ?? ''} emptyLabel="— Không gắn đơn vị —"
+                    options={[
+                      ...divisions.map((u) => ({ value: u.id, label: `${u.name} (Khối)` })),
+                      ...departments.map((u) => ({ value: u.id, label: `${u.name} (Phòng)` })),
+                    ]} />
                 </div>
                 <div>
                   <label className="f">Giao cho (cá nhân)</label>
-                  <select className="i" name="owner_email" defaultValue={card.owner_email ?? ''}>
-                    <option value="">— Chưa giao —</option>
-                    {users.map((u) => (
-                      <option key={u.email} value={u.email}>
-                        {u.name}
-                      </option>
-                    ))}
-                  </select>
+                  <SearchSelect name="owner_email" defaultValue={card.owner_email ?? ''} emptyLabel="— Chưa giao —"
+                    options={users.map((u) => ({ value: u.email, label: u.name }))} />
                 </div>
               </div>
             )}
@@ -611,25 +590,23 @@ function EditModal({
                   <>
                     <div className="row" style={{ marginTop: 6 }}>
                       <div style={{ flex: 2 }}>
-                        <select
-                          className="i"
+                        <SearchSelect
                           name="objective_id"
                           value={selObjective}
-                          onChange={(e) => { setSelObjective(e.target.value); setSelKr(''); }}
-                        >
-                          <option value="">— Chọn OKR —</option>
-                          {selObjective && !objectives.some((o) => o.id === selObjective) && (
+                          onChange={(v) => { setSelObjective(v); setSelKr(''); }}
+                          emptyLabel="— Chọn OKR —"
+                          placeholder="— Chọn OKR —"
+                          options={[
                             // OKR hiện tại ở kỳ khác (không có trong danh sách) → giữ làm option để không bị xoá khi lưu.
-                            <option value={selObjective}>{card.objective_code ? `${card.objective_code} · ` : ''}(OKR hiện tại)</option>
-                          )}
-                          {objectives.map((o) => (
-                            <option key={o.id} value={o.id}>
-                              {o.code ? `${o.code} · ` : ''}
-                              {o.unit_name ? `[${o.unit_name}] ` : ''}
-                              {o.title}
-                            </option>
-                          ))}
-                        </select>
+                            ...(selObjective && !objectives.some((o) => o.id === selObjective)
+                              ? [{ value: selObjective, label: `${card.objective_code ? card.objective_code + ' · ' : ''}(OKR hiện tại)` }]
+                              : []),
+                            ...objectives.map((o) => ({
+                              value: o.id,
+                              label: `${o.code ? o.code + ' · ' : ''}${o.unit_name ? `[${o.unit_name}] ` : ''}${o.title}`,
+                            })),
+                          ]}
+                        />
                       </div>
                       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6 }}>
                         {selObjective && (
@@ -640,15 +617,11 @@ function EditModal({
                       </div>
                     </div>
                     {selObjective && krOptions.length > 0 && (
-                      <select className="i" name="key_result_id" value={selKr} onChange={(e) => setSelKr(e.target.value)} style={{ marginTop: 6 }}>
-                        <option value="">— Gắn ở cấp Objective (không chọn Key Result) —</option>
-                        {krOptions.map((k) => (
-                          <option key={k.id} value={k.id}>
-                            {k.code ? `${k.code} · ` : ''}
-                            {k.title}
-                          </option>
-                        ))}
-                      </select>
+                      <div style={{ marginTop: 6 }}>
+                        <SearchSelect name="key_result_id" value={selKr} onChange={setSelKr}
+                          emptyLabel="— Gắn ở cấp Objective (không chọn Key Result) —"
+                          options={krOptions.map((k) => ({ value: k.id, label: `${k.code ? k.code + ' · ' : ''}${k.title}` }))} />
+                      </div>
                     )}
                     {(!selObjective || krOptions.length === 0) && (
                       // Không hiện chọn KR → giữ KR hiện tại nếu vẫn cùng OKR, ngược lại bỏ.
@@ -689,20 +662,9 @@ function EditModal({
                   <>
                     <div className="row" style={{ marginTop: 6 }}>
                       <div style={{ flex: 2 }}>
-                        <select
-                          className="i"
-                          name="project_id"
-                          value={selProject}
-                          onChange={(e) => setSelProject(e.target.value)}
-                        >
-                          <option value="">— Chọn dự án —</option>
-                          {projects.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.code ? `${p.code} · ` : ''}
-                              {p.name}
-                            </option>
-                          ))}
-                        </select>
+                        <SearchSelect name="project_id" value={selProject} onChange={setSelProject}
+                          emptyLabel="— Chọn dự án —" placeholder="— Chọn dự án —"
+                          options={projects.map((p) => ({ value: p.id, label: `${p.code ? p.code + ' · ' : ''}${p.name}` }))} />
                       </div>
                       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6 }}>
                         {selProject && (

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import SearchSelect from '@/components/SearchSelect';
 import type { CalEvent, CalEventType } from '@/lib/calendar';
 
 export type CalView = 'day' | 'week' | 'month';
@@ -250,6 +251,7 @@ function QuickAdd({
   const submit = (e: React.FormEvent<HTMLFormElement>, kind: 'meeting' | 'task') => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    if (kind === 'task' && !objId) { setErr('Vui lòng chọn OKR để gắn việc.'); return; }
     setErr(null);
     startTransition(async () => {
       try {
@@ -296,9 +298,8 @@ function QuickAdd({
             </div>
             <div>
               <label className="f">Chủ trì</label>
-              <select className="i" name="owner_email" defaultValue={defaultOwner}>
-                {users.map((u) => <option key={u.email} value={u.email}>{u.name}</option>)}
-              </select>
+              <SearchSelect name="owner_email" defaultValue={defaultOwner}
+                options={users.map((u) => ({ value: u.email, label: u.name }))} />
             </div>
           </div>
           <label className="f">Địa điểm</label>
@@ -313,35 +314,24 @@ function QuickAdd({
           <input type="hidden" name="due_on" value={date} />
           <input type="hidden" name="kind" value="action" />
           <label className="f">Gắn vào OKR (bắt buộc)</label>
-          <select className="i" name="objective_id" required value={objId} onChange={(e) => setObjId(e.target.value)}>
-            <option value="">— Chọn Objective —</option>
-            {objectives.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.code ? `${o.code} · ` : ''}{o.unit_name ? `[${o.unit_name}] ` : ''}{o.title}
-              </option>
-            ))}
-          </select>
+          <SearchSelect name="objective_id" defaultValue="" emptyLabel="— Chọn Objective —" placeholder="— Chọn Objective —"
+            onChange={setObjId}
+            options={objectives.map((o) => ({ value: o.id, label: `${o.code ? o.code + ' · ' : ''}${o.unit_name ? `[${o.unit_name}] ` : ''}${o.title}` }))} />
           <label className="f">Gắn vào Key Result (tuỳ chọn)</label>
-          <select className="i" name="key_result_id" defaultValue="" disabled={!objId}>
-            <option value="">— Ở cấp Objective —</option>
-            {krs.map((k) => <option key={k.id} value={k.id}>{k.code ? `${k.code} · ` : ''}{k.title}</option>)}
-          </select>
+          <SearchSelect key={objId} name="key_result_id" defaultValue="" emptyLabel="— Ở cấp Objective —" disabled={!objId}
+            options={krs.map((k) => ({ value: k.id, label: `${k.code ? k.code + ' · ' : ''}${k.title}` }))} />
           <label className="f">Tên việc *</label>
           <input className="i" name="title" required placeholder="VD: Chuẩn bị tài liệu họp" />
           <div className="row">
             <div>
               <label className="f">Giao cho</label>
-              <select className="i" name="owner_email" defaultValue={defaultOwner}>
-                <option value="">— Chưa giao —</option>
-                {users.map((u) => <option key={u.email} value={u.email}>{u.name}</option>)}
-              </select>
+              <SearchSelect name="owner_email" defaultValue={defaultOwner} emptyLabel="— Chưa giao —"
+                options={users.map((u) => ({ value: u.email, label: u.name }))} />
             </div>
             <div>
               <label className="f">Thuộc dự án (tuỳ chọn)</label>
-              <select className="i" name="project_id" defaultValue="">
-                <option value="">— Không gắn —</option>
-                {projects.map((p) => <option key={p.id} value={p.id}>{p.code ? `${p.code} · ` : ''}{p.name}</option>)}
-              </select>
+              <SearchSelect name="project_id" defaultValue="" emptyLabel="— Không gắn —"
+                options={projects.map((p) => ({ value: p.id, label: `${p.code ? p.code + ' · ' : ''}${p.name}` }))} />
             </div>
           </div>
           {err && <p className="form-err">{err}</p>}

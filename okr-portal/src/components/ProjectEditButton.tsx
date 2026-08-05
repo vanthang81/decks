@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import ConfirmButton from './ConfirmButton';
+import SearchSelect from '@/components/SearchSelect';
 
 export type ProjData = {
   id: string;
@@ -108,28 +109,16 @@ export default function ProjectEditButton({
               <div className="row">
                 <div>
                   <label className="f">Chủ trì (cá nhân)</label>
-                  <select className="i" name="owner_email" defaultValue={project.owner_email ?? ''}>
-                    <option value="">— Chưa gán —</option>
-                    {users.map((u) => (
-                      <option key={u.email} value={u.email}>{u.name}</option>
-                    ))}
-                  </select>
+                  <SearchSelect name="owner_email" defaultValue={project.owner_email ?? ''} emptyLabel="— Chưa gán —"
+                    options={users.map((u) => ({ value: u.email, label: u.name }))} />
                 </div>
                 <div>
                   <label className="f">Đơn vị chủ trì (Khối / Phòng)</label>
-                  <select className="i" name="unit_id" defaultValue={project.unit_id ?? ''}>
-                    <option value="">— Không gắn —</option>
-                    {divisions.length > 0 && (
-                      <optgroup label="Khối">
-                        {divisions.map((u) => (<option key={u.id} value={u.id}>{u.name}</option>))}
-                      </optgroup>
-                    )}
-                    {departments.length > 0 && (
-                      <optgroup label="Phòng ban">
-                        {departments.map((u) => (<option key={u.id} value={u.id}>{u.name}</option>))}
-                      </optgroup>
-                    )}
-                  </select>
+                  <SearchSelect name="unit_id" defaultValue={project.unit_id ?? ''} emptyLabel="— Không gắn —"
+                    options={[
+                      ...divisions.map((u) => ({ value: u.id, label: `${u.name} (Khối)` })),
+                      ...departments.map((u) => ({ value: u.id, label: `${u.name} (Phòng)` })),
+                    ]} />
                 </div>
                 <div>
                   <label className="f">Trạng thái</label>

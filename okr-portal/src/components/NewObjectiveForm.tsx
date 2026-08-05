@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
+import SearchSelect from '@/components/SearchSelect';
 import type { Level } from '@/lib/okr';
 
 type UserOpt = { email: string; name: string; role: string; unit_id: string | null; unit_name: string | null };
@@ -189,10 +190,9 @@ export default function NewObjectiveForm({
       <textarea className="i" value={description} onChange={(e) => setDescription(e.target.value)} />
 
       <label className="f">Người chủ trì {level === 'company' ? '(mặc định CEO — có thể assign khác)' : level !== 'individual' ? '(mặc định người phụ trách đơn vị)' : ''}</label>
-      <select className="i" value={owner} onChange={(e) => setOwner(e.target.value)}>
-        <option value="">— Chưa gán —</option>
-        {users.map((u) => <option key={u.email} value={u.email}>{u.name}{u.unit_name ? ` · ${u.unit_name}` : ''}</option>)}
-      </select>
+      <SearchSelect name="owner_pick" value={owner} onChange={setOwner} emptyLabel="— Chưa gán —"
+        options={users.map((u) => ({ value: u.email, label: `${u.name}${u.unit_name ? ` · ${u.unit_name}` : ''}` }))} />
+      {/* owner_email được gửi qua fd.set('owner_email', owner) trong submit */}
 
       {err && <p className="form-err">{err}</p>}
       <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
