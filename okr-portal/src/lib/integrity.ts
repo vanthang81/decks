@@ -12,6 +12,7 @@ type Counts = {
   proj_no_task: number;
   task_project_period_mismatch: number;
   budget_line_mismatch: number;
+  task_dep_cross_okr: number;
 };
 
 const DEF: { key: keyof Counts; label: string; hint: string }[] = [
@@ -23,7 +24,29 @@ const DEF: { key: keyof Counts; label: string; hint: string }[] = [
   { key: 'proj_no_task', label: 'Dự án chưa gắn công việc nào', hint: 'Dự án rỗng — chưa gom việc từ OKR vào.' },
   { key: 'task_project_period_mismatch', label: 'Việc gắn dự án khác kỳ với OKR gốc', hint: 'Công việc được gom vào một dự án (PRJ) thuộc kỳ KHÁC với kỳ của OKR gốc — có thể đã gắn nhầm dự án.' },
   { key: 'budget_line_mismatch', label: 'Ngân sách chi tiết lệch với ngân sách dự án', hint: 'Tổng kế hoạch các dòng chi tiết (sổ ngân sách) khác ngân sách khai báo của dự án >5% — cập nhật ngân sách dự án cho khớp để các trang khác hiển thị đúng.' },
+  { key: 'task_dep_cross_okr', label: 'Việc phụ thuộc vào việc khác OKR', hint: 'Ràng buộc waterfall chỉ nên trong CÙNG một OKR. Việc đang phụ thuộc vào một việc thuộc OKR khác — có thể do dữ liệu cũ/gắn nhầm, nên gỡ.' },
 ];
+
+// OKR gốc của 1 công việc = objective_id trực tiếp, hoặc suy từ key_result.
+const OKR_OF = (a: string) => `COALESCE(${a}.objective_id, (SELECT objective_id FROM okr_key_results WHERE id=${a}.key_result_id))`;
+
+// Đếm ràng buộc phụ thuộc vắt qua 2 OKR khác nhau (bảng có thể chưa migrate → trả 0).
+async function crossOkrDepCount(periodId: string): Promise<number> {
+  try {
+    const r = await query<{ n: number }>(
+      `SELECT count(*)::int AS n
+         FROM okr_initiative_deps d
+         JOIN okr_initiatives t ON t.id = d.task_id
+         JOIN okr_initiatives p ON p.id = d.depends_on_id
+         JOIN okr_objectives o ON o.id = ${OKR_OF('t')}
+        WHERE o.period_id=$1 AND ${OKR_OF('t')} IS DISTINCT FROM ${OKR_OF('p')}`,
+      [periodId],
+    );
+    return r[0]?.n ?? 0;
+  } catch {
+    return 0;
+  }
+}
 
 /** Đếm các vấn đề toàn vẹn trong 1 kỳ; chỉ trả về mục có count > 0. */
 export async function integrityIssues(periodId: string): Promise<IntegrityIssue[]> {
@@ -55,6 +78,7 @@ export async function integrityIssues(periodId: string): Promise<IntegrityIssue[
     [periodId],
   );
   const c = r[0] ?? ({} as Counts);
+  c.task_dep_cross_okr = await crossOkrDepCount(periodId);
   return DEF.map((d) => ({ key: d.key, label: d.label, hint: d.hint, count: c[d.key] ?? 0 })).filter(
     (x) => x.count > 0,
   );
@@ -180,6 +204,29 @@ async function itemsFor(key: keyof Counts, periodId: string): Promise<IntegrityI
         href: `/objectives/${t.oid}`,
         sub: [t.pcode ? `Dự án ${t.pcode}` : null, t.pperiod ? `kỳ ${t.pperiod}` : null].filter(Boolean).join(' · '),
       }));
+    case 'task_dep_cross_okr':
+      try {
+        return (
+          await query<{ code: string | null; title: string; oid: string; pcode: string | null; ptitle: string }>(
+            `SELECT t.code, t.title, ${OKR_OF('t')} AS oid,
+                    p.code AS pcode, p.title AS ptitle
+               FROM okr_initiative_deps d
+               JOIN okr_initiatives t ON t.id = d.task_id
+               JOIN okr_initiatives p ON p.id = d.depends_on_id
+               JOIN okr_objectives o ON o.id = ${OKR_OF('t')}
+              WHERE o.period_id=$1 AND ${OKR_OF('t')} IS DISTINCT FROM ${OKR_OF('p')}
+              ORDER BY t.code NULLS LAST, t.title LIMIT ${CAP}`,
+            [periodId],
+          )
+        ).map((t) => ({
+          code: t.code,
+          title: t.title,
+          href: `/objectives/${t.oid}`,
+          sub: `phụ thuộc việc khác OKR: ${t.pcode ? t.pcode + ' · ' : ''}${t.ptitle}`,
+        }));
+      } catch {
+        return [];
+      }
     default:
       return [];
   }

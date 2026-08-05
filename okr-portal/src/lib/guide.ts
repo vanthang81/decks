@@ -598,7 +598,8 @@ export const CHANGELOG: ChangeLog[] = [
     date: '05/08/2026 (Ràng buộc waterfall giữa công việc)',
     items: [
       'Công việc nay có thể PHỤ THUỘC vào việc khác cùng OKR (waterfall): mở việc ở trang Công việc → mục "⏳ Phụ thuộc vào (việc phải xong trước)" chọn nhiều việc tiên quyết. Chống vòng lặp tự động.',
-      'Việc nào còn chờ việc trước chưa xong sẽ hiện nhãn tím "⏳ Chờ N việc" (di chuột xem danh sách) — cảnh báo mềm, không khoá thao tác.',
+      'Việc nào còn chờ việc trước chưa xong sẽ hiện nhãn tím "⏳ Chờ N việc" (di chuột xem danh sách) — cảnh báo mềm, không khoá thao tác. Hiện ở CẢ 3 chế độ: Danh sách · Kanban · Gantt.',
+      'Tự audit: trang Toàn vẹn (/integrity) thêm cảnh báo "Việc phụ thuộc vào việc khác OKR" — bắt ràng buộc gắn nhầm vắt qua 2 OKR (truy vết đích danh từng việc).',
     ],
   },
   {
