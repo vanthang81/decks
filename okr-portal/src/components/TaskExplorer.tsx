@@ -41,7 +41,7 @@ const PRIO_LABEL: Record<string, string> = { high: 'Cao', medium: 'Trung bình',
 const PRIO_RANK: Record<string, number> = { high: 0, medium: 1, low: 2 };
 
 // Sắp xếp theo cột (nulls luôn xuống cuối, không đổi theo chiều).
-type SortKey = 'code' | 'title' | 'status' | 'priority' | 'progress' | 'owner' | 'unit' | 'objective' | 'project' | 'due';
+type SortKey = 'code' | 'title' | 'status' | 'priority' | 'progress' | 'owner' | 'unit' | 'objective' | 'project' | 'due' | 'created';
 function sortVal(t: TaskRow, k: SortKey): string | number | null {
   switch (k) {
     case 'code': return t.code;
@@ -54,7 +54,14 @@ function sortVal(t: TaskRow, k: SortKey): string | number | null {
     case 'objective': return t.objective_code || t.objective_title;
     case 'project': return t.project_name;
     case 'due': return t.due_on;
+    case 'created': return t.created_at;
   }
+}
+// dd/mm/yyyy gọn cho cột "Tạo lúc"
+function fmtCreated(s: string | null): string {
+  if (!s) return '';
+  const d = s.slice(0, 10).split('-');
+  return d.length === 3 ? `${d[2]}/${d[1]}/${d[0]}` : '';
 }
 const COLS: { key: SortKey; label: string; style?: CSSProperties; hint?: string }[] = [
   { key: 'code', label: 'Mã' },
@@ -67,6 +74,7 @@ const COLS: { key: SortKey; label: string; style?: CSSProperties; hint?: string 
   { key: 'objective', label: 'OKR' },
   { key: 'project', label: 'Thuộc dự án', hint: 'Dự án xuyên-OKR (mã PRJ) mà việc này được gom vào. Khác với nhãn "Loại: Dự án" (kiểu nút trong cây thực thi).' },
   { key: 'due', label: 'Hạn' },
+  { key: 'created', label: 'Tạo lúc', hint: 'Ngày tạo việc — bấm để sắp xếp mới/cũ' },
 ];
 
 // Cảnh báo hạn (đồng bộ ExecutionTabs): chỉ tính việc CÒN MỞ.
@@ -226,6 +234,15 @@ export default function TaskExplorer({
       return r * dir;
     });
   }, [filtered, sortKey, sortDir]);
+
+  // Phân trang danh sách (50 việc/trang) — chỉ ở chế độ Danh sách; Kanban/Gantt vẫn hiện đủ.
+  const PAGE_SIZE = 50;
+  const [page, setPage] = useState(0);
+  const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const curPage = Math.min(page, pageCount - 1);
+  const pageRows = useMemo(() => sorted.slice(curPage * PAGE_SIZE, curPage * PAGE_SIZE + PAGE_SIZE), [sorted, curPage]);
+  // Lọc/sắp xếp đổi → về trang 1.
+  useEffect(() => { setPage(0); }, [q, fOwner, fUnit, fObj, fProject, fStatus, fPrio, fKind, fPeriod, fOverdue, fMine, hideDone, sortKey, sortDir]);
 
   // Tổng quan trạng thái + quá hạn của tập đang lọc.
   const byStatus = useMemo(() => {
@@ -436,6 +453,24 @@ export default function TaskExplorer({
           <option value="subproject">Tiểu dự án</option>
           <option value="action">Công việc</option>
         </select>
+        <select
+          className="i fb-sel"
+          title="Sắp xếp danh sách"
+          value={sortKey ? `${sortKey}|${sortDir}` : ''}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (!v) { setSortKey(null); return; }
+            const [k, d] = v.split('|');
+            setSortKey(k as SortKey);
+            setSortDir(d as 'asc' | 'desc');
+          }}
+        >
+          <option value="">Sắp xếp: Mặc định</option>
+          <option value="created|desc">Mới tạo trước</option>
+          <option value="created|asc">Cũ nhất trước</option>
+          <option value="due|asc">Hạn gần nhất</option>
+          <option value="progress|desc">Tiến độ cao → thấp</option>
+        </select>
         {periods.length > 1 && (
           <select className="i fb-sel" value={fPeriod} onChange={(e) => setFPeriod(e.target.value)}>
             <option value="">Kỳ: tất cả</option>
@@ -491,7 +526,7 @@ export default function TaskExplorer({
             </tr>
           </thead>
           <tbody>
-            {sorted.map((t) => (
+            {pageRows.map((t) => (
               <tr key={t.id} className="te-row" onClick={() => setEditing(t)} title="Bấm để cập nhật / sửa / xoá">
                 <td>{t.code && <span className="okr-code">{t.code}</span>}</td>
                 <td>
@@ -551,6 +586,9 @@ export default function TaskExplorer({
                     </span>
                   ) : <span className="muted">—</span>}
                 </td>
+                <td style={{ whiteSpace: 'nowrap', fontSize: 12.5 }}>
+                  {t.created_at ? fmtCreated(t.created_at) : <span className="muted">—</span>}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -558,6 +596,15 @@ export default function TaskExplorer({
       </div>
       {filtered.length === 0 && (
         <div className="card"><p className="muted" style={{ margin: 0 }}>Không có công việc nào khớp bộ lọc.</p></div>
+      )}
+      {sorted.length > PAGE_SIZE && (
+        <div className="pager">
+          <button type="button" className="btn ghost sm" disabled={curPage === 0} onClick={() => setPage(curPage - 1)}>← Trước</button>
+          <span className="pager-info">
+            {curPage * PAGE_SIZE + 1}–{Math.min((curPage + 1) * PAGE_SIZE, sorted.length)} / {sorted.length} việc · Trang {curPage + 1}/{pageCount}
+          </span>
+          <button type="button" className="btn ghost sm" disabled={curPage >= pageCount - 1} onClick={() => setPage(curPage + 1)}>Sau →</button>
+        </div>
       )}
       </>}
       {!seeAll && (

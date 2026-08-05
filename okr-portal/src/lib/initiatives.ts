@@ -156,6 +156,7 @@ export type TaskRow = {
   budget_actual: number;
   parent_id: string | null;
   has_children: boolean; // có nút con trong cây thực thi → mới thực sự là "nhóm/dự án"
+  created_at: string | null; // thời điểm tạo việc (ISO) — để biết việc mới/cũ + sắp xếp
 };
 
 const TASK_SELECT = `
@@ -171,7 +172,8 @@ const TASK_SELECT = `
          eo.owner_email AS objective_owner, eo.unit_id AS objective_unit_id, eo.created_by AS objective_created_by,
          i.key_result_id, kr.code AS key_result_code,
          eo.period_id, per.name AS period_name,
-         i.budget_planned::float8 AS budget_planned, i.budget_actual::float8 AS budget_actual
+         i.budget_planned::float8 AS budget_planned, i.budget_actual::float8 AS budget_actual,
+         i.created_at::text AS created_at
     FROM okr_initiatives i
     LEFT JOIN okr_users u ON u.email = i.owner_email
     LEFT JOIN okr_units un ON un.id = i.unit_id

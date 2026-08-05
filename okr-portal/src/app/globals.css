@@ -330,6 +330,9 @@ img.cmt-avatar, img.cmt-mm-av, img.ntf-av { object-fit: cover; }
 @media (max-width: 640px) {
   .filterbar .fb-search, .filterbar .fb-sel { flex: 1 1 100%; width: 100%; min-width: 0; }
 }
+/* Phân trang danh sách công việc */
+.pager { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 14px 0 4px; flex-wrap: wrap; }
+.pager-info { font-size: 13px; color: var(--muted); font-weight: 600; white-space: nowrap; }
 
 .pagetitle { font-size: 22px; font-weight: 700; margin: 4px 0 2px; }
 .subtitle { color: var(--muted); margin: 0 0 18px; }
