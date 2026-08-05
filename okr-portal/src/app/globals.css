@@ -8,6 +8,7 @@
   --muted: #7A6F6A;
   --label: #9A3A44;          /* nhãn ô nhập (đầu đề trường) — maroon dịu, tách rõ với chữ nhập màu --ink */
   --line: #EDE7E0;
+  --cal-line: #F3EFE9;       /* kẻ ô lịch — nhạt hơn --line cho lưới dịu, đỡ đậm */
   --bg: #FAF6F0;             /* ivory BTMH */
   --card: #ffffff;
   --radius: 12px;
@@ -869,7 +870,7 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
 /* Xem theo NGÀY (agenda) */
 .cal-day-card { padding: 16px 18px; }
 .cal-day-head { font-weight: 800; font-size: 16px; margin-bottom: 8px; }
-.cal-cell { height: 112px; min-width: 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 5px 6px; display: flex; flex-direction: column; gap: 3px; align-items: stretch; text-align: left; background: #fff; font: inherit; cursor: pointer; overflow: hidden; transition: background .12s; }
+.cal-cell { height: 112px; min-width: 0; border-right: 1px solid var(--cal-line); border-bottom: 1px solid var(--cal-line); padding: 5px 6px; display: flex; flex-direction: column; gap: 3px; align-items: stretch; text-align: left; background: #fff; font: inherit; cursor: pointer; overflow: hidden; transition: background .12s; }
 .cal-cell:nth-child(7n) { border-right: 0; }
 .cal-cell.cal-has:hover, .cal-cell:hover { background: var(--primary-tint); }
 /* Cuối tuần: nền hơi ấm để tách nhịp; ngày tràn tháng khác: mờ đi cho lưới luôn đầy mà không gây rối */
