@@ -17,7 +17,7 @@ import { listAllProjectOptions } from '@/lib/projects';
 import { listObjectivesWithKrs } from '@/lib/okr';
 import { getCurrentPeriod } from '@/lib/periods';
 import {
-  getMeeting, canViewMeeting, canManageMeeting, listParticipants, listMeetingOptions, listFollowUpMeetings,
+  getMeeting, canViewMeeting, canManageMeetingWith, listParticipants, listMeetingOptions, listFollowUpMeetings,
   listAccessRequests, myAccessRequest,
   MEETING_TYPE_LABEL, meetingStatusView, VISIBILITY_LABEL,
 } from '@/lib/meetings';
@@ -42,7 +42,6 @@ export default async function MeetingDetail({ params }: { params: { id: string }
   if (!m) notFound();
 
   const canView = await canViewMeeting(user, m);
-  const canManage = canManageMeeting(user, m);
 
   // ── Chưa được xem: chỉ hiện thông tin cơ bản + xin quyền ──
   if (!canView) {
@@ -76,12 +75,22 @@ export default async function MeetingDetail({ params }: { params: { id: string }
     );
   }
 
-  const [participants, tasks, pending, users, units, projectOpts, meetingOpts, followUps] = await Promise.all([
-    listParticipants(m.id), listInitiativesForMeeting(m.id),
+  // Nạp participants trước để tính quyền sửa (gồm đồng chủ trì & nhiều thư ký).
+  const participants = await listParticipants(m.id);
+  const canManage = canManageMeetingWith(user, m, participants);
+
+  const [tasks, pending, users, units, projectOpts, meetingOpts, followUps] = await Promise.all([
+    listInitiativesForMeeting(m.id),
     canManage ? listAccessRequests(m.id, 'pending') : Promise.resolve([]),
     listUsers(), listUnits(), listAllProjectOptions(), listMeetingOptions(user), listFollowUpMeetings(m.id, user),
   ]);
+  const ownerLc = m.owner_email?.toLowerCase() ?? '';
   const participantsText = participants.filter((p) => p.role === 'participant' || p.role === 'watcher').map((p) => p.email).join(', ');
+  // Đồng chủ trì = role host trừ chủ trì chính; thư ký = role secretary. Để prefill ô chọn nhiều người.
+  const cohostText = participants.filter((p) => p.role === 'host' && p.email.toLowerCase() !== ownerLc).map((p) => p.email).join(', ');
+  const secretaryText = participants.filter((p) => p.role === 'secretary').map((p) => p.email).join(', ');
+  const cohostNames = participants.filter((p) => p.role === 'host' && p.email.toLowerCase() !== ownerLc).map((p) => p.name || p.email);
+  const secretaryNames = participants.filter((p) => p.role === 'secretary').map((p) => p.name || p.email);
   const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url }));
   const unitOpts = units.filter((u) => u.type !== 'company').map((u) => ({ id: u.id, name: u.name, type: u.type }));
   // OKR để gắn khi thêm việc: theo kỳ của cuộc họp (fallback kỳ hiện tại).
@@ -108,7 +117,8 @@ export default async function MeetingDetail({ params }: { params: { id: string }
               </div>
               <div className="obj-meta" style={{ marginTop: 4 }}>
                 Chủ trì: <b>{m.owner_name ?? m.owner_email ?? '—'}</b>
-                {m.secretary_email ? ` · Thư ký: ${m.secretary_email}` : ''}
+                {cohostNames.length > 0 ? `, ${cohostNames.join(', ')}` : ''}
+                {secretaryNames.length > 0 ? ` · Thư ký: ${secretaryNames.join(', ')}` : ''}
                 {m.unit_name ? ` · ${m.unit_name}` : ''}
                 {m.project_name ? ` · 🗂 ${m.project_name}` : ''}
                 {` · 👁 ${VISIBILITY_LABEL[m.visibility]}`}
@@ -131,7 +141,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
             {canManage && (
               <div className="row-actions">
                 <EditModal title="Sửa cuộc họp" label="Sửa" icon={<NavIcon name="pencil" />} submitLabel="Lưu cuộc họp" action={updateMeetingAction} wide>
-                  <MeetingFields users={users} units={units} projects={projectOpts} meetings={meetingOpts} defaultOwner={user.email} meeting={m} participantsText={participantsText} />
+                  <MeetingFields users={users} units={units} projects={projectOpts} meetings={meetingOpts} defaultOwner={user.email} meeting={m} participantsText={participantsText} cohostText={cohostText} secretaryText={secretaryText} />
                 </EditModal>
                 <form action={deleteMeetingAction}>
                   <input type="hidden" name="id" value={m.id} />

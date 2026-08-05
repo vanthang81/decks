@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-05.92';
+export const GUIDE_VERSION = '2026-08-05.93';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -594,6 +594,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '05/08/2026 (Cuộc họp: nhiều đồng chủ trì & thư ký)',
+    items: [
+      'Cuộc họp nay cho phép NHIỀU đồng chủ trì và NHIỀU thư ký (ô chọn nhiều người). Tất cả — chủ trì chính, đồng chủ trì, mọi thư ký — đều có quyền sửa TOÀN BỘ nội dung cuộc họp (thông tin, biên bản, quyết định, thêm việc).',
+    ],
+  },
   {
     date: '05/08/2026 (Ô chọn OKR/người/dự án có TÌM KIẾM)',
     items: [

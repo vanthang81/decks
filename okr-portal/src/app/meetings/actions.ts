@@ -6,7 +6,7 @@ import { requireUser } from '@/lib/current-user';
 import { isExec } from '@/lib/rbac';
 import {
   createMeeting, updateMeeting, updateMinutes, deleteMeeting, setParticipants,
-  getMeeting, canManageMeeting, requestAccess, decideAccessRequest,
+  getMeeting, isMeetingEditor, requestAccess, decideAccessRequest,
   type MeetingInput, type MeetingType, type MeetingStatus, type MeetingVisibility, MEETING_TYPES,
 } from '@/lib/meetings';
 import { notifySimple } from '@/lib/notifications';
@@ -40,12 +40,27 @@ function readInput(fd: FormData): MeetingInput {
   };
 }
 
-function parseParticipants(raw: string): { email: string; role: string }[] {
-  return raw
-    .split(/[\n,;]+/)
-    .map((e) => e.trim())
-    .filter((e) => e.includes('@'))
-    .map((email) => ({ email, role: 'participant' }));
+function emailList(raw: string): string[] {
+  return raw.split(/[\n,;]+/).map((e) => e.trim()).filter((e) => e.includes('@'));
+}
+
+// Gom TOÀN BỘ người của cuộc họp + vai trò, ưu tiên host > secretary > participant khi 1 người
+// xuất hiện nhiều vai. Nguồn: participants (tham gia) + secretary_emails (nhiều thư ký) +
+// cohost_emails (đồng chủ trì) + owner_email (chủ trì chính) + secretary_email (thư ký chính).
+function buildPeople(fd: FormData, input: MeetingInput): { email: string; role: string }[] {
+  const rank = (r: string) => (r === 'host' ? 3 : r === 'secretary' ? 2 : 1);
+  const map = new Map<string, { email: string; role: string }>();
+  const set = (email: string, role: string) => {
+    const k = email.toLowerCase();
+    const cur = map.get(k);
+    if (!cur || rank(role) > rank(cur.role)) map.set(k, { email: cur?.email ?? email, role });
+  };
+  for (const e of emailList(str(fd, 'participants'))) set(e, 'participant');
+  for (const e of emailList(str(fd, 'secretary_emails'))) set(e, 'secretary');
+  for (const e of emailList(str(fd, 'cohost_emails'))) set(e, 'host');
+  if (input.owner_email) set(input.owner_email, 'host');
+  if (input.secretary_email) set(input.secretary_email, 'secretary');
+  return [...map.values()];
 }
 
 export async function createMeetingAction(fd: FormData) {
@@ -54,12 +69,11 @@ export async function createMeetingAction(fd: FormData) {
   if (!input.title) throw new Error('Thiếu tiêu đề cuộc họp.');
   // Mặc định người tạo là chủ trì nếu chưa chọn.
   if (!input.owner_email) input.owner_email = user.email;
+  // Thư ký chính = thư ký đầu tiên trong danh sách nhiều thư ký (cột secretary_email để hiện gọn).
+  const secs = emailList(str(fd, 'secretary_emails'));
+  if (secs.length) input.secretary_email = secs[0];
   const id = await createMeeting(input, user.email);
-  const people = parseParticipants(str(fd, 'participants'));
-  // Chủ trì + thư ký cũng là participant để phân quyền xem ổn định.
-  if (input.owner_email) people.push({ email: input.owner_email, role: 'host' });
-  if (input.secretary_email) people.push({ email: input.secretary_email, role: 'secretary' });
-  await setParticipants(id, people);
+  await setParticipants(id, buildPeople(fd, input));
   revalidatePath('/meetings');
   redirect(`/meetings/${id}`);
 }
@@ -68,7 +82,8 @@ async function guardManage(id: string) {
   const user = await requireUser();
   const m = await getMeeting(id);
   if (!m) throw new Error('Không tìm thấy cuộc họp.');
-  if (!canManageMeeting(user, m)) throw new Error('Chỉ chủ trì/thư ký (hoặc CEO/CFO) mới sửa được.');
+  // Đồng chủ trì & nhiều thư ký (participant role host/secretary) cũng sửa được.
+  if (!(await isMeetingEditor(user, id, m))) throw new Error('Chỉ chủ trì/đồng chủ trì/thư ký (hoặc CEO/CFO) mới sửa được.');
   return { user, m };
 }
 
@@ -77,14 +92,11 @@ export async function updateMeetingAction(fd: FormData) {
   await guardManage(id);
   const input = readInput(fd);
   if (!input.title) throw new Error('Thiếu tiêu đề cuộc họp.');
+  const secs = emailList(str(fd, 'secretary_emails'));
+  if (secs.length) input.secretary_email = secs[0];
+  else if (fd.has('secretary_emails')) input.secretary_email = null; // đã xoá hết thư ký
   await updateMeeting(id, input);
-  const raw = str(fd, 'participants');
-  if (raw) {
-    const people = parseParticipants(raw);
-    if (input.owner_email) people.push({ email: input.owner_email, role: 'host' });
-    if (input.secretary_email) people.push({ email: input.secretary_email, role: 'secretary' });
-    await setParticipants(id, people);
-  }
+  await setParticipants(id, buildPeople(fd, input));
   revalidatePath(`/meetings/${id}`);
   revalidatePath('/meetings');
 }

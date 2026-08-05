@@ -141,6 +141,30 @@ export function canManageMeeting(user: OkrUser, m: Meeting): boolean {
   return m.owner_email?.toLowerCase() === email || m.secretary_email?.toLowerCase() === email;
 }
 
+/**
+ * Được sửa cuộc họp — TÍNH CẢ đồng chủ trì & nhiều thư ký (participants role host/secretary).
+ * Bản đồng bộ (dùng ở trang đã nạp sẵn participants).
+ */
+export function canManageMeetingWith(user: OkrUser, m: Meeting, participants: Participant[]): boolean {
+  if (canManageMeeting(user, m)) return true;
+  const email = user.email.toLowerCase();
+  return participants.some((p) => (p.role === 'host' || p.role === 'secretary') && p.email.toLowerCase() === email);
+}
+
+/** Bản ASYNC để gác Server Action (tự nạp participants). */
+export async function isMeetingEditor(user: OkrUser, meetingId: string, m?: Meeting | null): Promise<boolean> {
+  if (isExec(user.role)) return true;
+  const email = user.email.toLowerCase();
+  const mm = m ?? (await getMeeting(meetingId));
+  if (mm && (mm.owner_email?.toLowerCase() === email || mm.secretary_email?.toLowerCase() === email)) return true;
+  const r = await queryOne<{ n: number }>(
+    `SELECT count(*)::int AS n FROM okr_meeting_participants
+      WHERE meeting_id=$1 AND lower(email)=$2 AND role IN ('host','secretary')`,
+    [meetingId, email],
+  );
+  return (r?.n ?? 0) > 0;
+}
+
 async function nextMeetingCode(): Promise<string> {
   const r = await queryOne<{ n: number }>(
     `SELECT COALESCE(MAX((substring(code from 'MTG-([0-9]+)'))::int),0)+1 AS n FROM okr_meetings WHERE code ~ '^MTG-[0-9]+$'`,

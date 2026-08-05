@@ -6,7 +6,7 @@ import SearchSelect from '@/components/SearchSelect';
 
 // Bộ ô nhập cuộc họp — dùng chung cho popup Tạo & Sửa (server component).
 export default function MeetingFields({
-  users, units, projects, meetings, defaultOwner, meeting, participantsText,
+  users, units, projects, meetings, defaultOwner, meeting, participantsText, cohostText, secretaryText,
 }: {
   users: { email: string; display_name: string | null }[];
   units: { id: string; name: string; type: string }[];
@@ -14,7 +14,9 @@ export default function MeetingFields({
   meetings?: { id: string; code: string | null; title: string }[];
   defaultOwner: string;
   meeting?: Meeting | null;
-  participantsText?: string;
+  participantsText?: string;   // người tham gia/theo dõi (role participant/watcher)
+  cohostText?: string;         // đồng chủ trì (role host, trừ chủ trì chính)
+  secretaryText?: string;      // thư ký (role secretary — có thể nhiều)
 }) {
   const m = meeting ?? null;
   // datetime-local cần "YYYY-MM-DDTHH:MM"
@@ -42,13 +44,8 @@ export default function MeetingFields({
       </div>
       <div className="row">
         <div>
-          <label className="f">Chủ trì</label>
+          <label className="f">Chủ trì (chính)</label>
           <SearchSelect name="owner_email" defaultValue={m?.owner_email ?? defaultOwner}
-            options={users.map((u) => ({ value: u.email, label: u.display_name || u.email }))} />
-        </div>
-        <div>
-          <label className="f">Thư ký</label>
-          <SearchSelect name="secretary_email" defaultValue={m?.secretary_email ?? ''} emptyLabel="— Chưa chọn —"
             options={users.map((u) => ({ value: u.email, label: u.display_name || u.email }))} />
         </div>
         <div>
@@ -60,6 +57,10 @@ export default function MeetingFields({
           </select>
         </div>
       </div>
+      <label className="f">Đồng chủ trì <span className="muted" style={{ fontWeight: 400 }}>(có thể chọn nhiều người — cùng quyền sửa toàn bộ cuộc họp)</span></label>
+      <ParticipantsPicker users={users} initial={cohostText ?? ''} name="cohost_emails" />
+      <label className="f">Thư ký <span className="muted" style={{ fontWeight: 400 }}>(một hoặc nhiều người — cùng quyền sửa toàn bộ cuộc họp)</span></label>
+      <ParticipantsPicker users={users} initial={secretaryText ?? ''} name="secretary_emails" />
       <div className="row">
         <div>
           <label className="f">Khối / Phòng liên quan</label>
