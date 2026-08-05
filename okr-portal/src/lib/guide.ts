@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-05.93';
+export const GUIDE_VERSION = '2026-08-05.94';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -594,6 +594,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '05/08/2026 (Ràng buộc waterfall giữa công việc)',
+    items: [
+      'Công việc nay có thể PHỤ THUỘC vào việc khác cùng OKR (waterfall): mở việc ở trang Công việc → mục "⏳ Phụ thuộc vào (việc phải xong trước)" chọn nhiều việc tiên quyết. Chống vòng lặp tự động.',
+      'Việc nào còn chờ việc trước chưa xong sẽ hiện nhãn tím "⏳ Chờ N việc" (di chuột xem danh sách) — cảnh báo mềm, không khoá thao tác.',
+    ],
+  },
   {
     date: '05/08/2026 (Cuộc họp: nhiều đồng chủ trì & thư ký)',
     items: [

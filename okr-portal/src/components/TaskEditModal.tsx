@@ -6,6 +6,7 @@ import Link from 'next/link';
 import ConfirmButton from '@/components/ConfirmButton';
 import SearchSelect from '@/components/SearchSelect';
 import NumberInput from '@/components/NumberInput';
+import MultiSelect, { type MSOption } from '@/components/MultiSelect';
 import CommentThread from '@/components/CommentThread';
 import type { TaskRow } from '@/lib/initiatives';
 import type { PersonOpt, UnitOpt, ProjectOpt } from '@/components/ExecutionTabs';
@@ -27,6 +28,8 @@ export default function TaskEditModal({
   editAction,
   deleteAction,
   onClose,
+  depInitial = [],
+  depOptions = [],
 }: {
   task: TaskRow;
   canManage: boolean;
@@ -37,6 +40,8 @@ export default function TaskEditModal({
   editAction: (fd: FormData) => Promise<void>;
   deleteAction: (fd: FormData) => Promise<void>;
   onClose: () => void;
+  depInitial?: string[];    // predecessor id hiện có
+  depOptions?: MSOption[];  // việc anh em (cùng OKR) để chọn phụ thuộc
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -175,6 +180,13 @@ export default function TaskEditModal({
                   <NumberInput name="budget_actual" defaultValue={task.budget_actual} />
                 </div>
               </div>
+              {depOptions.length > 0 && (
+                <>
+                  <label className="f">⏳ Phụ thuộc vào (việc phải xong trước) <span className="muted" style={{ fontWeight: 400 }}>— ràng buộc waterfall trong cùng OKR</span></label>
+                  <MultiSelect name="depends_on" options={depOptions} initial={depInitial}
+                    placeholder="Chọn việc phải hoàn thành trước việc này…" emptyText="Không phụ thuộc việc nào (chạy độc lập)." />
+                </>
+              )}
             </>
           ) : isAssignee ? (
             <>

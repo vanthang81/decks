@@ -6,6 +6,7 @@ import { listUnits } from '@/lib/org';
 import { listUsers } from '@/lib/users';
 import { listAllProjectOptions } from '@/lib/projects';
 import { listAllInitiatives } from '@/lib/initiatives';
+import { depsForTasks } from '@/lib/deps';
 import { loadAccess, buildTaskViewCtx, canViewInitiative, canEditObjective } from '@/lib/access';
 import { editInitiativeAction, deleteInitiativeAction, moveInitiativeAction } from '@/app/objectives/actions';
 
@@ -39,6 +40,11 @@ export default async function TasksPage() {
     )
     .map((t) => t.id);
 
+  // Phụ thuộc waterfall: map việc → danh sách predecessor (việc phải xong trước). Rỗng nếu chưa migrate.
+  const depsMapRaw = await depsForTasks(visible.map((t) => t.id));
+  const depsMap: Record<string, string[]> = {};
+  for (const [k, v] of depsMapRaw) depsMap[k] = v;
+
   const unitOpts = units.map((u) => ({ id: u.id, name: u.name, type: u.type }));
   const userOpts = users.map((u) => ({
     email: u.email,
@@ -62,6 +68,7 @@ export default async function TasksPage() {
 
         <TaskExplorer
           tasks={visible}
+          depsMap={depsMap}
           currentEmail={user.email}
           seeAll={ctx.seeAll}
           totalAll={all.length}

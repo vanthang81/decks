@@ -99,6 +99,12 @@ function DeadlineBadge({ t }: { t: TaskRow }) {
   return null;
 }
 
+// Nhãn "đang chờ việc trước" (waterfall) — cảnh báo mềm, không khoá thao tác.
+function WaitBadge({ titles }: { titles: string[] }) {
+  if (titles.length === 0) return null;
+  return <span className="dl-badge dl-wait" title={`Phải xong trước: ${titles.join(' · ')}`}>⏳ Chờ {titles.length} việc</span>;
+}
+
 export default function TaskExplorer({
   tasks,
   currentEmail,
@@ -111,8 +117,10 @@ export default function TaskExplorer({
   editAction,
   deleteAction,
   move,
+  depsMap = {},
 }: {
   tasks: TaskRow[];
+  depsMap?: Record<string, string[]>;
   currentEmail: string;
   seeAll: boolean;
   totalAll: number;
@@ -125,6 +133,16 @@ export default function TaskExplorer({
   move: (id: string, status: Status) => Promise<void>;
 }) {
   const manageSet = useMemo(() => new Set(manageIds), [manageIds]);
+  const taskById = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks]);
+  // Việc "đang chờ" = có việc-phải-xong-trước (predecessor) CHƯA Xong/Huỷ. Trả về tiêu đề các việc đó.
+  const waitingTitles = (id: string): string[] => {
+    const out: string[] = [];
+    for (const p of depsMap[id] ?? []) {
+      const pt = taskById.get(p);
+      if (pt && pt.status !== 'done' && pt.status !== 'canceled') out.push(pt.code ? `${pt.code} · ${pt.title}` : pt.title);
+    }
+    return out;
+  };
   const [editing, setEditing] = useState<TaskRow | null>(null);
   const [view, setView] = useState<'list' | 'kanban' | 'timeline'>('list');
   useEffect(() => {
@@ -536,6 +554,7 @@ export default function TaskExplorer({
                     <span className={`badge ${KIND_CLS[effKindT(t)]}`} style={{ fontSize: 10.5, marginRight: 6 }}>{KIND_LABEL[effKindT(t)]}</span>
                   )}
                   <b>{t.title}</b>
+                  {' '}<WaitBadge titles={waitingTitles(t.id)} />
                 </td>
                 <td><span className={`badge ${STATUS_CLS[t.status]}`}>{STATUS_LABEL[t.status]}</span></td>
                 <td>
@@ -625,6 +644,10 @@ export default function TaskExplorer({
           editAction={editAction}
           deleteAction={deleteAction}
           onClose={() => setEditing(null)}
+          depInitial={depsMap[editing.id] ?? []}
+          depOptions={tasks
+            .filter((t) => t.id !== editing.id && t.objective_id && t.objective_id === editing.objective_id)
+            .map((t) => ({ value: t.id, label: `${t.code ? t.code + ' · ' : ''}${t.title}` }))}
         />
       )}
     </div>

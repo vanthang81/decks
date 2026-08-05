@@ -1,6 +1,7 @@
 'use server';
 
 import { parseNum } from '@/lib/num';
+import { setTaskDeps } from '@/lib/deps';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/current-user';
@@ -509,6 +510,11 @@ export async function editInitiativeAction(fd: FormData) {
       budget_planned: num(fd, 'budget_planned'),
       budget_actual: num(fd, 'budget_actual'),
     });
+    // Phụ thuộc waterfall (chỉ khi form có gửi 'depends_on' — form khác không đụng tới).
+    if (fd.has('depends_on')) {
+      const preds = str(fd, 'depends_on').split(',').map((x) => x.trim()).filter(Boolean);
+      await setTaskDeps(id, preds);
+    }
   } else {
     await setInitiativeProgress(id, {
       status: (str(fd, 'status') || 'todo') as InitStatus,
