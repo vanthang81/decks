@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import ConfirmButton from './ConfirmButton';
+import NumberInput from '@/components/NumberInput';
 
 export type KrData = {
   id: string;
@@ -128,15 +129,15 @@ export default function KeyResultEditButton({
               <div className="row">
                 <div>
                   <label className="f">Bắt đầu</label>
-                  <input className="i" name="start_value" defaultValue={kr.start_value} disabled={isAuto} />
+                  <NumberInput name="start_value" defaultValue={kr.start_value} disabled={isAuto} />
                 </div>
                 <div>
                   <label className="f">Mục tiêu</label>
-                  <input className="i" name="target_value" defaultValue={kr.target_value} disabled={isAuto} />
+                  <NumberInput name="target_value" defaultValue={kr.target_value} disabled={isAuto} />
                 </div>
                 <div>
                   <label className="f">Trọng số</label>
-                  <input className="i" name="weight" defaultValue={kr.weight} />
+                  <NumberInput name="weight" defaultValue={kr.weight} />
                 </div>
               </div>
 

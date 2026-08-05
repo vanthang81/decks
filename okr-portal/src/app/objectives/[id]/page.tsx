@@ -5,6 +5,7 @@ import HelpTip from '@/components/HelpTip';
 import ExecutionTabs from '@/components/ExecutionTabs';
 import ResettableForm from '@/components/ResettableForm';
 import SearchSelect from '@/components/SearchSelect';
+import NumberInput from '@/components/NumberInput';
 import CommentThread from '@/components/CommentThread';
 import CheckinRow from '@/components/CheckinRow';
 import ObjectiveEditButton from '@/components/ObjectiveEditButton';
@@ -534,19 +535,19 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                 <div className="row">
                   <div>
                     <label className="f">Bắt đầu</label>
-                    <input className="i" name="start_value" defaultValue="0" />
+                    <NumberInput name="start_value" defaultValue="0" />
                   </div>
                   <div>
                     <label className="f">Hiện tại</label>
-                    <input className="i" name="current_value" defaultValue="0" />
+                    <NumberInput name="current_value" defaultValue="0" />
                   </div>
                   <div>
                     <label className="f">Mục tiêu</label>
-                    <input className="i" name="target_value" defaultValue="100" />
+                    <NumberInput name="target_value" defaultValue="100" />
                   </div>
                   <div>
                     <label className="f">Trọng số</label>
-                    <input className="i" name="weight" defaultValue="1" />
+                    <NumberInput name="weight" defaultValue="1" />
                   </div>
                 </div>
                 <label className="f">Nguồn KPI tự động (tuỳ chọn)<HelpTip k="kpi-auto" /></label>
@@ -703,11 +704,11 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                 <div className="row">
                   <div>
                     <label className="f">Ngân sách kế hoạch (VND)</label>
-                    <input className="i" name="budget_planned" defaultValue="0" />
+                    <NumberInput name="budget_planned" defaultValue="0" />
                   </div>
                   <div>
                     <label className="f">Đã chi (VND)</label>
-                    <input className="i" name="budget_actual" defaultValue="0" />
+                    <NumberInput name="budget_actual" defaultValue="0" />
                   </div>
                 </div>
                 <div style={{ marginTop: 12 }}>

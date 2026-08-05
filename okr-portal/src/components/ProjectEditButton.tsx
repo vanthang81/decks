@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import ConfirmButton from './ConfirmButton';
 import SearchSelect from '@/components/SearchSelect';
+import NumberInput from '@/components/NumberInput';
 
 export type ProjData = {
   id: string;
@@ -140,11 +141,11 @@ export default function ProjectEditButton({
                 </div>
                 <div>
                   <label className="f">NS kế hoạch (VND)</label>
-                  <input className="i" name="budget_planned" defaultValue={project.budget_planned} />
+                  <NumberInput name="budget_planned" defaultValue={project.budget_planned} />
                 </div>
                 <div>
                   <label className="f">Đã chi (VND)</label>
-                  <input className="i" name="budget_actual" defaultValue={project.budget_actual} />
+                  <NumberInput name="budget_actual" defaultValue={project.budget_actual} />
                 </div>
               </div>
               <label className="f">Mô tả</label>

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import CommentThread from '@/components/CommentThread';
 import ConfirmButton from '@/components/ConfirmButton';
 import SearchSelect from '@/components/SearchSelect';
+import NumberInput from '@/components/NumberInput';
 
 // Hằng số lặp lại từ lib (KHÔNG import initiatives.ts để tránh kéo pg vào client bundle).
 type Status = 'todo' | 'in_progress' | 'blocked' | 'done' | 'canceled';
@@ -820,11 +821,11 @@ function EditModal({
                   </div>
                   <div>
                     <label className="f">NS kế hoạch (VND)</label>
-                    <input className="i" name="budget_planned" defaultValue={card.budget_planned} />
+                    <NumberInput name="budget_planned" defaultValue={card.budget_planned} />
                   </div>
                   <div>
                     <label className="f">Thực chi (VND)</label>
-                    <input className="i" name="budget_actual" defaultValue={card.budget_actual} />
+                    <NumberInput name="budget_actual" defaultValue={card.budget_actual} />
                   </div>
                 </div>
                 <label className="f">Mô tả</label>

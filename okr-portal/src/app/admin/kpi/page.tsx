@@ -11,6 +11,7 @@ import { getCurrentPeriod } from '@/lib/periods';
 import { listKpiResults } from '@/lib/kpi-values';
 import KpiResultCell from '@/components/KpiResultCell';
 import KpiOwnerFields from '@/components/KpiOwnerFields';
+import NumberInput from '@/components/NumberInput';
 import EditModal from '@/components/EditModal';
 import NavIcon from '@/components/NavIcon';
 import { BSC_PERSPECTIVES, BSC_PERSPECTIVE_LABEL, BSC_PERSPECTIVE_ICON } from '@/lib/okr';
@@ -130,9 +131,9 @@ function KpiFields({
 
       <label className="f">3 ngưỡng cảnh báo (Watch · Alert · Escalate)</label>
       <div className="row">
-        <div><input className="i" name="threshold_watch" defaultValue={kpi?.threshold_watch ?? ''} placeholder="Watch" /></div>
-        <div><input className="i" name="threshold_alert" defaultValue={kpi?.threshold_alert ?? ''} placeholder="Alert" /></div>
-        <div><input className="i" name="threshold_escalate" defaultValue={kpi?.threshold_escalate ?? ''} placeholder="Escalate" /></div>
+        <div><NumberInput name="threshold_watch" defaultValue={kpi?.threshold_watch ?? ''} placeholder="Watch" /></div>
+        <div><NumberInput name="threshold_alert" defaultValue={kpi?.threshold_alert ?? ''} placeholder="Alert" /></div>
+        <div><NumberInput name="threshold_escalate" defaultValue={kpi?.threshold_escalate ?? ''} placeholder="Escalate" /></div>
       </div>
 
       <label className="f">Mô tả / cách đọc</label>

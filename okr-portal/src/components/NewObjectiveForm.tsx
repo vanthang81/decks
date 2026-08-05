@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import SearchSelect from '@/components/SearchSelect';
+import NumberInput from '@/components/NumberInput';
 import type { Level } from '@/lib/okr';
 
 type UserOpt = { email: string; name: string; role: string; unit_id: string | null; unit_name: string | null };
@@ -167,8 +168,8 @@ export default function NewObjectiveForm({
                 <option value="increase">Tăng ↑</option>
                 <option value="decrease">Giảm ↓</option>
               </select>
-              {k.metric_type !== 'boolean' && <input className="i" type="number" step="any" placeholder="Đầu kỳ" value={k.start_value} onChange={(e) => setKr(i, { start_value: e.target.value })} />}
-              {k.metric_type !== 'boolean' && <input className="i" type="number" step="any" placeholder="Mục tiêu" value={k.target_value} onChange={(e) => setKr(i, { target_value: e.target.value })} />}
+              {k.metric_type !== 'boolean' && <NumberInput placeholder="Đầu kỳ" value={k.start_value} onValueChange={(f) => setKr(i, { start_value: f })} />}
+              {k.metric_type !== 'boolean' && <NumberInput placeholder="Mục tiêu" value={k.target_value} onValueChange={(f) => setKr(i, { target_value: f })} />}
               {k.metric_type === 'number' && <input className="i" placeholder="Đơn vị (tỷ, chỉ…)" value={k.unit_label} onChange={(e) => setKr(i, { unit_label: e.target.value })} />}
               <select className="i" value={k.indicator} onChange={(e) => setKr(i, { indicator: e.target.value })} title="Loại chỉ số">
                 <option value="lagging">Kết quả (lagging)</option>

@@ -2,6 +2,7 @@ import HelpTip from '@/components/HelpTip';
 import SiteHeader from '@/components/SiteHeader';
 import ProjectsList from '@/components/ProjectsList';
 import SearchSelect from '@/components/SearchSelect';
+import NumberInput from '@/components/NumberInput';
 import PeriodPicker from '@/components/PeriodPicker';
 import { requireUser } from '@/lib/current-user';
 import { listUnits } from '@/lib/org';
@@ -64,7 +65,7 @@ function ProjectFields({
       <div className="row">
         <div><label className="f">Bắt đầu</label><input className="i" type="date" name="start_on" /></div>
         <div><label className="f">Hạn</label><input className="i" type="date" name="due_on" /></div>
-        <div><label className="f">NS kế hoạch (VND)</label><input className="i" name="budget_planned" defaultValue="0" /></div>
+        <div><label className="f">NS kế hoạch (VND)</label><NumberInput name="budget_planned" defaultValue="0" /></div>
       </div>
       <label className="f">Mô tả</label>
       <textarea className="i" name="description" placeholder="Mục tiêu, phạm vi dự án…" />

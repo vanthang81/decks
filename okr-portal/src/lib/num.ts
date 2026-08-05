@@ -14,8 +14,8 @@ export function parseNum(raw: unknown, def = 0): number {
     // chỉ có ',' → dấu thập phân
     s = s.replace(',', '.');
   } else if (hasDot) {
-    // chỉ có '.': nếu là nhóm nghìn (1.000.000 / 500.000) thì bỏ; nếu là thập phân (12.5) thì giữ
-    if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+    // chỉ có '.': nếu là nhóm nghìn (1.000.000 / -500.000) thì bỏ; nếu là thập phân (12.5) thì giữ
+    if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
   }
   const v = Number(s);
   return Number.isFinite(v) ? v : def;

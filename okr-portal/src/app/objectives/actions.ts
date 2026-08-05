@@ -108,8 +108,9 @@ export async function createObjectiveAction(fd: FormData) {
       const kt = String(k.title ?? '').trim();
       if (!kt) continue;
       const mt = (['number', 'percent', 'currency', 'boolean'].includes(String(k.metric_type)) ? k.metric_type : 'number') as MetricType;
-      const start = Number(k.start_value ?? 0) || 0;
-      const target = Number(k.target_value ?? (mt === 'boolean' ? 1 : 100)) || (mt === 'boolean' ? 1 : 100);
+      // parseNum: nhận cả số đã format dấu nghìn ("2.204.000.000") lẫn số thô.
+      const start = parseNum(k.start_value, 0);
+      const target = parseNum(k.target_value, mt === 'boolean' ? 1 : 100);
       await createKeyResult({
         objective_id: id,
         title: kt,
@@ -119,7 +120,7 @@ export async function createObjectiveAction(fd: FormData) {
         start_value: start,
         target_value: target,
         current_value: start,
-        weight: Number(k.weight ?? 1) || 1,
+        weight: parseNum(k.weight, 1) || 1,
         kpi_source: null,
         indicator: (k.indicator === 'leading' ? 'leading' : 'lagging') as Indicator,
       }).catch(() => {});

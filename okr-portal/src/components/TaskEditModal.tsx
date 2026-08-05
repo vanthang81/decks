@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ConfirmButton from '@/components/ConfirmButton';
 import SearchSelect from '@/components/SearchSelect';
+import NumberInput from '@/components/NumberInput';
 import CommentThread from '@/components/CommentThread';
 import type { TaskRow } from '@/lib/initiatives';
 import type { PersonOpt, UnitOpt, ProjectOpt } from '@/components/ExecutionTabs';
@@ -167,11 +168,11 @@ export default function TaskEditModal({
               <div className="row">
                 <div>
                   <label className="f">NS kế hoạch (VND)</label>
-                  <input className="i" name="budget_planned" defaultValue={task.budget_planned} />
+                  <NumberInput name="budget_planned" defaultValue={task.budget_planned} />
                 </div>
                 <div>
                   <label className="f">Đã chi (VND)</label>
-                  <input className="i" name="budget_actual" defaultValue={task.budget_actual} />
+                  <NumberInput name="budget_actual" defaultValue={task.budget_actual} />
                 </div>
               </div>
             </>
