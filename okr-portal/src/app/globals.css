@@ -8,7 +8,7 @@
   --muted: #7A6F6A;
   --label: #9A3A44;          /* nhãn ô nhập (đầu đề trường) — maroon dịu, tách rõ với chữ nhập màu --ink */
   --line: #EDE7E0;
-  --cal-line: #F3EFE9;       /* kẻ ô lịch — nhạt hơn --line cho lưới dịu, đỡ đậm */
+  --cal-line: #F6E9EA;       /* kẻ ô lịch — pale maroon-tint (giống nền nút "Tất cả"), rất dịu */
   --bg: #FAF6F0;             /* ivory BTMH */
   --card: #ffffff;
   --radius: 12px;
