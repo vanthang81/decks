@@ -10,6 +10,7 @@ import { listUsers } from '@/lib/users';
 import { getCurrentPeriod } from '@/lib/periods';
 import { listKpiResults } from '@/lib/kpi-values';
 import KpiResultCell from '@/components/KpiResultCell';
+import KpiOwnerFields from '@/components/KpiOwnerFields';
 import EditModal from '@/components/EditModal';
 import NavIcon from '@/components/NavIcon';
 import { BSC_PERSPECTIVES, BSC_PERSPECTIVE_LABEL, BSC_PERSPECTIVE_ICON } from '@/lib/okr';
@@ -118,38 +119,14 @@ function KpiFields({
         </div>
       </div>
 
-      <div className="row">
-        <div>
-          <label className="f">Module (KRA)</label>
-          <input className="i" name="module" list="kpi-modules" defaultValue={kpi?.module ?? ''} placeholder="Chọn / gõ module" />
-        </div>
-        <div>
-          <label className="f">Đơn vị chủ (Khối/Phòng)</label>
-          <select className="i" name="unit_id" defaultValue={kpi?.unit_id ?? ''}>
-            <option value="">— Không gắn —</option>
-            {divisions.map((u) => (
-              <option key={u.id} value={u.id}>{u.name} ({u.type === 'division' ? 'Khối' : 'Phòng'})</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="row">
-        <div>
-          <label className="f">Business owner (tạo kết quả)</label>
-          <select className="i" name="business_owner" defaultValue={kpi?.business_owner ?? ''}>
-            <option value="">— Chưa gán —</option>
-            {users.map((u) => <option key={u.email} value={u.email}>{u.display_name || u.email}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="f">Measurement owner (đo)</label>
-          <select className="i" name="measurement_owner" defaultValue={kpi?.measurement_owner ?? ''}>
-            <option value="">— Chưa gán —</option>
-            {users.map((u) => <option key={u.email} value={u.email}>{u.display_name || u.email}</option>)}
-          </select>
-        </div>
-      </div>
+      <KpiOwnerFields
+        units={divisions.map((u) => ({ id: u.id, name: u.name, type: u.type }))}
+        users={users.map((u) => ({ email: u.email, name: u.display_name || u.email, role: u.role, unit_id: u.unit_id }))}
+        defModule={kpi?.module ?? ''}
+        defUnit={kpi?.unit_id ?? ''}
+        defBusiness={kpi?.business_owner ?? ''}
+        defMeasure={kpi?.measurement_owner ?? ''}
+      />
 
       <label className="f">3 ngưỡng cảnh báo (Watch · Alert · Escalate)</label>
       <div className="row">
