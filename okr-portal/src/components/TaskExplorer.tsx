@@ -518,10 +518,10 @@ export default function TaskExplorer({
       </div>
 
       {view === 'kanban' && (
-        <TasksKanban tasks={sorted} canEditT={(t) => manageSet.has(t.id) || t.owner_email?.toLowerCase() === emailLc} move={move} onOpen={(t) => setEditing(t)} />
+        <TasksKanban tasks={sorted} canEditT={(t) => manageSet.has(t.id) || t.owner_email?.toLowerCase() === emailLc} move={move} onOpen={(t) => setEditing(t)} waiting={waitingTitles} />
       )}
       {view === 'timeline' && (
-        <TasksGantt tasks={sorted} onOpen={(t) => setEditing(t)} />
+        <TasksGantt tasks={sorted} onOpen={(t) => setEditing(t)} waiting={waitingTitles} />
       )}
 
       {view === 'list' && <>
@@ -659,12 +659,13 @@ function effKindT(t: TaskRow): 'project' | 'subproject' | 'action' {
   return t.kind !== 'action' && !t.has_children ? 'action' : t.kind;
 }
 function TasksKanban({
-  tasks, canEditT, move, onOpen,
+  tasks, canEditT, move, onOpen, waiting,
 }: {
   tasks: TaskRow[];
   canEditT: (t: TaskRow) => boolean;
   move: (id: string, status: Status) => Promise<void>;
   onOpen: (t: TaskRow) => void;
+  waiting: (id: string) => string[];
 }) {
   const router = useRouter();
   const [cards, setCards] = useState<TaskRow[]>(tasks);
@@ -727,6 +728,7 @@ function TasksKanban({
                       <div className="kb-card-title">
                         {c.code && <span className="okr-code" style={{ fontSize: 10, marginRight: 4 }}>{c.code}</span>}{c.title}
                       </div>
+                      {waiting(c.id).length > 0 && <div className="kb-card-wait"><WaitBadge titles={waiting(c.id)} /></div>}
                       {c.unit_name && <div className="kb-card-unit">🏢 {c.unit_name}</div>}
                       <div className="kb-card-ctx">
                         {c.objective_code && <span className="ctx-chip ctx-o">🎯 {c.objective_code}</span>}
@@ -754,7 +756,7 @@ function TasksKanban({
 }
 
 // ───────── Gantt cho /tasks (read-only, bấm mở popup) ─────────
-function TasksGantt({ tasks, onOpen }: { tasks: TaskRow[]; onOpen: (t: TaskRow) => void }) {
+function TasksGantt({ tasks, onOpen, waiting }: { tasks: TaskRow[]; onOpen: (t: TaskRow) => void; waiting: (id: string) => string[] }) {
   const parseD = (s: string) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
   const dayDiff = (a: Date, b: Date) => Math.round((b.getTime() - a.getTime()) / 86400000);
   const dated = tasks.filter((c) => c.start_on || c.due_on);
@@ -802,6 +804,7 @@ function TasksGantt({ tasks, onOpen }: { tasks: TaskRow[]; onOpen: (t: TaskRow) 
                 {ek !== 'action' && <><span className={`badge ${KIND_CLS[ek]}`} style={{ fontSize: 10 }}>{KIND_LABEL[ek]}</span>{' '}</>}
                 {c.code && <span className="okr-code" style={{ fontSize: 9.5, marginRight: 3 }}>{c.code}</span>}
                 {dl !== 'none' && <><DeadlineBadge t={c} /> </>}
+                {waiting(c.id).length > 0 && <><span className="dl-badge dl-wait" style={{ fontSize: 9.5 }} title={`Phải xong trước: ${waiting(c.id).join(' · ')}`}>⏳{waiting(c.id).length}</span> </>}
                 <span className="gantt-name">{c.title}</span>
               </div>
               <div className="gantt-track">
