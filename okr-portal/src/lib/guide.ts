@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-04.90';
+export const GUIDE_VERSION = '2026-08-05.91';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -594,6 +594,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '05/08/2026 (Lịch tháng đẹp & chuyên nghiệp hơn)',
+    items: [
+      'Lịch xem Tháng nay lấp đầy ngày "tràn" của tháng trước/sau (hiển thị mờ) như Google/Apple — hết ô trống trơ và hàng cuối chỉ có 1 ngày lẻ loi; lưới gọn, đều, dễ đọc trên máy tính.',
+      'Thêm nền ấm nhẹ cho cột cuối tuần (T7/CN) + tiêu đề thứ đậm hơn, ô "hôm nay" viền nổi rõ — nhìn cân đối, chuyên nghiệp hơn.',
+    ],
+  },
   {
     date: '04/08/2026 (Form mẫu & Nhập OKR hàng loạt qua Excel)',
     items: [

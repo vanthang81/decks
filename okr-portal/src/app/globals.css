@@ -861,21 +861,26 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
 .cal-leg-hint { font-style: italic; }
 .cal-card { padding: 0; overflow: hidden; }
 .cal-wdrow { display: grid; grid-template-columns: repeat(7, 1fr); }
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 116px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 112px; }
 .cal-grid-week { grid-auto-rows: 248px; }
-.cal-wd { background: var(--primary); color: rgba(255,255,255,.92); font-weight: 700; font-size: 12px; text-align: center; padding: 8px 4px; }
+.cal-wd { background: var(--primary); color: rgba(255,255,255,.92); font-weight: 700; font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; text-align: center; padding: 9px 4px; }
+.cal-wd-wknd { background: var(--primary-dark); }
 .cal-wd-today { background: var(--primary-dark); box-shadow: inset 0 -3px 0 var(--accent); }
 /* Xem theo NGÀY (agenda) */
 .cal-day-card { padding: 16px 18px; }
 .cal-day-head { font-weight: 800; font-size: 16px; margin-bottom: 8px; }
-.cal-cell { height: 116px; min-width: 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 4px; display: flex; flex-direction: column; gap: 3px; align-items: stretch; text-align: left; background: #fff; font: inherit; cursor: pointer; overflow: hidden; }
+.cal-cell { height: 112px; min-width: 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 5px 6px; display: flex; flex-direction: column; gap: 3px; align-items: stretch; text-align: left; background: #fff; font: inherit; cursor: pointer; overflow: hidden; transition: background .12s; }
 .cal-cell:nth-child(7n) { border-right: 0; }
 .cal-cell.cal-has:hover, .cal-cell:hover { background: var(--primary-tint); }
+/* Cuối tuần: nền hơi ấm để tách nhịp; ngày tràn tháng khác: mờ đi cho lưới luôn đầy mà không gây rối */
+.cal-cell.cal-wknd { background: #FCFAF6; }
+.cal-cell.cal-oth { background: #FAF7F2; }
+.cal-cell.cal-oth .cal-day { color: #C2B6A5; font-weight: 600; }
 .cal-empty { background: #FBF8F3; cursor: default; }
 .cal-empty:hover { background: #FBF8F3; }
 .cal-day { font-size: 12.5px; font-weight: 700; color: var(--muted); padding: 1px 3px; align-self: flex-start; }
-.cal-today .cal-day { background: var(--primary); color: #fff; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
-.cal-today { background: var(--primary-tint); }
+.cal-cell.cal-today { background: var(--primary-tint); box-shadow: inset 0 0 0 2px var(--primary); position: relative; z-index: 1; }
+.cal-cell.cal-today .cal-day { background: var(--primary); color: #fff; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; padding: 0; font-weight: 700; }
 .cal-events { display: flex; flex-direction: column; gap: 2px; overflow: hidden; min-height: 0; min-width: 0; }
 .cal-ev { font-size: 11px; padding: 2px 5px; border-radius: 5px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
 .cal-ev.cal-task { background: var(--primary); }

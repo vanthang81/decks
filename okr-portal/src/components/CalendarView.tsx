@@ -68,15 +68,16 @@ export default function CalendarView({
     return Array.from({ length: 7 }, (_, i) => { const x = new Date(mon); x.setDate(mon.getDate() + i); return iso(x); });
   }, [anchor]);
 
-  // Ô lưới tháng.
+  // Ô lưới tháng — gồm cả ngày "tràn" của tháng trước/sau (hiển thị mờ) để lưới luôn ĐẦY & gọn
+  // như Google/Apple Calendar (không còn ô trống trơ, không còn hàng cuối lẻ loi 1 ngày).
   const monthCells = useMemo(() => {
-    const daysInMonth = new Date(year, month0 + 1, 0).getDate();
     const startWeekday = (new Date(year, month0, 1).getDay() + 6) % 7;
-    const c: (number | null)[] = [];
-    for (let i = 0; i < startWeekday; i++) c.push(null);
-    for (let d = 1; d <= daysInMonth; d++) c.push(d);
-    while (c.length % 7 !== 0) c.push(null);
-    return c;
+    const daysInMonth = new Date(year, month0 + 1, 0).getDate();
+    const total = Math.ceil((startWeekday + daysInMonth) / 7) * 7; // 35 hoặc 42 ô (tuần đủ)
+    return Array.from({ length: total }, (_, i) => {
+      const dt = new Date(year, month0, 1 - startWeekday + i);
+      return { ds: iso(dt), day: dt.getDate(), inMonth: dt.getMonth() === month0 };
+    });
   }, [year, month0]);
 
   const heading =
@@ -93,13 +94,14 @@ export default function CalendarView({
 
   const scopeHref = (s: 'mine' | 'all') => `/calendar?view=${view}&d=${anchor}${s === 'all' ? '&scope=all' : ''}`;
 
-  const cell = (ds: string, dayNum: number, maxShow: number) => {
+  const cell = (ds: string, dayNum: number, maxShow: number, inMonth = true, col = 0) => {
     const evs = byDate.get(ds) ?? [];
     const isToday = ds === todayStr;
+    const wknd = col % 7 >= 5; // T7 / CN
     return (
       <button
         type="button"
-        className={`cal-cell${isToday ? ' cal-today' : ''}${evs.length ? ' cal-has' : ''}`}
+        className={`cal-cell${isToday ? ' cal-today' : ''}${evs.length ? ' cal-has' : ''}${inMonth ? '' : ' cal-oth'}${wknd ? ' cal-wknd' : ''}`}
         onClick={() => setDayOpen(ds)}
         title={evs.length ? `${evs.length} sự kiện — bấm để xem` : 'Bấm để thêm cuộc họp / công việc'}
       >
@@ -143,11 +145,13 @@ export default function CalendarView({
 
       {view === 'month' && (
         <div className="card cal-card">
-          <div className="cal-wdrow">{WD.map((w) => <div key={w} className="cal-wd">{w}</div>)}</div>
+          <div className="cal-wdrow">
+            {WD.map((w, i) => (
+              <div key={w} className={`cal-wd${i >= 5 ? ' cal-wd-wknd' : ''}`}>{w}</div>
+            ))}
+          </div>
           <div className="cal-grid">
-            {monthCells.map((d, i) =>
-              d === null ? <div key={i} className="cal-cell cal-empty" /> : cell(`${year}-${pad(month0 + 1)}-${pad(d)}`, d, 3),
-            )}
+            {monthCells.map((c, i) => cell(c.ds, c.day, 3, c.inMonth, i))}
           </div>
         </div>
       )}
@@ -160,7 +164,7 @@ export default function CalendarView({
             ))}
           </div>
           <div className="cal-grid cal-grid-week">
-            {weekDays.map((ds) => cell(ds, Number(ds.slice(8, 10)), 6))}
+            {weekDays.map((ds, i) => cell(ds, Number(ds.slice(8, 10)), 6, true, i))}
           </div>
         </div>
       )}
