@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-06.99';
+export const GUIDE_VERSION = '2026-08-06.100';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -594,6 +594,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '06/08/2026 (Bấm công việc: xem chi tiết trước, sửa sau)',
+    items: [
+      'Bấm vào một công việc nay mở CHI TIẾT (chỉ xem) gọn gàng — tiêu đề, trạng thái, phụ trách, đơn vị, hạn, ngân sách, phụ thuộc. Muốn chỉnh thì bấm nút "✏️ Sửa công việc" mới vào form chỉnh sửa; ai không có quyền sửa chỉ thấy phần xem.',
+    ],
+  },
   {
     date: '06/08/2026 (Phân quyền xem OKR theo đơn vị cho Nhân viên)',
     items: [

@@ -9,6 +9,9 @@ import { unitTreeOptions } from '@/lib/unit-options';
 import NumberInput from '@/components/NumberInput';
 import MultiSelect, { type MSOption } from '@/components/MultiSelect';
 import CommentThread from '@/components/CommentThread';
+import UserLink from '@/components/UserLink';
+import { ProgressBar } from '@/components/ui';
+import { fmtVnd, fmtDate } from '@/lib/format';
 import type { TaskRow } from '@/lib/initiatives';
 import type { PersonOpt, UnitOpt, ProjectOpt } from '@/components/ExecutionTabs';
 
@@ -16,6 +19,8 @@ type Status = 'todo' | 'in_progress' | 'blocked' | 'done' | 'canceled';
 const STATUS_LABEL: Record<Status, string> = {
   todo: 'Chưa làm', in_progress: 'Đang làm', blocked: 'Vướng', done: 'Xong', canceled: 'Huỷ',
 };
+const STATUS_CLS: Record<Status, string> = { todo: 'gray', in_progress: 'blue', blocked: 'red', done: 'green', canceled: 'gray' };
+const PRIO_LABEL: Record<string, string> = { high: 'Cao', medium: 'Trung bình', low: 'Thấp' };
 const COLUMNS: Status[] = ['todo', 'in_progress', 'blocked', 'done', 'canceled'];
 const KIND_LABEL: Record<string, string> = { project: 'Dự án', subproject: 'Tiểu dự án', action: 'Công việc' };
 
@@ -48,6 +53,11 @@ export default function TaskEditModal({
   const [pending, start] = useTransition();
   const [err, setErr] = useState('');
   const editable = canManage || isAssignee;
+  // Bấm vào việc → mở CHI TIẾT (chỉ xem) trước; bấm "Sửa" mới sang form chỉnh sửa (CFO 06/08).
+  const [mode, setMode] = useState<'view' | 'edit'>('view');
+  const depLabels = depInitial
+    .map((id) => depOptions.find((o) => o.value === id)?.label)
+    .filter(Boolean) as string[];
 
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -112,6 +122,45 @@ export default function TaskEditModal({
           )}
         </div>
 
+        {mode === 'view' ? (
+          <div className="te-viewbody">
+            <div className="te-title">{task.title}</div>
+            <div className="te-vbadges">
+              <span className={`badge ${STATUS_CLS[task.status]}`}>{STATUS_LABEL[task.status]}</span>
+              {task.priority === 'high' && <span className="badge red">Ưu tiên cao</span>}
+              {task.kind !== 'action' && task.has_children && <span className="badge blue">{KIND_LABEL[task.kind]}</span>}
+            </div>
+            {task.description && <p className="te-desc">{task.description}</p>}
+            <table className="t te-detail" style={{ marginTop: 10 }}>
+              <tbody>
+                <tr><td className="muted">Tiến độ</td><td>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ width: 150, display: 'inline-block' }}><ProgressBar value={task.progress} /></span>
+                    <b className="mono">{task.progress.toFixed(0)}%</b>
+                  </span>
+                </td></tr>
+                <tr><td className="muted">Phụ trách</td><td>
+                  {task.owner_email || task.owner_name ? <UserLink email={task.owner_email} name={task.owner_name} /> : <span className="muted">Chưa giao</span>}
+                </td></tr>
+                <tr><td className="muted">Đơn vị</td><td>{task.unit_name || <span className="muted">—</span>}</td></tr>
+                <tr><td className="muted">Ưu tiên</td><td>{PRIO_LABEL[task.priority] ?? task.priority}</td></tr>
+                <tr><td className="muted">Bắt đầu</td><td>{task.start_on ? fmtDate(task.start_on) : <span className="muted">—</span>}</td></tr>
+                <tr><td className="muted">Hạn</td><td>{task.due_on ? fmtDate(task.due_on) : <span className="muted">—</span>}</td></tr>
+                <tr><td className="muted">NS kế hoạch</td><td className="mono">{fmtVnd(task.budget_planned)}</td></tr>
+                <tr><td className="muted">Đã chi</td><td className="mono">{fmtVnd(task.budget_actual)}</td></tr>
+                {depLabels.length > 0 && <tr><td className="muted">⏳ Phụ thuộc</td><td>{depLabels.join(' · ')}</td></tr>}
+              </tbody>
+            </table>
+            {!editable && <p className="muted" style={{ fontSize: 12.5, marginTop: 8 }}>Bạn chỉ có quyền xem việc này.</p>}
+            <div className="te-actions">
+              <div></div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button type="button" className="btn ghost sm" onClick={onClose}>Đóng</button>
+                {editable && <button type="button" className="btn sm" onClick={() => { setErr(''); setMode('edit'); }}>✏️ Sửa công việc</button>}
+              </div>
+            </div>
+          </div>
+        ) : (
         <form onSubmit={submit}>
           {canManage ? (
             <>
@@ -237,7 +286,7 @@ export default function TaskEditModal({
               )}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button type="button" className="btn ghost sm" onClick={onClose}>Đóng</button>
+              <button type="button" className="btn ghost sm" onClick={() => { setErr(''); setMode('view'); }}>← Xem chi tiết</button>
               {editable && (
                 <button type="submit" className="btn sm" disabled={pending}>
                   {pending ? 'Đang lưu…' : 'Lưu thay đổi'}
@@ -246,6 +295,7 @@ export default function TaskEditModal({
             </div>
           </div>
         </form>
+        )}
 
         <div className="okr-modal-cmt">
           <CommentThread entityType="initiative" entityId={task.id} users={users} defaultOpen canModerate={canManage} />
