@@ -8,6 +8,9 @@ import ConfirmButton from '@/components/ConfirmButton';
 import SearchSelect from '@/components/SearchSelect';
 import { unitTreeOptions } from '@/lib/unit-options';
 import NumberInput from '@/components/NumberInput';
+import UserLink from '@/components/UserLink';
+import { ProgressBar } from '@/components/ui';
+import { fmtVnd, fmtDate } from '@/lib/format';
 
 // Hằng số lặp lại từ lib (KHÔNG import initiatives.ts để tránh kéo pg vào client bundle).
 type Status = 'todo' | 'in_progress' | 'blocked' | 'done' | 'canceled';
@@ -26,6 +29,7 @@ const KIND_LABEL: Record<Kind, string> = {
   action: 'Công việc',
 };
 const KIND_CLS: Record<Kind, string> = { project: 'blue', subproject: 'amber', action: 'gray' };
+const PRIO_LABEL: Record<'low' | 'medium' | 'high', string> = { high: 'Cao', medium: 'Trung bình', low: 'Thấp' };
 // Nút 'Dự án'/'Tiểu dự án' KHÔNG có con = thực chất là 1 công việc → hiển thị "Công việc"
 // (tránh nhầm với "Thuộc dự án" = gói PRJ). childParents = tập id các nút có con.
 function effKind(c: { id: string; kind: Kind }, childParents: Set<string>): Kind {
@@ -453,6 +457,8 @@ function EditModal({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [err, setErr] = useState<string | null>(null);
+  // Bấm vào việc → mở CHI TIẾT (chỉ xem) trước; bấm "Sửa" mới sang form (CFO 06/08, đồng bộ TaskEditModal).
+  const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [addKid, setAddKid] = useState(false);
   const [inProject, setInProject] = useState<boolean>(!!card.project_id);
   const [newProj, setNewProj] = useState(false);
@@ -537,18 +543,60 @@ function EditModal({
           </button>
         </div>
 
-        {!canEdit ? (
-          <>
-            <div style={{ fontWeight: 600, marginTop: 4 }}>{card.title}</div>
-            <p className="muted" style={{ margin: '8px 0 0' }}>
-              Bạn không có quyền sửa việc này (chỉ người quản lý OKR hoặc người được giao mới sửa được).
-            </p>
-            <div style={{ marginTop: 14 }}>
-              <button className="btn ghost" type="button" onClick={onClose}>
-                Đóng
-              </button>
+        {mode === 'view' ? (
+          <div className="te-viewbody">
+            <div className="te-links">
+              {card.objective_id && (
+                <Link href={`/objectives/${card.objective_id}`} className="badge gray" onClick={onClose}>
+                  🎯 OKR {card.objective_code || ''}
+                </Link>
+              )}
+              {card.project_id && (
+                <Link href={`/projects/${card.project_id}`} className="badge gray" onClick={onClose}>
+                  🗂 {card.project_code || card.project_name}
+                </Link>
+              )}
+              {card.meeting_id && (
+                <Link href={`/meetings/${card.meeting_id}`} className="badge gray" onClick={onClose}>
+                  🗓 {card.meeting_code || card.meeting_title}
+                </Link>
+              )}
             </div>
-          </>
+            <div className="te-title">{card.title}</div>
+            <div className="te-vbadges">
+              <span className={`badge ${STATUS_CLS[card.status]}`}>{STATUS_LABEL[card.status]}</span>
+              {card.priority === 'high' && <span className="badge red">Ưu tiên cao</span>}
+              {mKind !== 'action' && <span className={`badge ${KIND_CLS[mKind]}`}>{KIND_LABEL[mKind]}</span>}
+            </div>
+            {card.description && <p className="te-desc">{card.description}</p>}
+            <table className="t te-detail" style={{ marginTop: 10 }}>
+              <tbody>
+                <tr><td className="muted">Tiến độ</td><td>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ width: 150, display: 'inline-block' }}><ProgressBar value={card.progress} /></span>
+                    <b className="mono">{Number(card.progress).toFixed(0)}%</b>
+                  </span>
+                </td></tr>
+                <tr><td className="muted">Phụ trách</td><td>
+                  {card.owner_email || card.owner_name ? <UserLink email={card.owner_email} name={card.owner_name} /> : <span className="muted">Chưa giao</span>}
+                </td></tr>
+                <tr><td className="muted">Đơn vị</td><td>{card.unit_name || <span className="muted">—</span>}</td></tr>
+                <tr><td className="muted">Ưu tiên</td><td>{PRIO_LABEL[card.priority] ?? card.priority}</td></tr>
+                <tr><td className="muted">Bắt đầu</td><td>{card.start_on ? fmtDate(card.start_on) : <span className="muted">—</span>}</td></tr>
+                <tr><td className="muted">Hạn</td><td>{card.due_on ? fmtDate(card.due_on) : <span className="muted">—</span>}</td></tr>
+                <tr><td className="muted">NS kế hoạch</td><td className="mono">{fmtVnd(card.budget_planned)}</td></tr>
+                <tr><td className="muted">Đã chi</td><td className="mono">{fmtVnd(card.budget_actual)}</td></tr>
+              </tbody>
+            </table>
+            {!canEdit && <p className="muted" style={{ fontSize: 12.5, marginTop: 8 }}>Bạn chỉ có quyền xem việc này (chỉ người quản lý OKR hoặc người được giao mới sửa được).</p>}
+            <div className="te-actions">
+              <div></div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button type="button" className="btn ghost sm" onClick={onClose}>Đóng</button>
+                {canEdit && <button type="button" className="btn sm" onClick={() => { setErr(null); setMode('edit'); }}>✏️ Sửa</button>}
+              </div>
+            </div>
+          </div>
         ) : (
           <>
           <form onSubmit={submit}>
@@ -845,6 +893,9 @@ function EditModal({
             <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
               <button className="btn" type="submit" disabled={pending}>
                 {pending ? 'Đang lưu…' : 'Lưu'}
+              </button>
+              <button className="btn ghost" type="button" onClick={() => { setErr(null); setMode('view'); }} disabled={pending}>
+                ← Xem chi tiết
               </button>
               <button className="btn ghost" type="button" onClick={onClose} disabled={pending}>
                 Huỷ
