@@ -5,7 +5,7 @@ import { ProgressBar, StatusBadge } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
 import { getCurrentPeriod, listPeriods } from '@/lib/periods';
 import { listObjectivesForOwner } from '@/lib/okr';
-import { listInitiativesForOwner, INIT_STATUS_LABEL } from '@/lib/initiatives';
+import { listInitiativesForOwner, taskCountsForOwner, INIT_STATUS_LABEL } from '@/lib/initiatives';
 import { fmtVnd, fmtDate } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
@@ -15,6 +15,13 @@ export default async function MyPage() {
   const period = (await getCurrentPeriod()) ?? (await listPeriods())[0] ?? null;
   const objectives = period ? await listObjectivesForOwner(user.email, period.id) : [];
   const initiatives = await listInitiativesForOwner(user.email);
+  const tc = await taskCountsForOwner(user.email);
+  const myTiles: { n: number; l: string; color?: string; href: string }[] = [
+    { n: tc.total, l: 'Tổng công việc', href: '/tasks?mine=1' },
+    { n: tc.doing, l: 'Đang làm', color: '#2563eb', href: '/tasks?mine=1&status=in_progress' },
+    { n: tc.overdue, l: 'Quá hạn', color: tc.overdue > 0 ? '#dc2626' : undefined, href: '/tasks?mine=1&overdue=1' },
+    { n: tc.done, l: 'Đã hoàn thành', color: '#16a34a', href: '/tasks?mine=1&status=done' },
+  ];
 
   return (
     <>
@@ -33,6 +40,18 @@ export default async function MyPage() {
               + Tạo OKR cá nhân
             </Link>
           )}
+        </div>
+
+        {/* Tổng quan công việc cá nhân — mỗi ô bấm được → mở trang Công việc đã lọc sẵn */}
+        <div className="card">
+          <div className="stat prof-tiles my-tiles">
+            {myTiles.map((t) => (
+              <Link key={t.l} href={t.href} className="my-tile">
+                <div className="n" style={t.color ? { color: t.color } : undefined}>{t.n}</div>
+                <div className="l">{t.l}</div>
+              </Link>
+            ))}
+          </div>
         </div>
 
         <div className="card">
@@ -67,7 +86,7 @@ export default async function MyPage() {
                 {initiatives.map((i) => (
                   <tr key={i.id}>
                     <td>
-                      <Link href={i.objective_id ? `/objectives/${i.objective_id}` : '/tasks'} className="tbl-link">
+                      <Link href={`/tasks?task=${i.id}`} className="tbl-link" title="Mở chi tiết công việc">
                         {i.code && <span className="okr-code" style={{ marginRight: 6 }}>{i.code}</span>}
                         {i.title}
                       </Link>

@@ -202,6 +202,22 @@ export async function listInitiativesForOwner(email: string): Promise<Initiative
   );
 }
 
+// Số liệu tổng quan công việc cá nhân (mọi trạng thái) — cho tiles ở trang "Của tôi".
+export type MyTaskCounts = { total: number; doing: number; todo: number; blocked: number; done: number; overdue: number };
+export async function taskCountsForOwner(email: string): Promise<MyTaskCounts> {
+  const r = await queryOne<MyTaskCounts>(
+    `SELECT count(*)::int AS total,
+            count(*) FILTER (WHERE status='in_progress')::int AS doing,
+            count(*) FILTER (WHERE status='todo')::int AS todo,
+            count(*) FILTER (WHERE status='blocked')::int AS blocked,
+            count(*) FILTER (WHERE status='done')::int AS done,
+            count(*) FILTER (WHERE due_on < current_date AND status NOT IN ('done','canceled'))::int AS overdue
+       FROM okr_initiatives WHERE lower(owner_email)=lower($1)`,
+    [email],
+  );
+  return r ?? { total: 0, doing: 0, todo: 0, blocked: 0, done: 0, overdue: 0 };
+}
+
 export async function getInitiative(id: string): Promise<Initiative | null> {
   return queryOne<Initiative>(`${SELECT} WHERE i.id=$1`, [id]);
 }

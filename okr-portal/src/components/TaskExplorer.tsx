@@ -121,6 +121,10 @@ export default function TaskExplorer({
   deleteAction,
   move,
   depsMap = {},
+  initialTaskId,
+  initialMine,
+  initialStatus,
+  initialOverdue,
 }: {
   tasks: TaskRow[];
   depsMap?: Record<string, string[]>;
@@ -134,6 +138,10 @@ export default function TaskExplorer({
   editAction: (fd: FormData) => Promise<void>;
   deleteAction: (fd: FormData) => Promise<void>;
   move: (id: string, status: Status) => Promise<void>;
+  initialTaskId?: string;
+  initialMine?: boolean;
+  initialStatus?: string;
+  initialOverdue?: boolean;
 }) {
   const manageSet = useMemo(() => new Set(manageIds), [manageIds]);
   const taskById = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks]);
@@ -147,6 +155,13 @@ export default function TaskExplorer({
     return out;
   };
   const [editing, setEditing] = useState<TaskRow | null>(null);
+  // Mở sẵn popup chi tiết 1 việc khi tới từ link ?task=<id> (vd bấm việc ở trang "Của tôi").
+  useEffect(() => {
+    if (!initialTaskId) return;
+    const t = tasks.find((x) => x.id === initialTaskId);
+    if (t) setEditing(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialTaskId]);
   const [view, setView] = useState<'list' | 'kanban' | 'timeline'>('list');
   useEffect(() => {
     const v = typeof window !== 'undefined' ? localStorage.getItem('okrTasksView') : null;
@@ -171,13 +186,14 @@ export default function TaskExplorer({
   const [fUnit, setFUnit] = useState('');
   const [fObj, setFObj] = useState('');
   const [fProject, setFProject] = useState('');
-  const [fStatus, setFStatus] = useState('');
+  const [fStatus, setFStatus] = useState(initialStatus ?? '');
   const [fPrio, setFPrio] = useState('');
   const [fKind, setFKind] = useState('');
   const [fPeriod, setFPeriod] = useState('');
-  const [fOverdue, setFOverdue] = useState(false);
-  const [fMine, setFMine] = useState(false);
-  const [hideDone, setHideDone] = useState(true); // mặc định ẩn việc đã xong cho gọn
+  const [fOverdue, setFOverdue] = useState(!!initialOverdue);
+  const [fMine, setFMine] = useState(!!initialMine);
+  // Ẩn việc đã xong cho gọn — TRỪ khi được lọc sẵn theo trạng thái "done" (từ tile "Đã hoàn thành").
+  const [hideDone, setHideDone] = useState(initialStatus !== 'done');
   const [repOpen, setRepOpen] = useState(true); // hiện báo cáo tổng quan
   const [dim, setDim] = useState<'unit' | 'project' | 'owner' | 'prio'>('unit'); // chiều phân bổ (breakout)
 

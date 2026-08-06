@@ -12,7 +12,11 @@ import { editInitiativeAction, deleteInitiativeAction, moveInitiativeAction } fr
 
 export const dynamic = 'force-dynamic';
 
-export default async function TasksPage() {
+export default async function TasksPage({
+  searchParams,
+}: {
+  searchParams: { task?: string; mine?: string; status?: string; overdue?: string };
+}) {
   const user = await requireUser();
   const [access, units, all, users, projects] = await Promise.all([
     loadAccess(),
@@ -79,6 +83,10 @@ export default async function TasksPage() {
           editAction={editInitiativeAction}
           deleteAction={deleteInitiativeAction}
           move={moveInitiativeAction}
+          initialTaskId={searchParams.task}
+          initialMine={!!searchParams.mine}
+          initialStatus={searchParams.status}
+          initialOverdue={!!searchParams.overdue}
         />
       </div>
     </>

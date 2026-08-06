@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-06.97';
+export const GUIDE_VERSION = '2026-08-06.98';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -594,6 +594,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '06/08/2026 (Của tôi: tổng quan công việc + mở chi tiết việc)',
+    items: [
+      'Trang "Của tôi" thêm 4 ô tổng quan công việc cá nhân: Tổng công việc · Đang làm · Quá hạn · Đã hoàn thành. Bấm mỗi ô → mở trang Công việc đã lọc sẵn (truy vết).',
+      'Bấm một công việc ở "Của tôi" nay MỞ THẲNG chi tiết việc đó (popup) thay vì nhảy ra OKR chung; link "Mở OKR" vẫn giữ ở cột cuối.',
+    ],
+  },
   {
     date: '06/08/2026 (Hồ sơ 360° người dùng — bấm vào tên để mở)',
     items: [
