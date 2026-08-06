@@ -204,7 +204,10 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   `moveInitiativeAction`). **GANTT read-only**: bar start→due theo % ngày, vạch hôm nay, màu theo trạng
   thái. KHÔNG import `initiatives.ts` (tránh kéo `pg` vào client bundle) → hằng số nhãn khai lại trong file.
   List view = children server-render (giữ form thêm/sửa/giao). CSS `.exec-tabs/.kb-*/.gantt-*` ở globals.css.
-- Quyền ĐỌC minh bạch (mọi user xem hết OKR); quyền SỬA giới hạn theo `canManageObjective`.
+- Quyền ĐỌC: điều hành + Giám đốc khối + Trưởng phòng xem TẤT CẢ OKR (minh bạch quản lý); **Nhân viên
+  (staff) CHỈ xem OKR trong phạm vi đơn vị mình** (đơn vị + chuỗi cấp trên align lên) — `objectiveViewScope`/
+  `canViewObjectiveUnit` trong `org.ts`, lọc ở `/objectives` + gác `/objectives/[id]` (CFO 06/08). Quyền SỬA
+  giới hạn theo `canManageObjective`.
   Admin hệ thống (users/org/periods) chỉ `exec` (`canAdmin`), guard không xoá exec cuối/chính mình.
 
 ## Trang (src/app/)

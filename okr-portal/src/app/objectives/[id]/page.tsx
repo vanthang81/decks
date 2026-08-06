@@ -15,7 +15,7 @@ import KeyResultEditButton from '@/components/KeyResultEditButton';
 import { Sparkline } from '@/components/charts';
 import { ProgressBar, LevelBadge, StatusBadge } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
-import { listUnits } from '@/lib/org';
+import { listUnits, objectiveViewScope, canViewObjectiveUnit } from '@/lib/org';
 import { listUsers } from '@/lib/users';
 import {
   getObjective,
@@ -73,6 +73,24 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
   if (!obj) notFound();
 
   const units = await listUnits();
+  // Gác phạm vi ĐỌC: nhân viên chỉ mở được OKR trong đơn vị mình (+ cấp trên align lên) hoặc OKR mình chủ trì.
+  const viewScope = objectiveViewScope(user, units);
+  if (!canViewObjectiveUnit(viewScope, obj, user.email)) {
+    return (
+      <>
+        <SiteHeader active="okr" />
+        <div className="wrap">
+          <div className="card" style={{ borderLeft: '4px solid var(--accent)' }}>
+            <div className="pagetitle" style={{ marginTop: 0 }}>Ngoài phạm vi xem</div>
+            <p className="muted" style={{ margin: '6px 0 0' }}>
+              OKR này thuộc đơn vị khác. Bạn (Nhân viên) chỉ xem được OKR trong phạm vi đơn vị mình.
+              {' '}<Link href="/objectives">← Về OKR của đơn vị tôi</Link>
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  }
   const users = await listUsers();
   const access = await loadAccess();
   const canManage = canEditObjective(user, obj, units, access);

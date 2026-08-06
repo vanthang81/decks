@@ -5,7 +5,7 @@ import PeriodPicker from '@/components/PeriodPicker';
 import HelpTip from '@/components/HelpTip';
 import ImportOkr from '@/components/ImportOkr';
 import { requireUser } from '@/lib/current-user';
-import { listUnits } from '@/lib/org';
+import { listUnits, objectiveViewScope, canViewObjectiveUnit } from '@/lib/org';
 import { unitTreeOptions } from '@/lib/unit-options';
 import { loadAccess, canImportData } from '@/lib/access';
 import {
@@ -35,9 +35,17 @@ export default async function ObjectivesPage({
     : (await getCurrentPeriod()) ?? periods[0] ?? null;
 
   const canImport = canImportData(user, await loadAccess());
-  const objectives = period ? await listObjectivesByPeriod(period.id) : [];
+  const allObjectives = period ? await listObjectivesByPeriod(period.id) : [];
   const overLimit = period ? await ownersOverObjectiveLimit(period.id) : [];
-  const unitOptions = unitTreeOptions(await listUnits(), { excludeCompany: true });
+  const units = await listUnits();
+  // Phạm vi ĐỌC: nhân viên (staff) chỉ thấy OKR trong đơn vị mình + chuỗi cấp trên; điều hành &
+  // trưởng khối/phòng thấy tất cả. Lọc TẠI NGUỒN để không lộ OKR khối khác cho nhân viên.
+  const viewScope = objectiveViewScope(user, units);
+  const objectives = viewScope === null
+    ? allObjectives
+    : allObjectives.filter((o) => canViewObjectiveUnit(viewScope, o, user.email));
+  const scopedView = viewScope !== null;
+  const unitOptions = unitTreeOptions(units, { excludeCompany: true });
 
   // Chỉ truyền field cần cho cây (serializable) sang client component.
   const treeData: TreeObjective[] = objectives.map((o) => ({
@@ -63,9 +71,11 @@ export default async function ObjectivesPage({
       <div className="wrap">
         <div className="flexbtw">
           <div>
-            <div className="pagetitle">Toàn bộ OKR<HelpTip k="okr-cascade" /></div>
+            <div className="pagetitle">{scopedView ? 'OKR của đơn vị tôi' : 'Toàn bộ OKR'}<HelpTip k="okr-cascade" /></div>
             <p className="subtitle">
-              Cây mục tiêu theo alignment: Công ty → Khối → Phòng ban → Cá nhân.
+              {scopedView
+                ? 'Bạn đang xem OKR trong phạm vi đơn vị mình (kèm mục tiêu cấp Công ty/Khối mà đơn vị align lên). Chế độ chỉ xem.'
+                : 'Cây mục tiêu theo alignment: Công ty → Khối → Phòng ban → Cá nhân.'}
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', flex: '0 0 auto' }}>

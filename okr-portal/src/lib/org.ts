@@ -94,6 +94,32 @@ export function manageScope(user: OkrUser, units: Unit[]): Set<string> | null {
   return new Set([user.unit_id]); // staff
 }
 
+/**
+ * Phạm vi ĐỌC OKR. Điều hành + Giám đốc khối + Trưởng phòng = null (xem TẤT CẢ — giữ minh bạch
+ * quản lý xuyên đơn vị). NHÂN VIÊN (staff) = CHỈ trong phạm vi đơn vị mình: đơn vị + hậu duệ +
+ * chuỗi TỔ TIÊN (để vẫn thấy OKR cấp Công ty/Khối mà mình align lên) — KHÔNG thấy OKR các khối khác.
+ */
+export function objectiveViewScope(user: OkrUser, units: Unit[]): Set<string> | null {
+  if (user.role !== 'staff') return null;
+  if (!user.unit_id) return new Set();
+  const s = subtreeIds(units, user.unit_id);
+  for (const a of ancestorIds(units, user.unit_id)) s.add(a);
+  return s;
+}
+
+/** Người này có được XEM 1 OKR không (theo objectiveViewScope). Luôn thấy OKR cấp Công ty + OKR mình chủ trì. */
+export function canViewObjectiveUnit(
+  scope: Set<string> | null,
+  o: { unit_id: string | null; owner_email: string | null; level: string },
+  email: string,
+): boolean {
+  if (scope === null) return true;
+  if (o.level === 'company') return true;
+  if (o.unit_id && scope.has(o.unit_id)) return true;
+  if (o.owner_email && o.owner_email.toLowerCase() === email.toLowerCase()) return true;
+  return false;
+}
+
 export async function createUnit(input: {
   name: string;
   code: string | null;

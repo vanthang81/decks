@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-06.98';
+export const GUIDE_VERSION = '2026-08-06.99';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -594,6 +594,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '06/08/2026 (Phân quyền xem OKR theo đơn vị cho Nhân viên)',
+    items: [
+      'Nhân viên (staff) nay chỉ XEM OKR trong phạm vi ĐƠN VỊ MÌNH (đơn vị + cấp trên align lên: Khối/Công ty), KHÔNG thấy OKR các khối khác. Điều hành & Giám đốc khối/Trưởng phòng vẫn xem toàn bộ (minh bạch quản lý).',
+      'Chế độ CHỈ XEM cho nhân viên — không có nút sửa. Mở nhầm OKR khối khác qua link trực tiếp → báo "Ngoài phạm vi xem".',
+    ],
+  },
   {
     date: '06/08/2026 (Của tôi: tổng quan công việc + mở chi tiết việc)',
     items: [
