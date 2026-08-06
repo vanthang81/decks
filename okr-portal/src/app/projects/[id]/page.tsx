@@ -73,7 +73,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
   const meetingOpts = await listMeetingOptions(user);
   const objectiveOpts = p.period_id ? await listObjectivesWithKrs(p.period_id) : [];
   const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url }));
-  const unitOpts = units.filter((u) => u.type !== 'company').map((u) => ({ id: u.id, name: u.name, type: u.type }));
+  const unitOpts = units.filter((u) => u.type !== 'company').map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort }));
 
   // Tổng quan trạng thái công việc của dự án.
   const TS_C: Record<string, string> = { todo: '#94a3b8', in_progress: '#2563eb', blocked: '#dc2626', done: '#16a34a', canceled: '#cbd5e1' };

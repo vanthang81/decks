@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import ConfirmButton from './ConfirmButton';
 import SearchSelect from '@/components/SearchSelect';
+import { unitTreeOptions } from '@/lib/unit-options';
 import NumberInput from '@/components/NumberInput';
 
 export type ProjData = {
@@ -55,8 +56,6 @@ export default function ProjectEditButton({
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
-  const divisions = units.filter((u) => u.type === 'division');
-  const departments = units.filter((u) => u.type === 'department');
 
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -116,10 +115,7 @@ export default function ProjectEditButton({
                 <div>
                   <label className="f">Đơn vị chủ trì (Khối / Phòng)</label>
                   <SearchSelect name="unit_id" defaultValue={project.unit_id ?? ''} emptyLabel="— Không gắn —"
-                    options={[
-                      ...divisions.map((u) => ({ value: u.id, label: `${u.name} (Khối)` })),
-                      ...departments.map((u) => ({ value: u.id, label: `${u.name} (Phòng)` })),
-                    ]} />
+                    options={unitTreeOptions(units, { excludeCompany: true })} />
                 </div>
                 <div>
                   <label className="f">Trạng thái</label>

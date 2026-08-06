@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import ConfirmButton from './ConfirmButton';
 import SearchSelect from '@/components/SearchSelect';
+import { unitTreeOptions } from '@/lib/unit-options';
 
 export type ObjData = {
   id: string;
@@ -59,8 +60,6 @@ export default function ObjectiveEditButton({
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
-  const divisions = units.filter((u) => u.type === 'division');
-  const departments = units.filter((u) => u.type === 'department');
   const isIndividual = objective.level === 'individual';
 
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -143,10 +142,7 @@ export default function ObjectiveEditButton({
                 <>
                   <label className="f">Đơn vị phụ trách (Khối / Phòng)</label>
                   <SearchSelect name="unit_id" defaultValue={objective.unit_id ?? ''} emptyLabel="— Không gắn —"
-                    options={[
-                      ...divisions.map((u) => ({ value: u.id, label: `${u.name} (Khối)` })),
-                      ...departments.map((u) => ({ value: u.id, label: `${u.name} (Phòng)` })),
-                    ]} />
+                    options={unitTreeOptions(units, { excludeCompany: true })} />
                 </>
               )}
 

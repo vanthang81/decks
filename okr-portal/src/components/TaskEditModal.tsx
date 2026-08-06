@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ConfirmButton from '@/components/ConfirmButton';
 import SearchSelect from '@/components/SearchSelect';
+import { unitTreeOptions } from '@/lib/unit-options';
 import NumberInput from '@/components/NumberInput';
 import MultiSelect, { type MSOption } from '@/components/MultiSelect';
 import CommentThread from '@/components/CommentThread';
@@ -85,8 +86,6 @@ export default function TaskEditModal({
     });
   };
 
-  const divisions = units.filter((u) => u.type === 'division');
-  const depts = units.filter((u) => u.type === 'department');
 
   return (
     <div className="okr-modal-backdrop" onMouseDown={onClose}>
@@ -129,10 +128,7 @@ export default function TaskEditModal({
                 <div>
                   <label className="f">Đơn vị phụ trách</label>
                   <SearchSelect name="unit_id" defaultValue={task.unit_id ?? ''} emptyLabel="— Không gắn —"
-                    options={[
-                      ...divisions.map((u) => ({ value: u.id, label: `${u.name} (Khối)` })),
-                      ...depts.map((u) => ({ value: u.id, label: `${u.name} (Phòng)` })),
-                    ]} />
+                    options={unitTreeOptions(units, { excludeCompany: true })} />
                 </div>
               </div>
               <div className="row">

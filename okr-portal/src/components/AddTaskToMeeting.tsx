@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import SearchSelect from '@/components/SearchSelect';
+import { unitTreeOptions } from '@/lib/unit-options';
 
 type Kr = { id: string; code: string | null; title: string };
 export type ObjOpt = { id: string; code: string | null; title: string; unit_name: string | null; krs: Kr[] };
@@ -39,8 +40,6 @@ export default function AddTaskToMeeting({
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
-  const divisions = units.filter((u) => u.type === 'division');
-  const departments = units.filter((u) => u.type === 'department');
   const krs = useMemo(() => objectives.find((o) => o.id === objId)?.krs ?? [], [objId, objectives]);
 
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -124,10 +123,7 @@ export default function AddTaskToMeeting({
                     name="unit_id"
                     defaultValue=""
                     emptyLabel="— Không gắn —"
-                    options={[
-                      ...divisions.map((u) => ({ value: u.id, label: `${u.name} (Khối)` })),
-                      ...departments.map((u) => ({ value: u.id, label: `${u.name} (Phòng)` })),
-                    ]}
+                    options={unitTreeOptions(units, { excludeCompany: true })}
                   />
                 </div>
               </div>

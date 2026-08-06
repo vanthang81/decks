@@ -55,7 +55,7 @@ export default async function NewObjectivePage({ searchParams }: { searchParams:
               allowedLevels={allowedLevels}
               defaultLevel={defaultLevel}
               levelLabels={LEVEL_LABEL}
-              units={allowedUnits.map((u) => ({ id: u.id, name: u.name, type: u.type }))}
+              units={allowedUnits.map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort }))}
               users={users.map((u) => ({ email: u.email, name: u.display_name || u.email, role: u.role, unit_id: u.unit_id, unit_name: u.unit_name }))}
               periodObjectives={objectives.map((o) => ({ id: o.id, code: o.code, title: o.title, level: o.level, bsc: o.bsc_perspective }))}
               pillars={pillars.map((p) => ({ id: p.id, code: p.code, title: p.title, bsc: p.bsc_perspective }))}

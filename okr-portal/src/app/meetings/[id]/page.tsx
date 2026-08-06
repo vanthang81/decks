@@ -92,7 +92,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
   const cohostNames = participants.filter((p) => p.role === 'host' && p.email.toLowerCase() !== ownerLc).map((p) => p.name || p.email);
   const secretaryNames = participants.filter((p) => p.role === 'secretary').map((p) => p.name || p.email);
   const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url }));
-  const unitOpts = units.filter((u) => u.type !== 'company').map((u) => ({ id: u.id, name: u.name, type: u.type }));
+  const unitOpts = units.filter((u) => u.type !== 'company').map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort }));
   // OKR để gắn khi thêm việc: theo kỳ của cuộc họp (fallback kỳ hiện tại).
   const periodForObjs = m.period_id ?? (await getCurrentPeriod())?.id ?? null;
   const objectiveOpts = periodForObjs ? await listObjectivesWithKrs(periodForObjs) : [];

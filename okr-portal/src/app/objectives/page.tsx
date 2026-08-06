@@ -5,6 +5,8 @@ import PeriodPicker from '@/components/PeriodPicker';
 import HelpTip from '@/components/HelpTip';
 import ImportOkr from '@/components/ImportOkr';
 import { requireUser } from '@/lib/current-user';
+import { listUnits } from '@/lib/org';
+import { unitTreeOptions } from '@/lib/unit-options';
 import { loadAccess, canImportData } from '@/lib/access';
 import {
   getCurrentPeriod,
@@ -35,6 +37,7 @@ export default async function ObjectivesPage({
   const canImport = canImportData(user, await loadAccess());
   const objectives = period ? await listObjectivesByPeriod(period.id) : [];
   const overLimit = period ? await ownersOverObjectiveLimit(period.id) : [];
+  const unitOptions = unitTreeOptions(await listUnits(), { excludeCompany: true });
 
   // Chỉ truyền field cần cho cây (serializable) sang client component.
   const treeData: TreeObjective[] = objectives.map((o) => ({
@@ -108,7 +111,7 @@ export default async function ObjectivesPage({
           {period && objectives.length === 0 && (
             <p className="muted">Kỳ này chưa có OKR nào. Bấm “+ Tạo OKR”.</p>
           )}
-          {period && objectives.length > 0 && <ObjectiveTree objectives={treeData} />}
+          {period && objectives.length > 0 && <ObjectiveTree objectives={treeData} unitOptions={unitOptions} />}
         </div>
 
         {canImport && (

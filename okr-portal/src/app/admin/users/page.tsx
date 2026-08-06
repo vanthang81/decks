@@ -4,6 +4,8 @@ import SiteHeader from '@/components/SiteHeader';
 import ConfirmButton from '@/components/ConfirmButton';
 import EditUserModal from '@/components/EditUserModal';
 import UserSearchBox from '@/components/UserSearchBox';
+import SearchSelect from '@/components/SearchSelect';
+import { unitTreeOptions } from '@/lib/unit-options';
 import { requireUser } from '@/lib/current-user';
 import { ROLE_LABEL, ROLES, isExec } from '@/lib/rbac';
 import { loadAccess, canManageSystem, canAssignPerms } from '@/lib/access';
@@ -60,14 +62,8 @@ export default async function AdminUsers() {
               </div>
               <div>
                 <label className="f">Đơn vị (nhà)</label>
-                <select className="i" name="unit_id" defaultValue="">
-                  <option value="">— Không gán —</option>
-                  {units.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name} ({u.type === 'company' ? 'Công ty' : u.type === 'division' ? 'Khối' : 'Phòng'})
-                    </option>
-                  ))}
-                </select>
+                <SearchSelect name="unit_id" defaultValue="" emptyLabel="— Không gán —"
+                  options={unitTreeOptions(units)} />
               </div>
               <div>
                 <label className="f">
@@ -153,7 +149,7 @@ export default async function AdminUsers() {
                             unit_id: u.unit_id,
                             perm_group: u.perm_group,
                           }}
-                          units={units.map((x) => ({ id: x.id, name: x.name, type: x.type }))}
+                          units={units.map((x) => ({ id: x.id, name: x.name, type: x.type, parent_id: x.parent_id, sort: x.sort }))}
                           roles={ROLES.map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
                           groups={DEFAULT_GROUPS.map((g) => ({ key: g.key, icon: g.icon, label: g.label, desc: g.desc }))}
                           assignPerms={assignPerms}

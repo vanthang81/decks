@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ProgressBar } from './ui';
+import SearchSelect from '@/components/SearchSelect';
 import { unitIcon } from '@/lib/unit-icons';
 
 // Kiểu dữ liệu phẳng truyền từ server (chỉ field cần cho cây — đều serializable).
@@ -75,7 +76,7 @@ function collectParents(nodes: Node[], acc: Set<string>): Set<string> {
   return acc;
 }
 
-export default function ObjectiveTree({ objectives }: { objectives: TreeObjective[] }) {
+export default function ObjectiveTree({ objectives, unitOptions }: { objectives: TreeObjective[]; unitOptions?: { value: string; label: string }[] }) {
   const roots = useMemo(() => buildTree(objectives), [objectives]);
   const parentIds = useMemo(() => collectParents(roots, new Set<string>()), [roots]);
 
@@ -115,11 +116,16 @@ export default function ObjectiveTree({ objectives }: { objectives: TreeObjectiv
   const [fStatus, setFStatus] = useState('');
   const [fType, setFType] = useState('');
 
-  const units = useMemo(() => {
-    const m = new Map<string, { name: string; code: string | null }>();
-    for (const o of objectives) if (o.unit_id && o.unit_name) m.set(o.unit_id, { name: o.unit_name, code: o.unit_code });
-    return [...m.entries()].map(([id, v]) => ({ id, ...v })).sort((a, b) => a.name.localeCompare(b.name));
-  }, [objectives]);
+  // Chỉ hiện đơn vị CÓ OKR; nếu có unitOptions (cây tổ chức từ server) → giữ THỨ TỰ + thụt cấp,
+  // nếu không → suy từ objectives (phẳng, sắp theo tên) để tương thích ngược.
+  const unitChoices = useMemo(() => {
+    const present = new Map<string, string>();
+    for (const o of objectives) if (o.unit_id && o.unit_name) present.set(o.unit_id, o.unit_name);
+    if (unitOptions && unitOptions.length) return unitOptions.filter((o) => present.has(o.value));
+    return [...present.entries()]
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [objectives, unitOptions]);
   const levels = useMemo(() => [...new Set(objectives.map((o) => o.level))], [objectives]);
   const statuses = useMemo(() => [...new Set(objectives.map((o) => o.status))], [objectives]);
   const types = useMemo(() => [...new Set(objectives.map((o) => o.okr_type))], [objectives]);
@@ -240,14 +246,9 @@ export default function ObjectiveTree({ objectives }: { objectives: TreeObjectiv
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
-        <select className="i fb-sel" value={fUnit} onChange={(e) => setFUnit(e.target.value)}>
-          <option value="">Khối / Phòng: tất cả</option>
-          {units.map((u) => (
-            <option key={u.id} value={u.id}>
-              {unitIcon({ code: u.code, name: u.name, type: 'division' })} {u.name}
-            </option>
-          ))}
-        </select>
+        <div className="fb-sel fb-ss">
+          <SearchSelect name="_fUnit" value={fUnit} onChange={setFUnit} emptyLabel="Khối / Phòng: tất cả" placeholder="Khối / Phòng: tất cả" options={unitChoices} />
+        </div>
         <select className="i fb-sel" value={fLevel} onChange={(e) => setFLevel(e.target.value)}>
           <option value="">Cấp: tất cả</option>
           {levels.map((l) => (

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-06.95';
+export const GUIDE_VERSION = '2026-08-06.96';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -595,10 +595,10 @@ export const GLOSSARY: { term: string; def: string }[] = [
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
   {
-    date: '06/08/2026 (Scorecard KPI: lọc đơn vị theo cây + tìm kiếm)',
+    date: '06/08/2026 (Đồng bộ TOÀN HỆ THỐNG: dropdown đơn vị theo cây + tìm kiếm)',
     items: [
-      'Bộ lọc đơn vị ở Scorecard KPI nay đi THEO CÂY tổ chức: mỗi Phòng nằm ngay dưới Khối của nó (thụt cấp, dấu ↳) thay vì gom phẳng tất cả Phòng xuống cuối — dễ tìm đúng đơn vị theo tuyến báo cáo.',
-      'Thêm ô TÌM KIẾM trong dropdown đơn vị (gõ tên, không phân biệt dấu) — chọn nhanh giữa 13 Khối + 36 Phòng.',
+      'MỌI ô chọn/lọc đơn vị trong app nay đi THEO CÂY tổ chức: mỗi Phòng nằm ngay dưới Khối của nó (thụt cấp, dấu ↳) thay vì gom phẳng tất cả Phòng xuống cuối — dễ tìm đúng đơn vị theo tuyến báo cáo.',
+      'Thêm ô TÌM KIẾM (gõ tên, không phân biệt dấu) vào các dropdown đơn vị: Scorecard KPI, bộ lọc "Toàn bộ OKR", bộ lọc trang Công việc, và mọi form gán đơn vị phụ trách (việc, dự án, cuộc họp, OKR, người dùng).',
     ],
   },
   {

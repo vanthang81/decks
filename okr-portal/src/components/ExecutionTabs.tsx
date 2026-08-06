@@ -6,6 +6,7 @@ import Link from 'next/link';
 import CommentThread from '@/components/CommentThread';
 import ConfirmButton from '@/components/ConfirmButton';
 import SearchSelect from '@/components/SearchSelect';
+import { unitTreeOptions } from '@/lib/unit-options';
 import NumberInput from '@/components/NumberInput';
 
 // Hằng số lặp lại từ lib (KHÔNG import initiatives.ts để tránh kéo pg vào client bundle).
@@ -83,7 +84,7 @@ export type Card = {
 };
 
 export type PersonOpt = { email: string; name: string; avatar?: string | null };
-export type UnitOpt = { id: string; name: string; type: 'company' | 'division' | 'department' };
+export type UnitOpt = { id: string; name: string; type: 'company' | 'division' | 'department'; parent_id?: string | null; sort?: number | null };
 export type ProjectOpt = { id: string; code: string | null; name: string };
 export type MeetingOpt = { id: string; code: string | null; title: string };
 export type ObjOpt = {
@@ -475,8 +476,6 @@ function EditModal({
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const divisions = units.filter((u) => u.type === 'division');
-  const departments = units.filter((u) => u.type === 'department');
 
   const run = (fn: () => Promise<void>) => {
     setErr(null);
@@ -561,10 +560,7 @@ function EditModal({
                 <div>
                   <label className="f">Đơn vị phụ trách (Khối / Phòng)</label>
                   <SearchSelect name="unit_id" defaultValue={card.unit_id ?? ''} emptyLabel="— Không gắn đơn vị —"
-                    options={[
-                      ...divisions.map((u) => ({ value: u.id, label: `${u.name} (Khối)` })),
-                      ...departments.map((u) => ({ value: u.id, label: `${u.name} (Phòng)` })),
-                    ]} />
+                    options={unitTreeOptions(units, { excludeCompany: true })} />
                 </div>
                 <div>
                   <label className="f">Giao cho (cá nhân)</label>

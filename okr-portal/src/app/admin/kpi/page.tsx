@@ -121,7 +121,7 @@ function KpiFields({
       </div>
 
       <KpiOwnerFields
-        units={divisions.map((u) => ({ id: u.id, name: u.name, type: u.type }))}
+        units={divisions.map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort }))}
         users={users.map((u) => ({ email: u.email, name: u.display_name || u.email, role: u.role, unit_id: u.unit_id }))}
         defModule={kpi?.module ?? ''}
         defUnit={kpi?.unit_id ?? ''}

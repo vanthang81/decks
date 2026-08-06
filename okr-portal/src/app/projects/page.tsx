@@ -6,6 +6,7 @@ import NumberInput from '@/components/NumberInput';
 import PeriodPicker from '@/components/PeriodPicker';
 import { requireUser } from '@/lib/current-user';
 import { listUnits } from '@/lib/org';
+import { unitTreeOptions } from '@/lib/unit-options';
 import { listUsers } from '@/lib/users';
 import {
   getCurrentPeriod,
@@ -26,13 +27,12 @@ import { createProjectInlineAction } from './actions';
 
 // Ô nhập form dự án — dùng trong popup "Dự án mới".
 function ProjectFields({
-  periodId, user, users, divisionUnits, deptUnits,
+  periodId, user, users, unitOptions,
 }: {
   periodId: string;
   user: { email: string };
   users: { email: string; display_name: string | null }[];
-  divisionUnits: { id: string; name: string }[];
-  deptUnits: { id: string; name: string }[];
+  unitOptions: { value: string; label: string }[];
 }) {
   return (
     <>
@@ -48,10 +48,7 @@ function ProjectFields({
         <div>
           <label className="f">Đơn vị chủ trì (Khối / Phòng)</label>
           <SearchSelect name="unit_id" defaultValue="" emptyLabel="— Không gắn —"
-            options={[
-              ...divisionUnits.map((u) => ({ value: u.id, label: `${u.name} (Khối)` })),
-              ...deptUnits.map((u) => ({ value: u.id, label: `${u.name} (Phòng)` })),
-            ]} />
+            options={unitOptions} />
         </div>
         <div>
           <label className="f">Trạng thái</label>
@@ -90,8 +87,7 @@ export default async function ProjectsPage({
   const units = await listUnits();
   const users = await listUsers();
   const canCreate = canCreateProject(user, await loadAccess());
-  const divisionUnits = units.filter((u) => u.type === 'division');
-  const deptUnits = units.filter((u) => u.type === 'department');
+  const unitOptions = unitTreeOptions(units, { excludeCompany: true });
 
   return (
     <>
@@ -117,7 +113,7 @@ export default async function ProjectsPage({
             />
             {canCreate && period && (
               <EditModal title="Tạo dự án mới" label="Dự án mới" icon={<NavIcon name="plus" />} submitLabel="Tạo dự án" action={createProjectInlineAction} wide>
-                <ProjectFields periodId={period.id} user={user} users={users} divisionUnits={divisionUnits} deptUnits={deptUnits} />
+                <ProjectFields periodId={period.id} user={user} users={users} unitOptions={unitOptions} />
               </EditModal>
             )}
           </div>

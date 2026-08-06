@@ -123,10 +123,8 @@ export default function NewObjectiveForm({
       {needsUnit && (
         <>
           <label className="f">Đơn vị ({level === 'division' ? 'Khối' : 'Phòng'})</label>
-          <select className="i" value={unitId} onChange={(e) => setUnitId(e.target.value)}>
-            <option value="">— Chọn {level === 'division' ? 'Khối' : 'Phòng'} —</option>
-            {unitChoices.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-          </select>
+          <SearchSelect name="_unit_pick" value={unitId} onChange={setUnitId} emptyLabel={`— Chọn ${level === 'division' ? 'Khối' : 'Phòng'} —`}
+            options={unitChoices.map((u) => ({ value: u.id, label: u.name }))} />
         </>
       )}
 

@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { ProgressBar } from '@/components/ui';
 import { StackedBar, Donut } from '@/components/charts';
 import TaskEditModal from '@/components/TaskEditModal';
+import SearchSelect from '@/components/SearchSelect';
+import { unitTreeOptions } from '@/lib/unit-options';
 import { fmtDate } from '@/lib/format';
 import type { TaskRow } from '@/lib/initiatives';
 import type { PersonOpt, UnitOpt, ProjectOpt } from '@/components/ExecutionTabs';
@@ -185,11 +187,12 @@ export default function TaskExplorer({
     for (const t of tasks) if (t.owner_email) m.set(t.owner_email, t.owner_name || t.owner_email);
     return [...m.entries()].map(([email, name]) => ({ email, name })).sort((a, b) => a.name.localeCompare(b.name));
   }, [tasks]);
+  // Lọc đơn vị theo CÂY tổ chức (thụt cấp) — chỉ hiện đơn vị có việc.
   const unitChoices = useMemo(() => {
-    const m = new Map<string, string>();
-    for (const t of tasks) if (t.unit_id && t.unit_name) m.set(t.unit_id, t.unit_name);
-    return [...m.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
-  }, [tasks]);
+    const present = new Set<string>();
+    for (const t of tasks) if (t.unit_id) present.add(t.unit_id);
+    return unitTreeOptions(units).filter((o) => present.has(o.value));
+  }, [tasks, units]);
   const objectives = useMemo(() => {
     const m = new Map<string, string>();
     for (const t of tasks) if (t.objective_id && t.objective_title) m.set(t.objective_id, t.objective_title);
@@ -443,10 +446,9 @@ export default function TaskExplorer({
           <option value="">Phụ trách: tất cả</option>
           {owners.map((o) => <option key={o.email} value={o.email}>{o.name}</option>)}
         </select>
-        <select className="i fb-sel" value={fUnit} onChange={(e) => setFUnit(e.target.value)}>
-          <option value="">Đơn vị: tất cả</option>
-          {unitChoices.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-        </select>
+        <div className="fb-sel fb-ss">
+          <SearchSelect name="_fUnit" value={fUnit} onChange={setFUnit} emptyLabel="Đơn vị: tất cả" placeholder="Đơn vị: tất cả" options={unitChoices} />
+        </div>
         <select className="i fb-sel" value={fObj} onChange={(e) => setFObj(e.target.value)}>
           <option value="">OKR: tất cả</option>
           {objectives.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}

@@ -45,7 +45,7 @@ export default async function TasksPage() {
   const depsMap: Record<string, string[]> = {};
   for (const [k, v] of depsMapRaw) depsMap[k] = v;
 
-  const unitOpts = units.map((u) => ({ id: u.id, name: u.name, type: u.type }));
+  const unitOpts = units.map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort }));
   const userOpts = users.map((u) => ({
     email: u.email,
     name: u.display_name || u.email,

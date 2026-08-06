@@ -5,6 +5,7 @@ import HelpTip from '@/components/HelpTip';
 import ExecutionTabs from '@/components/ExecutionTabs';
 import ResettableForm from '@/components/ResettableForm';
 import SearchSelect from '@/components/SearchSelect';
+import { unitTreeOptions } from '@/lib/unit-options';
 import NumberInput from '@/components/NumberInput';
 import CommentThread from '@/components/CommentThread';
 import CheckinRow from '@/components/CheckinRow';
@@ -82,33 +83,11 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
   const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url }));
   const unitOpts = units
     .filter((u) => u.type !== 'company')
-    .map((u) => ({ id: u.id, name: u.name, type: u.type }));
-  const divisionUnits = units.filter((u) => u.type === 'division');
-  const deptUnits = units.filter((u) => u.type === 'department');
-
-  // Bộ chọn Đơn vị phụ trách (Khối/Phòng) dùng lại ở các form thêm/sửa dự án.
+    .map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort }));
+  // Bộ chọn Đơn vị phụ trách (Khối/Phòng) — theo cây tổ chức + tìm kiếm, dùng lại ở form thêm/sửa việc.
   const unitSelect = (defaultValue: string) => (
-    <select className="i" name="unit_id" defaultValue={defaultValue}>
-      <option value="">— Không gắn đơn vị —</option>
-      {divisionUnits.length > 0 && (
-        <optgroup label="Khối">
-          {divisionUnits.map((u) => (
-            <option key={u.id} value={u.id}>
-              {u.name}
-            </option>
-          ))}
-        </optgroup>
-      )}
-      {deptUnits.length > 0 && (
-        <optgroup label="Phòng ban">
-          {deptUnits.map((u) => (
-            <option key={u.id} value={u.id}>
-              {u.name}
-            </option>
-          ))}
-        </optgroup>
-      )}
-    </select>
+    <SearchSelect name="unit_id" defaultValue={defaultValue} emptyLabel="— Không gắn đơn vị —"
+      options={unitTreeOptions(unitOpts)} />
   );
 
   const [krs, children, initiatives, budget, checkins] = await Promise.all([

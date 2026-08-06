@@ -3,13 +3,14 @@ import {
 } from '@/lib/meetings';
 import ParticipantsPicker from '@/components/ParticipantsPicker';
 import SearchSelect from '@/components/SearchSelect';
+import { unitTreeOptions } from '@/lib/unit-options';
 
 // Bộ ô nhập cuộc họp — dùng chung cho popup Tạo & Sửa (server component).
 export default function MeetingFields({
   users, units, projects, meetings, defaultOwner, meeting, participantsText, cohostText, secretaryText,
 }: {
   users: { email: string; display_name: string | null }[];
-  units: { id: string; name: string; type: string }[];
+  units: { id: string; name: string; type: 'company' | 'division' | 'department'; parent_id?: string | null; sort?: number | null }[];
   projects: { id: string; code: string | null; name: string }[];
   meetings?: { id: string; code: string | null; title: string }[];
   defaultOwner: string;
@@ -65,7 +66,7 @@ export default function MeetingFields({
         <div>
           <label className="f">Khối / Phòng liên quan</label>
           <SearchSelect name="unit_id" defaultValue={m?.unit_id ?? ''} emptyLabel="— Không gắn —"
-            options={units.map((u) => ({ value: u.id, label: `${u.name} (${u.type === 'division' ? 'Khối' : u.type === 'department' ? 'Phòng' : 'Công ty'})` }))} />
+            options={unitTreeOptions(units)} />
         </div>
         <div>
           <label className="f">Dự án liên quan</label>

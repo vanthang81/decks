@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import SearchSelect from './SearchSelect';
+import { unitTreeOptions } from '@/lib/unit-options';
 
-type UnitOpt = { id: string; name: string; type: 'company' | 'division' | 'department' };
+type UnitOpt = { id: string; name: string; type: 'company' | 'division' | 'department'; parent_id?: string | null; sort?: number | null };
 type UserOpt = { email: string; name: string; role: string; unit_id: string | null };
 
 // Module (KRA) + Đơn vị chủ + Business/Measurement owner cho form KPI.
@@ -37,7 +38,7 @@ export default function KpiOwnerFields({
     if (lead) setBusiness(lead); // đổi đơn vị → gợi ý luôn Trưởng đơn vị làm Business owner
   };
 
-  const unitOptions = units.map((u) => ({ value: u.id, label: `${u.name} (${u.type === 'division' ? 'Khối' : 'Phòng'})` }));
+  const unitOptions = unitTreeOptions(units);
   const userOptions = users.map((u) => ({ value: u.email, label: u.name }));
   const isLeadDefault = !!unit && business === leadByUnit[unit];
 

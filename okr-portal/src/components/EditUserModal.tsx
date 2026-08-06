@@ -2,9 +2,11 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import SearchSelect from '@/components/SearchSelect';
+import { unitTreeOptions } from '@/lib/unit-options';
 
 // Popup SỬA QUYỀN 1 người dùng — dùng lại saveUserAction (upsert theo email).
-type Unit = { id: string; name: string; type: string };
+type Unit = { id: string; name: string; type: 'company' | 'division' | 'department'; parent_id?: string | null; sort?: number | null };
 type Group = { key: string; icon: string; label: string; desc?: string };
 type Role = { value: string; label: string };
 type U = {
@@ -83,14 +85,8 @@ export default function EditUserModal({
                 </div>
                 <div>
                   <label className="f">Đơn vị (nhà)</label>
-                  <select className="i" name="unit_id" defaultValue={user.unit_id ?? ''}>
-                    <option value="">— Không gán —</option>
-                    {units.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.name} ({u.type === 'company' ? 'Công ty' : u.type === 'division' ? 'Khối' : 'Phòng'})
-                      </option>
-                    ))}
-                  </select>
+                  <SearchSelect name="unit_id" defaultValue={user.unit_id ?? ''} emptyLabel="— Không gán —"
+                    options={unitTreeOptions(units)} />
                 </div>
               </div>
               <label className="f">
