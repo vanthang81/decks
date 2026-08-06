@@ -59,24 +59,29 @@ export async function getUserProfile(email: string, full: boolean): Promise<User
 
   if (!full) return { identity, counts, full: false };
 
+  // Chi tiết 360° — best-effort: nếu 1 truy vấn lỗi (schema drift) thì vẫn hiện định danh + số liệu,
+  // KHÔNG để 500 cả trang. Mỗi nhánh tự bọc catch → trả [] khi lỗi.
+  const safe = <T>(p: Promise<T[]>): Promise<T[]> => p.catch(() => [] as T[]);
   const [objectives, projects, tasks, checkins, meetings, activity] = await Promise.all([
-    query<ProfileListItem>(
+    safe(query<ProfileListItem>(
       `SELECT o.id, o.code, o.title,
               CASE o.level WHEN 'company' THEN 'Công ty' WHEN 'division' THEN 'Khối'
                            WHEN 'department' THEN 'Phòng' WHEN 'individual' THEN 'Cá nhân' ELSE o.level END AS sub,
               ('/objectives/'||o.id) AS href,
               round(o.progress)::text || '%' AS badge, 'blue' AS "badgeCls"
          FROM okr_objectives o WHERE lower(o.owner_email)=lower($1)
-         ORDER BY o.code NULLS LAST, o.title LIMIT 100`, [e]),
-    query<ProfileListItem>(
+         ORDER BY o.code NULLS LAST, o.title LIMIT 100`, [e])),
+    safe(query<ProfileListItem>(
       `SELECT p.id, p.code, p.name AS title,
               CASE p.status WHEN 'active' THEN 'Đang chạy' WHEN 'done' THEN 'Hoàn thành'
                             WHEN 'paused' THEN 'Tạm dừng' ELSE 'Lưu trữ' END AS sub,
               ('/projects/'||p.id) AS href,
-              round(p.progress)::text || '%' AS badge, 'blue' AS "badgeCls"
+              round(COALESCE((SELECT avg(i.progress) FROM okr_initiatives i
+                               WHERE i.project_id = p.id AND i.status <> 'canceled'), 0))::text || '%' AS badge,
+              'blue' AS "badgeCls"
          FROM okr_projects p WHERE lower(p.owner_email)=lower($1)
-         ORDER BY p.code NULLS LAST, p.name LIMIT 100`, [e]),
-    query<ProfileListItem>(
+         ORDER BY p.code NULLS LAST, p.name LIMIT 100`, [e])),
+    safe(query<ProfileListItem>(
       `SELECT i.id, i.code, i.title,
               (CASE i.status WHEN 'todo' THEN 'Chưa làm' WHEN 'in_progress' THEN 'Đang làm'
                              WHEN 'blocked' THEN 'Vướng' WHEN 'done' THEN 'Xong' ELSE 'Huỷ' END
@@ -88,24 +93,24 @@ export async function getUserProfile(email: string, full: boolean): Promise<User
               CASE i.status WHEN 'done' THEN 'green' WHEN 'blocked' THEN 'red' WHEN 'in_progress' THEN 'blue' ELSE 'gray' END AS "badgeCls"
          FROM okr_initiatives i WHERE lower(i.owner_email)=lower($1)
          ORDER BY CASE i.status WHEN 'blocked' THEN 0 WHEN 'in_progress' THEN 1 WHEN 'todo' THEN 2 WHEN 'done' THEN 3 ELSE 4 END,
-                  i.due_on NULLS LAST LIMIT 200`, [e]),
-    query<{ title: string; sub: string; at: string }>(
+                  i.due_on NULLS LAST LIMIT 200`, [e])),
+    safe(query<{ title: string; sub: string; at: string }>(
       `SELECT COALESCE(k.title, o.title, 'Check-in') AS title,
               COALESCE(c.note, '') AS sub, c.created_at::text AS at
          FROM okr_checkins c
          LEFT JOIN okr_key_results k ON k.id=c.key_result_id
          LEFT JOIN okr_objectives o ON o.id=c.objective_id
-        WHERE lower(c.author_email)=lower($1) ORDER BY c.created_at DESC LIMIT 20`, [e]),
-    query<ProfileListItem>(
+        WHERE lower(c.author_email)=lower($1) ORDER BY c.created_at DESC LIMIT 20`, [e])),
+    safe(query<ProfileListItem>(
       `SELECT m.id, m.code, m.title,
               to_char(m.meeting_at,'DD/MM/YYYY') AS sub, ('/meetings/'||m.id) AS href, NULL AS badge, NULL AS "badgeCls"
          FROM okr_meetings m
         WHERE lower(m.owner_email)=lower($1) OR lower(m.secretary_email)=lower($1)
            OR EXISTS (SELECT 1 FROM okr_meeting_participants mp WHERE mp.meeting_id=m.id AND lower(mp.email)=lower($1))
-        ORDER BY m.meeting_at DESC NULLS LAST LIMIT 30`, [e]),
-    query<{ action: string; entity: string | null; at: string }>(
+        ORDER BY m.meeting_at DESC NULLS LAST LIMIT 30`, [e])),
+    safe(query<{ action: string; entity: string | null; at: string }>(
       `SELECT action, entity, created_at::text AS at FROM okr_audit_log
-        WHERE lower(actor)=lower($1) ORDER BY created_at DESC LIMIT 25`, [e]),
+        WHERE lower(actor)=lower($1) ORDER BY created_at DESC LIMIT 25`, [e])),
   ]);
 
   return { identity, counts, full: true, objectives, projects, tasks, checkins, meetings, activity };
