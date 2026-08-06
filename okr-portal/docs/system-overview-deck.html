@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hệ thống Quản trị Hiệu suất BTMH — Giới thiệu</title>
+<style>
+  :root {
+    --paper: #FBFAF8; --ink: #161A21; --neutral: #5B6472; --neutral-soft: #8A929E;
+    --line: #E4E0D8; --accent: #7C0312; --accent-soft: #F3D9DC; --data: #2E6F72; --gold: #C8A951;
+    --card: #FFFFFF; --shadow: 0 24px 60px -28px rgba(22,26,33,.35);
+    --display: Georgia, "Times New Roman", serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --paper: #14171D; --ink: #F1EEE8; --neutral: #A6ADB8; --neutral-soft: #767E8B;
+      --line: #2A2F38; --accent: #E0808C; --accent-soft: #3A1418; --data: #4FA8AB; --gold: #D8BE72;
+      --card: #1B1F26; --shadow: 0 24px 60px -28px rgba(0,0,0,.6); }
+  }
+  :root[data-theme="light"] { --paper: #FBFAF8; --ink: #161A21; --neutral: #5B6472; --neutral-soft: #8A929E;
+    --line: #E4E0D8; --accent: #7C0312; --accent-soft: #F3D9DC; --data: #2E6F72; --gold: #C8A951;
+    --card: #FFFFFF; --shadow: 0 24px 60px -28px rgba(22,26,33,.35); }
+  :root[data-theme="dark"] { --paper: #14171D; --ink: #F1EEE8; --neutral: #A6ADB8; --neutral-soft: #767E8B;
+    --line: #2A2F38; --accent: #E0808C; --accent-soft: #3A1418; --data: #4FA8AB; --gold: #D8BE72;
+    --card: #1B1F26; --shadow: 0 24px 60px -28px rgba(0,0,0,.6); }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans);
+    display: flex; align-items: center; justify-content: center; min-height: 100vh;
+    -webkit-font-smoothing: antialiased; transition: background .3s ease, color .3s ease; }
+
+  .stage { width: min(94vw, 1200px); aspect-ratio: 16 / 9; position: relative; }
+  .slide { position: absolute; inset: 0; background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; box-shadow: var(--shadow); padding: clamp(26px, 4.4vw, 60px);
+    display: none; flex-direction: column; overflow: hidden; }
+  .slide.active { display: flex; animation: rise .45s cubic-bezier(.22,.61,.36,1); }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .slide.active { animation: none; } }
+
+  .eyebrow { font-size: clamp(11px, 1.1vw, 13px); letter-spacing: .18em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; margin: 0 0 14px; }
+  .kicker-row { display: flex; align-items: center; gap: 14px; color: var(--neutral);
+    font-size: clamp(11px, 1.1vw, 13px); letter-spacing: .14em; text-transform: uppercase; }
+  .kicker-row .rule { flex: 1; height: 1px; background: var(--line); }
+
+  h1 { font-family: var(--display); font-weight: 600; font-size: clamp(32px, 5.4vw, 66px);
+    line-height: 1.04; letter-spacing: -.015em; text-wrap: balance; margin: .3em 0 .3em; }
+  h2 { font-family: var(--display); font-weight: 600; font-size: clamp(24px, 3.4vw, 40px);
+    line-height: 1.1; letter-spacing: -.01em; text-wrap: balance; margin: 0 0 .5em; }
+  .lead { font-size: clamp(14px, 1.55vw, 20px); line-height: 1.55; color: var(--neutral); max-width: 64ch; margin: 0; }
+  .fill { flex: 1; }
+  .title-foot { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px;
+    color: var(--neutral); font-size: clamp(12px, 1.2vw, 15px); }
+  .title-foot strong { color: var(--ink); font-weight: 600; }
+
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(14px, 2.4vw, 30px); flex: 1; align-content: center; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(12px, 1.8vw, 22px); flex: 1; align-content: center; }
+  .card2 { border: 1px solid var(--line); border-radius: 10px; padding: clamp(14px, 1.9vw, 24px);
+    display: flex; flex-direction: column; gap: 8px; background: linear-gradient(180deg, transparent, rgba(124,3,18,.03)); }
+  .card2 .tag { align-self: flex-start; font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 3px 10px; border-radius: 100px; }
+  .card2 h3 { font-family: var(--display); font-size: clamp(17px,2vw,24px); margin: 2px 0 0; font-weight: 600; }
+  .card2 p { margin: 0; color: var(--neutral); font-size: clamp(12.5px,1.3vw,15px); line-height: 1.48; }
+
+  ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; flex: 1; justify-content: center; }
+  ol.steps li { counter-increment: s; display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; }
+  ol.steps li::before { content: counter(s, decimal-leading-zero); font-family: var(--display);
+    font-variant-numeric: tabular-nums; color: var(--accent); font-size: clamp(17px, 1.9vw, 23px); line-height: 1.3; min-width: 2.2ch; }
+  ol.steps b { font-weight: 700; }
+  ol.steps li div { font-size: clamp(13.5px, 1.4vw, 16px); line-height: 1.5; }
+  ol.steps span { color: var(--neutral); }
+
+  .flow { display: flex; align-items: stretch; gap: 10px; flex: 1; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .flow .node { flex: 1 1 0; min-width: 120px; border: 1px solid var(--line); border-radius: 10px; padding: 14px 12px; text-align: center;
+    background: linear-gradient(180deg, transparent, rgba(124,3,18,.03)); }
+  .flow .node b { font-family: var(--display); font-size: clamp(15px,1.7vw,20px); display: block; }
+  .flow .node span { color: var(--neutral); font-size: clamp(11.5px,1.2vw,13.5px); }
+  .flow .arrow { color: var(--accent); font-size: 22px; font-weight: 700; flex: 0 0 auto; }
+
+  .modmap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; flex: 1; align-content: center; }
+  .mod { border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 5px; }
+  .mod .ic { font-size: 22px; }
+  .mod b { font-size: clamp(13.5px,1.4vw,16px); }
+  .mod span { color: var(--neutral); font-size: clamp(11.5px,1.2vw,13px); line-height: 1.4; }
+
+  .facts { display: flex; gap: clamp(18px,3vw,44px); flex-wrap: wrap; margin-top: 6px; }
+  .facts .f { }
+  .facts .n { font-family: var(--display); font-size: clamp(26px,3.4vw,44px); color: var(--accent); font-weight: 600; line-height: 1; }
+  .facts .l { color: var(--neutral); font-size: clamp(12px,1.3vw,15px); margin-top: 4px; }
+
+  ul.ticks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  ul.ticks li { display: grid; grid-template-columns: auto 1fr; gap: 12px; font-size: clamp(13.5px,1.4vw,16.5px); line-height: 1.5; }
+  ul.ticks li::before { content: "▸"; color: var(--accent); font-weight: 700; }
+  ul.ticks b { font-weight: 700; }
+  ul.ticks span { color: var(--neutral); }
+
+  .cl { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; flex: 1; overflow: auto; }
+  .cl li { display: grid; grid-template-columns: 150px 1fr; gap: 16px; align-items: start; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+  .cl .date { color: var(--accent); font-weight: 700; font-size: clamp(12px,1.3vw,14px); }
+  .cl .what { color: var(--neutral); font-size: clamp(12.5px,1.3vw,15px); line-height: 1.5; }
+  .cl .what b { color: var(--ink); font-weight: 600; }
+
+  .linkbox { display: inline-flex; align-items: center; gap: 12px; align-self: flex-start;
+    border: 1px solid var(--line); border-radius: 100px; padding: 11px 20px; font-size: clamp(13px,1.4vw,17px); color: var(--ink); }
+  .linkbox .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+
+  .hud { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 16px; z-index: 20;
+    background: var(--card); border: 1px solid var(--line); border-radius: 100px; padding: 7px 9px 7px 18px; box-shadow: var(--shadow); }
+  .hud .count { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--neutral); letter-spacing: .04em; }
+  .hud button { border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+    width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 16px; display: grid; place-items: center; }
+  .hud button:hover { border-color: var(--accent); color: var(--accent); }
+  .hud button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); z-index: 20; transition: width .4s ease; }
+  .dots { display: flex; gap: 6px; flex-wrap: wrap; max-width: 42vw; }
+  .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); cursor: pointer; transition: all .25s; }
+  .dots i.on { background: var(--accent); transform: scale(1.25); }
+
+  @media (max-width: 720px) { .cols, .grid3, .modmap { grid-template-columns: 1fr; } .stage { width: 95vw; } .cl li { grid-template-columns: 1fr; gap: 4px; } }
+  @media print { body { display: block; } .hud, .progress { display: none; }
+    .slide { display: flex !important; position: relative; inset: auto; page-break-after: always; box-shadow: none; margin-bottom: 20px; aspect-ratio: 16/9; }
+    .stage { width: 100%; aspect-ratio: auto; } }
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="stage">
+
+  <!-- 1 · Cover -->
+  <section class="slide active">
+    <div class="kicker-row"><span>Bảo Tín Mạnh Hải</span><span class="rule"></span><span>Performance Management</span></div>
+    <div class="fill"></div>
+    <h1>Hệ thống Quản trị Hiệu suất — từ chiến lược tới thực thi.</h1>
+    <p class="lead">Một nơi duy nhất nối tầm nhìn dài hạn của BTMH với công việc hằng ngày của mỗi khối, mỗi phòng, mỗi người — và đo được kết quả gần như tức thời.</p>
+    <div class="fill"></div>
+    <div class="title-foot">
+      <span>Điều hướng bằng <strong>← →</strong> hoặc <strong>Space</strong> · nút <strong>◐</strong> đổi sáng/tối</span>
+      <span><strong>Tài liệu giới thiệu</strong> · dành cho người dùng</span>
+    </div>
+  </section>
+
+  <!-- 2 · The problem -->
+  <section class="slide">
+    <p class="eyebrow">Bài toán</p>
+    <h2>Chiến lược lớn dễ “trôi” nếu không nối được với hành động hằng ngày.</h2>
+    <p class="lead">BTMH đặt mục tiêu tăng trưởng mạnh tới 2030. Nhưng giữa một kế hoạch nhiều năm và việc một nhân viên làm sáng nay là một khoảng cách rất dài — và thường là nơi chiến lược thất thoát.</p>
+    <div class="facts">
+      <div class="f"><div class="n">261</div><div class="l">cửa hàng mục tiêu 2030</div></div>
+      <div class="f"><div class="n">~180 nghìn tỷ</div><div class="l">doanh thu mục tiêu 2030</div></div>
+      <div class="f"><div class="n">13 khối · 36 phòng</div><div class="l">cần cùng nhịp, cùng hướng</div></div>
+    </div>
+    <div class="fill"></div>
+    <p class="lead">Câu hỏi cốt lõi: <b style="color:var(--ink)">Làm sao để mọi mục tiêu, mọi con số, mọi đầu việc — của cả công ty — luôn nhìn thấy được, gắn kết với nhau, và có người chịu trách nhiệm?</b></p>
+  </section>
+
+  <!-- 3 · The chain / solution -->
+  <section class="slide">
+    <p class="eyebrow">Lời giải</p>
+    <h2>Một chuỗi liền mạch: chiến lược → mục tiêu → đo lường → hành động → nhìn lại.</h2>
+    <div class="flow">
+      <div class="node"><b>Chiến lược</b><span>Tầm nhìn 2026–2030, trụ cột</span></div>
+      <span class="arrow">→</span>
+      <div class="node"><b>OKR</b><span>Mục tiêu &amp; kết quả then chốt</span></div>
+      <span class="arrow">→</span>
+      <div class="node"><b>KPI</b><span>Chỉ số đo sức khỏe</span></div>
+      <span class="arrow">→</span>
+      <div class="node"><b>Dự án &amp; Công việc</b><span>Việc phải làm để đạt</span></div>
+      <span class="arrow">→</span>
+      <div class="node"><b>Check-in &amp; Báo cáo</b><span>Nhìn lại, điều chỉnh</span></div>
+    </div>
+    <p class="lead" style="margin-top:14px">Mỗi mắt xích nối vào mắt xích kế bên. Nhờ vậy ai cũng thấy việc mình làm phục vụ mục tiêu nào của khối, của công ty — và lãnh đạo thấy chiến lược đang đi tới đâu.</p>
+  </section>
+
+  <!-- 4 · OKR method -->
+  <section class="slide">
+    <p class="eyebrow">Phương pháp · OKR</p>
+    <h2>Mục tiêu truyền cảm hứng, đo bằng kết quả cụ thể.</h2>
+    <div class="cols">
+      <div class="card2">
+        <span class="tag">Objective — Mục tiêu</span>
+        <h3>Chúng ta muốn đạt điều gì?</h3>
+        <p>Một câu ngắn, tạo động lực, có tính định hướng. Ví dụ: “Đưa kênh bán online thành trụ cột tăng trưởng của khối bán lẻ”.</p>
+      </div>
+      <div class="card2">
+        <span class="tag">Key Results — Kết quả then chốt</span>
+        <h3>Làm sao biết đã đạt?</h3>
+        <p>2–5 con số đo được, có mốc đầu kỳ → mục tiêu. Ví dụ: “Doanh thu online đạt 56 tỷ”, “Tỷ lệ đơn hoàn thành ≥ 98%”. Mỗi KR có <b>trọng số</b> nói lên mức đóng góp.</p>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:12px">Hệ thống tự tính % hoàn thành của từng KR, rồi cuộn lên Mục tiêu, lên Khối, lên Công ty — không cần cộng tay.</p>
+  </section>
+
+  <!-- 5 · KPI & BSC -->
+  <section class="slide">
+    <p class="eyebrow">Phương pháp · KPI &amp; Thẻ điểm cân bằng</p>
+    <h2>OKR đặt hướng đi. KPI theo dõi sức khỏe vận hành.</h2>
+    <div class="cols">
+      <div class="card2">
+        <span class="tag">KPI</span>
+        <h3>Chỉ số thường trực</h3>
+        <p>Doanh thu, lãi gộp, sản lượng, tồn kho, số hóa đơn… có ngưỡng <b>Theo dõi · Cảnh báo · Báo động</b>. Nhiều chỉ số được <b>tự động lấy từ dữ liệu bán hàng</b> — không nhập tay.</p>
+      </div>
+      <div class="card2">
+        <span class="tag">Thẻ điểm cân bằng (BSC)</span>
+        <h3>Nhìn 4 mặt</h3>
+        <p>Tài chính · Khách hàng · Quy trình nội bộ · Học hỏi &amp; phát triển. Đảm bảo không chỉ chạy theo doanh số mà bỏ quên con người, quy trình, khách hàng.</p>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:12px">OKR trả lời “ta thay đổi điều gì”; KPI trả lời “nền tảng có đang khỏe không”. Hai lớp bổ trợ nhau.</p>
+  </section>
+
+  <!-- 6 · Hierarchy -->
+  <section class="slide">
+    <p class="eyebrow">Cấu trúc</p>
+    <h2>Gắn kết theo cả tổ chức lẫn thời gian.</h2>
+    <div class="cols">
+      <div class="card2">
+        <span class="tag">Theo tổ chức</span>
+        <h3>Công ty → Khối → Phòng → Cá nhân</h3>
+        <p>Mục tiêu công ty rải xuống khối, xuống phòng, tới từng người. Ai cũng thấy việc mình “align” lên mục tiêu nào ở trên.</p>
+      </div>
+      <div class="card2">
+        <span class="tag">Theo thời gian</span>
+        <h3>Nhiều năm → Năm → Quý → Tháng → Tuần</h3>
+        <p>Chiến lược 2026–2030 chia thành mục tiêu năm, quý, tháng; công việc có ngày bắt đầu/hạn và check-in hằng tuần.</p>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:12px">Nhờ hai trục này, một con số bất kỳ luôn trả lời được: <b style="color:var(--ink)">của ai, thuộc mục tiêu nào, trong kỳ nào.</b></p>
+  </section>
+
+  <!-- 7 · Module map -->
+  <section class="slide">
+    <p class="eyebrow">Bản đồ hệ thống</p>
+    <h2>Các phân hệ, và cách chúng liên kết.</h2>
+    <div class="modmap">
+      <div class="mod"><span class="ic">🎯</span><b>Chiến lược</b><span>Tầm nhìn, sứ mệnh, trụ cột, BSC</span></div>
+      <div class="mod"><span class="ic">📊</span><b>OKR</b><span>Mục tiêu &amp; kết quả, cascade, check-in</span></div>
+      <div class="mod"><span class="ic">📈</span><b>KPI &amp; Scorecard</b><span>Chỉ số tự động, ngưỡng cảnh báo</span></div>
+      <div class="mod"><span class="ic">🗂️</span><b>Dự án &amp; Công việc</b><span>Danh sách · Kanban · Gantt</span></div>
+      <div class="mod"><span class="ic">🗓️</span><b>Cuộc họp điều hành</b><span>Giao việc, biên bản, nối chuỗi</span></div>
+      <div class="mod"><span class="ic">📰</span><b>Báo cáo &amp; Bản tin</b><span>Họp điều hành, nhận định, khuyến nghị</span></div>
+      <div class="mod"><span class="ic">👤</span><b>Hồ sơ 360°</b><span>Toàn cảnh mỗi người</span></div>
+      <div class="mod"><span class="ic">🛡️</span><b>Toàn vẹn dữ liệu</b><span>Tự soi lỗ hổng, mồ côi</span></div>
+    </div>
+    <p class="lead" style="margin-top:12px">Chúng không rời rạc: một <b>công việc</b> gắn với <b>KR</b> của một <b>OKR</b>, có thể thuộc một <b>dự án</b> xuyên nhiều khối, được giao trong một <b>cuộc họp</b>, và hiện lên trong <b>báo cáo</b> &amp; <b>hồ sơ</b> người phụ trách.</p>
+  </section>
+
+  <!-- 8 · Strategy module -->
+  <section class="slide">
+    <p class="eyebrow">Phân hệ · Chiến lược</p>
+    <h2>Đỉnh của chuỗi: nơi mọi thứ bắt nguồn.</h2>
+    <ul class="ticks">
+      <li><div><b>Tầm nhìn · Sứ mệnh · Giá trị · Khát vọng</b> <span>— tuyên bố định hướng, hiển thị cho toàn công ty.</span></div></li>
+      <li><div><b>Trụ cột chiến lược 2026–2030</b> <span>— các mục tiêu nhiều năm cấp công ty, là gốc để cascade.</span></div></li>
+      <li><div><b>Sơ đồ chuỗi giá trị &amp; Thẻ điểm cân bằng</b> <span>— nhìn một trang hiểu chiến lược nối tới đo lường thế nào.</span></div></li>
+    </ul>
+    <p class="lead" style="margin-top:14px">Đây là câu trả lời cho câu hỏi “vì sao chúng ta làm việc này” — luôn ở tầm tay để không ai lạc hướng.</p>
+  </section>
+
+  <!-- 9 · OKR module -->
+  <section class="slide">
+    <p class="eyebrow">Phân hệ · OKR</p>
+    <h2>Đặt mục tiêu, gắn kết, và giữ cho “sống”.</h2>
+    <div class="grid3">
+      <div class="card2"><h3>Cascade &amp; alignment</h3><p>Mỗi OKR liên kết lên OKR cấp trên → thấy rõ đóng góp vào mục tiêu chung.</p></div>
+      <div class="card2"><h3>Check-in định kỳ</h3><p>Cập nhật tiến độ hằng tuần kèm mức <b>độ tự tin</b>; hệ thống nhắc khi lâu chưa cập nhật.</p></div>
+      <div class="card2"><h3>Sức khỏe OKR</h3><p>Chấm điểm mỗi OKR theo 7 tiêu chí (có chủ trì, có KR, đã cascade, có thực thi, có check-in…) để biết chỗ nào yếu.</p></div>
+    </div>
+    <p class="lead" style="margin-top:12px">OKR không phải “điền một lần rồi quên” — hệ thống thiết kế để nó được nhìn lại và điều chỉnh liên tục.</p>
+  </section>
+
+  <!-- 10 · KPI module -->
+  <section class="slide">
+    <p class="eyebrow">Phân hệ · KPI tự động</p>
+    <h2>Con số thực hiện tự chảy vào, không nhập tay.</h2>
+    <ul class="ticks">
+      <li><div><b>Tự kéo dữ liệu bán hàng</b> <span>— doanh thu, lãi gộp, sản lượng (chỉ), số hóa đơn, mua vào, tồn kho… cập nhật nhiều lần mỗi ngày.</span></div></li>
+      <li><div><b>Mục tiêu = kế hoạch cả kỳ</b> <span>, thực hiện = số tới hôm nay → tự tính % đạt.</span></div></li>
+      <li><div><b>Ngưỡng Theo dõi / Cảnh báo / Báo động</b> <span>— chỉ số lệch sẽ tự nổi lên ở báo cáo &amp; bản tin.</span></div></li>
+    </ul>
+    <p class="lead" style="margin-top:14px">Lãnh đạo mở lên là thấy bức tranh mới nhất — thay vì chờ tổng hợp thủ công cuối tháng.</p>
+  </section>
+
+  <!-- 11 · Execution module -->
+  <section class="slide">
+    <p class="eyebrow">Phân hệ · Thực thi</p>
+    <h2>Biến mục tiêu thành việc làm được, theo dõi được.</h2>
+    <div class="grid3">
+      <div class="card2"><h3>Dự án xuyên OKR</h3><p>Một dự án gom việc từ nhiều khối/OKR; có cây Dự án → Tiểu dự án → Công việc và ngân sách.</p></div>
+      <div class="card2"><h3>3 cách nhìn</h3><p><b>Danh sách</b> để lọc, <b>Kanban</b> để kéo–thả theo trạng thái, <b>Gantt</b> để xem theo dòng thời gian.</p></div>
+      <div class="card2"><h3>Ràng buộc &amp; hạn</h3><p>Việc có thể <b>phụ thuộc</b> việc khác (waterfall); cảnh báo quá hạn / sắp đến hạn / đang chờ việc trước.</p></div>
+    </div>
+    <p class="lead" style="margin-top:12px">Mỗi việc biết nó thuộc mục tiêu nào, ai phụ trách, bao giờ xong — và tiến độ tự cuộn ngược lên OKR.</p>
+  </section>
+
+  <!-- 12 · Meetings module -->
+  <section class="slide">
+    <p class="eyebrow">Phân hệ · Cuộc họp điều hành</p>
+    <h2>Họp ra quyết định — và quyết định thành việc có chủ.</h2>
+    <ul class="ticks">
+      <li><div><b>Lịch họp theo loại</b> <span>(điều hành tuần/tháng, theo khối, theo dự án…) với chủ trì, <b>đồng chủ trì</b> và <b>thư ký</b> — đều có quyền biên tập.</span></div></li>
+      <li><div><b>Giao việc ngay tại họp</b> <span>— việc phát sinh gắn thẳng vào OKR/dự án, có người &amp; hạn.</span></div></li>
+      <li><div><b>Biên bản, quyết định, nối chuỗi họp</b> <span>— chuỗi check-in hằng tuần liền mạch, không rơi vãi.</span></div></li>
+    </ul>
+    <p class="lead" style="margin-top:14px">Cuộc họp không kết thúc bằng một biên bản để đó, mà bằng những đầu việc đã nằm trong hệ thống.</p>
+  </section>
+
+  <!-- 13 · Reporting module -->
+  <section class="slide">
+    <p class="eyebrow">Phân hệ · Báo cáo &amp; Điều hành</p>
+    <h2>Từ dữ liệu thô đến nhận định để hành động.</h2>
+    <div class="grid3">
+      <div class="card2"><h3>Trang Họp điều hành</h3><p>Tổng hợp một kỳ: nhịp độ, theo khối, BSC, cảnh báo KPI, OKR cần chú ý, việc quá hạn — in đẹp để họp.</p></div>
+      <div class="card2"><h3>Bản tin tuần tự động</h3><p>Gửi email tóm tắt cho ban lãnh đạo mỗi tuần — không cần ai soạn.</p></div>
+      <div class="card2"><h3>Nhận định &amp; Khuyến nghị</h3><p>Hệ thống tự nêu <b>Quan sát → Hàm ý → Khuyến nghị</b> theo mức độ, giúp đọc số ra hành động.</p></div>
+    </div>
+    <p class="lead" style="margin-top:12px">Mọi con số tổng hợp đều <b>bấm được</b> để truy ngược tới danh sách đích danh — minh bạch, không “số trơ”.</p>
+  </section>
+
+  <!-- 14 · Trust: profile + integrity + permissions -->
+  <section class="slide">
+    <p class="eyebrow">Minh bạch &amp; tin cậy</p>
+    <h2>Ai làm gì, dữ liệu có sạch không, ai được xem gì.</h2>
+    <div class="grid3">
+      <div class="card2"><h3>Hồ sơ 360°</h3><p>Bấm vào tên một người → xem toàn cảnh: đơn vị, OKR chủ trì, dự án, công việc, quá hạn, cuộc họp.</p></div>
+      <div class="card2"><h3>Toàn vẹn dữ liệu</h3><p>Tự soi lỗ hổng: OKR chưa cascade, KR chưa có việc, dự án rỗng, ngân sách lệch, ràng buộc gắn nhầm…</p></div>
+      <div class="card2"><h3>Phân quyền theo vai trò</h3><p>Điều hành xem toàn cảnh; nhân viên xem trong phạm vi đơn vị mình; quyền sửa giới hạn theo trách nhiệm.</p></div>
+    </div>
+    <p class="lead" style="margin-top:12px">Hệ thống không chỉ lưu số — nó chủ động chỉ ra chỗ chưa ổn để sửa sớm.</p>
+  </section>
+
+  <!-- 15 · Roles / how to use -->
+  <section class="slide">
+    <p class="eyebrow">Dùng thế nào cho hiệu quả</p>
+    <h2>Mỗi vai trò một cách khai thác.</h2>
+    <div class="cols">
+      <div class="card2"><span class="tag">CEO / CFO</span><h3>Điều hành toàn cảnh</h3><p>Theo dõi tiến độ công ty &amp; các khối, sức khỏe OKR, cảnh báo KPI; chủ trì họp điều hành, nhận bản tin tuần.</p></div>
+      <div class="card2"><span class="tag">Giám đốc khối</span><h3>Dẫn dắt khối</h3><p>Cascade mục tiêu công ty xuống phòng, phân bổ dự án/việc, duyệt check-in, xử lý việc quá hạn của khối.</p></div>
+      <div class="card2"><span class="tag">Trưởng phòng</span><h3>Điều phối phòng</h3><p>Giao việc cho nhân viên, theo dõi Kanban/Gantt của phòng, cập nhật KR, chuẩn bị số liệu họp.</p></div>
+      <div class="card2"><span class="tag">Nhân viên</span><h3>Tập trung việc của mình</h3><p>Trang “Của tôi”: tổng quan công việc, cập nhật trạng thái &amp; tiến độ; xem OKR trong phạm vi đơn vị mình.</p></div>
+    </div>
+  </section>
+
+  <!-- 16 · Operating rhythm -->
+  <section class="slide">
+    <p class="eyebrow">Nhịp vận hành đề xuất</p>
+    <h2>Đưa hệ thống vào thói quen — không phải sự kiện.</h2>
+    <ol class="steps">
+      <li><div><b>Hằng ngày.</b> <span>Nhân viên cập nhật trạng thái việc; trưởng phòng nhìn Kanban để gỡ vướng.</span></div></li>
+      <li><div><b>Hằng tuần.</b> <span>Check-in KR + độ tự tin; họp điều hành tuần giao/rà việc; hệ thống gửi bản tin.</span></div></li>
+      <li><div><b>Hằng tháng.</b> <span>Rà KPI theo ngưỡng, sức khỏe OKR, ngân sách; đọc Nhận định &amp; Khuyến nghị để điều chỉnh.</span></div></li>
+      <li><div><b>Hằng quý.</b> <span>Chấm điểm OKR, đặt OKR kỳ mới, soi Toàn vẹn dữ liệu trước khi bước sang kỳ.</span></div></li>
+    </ol>
+  </section>
+
+  <!-- 17 · Benefits -->
+  <section class="slide">
+    <p class="eyebrow">Vì sao đáng làm</p>
+    <h2>Lợi ích cho BTMH.</h2>
+    <ul class="ticks">
+      <li><div><b>Chiến lược không thất thoát</b> <span>— từ tầm nhìn tới việc của mỗi người đều nhìn thấy và nối liền.</span></div></li>
+      <li><div><b>Ra quyết định nhanh &amp; đúng</b> <span>— số liệu tươi, cảnh báo sớm, khuyến nghị sẵn.</span></div></li>
+      <li><div><b>Trách nhiệm rõ ràng</b> <span>— mỗi mục tiêu, mỗi việc đều có chủ và có hạn.</span></div></li>
+      <li><div><b>Tiết kiệm thời gian tổng hợp</b> <span>— báo cáo &amp; bản tin tự sinh, thay cho gom số thủ công.</span></div></li>
+      <li><div><b>Sẵn sàng cho quy mô lớn</b> <span>— chuẩn hóa cách vận hành khi công ty mở rộng tới hàng trăm điểm bán.</span></div></li>
+    </ul>
+  </section>
+
+  <!-- 18 · Changelog appendix -->
+  <section class="slide">
+    <p class="eyebrow">Phụ lục · Nhật ký cập nhật</p>
+    <h2>Hệ thống được nâng cấp liên tục.</h2>
+    <ul class="cl" id="changelog">
+      <li><span class="date">06/08/2026</span><span class="what"><b>Trải nghiệm &amp; phân quyền.</b> Hồ sơ 360° người dùng (bấm tên để xem); trang “Của tôi” thêm tổng quan công việc; dropdown chọn đơn vị theo cây tổ chức + tìm kiếm ở toàn hệ thống; nhân viên chỉ xem OKR trong phạm vi đơn vị mình.</span></li>
+      <li><span class="date">05/08/2026</span><span class="what"><b>Thực thi &amp; cộng tác.</b> Ràng buộc waterfall giữa các công việc (cảnh báo “đang chờ”); cuộc họp có nhiều đồng chủ trì &amp; thư ký; trang Công việc phân trang, sắp xếp, format số tự động.</span></li>
+      <li><span class="date">02–03/08/2026</span><span class="what"><b>Điều hành.</b> Trang Họp điều hành (WBR/MBR), Bản tin tuần tự động, Sức khỏe OKR, Nhận định &amp; Khuyến nghị; trang Toàn vẹn dữ liệu với truy vết đích danh.</span></li>
+      <li><span class="date">31/07/2026</span><span class="what"><b>Nền tảng đo lường.</b> KPI tự động từ dữ liệu bán hàng; Thư viện KPI &amp; Scorecard theo BSC; quản trị dự án gắn OKR (Danh sách/Kanban/Gantt); nhắc check-in định kỳ.</span></li>
+    </ul>
+    <div class="title-foot" style="margin-top:12px"><span>Danh sách rút gọn — bản đầy đủ xem trong mục “Hướng dẫn” của hệ thống.</span><span><strong>← →</strong> để xem lại</span></div>
+  </section>
+
+</div>
+
+<div class="hud">
+  <button id="prev" aria-label="Slide trước">‹</button>
+  <div class="dots" id="dots"></div>
+  <span class="count" id="count">1 / 18</span>
+  <button id="next" aria-label="Slide kế">›</button>
+  <button class="theme-btn" id="theme" aria-label="Đổi giao diện sáng/tối">◐</button>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotsWrap = document.getElementById('dots');
+  const countEl = document.getElementById('count');
+  const progress = document.getElementById('progress');
+  let i = 0;
+  slides.forEach((_, n) => { const d = document.createElement('i'); if (n === 0) d.className = 'on';
+    d.addEventListener('click', () => go(n)); dotsWrap.appendChild(d); });
+  const dots = Array.from(dotsWrap.children);
+  function go(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, k) => s.classList.toggle('active', k === i));
+    dots.forEach((d, k) => d.classList.toggle('on', k === i));
+    countEl.textContent = (i + 1) + ' / ' + slides.length;
+    progress.style.width = ((i + 1) / slides.length * 100) + '%';
+  }
+  document.getElementById('next').addEventListener('click', () => go(i + 1));
+  document.getElementById('prev').addEventListener('click', () => go(i - 1));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(i + 1); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(i - 1); }
+    if (e.key === 'Home') go(0); if (e.key === 'End') go(slides.length - 1);
+  });
+  document.getElementById('theme').addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const isDark = cur ? cur === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  });
+  progress.style.width = (1 / slides.length * 100) + '%';
+</script>
+</body>
+</html>

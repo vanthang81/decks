@@ -182,6 +182,18 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   `GUIDE_VERSION`; (3) gắn `<HelpTip k="..."/>` tại UI tính năng đó. Nhờ vậy tài liệu + tooltip luôn
   đồng bộ với hệ thống một cách tự động.
 
+## Tài liệu SLIDE DECK giới thiệu hệ thống (deck.consultx.vn) — TỰ ĐỘNG CẬP NHẬT
+- **Nguồn**: `okr-portal/docs/system-overview-deck.html` (HTML self-contained, house style deck ConsultX:
+  palette maroon `#7C0312`/gold, serif Georgia, nav ←→/Space, sáng/tối, in PDF; 16:9). Slug published =
+  **`he-thong-quan-tri-hieu-suat-btmh`** → live PUBLIC tại `https://deck.consultx.vn/d/he-thong-quan-tri-hieu-suat-btmh`.
+- **Publish/cập nhật**: tool MCP `deck-publisher` `deck_publish` (slug trên, `visibility:'public'`, category 'Hướng dẫn').
+  Gọi lại cùng slug = ghi đè. Link deck cũng gắn ở bước cuối tour onboarding + trang `/guide`.
+- **QUY TẮC THƯỜNG TRỰC (CFO 06/08 — KHÔNG cần hỏi lại)**: **mỗi khi thêm/đổi tính năng ⇒ TỰ ĐỘNG cập nhật
+  deck này + republish + tự QC** (chụp Chromium vài slide). Thêm mục vào phụ lục **Nhật ký cập nhật** (ngày +
+  tính năng) — KHÔNG ghi số version. Viết cho người **non-tech** (không lộ chi tiết kỹ thuật/hạ tầng/code).
+- **Cho dễ dùng/minh họa (CFO 06/08)**: ưu tiên **ảnh chụp màn hình app** (render faithful qua harness QC =
+  globals.css thật + data mẫu → nhúng data-URI), **sơ đồ/So SVG, charts/graphs, hình phác họa, link** — không chỉ chữ.
+
 ## Logic quan trọng (src/lib/)
 - `okr.ts`: `computeKrProgress` (theo hướng tăng/giảm, clamp 0..100), `recomputeUp` (lan tiến độ
   KR→Objective→cha, bình quân theo weight; không KR thì bình quân con). `canManageObjective`/`canCreateAt`.
