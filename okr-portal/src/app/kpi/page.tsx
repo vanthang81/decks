@@ -1,8 +1,9 @@
 import SiteHeader from '@/components/SiteHeader';
 import HelpTip from '@/components/HelpTip';
+import SearchSelect from '@/components/SearchSelect';
 import { ProgressBar } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
-import { listUnits, manageScope } from '@/lib/org';
+import { listUnits, manageScope, buildTree, type UnitNode } from '@/lib/org';
 import { getCurrentPeriod, listPeriods, getPeriod, orderPeriodsHierarchically, PERIOD_KIND_LABEL } from '@/lib/periods';
 import { loadAccess, canInputKpi, hasCap } from '@/lib/access';
 import { BSC_PERSPECTIVES, BSC_PERSPECTIVE_LABEL, BSC_PERSPECTIVE_ICON } from '@/lib/okr';
@@ -49,12 +50,18 @@ export default async function KpiScorecardPage({
   const { score, weighted, scored } = scorecardScore(rows);
   const scorePct = weighted ? (score / weighted) * 100 : 0;
 
-  // Đơn vị cho dropdown: Công ty → Khối → Phòng (thụt cấp).
-  const orderedUnits = [
-    ...units.filter((u) => u.type === 'company'),
-    ...units.filter((u) => u.type === 'division'),
-    ...units.filter((u) => u.type === 'department'),
-  ];
+  // Đơn vị cho dropdown: đi theo CÂY tổ chức — Công ty → mỗi Khối → các Phòng THUỘC khối đó
+  // (thụt cấp), thay vì gom phẳng tất cả Phòng xuống cuối. Kèm ô tìm kiếm (SearchSelect).
+  const TYPE_LABEL: Record<string, string> = { company: 'Công ty', division: 'Khối', department: 'Phòng' };
+  const unitOptions: { value: string; label: string }[] = [];
+  const walkUnits = (nodes: UnitNode[], depth: number) => {
+    for (const n of nodes) {
+      const indent = '  '.repeat(depth) + (depth > 0 ? '↳ ' : '');
+      unitOptions.push({ value: n.id, label: `${indent}${n.name} (${TYPE_LABEL[n.type] ?? n.type})` });
+      if (n.children.length) walkUnits(n.children, depth + 1);
+    }
+  };
+  walkUnits(buildTree(units), 0);
 
   return (
     <>
@@ -81,14 +88,9 @@ export default async function KpiScorecardPage({
               <option key={p.id} value={p.id}>{'· '.repeat(depth)}{PERIOD_KIND_LABEL[p.kind]}: {p.name}</option>
             ))}
           </select>
-          <select className="i fb-sel" name="unit" defaultValue={unitId}>
-            {orderedUnits.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.type === 'department' ? '· · ' : u.type === 'division' ? '· ' : ''}
-                {u.name} ({u.type === 'division' ? 'Khối' : u.type === 'department' ? 'Phòng' : 'Công ty'})
-              </option>
-            ))}
-          </select>
+          <div className="fb-sel fb-ss">
+            <SearchSelect name="unit" defaultValue={unitId} options={unitOptions} placeholder="Chọn đơn vị…" />
+          </div>
           <select className="i fb-sel" name="bsc" defaultValue={fbsc}>
             <option value="">Viễn cảnh: tất cả</option>
             {BSC_PERSPECTIVES.map((b) => (
