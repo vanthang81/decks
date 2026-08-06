@@ -88,3 +88,24 @@ export const deckPwCookieOptions = {
   path: '/',
   maxAge: PW_TTL_SECONDS,
 };
+
+// ---- Token ảnh preview cho EMAIL (Gmail chặn data-URI) ----
+// Ký token gắn với deckId để nhúng <img src="/api/thumb/<id>?t=..."> vào email duyệt yêu cầu.
+// Không cần phiên admin; chỉ server ký được nên link không đoán/giả được. Hết hạn 30 ngày.
+export async function signThumbToken(deckId: string): Promise<string> {
+  return new SignJWT({ d: deckId, p: 'thumb' })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('30d')
+    .sign(secret());
+}
+
+export async function verifyThumbToken(token: string | undefined, deckId: string): Promise<boolean> {
+  if (!token) return false;
+  try {
+    const { payload } = await jwtVerify(token, secret());
+    return payload.p === 'thumb' && payload.d === deckId;
+  } catch {
+    return false;
+  }
+}

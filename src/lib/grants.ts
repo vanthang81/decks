@@ -146,6 +146,16 @@ export async function revokeGrant(grantId: string): Promise<void> {
   );
 }
 
+// Thu hồi grant active của 1 email trên 1 deck (dùng khi từ chối/thu hồi yêu cầu cấp quyền).
+export async function revokeGrantByDeckEmail(deckId: string, email: string): Promise<void> {
+  await query(
+    `UPDATE deck_grants SET status='revoked', revoked_at=now()
+     WHERE deck_id=$1 AND status='active'
+       AND viewer_id IN (SELECT id FROM deck_viewers WHERE lower(email)=lower($2))`,
+    [deckId, email],
+  );
+}
+
 export type GrantRow = {
   id: string;
   viewer_id: string;

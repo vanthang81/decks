@@ -17,6 +17,7 @@ export type DeckLite = {
   tags: string[];
   company: string;
   groups: string[]; // tên các nhóm được cấp deck này
+  pending: number; // số yêu cầu cấp quyền đang chờ duyệt
 };
 
 function hueFor(s: string): number {
@@ -83,6 +84,7 @@ function Badges({ d }: { d: DeckLite }) {
       {d.has_password && <span className="pill" style={{ fontSize: 10 }}>🔒 mật khẩu</span>}
       {d.require_otp && <span className="pill" style={{ fontSize: 10 }}>OTP</span>}
       {!d.is_published && <span className="pill bad" style={{ fontSize: 10 }}>đã ẩn</span>}
+      {d.pending > 0 && <span className="pill bad" style={{ fontSize: 10 }}>🔔 {d.pending} chờ duyệt</span>}
     </span>
   );
 }

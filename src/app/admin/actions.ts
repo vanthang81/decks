@@ -12,6 +12,7 @@ import { upsertViewer } from '@/lib/viewers';
 import { issueGrant, revokeGrant, revokeGroupOnDeck } from '@/lib/grants';
 import { getAdmin, addAdmin, setAdminActive, setAdminRole, removeAdmin, countActiveAdmins, type AdminRole } from '@/lib/admins';
 import { createGroup, deleteGroup, addMember, removeMember, grantDeckToGroup } from '@/lib/groups';
+import { getRequest, setRequestStatus, approveAndGrant, denyRequest } from '@/lib/accessRequests';
 import { sendMail } from '@/lib/mail';
 
 // Bắt buộc là admin allowlist ĐANG hoạt động. Viewer đăng nhập Google có phiên nhưng KHÔNG phải admin
@@ -279,6 +280,33 @@ export async function revokeLinkAction(formData: FormData) {
   const grantId = String(formData.get('grant_id') ?? '');
   const deckId = String(formData.get('deck_id') ?? '');
   if (grantId) await revokeGrant(grantId);
+  revalidatePath(`/admin/decks/${deckId}`);
+}
+
+// ---- Yêu cầu cấp quyền xem (từ trang gate) ----
+// Duyệt = cấp grant + gửi link cho người xem. Đổi quyết định được (approve/deny lại bất cứ lúc nào).
+export async function approveRequestAction(formData: FormData) {
+  const by = await requireAdminEmail();
+  const reqId = String(formData.get('request_id') ?? '');
+  const deckId = String(formData.get('deck_id') ?? '');
+  if (!reqId) return;
+  const reqRow = await getRequest(reqId);
+  if (!reqRow) return;
+  await setRequestStatus(reqId, 'approved', by);
+  const base = process.env.APP_URL ?? '';
+  await approveAndGrant(reqRow, base, by).catch(() => {});
+  revalidatePath(`/admin/decks/${deckId}`);
+}
+
+export async function denyRequestAction(formData: FormData) {
+  const by = await requireAdminEmail();
+  const reqId = String(formData.get('request_id') ?? '');
+  const deckId = String(formData.get('deck_id') ?? '');
+  if (!reqId) return;
+  const reqRow = await getRequest(reqId);
+  if (!reqRow) return;
+  await setRequestStatus(reqId, 'denied', by);
+  await denyRequest(reqRow).catch(() => {}); // thu hồi grant nếu trước đó đã cấp
   revalidatePath(`/admin/decks/${deckId}`);
 }
 

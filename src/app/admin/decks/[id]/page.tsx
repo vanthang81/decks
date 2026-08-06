@@ -2,8 +2,10 @@ import { notFound } from 'next/navigation';
 import { getDeckById, hasDeckContent, listCategories, listCompanies } from '@/lib/decks';
 import { listGrantsForDeck } from '@/lib/grants';
 import { listGroups, grantedGroupsForDeck } from '@/lib/groups';
+import { listRequestsForDeck } from '@/lib/accessRequests';
+import { parseUA } from '@/lib/ua';
 import { listDeckLog } from '@/lib/log';
-import { issueLinkAction, revokeLinkAction, updateContentAction, grantDeckToGroupAction, revokeGroupOnDeckAction, setDeckPasswordAction, generateDeckPasswordAction, clearDeckPasswordAction, updateDeckMetaAction, generateThumbnailAction, setDeckPublishedAction, deleteDeckAction } from '../../actions';
+import { issueLinkAction, revokeLinkAction, updateContentAction, grantDeckToGroupAction, revokeGroupOnDeckAction, setDeckPasswordAction, generateDeckPasswordAction, clearDeckPasswordAction, updateDeckMetaAction, generateThumbnailAction, setDeckPublishedAction, deleteDeckAction, approveRequestAction, denyRequestAction } from '../../actions';
 import CopyField from '@/components/CopyField';
 
 export const dynamic = 'force-dynamic';
@@ -31,6 +33,8 @@ export default async function DeckDetailPage({
   const hasContent = await hasDeckContent(deck.id).catch(() => false);
   const groups = await listGroups().catch(() => []);
   const grantedGroups = await grantedGroupsForDeck(deck.id).catch(() => []);
+  const requests = await listRequestsForDeck(deck.id).catch(() => []);
+  const pendingCount = requests.filter((r) => r.status === 'pending').length;
   const categories = await listCategories().catch(() => []);
   const companies = await listCompanies().catch(() => []);
 
@@ -176,6 +180,55 @@ export default async function DeckDetailPage({
           <button className="btn" type="submit">Lưu nội dung</button>
         </div>
       </form>
+
+      <h2 style={{ marginTop: 8 }}>
+        Yêu cầu cấp quyền{pendingCount > 0 && <span className="pill bad" style={{ marginLeft: 8 }}>{pendingCount} chờ duyệt</span>}
+      </h2>
+      <p className="muted">Người xem gửi yêu cầu từ trang mở deck. <b>Đồng ý</b> = cấp link cá nhân + email cho họ (đổi quyết định được bất cứ lúc nào).</p>
+      {requests.length === 0 ? (
+        <p className="muted">Chưa có yêu cầu nào.</p>
+      ) : (
+        <table style={{ marginBottom: 32 }}>
+          <thead><tr><th>Người yêu cầu</th><th>Lý do</th><th>Thiết bị / IP</th><th>Thời gian</th><th>Trạng thái</th><th></th></tr></thead>
+          <tbody>
+            {requests.map((r) => {
+              const uaInfo = parseUA(r.user_agent);
+              return (
+                <tr key={r.id}>
+                  <td>{r.name ? `${r.name} · ` : ''}<span className="muted">{r.email}</span></td>
+                  <td className="muted" style={{ maxWidth: 220 }}>{r.message || '—'}</td>
+                  <td className="muted" style={{ fontSize: 12 }}>{uaInfo.browser} · {uaInfo.os}<br />{r.ip ?? '—'}</td>
+                  <td className="muted">{fmt(r.created_at)}</td>
+                  <td>
+                    <span className={`pill ${r.status === 'approved' ? 'ok' : r.status === 'denied' ? 'bad' : ''}`}>
+                      {r.status === 'approved' ? 'Đã duyệt' : r.status === 'denied' ? 'Từ chối' : 'Chờ duyệt'}
+                    </span>
+                    {r.decided_by && <div className="muted" style={{ fontSize: 11 }}>bởi {r.decided_by}</div>}
+                  </td>
+                  <td>
+                    <div className="row" style={{ gap: 6 }}>
+                      {r.status !== 'approved' && (
+                        <form action={approveRequestAction}>
+                          <input type="hidden" name="request_id" value={r.id} />
+                          <input type="hidden" name="deck_id" value={deck.id} />
+                          <button className="btn primary" type="submit">Đồng ý</button>
+                        </form>
+                      )}
+                      {r.status !== 'denied' && (
+                        <form action={denyRequestAction}>
+                          <input type="hidden" name="request_id" value={r.id} />
+                          <input type="hidden" name="deck_id" value={deck.id} />
+                          <button className="btn" type="submit">Từ chối</button>
+                        </form>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
 
       <h2 style={{ marginTop: 8 }}>Cấp cho nhóm</h2>
       <p className="muted">Cấp deck này cho cả một nhóm — mỗi thành viên tự nhận link cá nhân + watermark riêng. Thành viên thêm vào nhóm sau cũng tự có quyền.</p>

@@ -11,7 +11,11 @@ import { reqBaseUrl } from '@/lib/http';
 import { logEvent } from '@/lib/log';
 import { sendMail } from '@/lib/mail';
 import { auth } from '@/auth';
-import { getAdmin } from '@/lib/admins';
+import { getAdmin, listAdmins } from '@/lib/admins';
+import { createOrUpdateRequest } from '@/lib/accessRequests';
+import { adminRequestEmail } from '@/lib/emails';
+import { parseUA } from '@/lib/ua';
+import { signThumbToken } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,10 +36,10 @@ function htmlResponse(body: string, status = 200): Response {
 // Cả hai POST về chính URL /d/<slug>, phân biệt bằng field 'mode'.
 function accessGate(
   deck: Pick<Deck, 'slug' | 'title' | 'has_password' | 'visibility'>,
-  opts: { pwErr?: string; emailErr?: string; emailInfo?: string } = {},
+  opts: { pwErr?: string; reqErr?: string; reqInfo?: string } = {},
 ): Response {
   const showPw = deck.has_password;
-  const showEmail = deck.visibility === 'protected';
+  const showRequest = deck.visibility === 'protected'; // gửi yêu cầu cấp quyền / lấy lại link
   const showGoogle = deck.visibility === 'protected'; // Google login: admin + viewer được cấp
   const esc = (s: string) => s.replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]!));
   const cb = encodeURIComponent(`/d/${deck.slug}`);
@@ -61,21 +65,23 @@ function accessGate(
        </form>`
     : '';
 
-  const emailSection = showEmail
+  const requestSection = showRequest
     ? `<form class="sec" method="post" action="/d/${deck.slug}">
-         <input type="hidden" name="mode" value="email" />
-         <label>Gửi lại link qua email được cấp</label>
+         <input type="hidden" name="mode" value="request" />
+         <label>Yêu cầu quyền xem deck</label>
          <input type="email" name="email" placeholder="email@congty.com" autocomplete="email" required />
-         <button type="submit" class="ghost">Gửi link vào email của tôi</button>
-         ${opts.emailErr ? `<div class="err">${esc(opts.emailErr)}</div>` : ''}
-         ${opts.emailInfo ? `<div class="info">${esc(opts.emailInfo)}</div>` : ''}
+         <input type="text" name="name" placeholder="Tên của bạn (tuỳ chọn)" autocomplete="name" maxlength="120" />
+         <input type="text" name="message" placeholder="Lý do cần xem (tuỳ chọn)" maxlength="300" />
+         <button type="submit" class="ghost">Gửi yêu cầu</button>
+         ${opts.reqErr ? `<div class="err">${esc(opts.reqErr)}</div>` : ''}
+         ${opts.reqInfo ? `<div class="info">${esc(opts.reqInfo)}</div>` : ''}
        </form>`
     : '';
 
-  const sections = [googleSection, pwSection, emailSection].filter(Boolean);
+  const sections = [googleSection, pwSection, requestSection].filter(Boolean);
   const body = sections.join(`<div class="or"><span>hoặc</span></div>`);
-  const help = showEmail && !showPw
-    ? `<p class="hint">Bạn cần được cấp quyền để xem. Đăng nhập Google (nếu email đã được cấp), hoặc nhập email để nhận lại link.</p>`
+  const help = showRequest && !showPw
+    ? `<p class="hint">Bạn cần được cấp quyền để xem. Đăng nhập Google (nếu email đã được cấp), hoặc gửi yêu cầu để quản trị viên duyệt — hệ sẽ email link cho bạn khi được duyệt.</p>`
     : '';
 
   return htmlResponse(
@@ -111,7 +117,7 @@ function accessGate(
        <p class="sub">Deck bảo mật — chọn cách bạn được cấp quyền để xem.</p>
        ${help}${body}
      </div></body></html>`,
-    opts.pwErr || opts.emailErr ? 401 : 200,
+    opts.pwErr ? 401 : 200,
   );
 }
 
@@ -210,33 +216,58 @@ export async function POST(req: NextRequest, { params }: { params: { slug: strin
   const form = await req.formData().catch(() => null);
   const mode = String(form?.get('mode') ?? '');
 
-  // (A) Đăng nhập bằng email: nếu email có grant còn hiệu lực → cấp lại token + gửi link. Trả lời TRUNG TÍNH.
-  if (mode === 'email') {
+  // (A) Yêu cầu quyền xem: nếu email ĐÃ có grant → gửi lại link ngay; nếu CHƯA → tạo yêu cầu + email admin duyệt.
+  //     Trả lời TRUNG TÍNH (không tiết lộ email nào đã có quyền).
+  if (mode === 'request' || mode === 'email') {
     if (deck.visibility !== 'protected') {
-      return accessGate(deck, { emailErr: 'Deck này không dùng đăng nhập bằng email.' });
+      return accessGate(deck, { reqErr: 'Deck này không cần yêu cầu cấp quyền.' });
     }
     const email = String(form?.get('email') ?? '').trim().toLowerCase();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      return accessGate(deck, { emailErr: 'Email không hợp lệ.' });
+      return accessGate(deck, { reqErr: 'Email không hợp lệ.' });
     }
+    const name = String(form?.get('name') ?? '').trim().slice(0, 120) || null;
+    const message = String(form?.get('message') ?? '').trim().slice(0, 300) || null;
+    const base = reqBaseUrl(req);
+
     const grant = await findActiveGrantByDeckEmail(deck.id, email);
     if (grant) {
+      // Đã có quyền → gửi lại link cá nhân (rotate token).
       const token = await rotateGrantToken(grant.id);
       if (token) {
-        const base = reqBaseUrl(req);
-        const link = `${base}/v/${token}`;
         await sendMail({
           to: grant.viewer_email,
           subject: `Link xem deck: ${deck.title}`,
           html: `<p>Bạn yêu cầu xem deck <b>${deck.title}</b>.</p>
-                 <p><a href="${link}">Mở deck</a> — link cá nhân, chỉ dành cho bạn${deck.require_otp ? ' (sẽ cần mã OTP gửi qua email)' : ''}.</p>`,
+                 <p><a href="${base}/v/${token}">Mở deck</a> — link cá nhân, chỉ dành cho bạn${deck.require_otp ? ' (sẽ cần mã OTP gửi qua email)' : ''}.</p>`,
           kind: 'link',
         }).catch(() => {});
         await logEvent({ event: 'link_resend', deckId: deck.id, viewerId: grant.viewer_id, grantId: grant.id, ip, userAgent: ua }).catch(() => {});
       }
+    } else {
+      // Chưa có quyền → tạo yêu cầu + gửi email tới các admin để duyệt (nút Đồng ý/Không đồng ý).
+      try {
+        const { req: reqRow, token } = await createOrUpdateRequest({ deckId: deck.id, email, name, message, ip, ua });
+        const admins = (await listAdmins().catch(() => [])).filter((a) => a.is_active && a.email);
+        if (admins.length) {
+          const info = parseUA(ua);
+          const thumbUrl = deck.has_thumbnail ? `${base}/api/thumb/${deck.id}?t=${await signThumbToken(deck.id)}` : null;
+          const whenVN = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+          const html = adminRequestEmail({
+            deckTitle: deck.title, deckUrl: `${base}/d/${deck.slug}`, category: deck.category, company: deck.company,
+            thumbUrl, email, name, message, ip, browser: info.browser, os: info.os, whenVN, domain: base,
+            approveUrl: `${base}/api/access-request/${reqRow.id}?a=approve&t=${token}`,
+            denyUrl: `${base}/api/access-request/${reqRow.id}?a=deny&t=${token}`,
+            manageUrl: `${base}/admin/decks/${deck.id}`,
+          });
+          for (const a of admins) {
+            await sendMail({ to: a.email, subject: `[Deck] Xin quyền xem: ${deck.title} — ${email}`, html, kind: 'link' }).catch(() => {});
+          }
+        }
+      } catch { /* best-effort: không chặn phản hồi người dùng */ }
     }
     return accessGate(deck, {
-      emailInfo: 'Nếu email của bạn có quyền xem, link đã được gửi vào hộp thư (kiểm tra cả mục spam).',
+      reqInfo: 'Đã ghi nhận. Nếu email của bạn đã có quyền, link xem đã được gửi vào hộp thư; nếu chưa, yêu cầu đã được chuyển tới quản trị viên để duyệt.',
     });
   }
 

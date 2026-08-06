@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { listDecks } from '@/lib/decks';
 import { groupNamesByDeck } from '@/lib/groups';
+import { pendingRequestCountByDeck } from '@/lib/accessRequests';
 import { getAdmin } from '@/lib/admins';
 import SiteHeader from '@/components/SiteHeader';
 import DeckGallery, { type DeckLite } from '@/components/DeckGallery';
@@ -21,10 +22,12 @@ export default async function GalleryPage() {
 
   let decks: Awaited<ReturnType<typeof listDecks>> = [];
   let groupMap: Record<string, string[]> = {};
+  let pendingMap: Record<string, number> = {};
   let dbErr = false;
   try {
     decks = await listDecks();
     groupMap = await groupNamesByDeck().catch(() => ({}));
+    pendingMap = await pendingRequestCountByDeck().catch(() => ({}));
   } catch {
     dbErr = true;
   }
@@ -50,6 +53,7 @@ export default async function GalleryPage() {
     tags: d.tags,
     company: d.company,
     groups: groupMap[d.id] ?? [],
+    pending: pendingMap[d.id] ?? 0,
   }));
 
   return (
