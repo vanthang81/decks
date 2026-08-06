@@ -24,7 +24,8 @@ phục vụ + chèn watermark/log.
   bảng deck_groups/deck_group_members + cột deck_grants.group_id, `004_group_decks.sql` bảng
   deck_group_decks = entitlement nhóm↔deck, `005_deck_password.sql` cột deck_decks.password_hash,
   `006_deck_meta.sql` cột category/tags(text[])/company(default BTMH)/thumbnail = thư viện phân loại,
-  `007_access_events.sql` mở rộng CHECK deck_access_log.event thêm pw_ok/pw_fail/link_resend)
+  `007_access_events.sql` mở rộng CHECK deck_access_log.event thêm pw_ok/pw_fail/link_resend,
+  `008_access_requests.sql` bảng deck_access_requests = yêu cầu xin cấp quyền xem)
   — chạy bằng superuser postgres qua
   `docker exec` (hoặc n8n admin cred); app dùng user `btmh_app` (đã GRANT). Typecheck: `npm run build`.
 - **`mcp-server/` là project RIÊNG** (deps riêng, image Docker riêng `decks-mcp`) → ĐÃ loại khỏi
@@ -60,6 +61,18 @@ phục vụ + chèn watermark/log.
   (c) ô **đăng nhập bằng email** (POST `mode=email` → nếu email có grant còn hiệu lực thì `rotateGrantToken`
   cấp token mới + gửi lại link `/v/<token>` qua Deck Mail, phản hồi **trung tính** không tiết lộ email nào có
   quyền; KHÔNG reactivate grant đã thu hồi). (OTP vẫn áp ở luồng click link cá nhân, không chặn mật khẩu/Google.)
+- **Xin cấp quyền xem (request → duyệt)** (`db/008`, bảng `deck_access_requests` 1 dòng/(deck,email),
+  status pending/approved/denied): trang gate có form **"Yêu cầu quyền xem"** (email + tên + lý do). POST
+  `mode=request`: nếu email đã có grant → gửi lại link; nếu chưa → tạo yêu cầu + **email tới MỌI admin đang
+  hoạt động** (`src/lib/emails.ts` HTML ConsultX) gồm thông tin người xin (email/tên/lý do/**IP**/**trình
+  duyệt+OS** parse từ UA `src/lib/ua.ts`/giờ VN/domain truy cập) + **ảnh preview slide** (nhúng qua
+  `/api/thumb/<id>?t=<token ký>` vì Gmail chặn data-URI — token `signThumbToken`) + link deck + **2 nút
+  Đồng ý/Không đồng ý** (link 1-chạm kèm token, GET `/api/access-request/<id>?a=approve|deny&t=…`). Duyệt =
+  `setRequestStatus`+`approveAndGrant` (cấp grant + email link cho người xem); từ chối = thu hồi grant. Idempotent
+  (đã xử lý → báo trạng thái). Admin đổi quyết định ở trang chi tiết deck mục **"Yêu cầu cấp quyền"**; badge
+  🔔 "chờ duyệt" ở thư viện (`pendingRequestCountByDeck`). Phản hồi người dùng TRUNG TÍNH (không lộ email nào có quyền).
+  `src/lib/accessRequests.ts`. **Lưu ý**: link duyệt 1-chạm (GET) có thể bị trình quét email prefetch → luôn có
+  thể đảo quyết định ở admin; muốn chặt hơn thì đổi sang trang xác nhận (POST).
 - **Google login cho VIEWER** (không chỉ admin): `signIn` (auth.ts) cho phép **admin allowlist HOẶC người có
   grant còn hiệu lực** (`hasAnyActiveGrant`) — viewer đăng nhập Google có phiên nhưng `isActive=false`. `/d/<slug>`
   GET: phiên Google + admin → xem mọi deck; phiên Google + grant khớp email (`findActiveGrantByDeckEmail`) → xem
