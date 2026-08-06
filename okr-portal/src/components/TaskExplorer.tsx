@@ -7,6 +7,7 @@ import { ProgressBar } from '@/components/ui';
 import { StackedBar, Donut } from '@/components/charts';
 import TaskEditModal from '@/components/TaskEditModal';
 import SearchSelect from '@/components/SearchSelect';
+import UserLink from '@/components/UserLink';
 import { unitTreeOptions } from '@/lib/unit-options';
 import { fmtDate } from '@/lib/format';
 import type { TaskRow } from '@/lib/initiatives';
@@ -570,13 +571,13 @@ export default function TaskExplorer({
                 </td>
                 <td>
                   {t.owner_email ? (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5 }}>
                       {t.owner_avatar && (
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img src={t.owner_avatar} alt="" referrerPolicy="no-referrer"
                           style={{ width: 20, height: 20, borderRadius: '50%' }} />
                       )}
-                      <span style={{ fontSize: 12.5 }}>{t.owner_name || t.owner_email}</span>
+                      <UserLink email={t.owner_email} name={t.owner_name} stop />
                     </span>
                   ) : <span className="muted" style={{ fontSize: 12.5 }}>—</span>}
                 </td>

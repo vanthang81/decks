@@ -50,6 +50,7 @@ export default async function ObjectivesPage({
     unit_name: o.unit_name,
     unit_code: o.unit_code,
     owner_name: o.owner_name,
+    owner_email: o.owner_email,
     status: o.status,
     okr_type: o.okr_type,
     kr_count: o.kr_count,

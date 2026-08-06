@@ -5,6 +5,7 @@ import HelpTip from '@/components/HelpTip';
 import ExecutionTabs from '@/components/ExecutionTabs';
 import ResettableForm from '@/components/ResettableForm';
 import SearchSelect from '@/components/SearchSelect';
+import UserLink from '@/components/UserLink';
 import { unitTreeOptions } from '@/lib/unit-options';
 import NumberInput from '@/components/NumberInput';
 import CommentThread from '@/components/CommentThread';
@@ -302,7 +303,9 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                     {`${obj.unit_name} · `}
                   </>
                 ) : ''}
-                {obj.owner_name ? `Chủ trì: ${obj.owner_name}` : 'Chưa gán chủ trì'}
+                {obj.owner_email || obj.owner_name
+                  ? <>Chủ trì: <UserLink email={obj.owner_email} name={obj.owner_name} /></>
+                  : 'Chưa gán chủ trì'}
               </div>
               {obj.description && <p style={{ marginBottom: 0 }}>{obj.description}</p>}
             </div>

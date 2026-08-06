@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ProgressBar } from './ui';
 import SearchSelect from '@/components/SearchSelect';
+import UserLink from '@/components/UserLink';
 import { unitIcon } from '@/lib/unit-icons';
 
 // Kiểu dữ liệu phẳng truyền từ server (chỉ field cần cho cây — đều serializable).
@@ -17,6 +18,7 @@ export type TreeObjective = {
   unit_name: string | null;
   unit_code: string | null;
   owner_name: string | null;
+  owner_email: string | null;
   status: string;
   okr_type: string;
   kr_count: number;
@@ -172,7 +174,7 @@ export default function ObjectiveTree({ objectives, unitOptions }: { objectives:
           </div>
           <div className="ot-meta">
             {o.unit_name ? `${o.unit_name}` : ''}
-            {o.owner_name ? `${o.unit_name ? ' · ' : ''}Chủ trì: ${o.owner_name}` : ''}
+            {o.owner_name && <>{o.unit_name ? ' · ' : ''}Chủ trì: <UserLink email={o.owner_email} name={o.owner_name} /></>}
             {` · ${o.kr_count} KR · ${STATUS_LABEL[o.status] ?? o.status}`}
           </div>
         </div>
@@ -219,7 +221,7 @@ export default function ObjectiveTree({ objectives, unitOptions }: { objectives:
             </div>
             <div className="ot-meta">
               {n.unit_name ? `${n.unit_name}` : ''}
-              {n.owner_name ? `${n.unit_name ? ' · ' : ''}Chủ trì: ${n.owner_name}` : ''}
+              {n.owner_name && <>{n.unit_name ? ' · ' : ''}Chủ trì: <UserLink email={n.owner_email} name={n.owner_name} /></>}
               {` · ${n.kr_count} KR`}
             </div>
           </div>

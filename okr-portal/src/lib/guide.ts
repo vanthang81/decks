@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-06.96';
+export const GUIDE_VERSION = '2026-08-06.97';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -594,6 +594,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '06/08/2026 (Hồ sơ 360° người dùng — bấm vào tên để mở)',
+    items: [
+      'Bấm vào TÊN người (chủ trì OKR ở "Toàn bộ OKR"/chi tiết OKR, người phụ trách ở trang Công việc, danh sách Người dùng) → mở HỒ SƠ 360°: định danh, đơn vị, số liệu tổng quan (OKR/KR/dự án/việc/quá hạn/họp).',
+      'Phân quyền: quản trị (CEO/CFO) xem ĐẦY ĐỦ (chi tiết OKR/dự án/việc/check-in/đăng nhập/nhật ký); người thường xem bản CƠ BẢN (định danh + số lượng).',
+      'Sửa lỗi 500 khi mở hồ sơ (truy vấn tiến độ dự án sai cột) — nay tính đúng theo bình quân việc con.',
+    ],
+  },
   {
     date: '06/08/2026 (Đồng bộ TOÀN HỆ THỐNG: dropdown đơn vị theo cây + tìm kiếm)',
     items: [
