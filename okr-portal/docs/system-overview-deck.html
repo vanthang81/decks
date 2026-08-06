@@ -229,6 +229,58 @@
     <p class="lead" style="margin-top:12px">Nhờ hai trục này, một con số bất kỳ luôn trả lời được: <b style="color:var(--ink)">của ai, thuộc mục tiêu nào, trong kỳ nào.</b></p>
   </section>
 
+  <!-- 6b · Cascade tree (SVG) -->
+  <section class="slide">
+    <p class="eyebrow">Minh họa · Cascade</p>
+    <h2>Một mục tiêu công ty, rải xuống tới từng người.</h2>
+    <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+      <svg viewBox="0 0 960 340" width="100%" style="max-height:56vh" font-family="var(--sans)" role="img" aria-label="Sơ đồ cascade Công ty xuống Khối, Phòng, Cá nhân">
+        <style>
+          .box { fill: var(--card); stroke: var(--line); stroke-width: 1.5; }
+          .box.co { fill: var(--accent); }
+          .box.kh { fill: var(--accent-soft); }
+          .lbl { fill: var(--ink); font-size: 15px; font-weight: 600; }
+          .lbl.w { fill: #fff; }
+          .sub { fill: var(--neutral); font-size: 12px; }
+          .lnk { stroke: var(--accent); stroke-width: 1.6; fill: none; opacity: .55; }
+        </style>
+        <path class="lnk" d="M480 66 C 480 100, 250 100, 250 130" />
+        <path class="lnk" d="M480 66 C 480 100, 710 100, 710 130" />
+        <path class="lnk" d="M250 186 C 250 210, 150 210, 150 236" />
+        <path class="lnk" d="M250 186 C 250 210, 350 210, 350 236" />
+        <path class="lnk" d="M710 186 C 710 210, 610 210, 610 236" />
+        <path class="lnk" d="M710 186 C 710 210, 810 210, 810 236" />
+        <path class="lnk" d="M150 292 C 150 312, 150 312, 150 316" />
+        <path class="lnk" d="M610 292 C 610 312, 610 312, 610 316" />
+        <rect class="box co" x="360" y="24" width="240" height="44" rx="9"/>
+        <text class="lbl w" x="480" y="51" text-anchor="middle">🎯 Mục tiêu Công ty</text>
+        <rect class="box kh" x="150" y="130" width="200" height="56" rx="9"/>
+        <text class="lbl" x="250" y="154" text-anchor="middle">Khối Kinh doanh</text>
+        <text class="sub" x="250" y="173" text-anchor="middle">OKR khối · align lên công ty</text>
+        <rect class="box kh" x="610" y="130" width="200" height="56" rx="9"/>
+        <text class="lbl" x="710" y="154" text-anchor="middle">Khối Sản phẩm</text>
+        <text class="sub" x="710" y="173" text-anchor="middle">OKR khối · align lên công ty</text>
+        <rect class="box" x="60" y="236" width="180" height="52" rx="9"/>
+        <text class="lbl" x="150" y="258" text-anchor="middle" font-size="13.5">Phòng Ecom</text>
+        <text class="sub" x="150" y="276" text-anchor="middle">OKR phòng</text>
+        <rect class="box" x="260" y="236" width="180" height="52" rx="9"/>
+        <text class="lbl" x="350" y="258" text-anchor="middle" font-size="13.5">Phòng Bán buôn</text>
+        <text class="sub" x="350" y="276" text-anchor="middle">OKR phòng</text>
+        <rect class="box" x="520" y="236" width="180" height="52" rx="9"/>
+        <text class="lbl" x="610" y="258" text-anchor="middle" font-size="13.5">Phòng Phát triển SP</text>
+        <text class="sub" x="610" y="276" text-anchor="middle">OKR phòng</text>
+        <rect class="box" x="720" y="236" width="180" height="52" rx="9"/>
+        <text class="lbl" x="810" y="258" text-anchor="middle" font-size="13.5">Phòng QLDA</text>
+        <text class="sub" x="810" y="276" text-anchor="middle">OKR phòng</text>
+        <rect class="box" x="70" y="316" width="160" height="20" rx="6"/>
+        <text class="sub" x="150" y="330" text-anchor="middle">👤 Việc &amp; KR cá nhân</text>
+        <rect class="box" x="530" y="316" width="160" height="20" rx="6"/>
+        <text class="sub" x="610" y="330" text-anchor="middle">👤 Việc &amp; KR cá nhân</text>
+      </svg>
+    </div>
+    <p class="lead" style="margin-top:6px">Nhìn một sơ đồ là hiểu: việc của một nhân viên phòng Ecom cuối cùng phục vụ mục tiêu nào của công ty — và ngược lại, lãnh đạo lần được xuống tận nơi thực thi.</p>
+  </section>
+
   <!-- 7 · Module map -->
   <section class="slide">
     <p class="eyebrow">Bản đồ hệ thống</p>
@@ -280,6 +332,62 @@
       <li><div><b>Ngưỡng Theo dõi / Cảnh báo / Báo động</b> <span>— chỉ số lệch sẽ tự nổi lên ở báo cáo &amp; bản tin.</span></div></li>
     </ul>
     <p class="lead" style="margin-top:14px">Lãnh đạo mở lên là thấy bức tranh mới nhất — thay vì chờ tổng hợp thủ công cuối tháng.</p>
+  </section>
+
+  <!-- 10b · KPI chart (SVG) -->
+  <section class="slide">
+    <p class="eyebrow">Minh họa · Bảng điểm KPI</p>
+    <h2>Thực hiện so với mục tiêu — màu tự đổi theo ngưỡng.</h2>
+    <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+      <svg viewBox="0 0 960 340" width="100%" style="max-height:52vh" role="img" aria-label="Biểu đồ KPI thực hiện so với mục tiêu">
+        <style>
+          .axis { stroke: var(--line); stroke-width: 1.2; }
+          .grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 4; opacity: .6; }
+          .tgt  { stroke: var(--accent); stroke-width: 1.6; stroke-dasharray: 6 4; }
+          .g { fill: #2E9E5B; } .a { fill: #C99A2E; } .r { fill: #C0392B; }
+          .track { fill: var(--line); opacity: .35; }
+          .cap { fill: var(--neutral); font-size: 13px; }
+          .val { fill: var(--ink); font-size: 13px; font-weight: 700; }
+          .leg { fill: var(--neutral); font-size: 12.5px; }
+        </style>
+        <!-- gridlines 0/50/100% -->
+        <line class="grid" x1="120" y1="60" x2="900" y2="60"/>
+        <line class="grid" x1="120" y1="140" x2="900" y2="140"/>
+        <line class="axis" x1="120" y1="220" x2="900" y2="220"/>
+        <text class="cap" x="112" y="64" text-anchor="end">100%</text>
+        <text class="cap" x="112" y="144" text-anchor="end">50%</text>
+        <text class="cap" x="112" y="224" text-anchor="end">0%</text>
+        <!-- target line at 100% -->
+        <line class="tgt" x1="120" y1="60" x2="900" y2="60"/>
+        <text class="cap" x="900" y="54" text-anchor="end" fill="var(--accent)">Mục tiêu 100%</text>
+        <!-- bars: value% mapped: y = 220 - value*1.6 ; height = value*1.6 -->
+        <!-- Doanh thu 82 (green) -->
+        <rect class="track" x="170" y="60" width="70" height="160" rx="5"/>
+        <rect class="g" x="170" y="88.8" width="70" height="131.2" rx="5"/>
+        <text class="val" x="205" y="80" text-anchor="middle">82%</text>
+        <text class="cap" x="205" y="242" text-anchor="middle">Doanh thu</text>
+        <!-- Lãi gộp 76 (amber) -->
+        <rect class="track" x="330" y="60" width="70" height="160" rx="5"/>
+        <rect class="a" x="330" y="98.4" width="70" height="121.6" rx="5"/>
+        <text class="val" x="365" y="90" text-anchor="middle">76%</text>
+        <text class="cap" x="365" y="242" text-anchor="middle">Lãi gộp</text>
+        <!-- Sản lượng 91 (green) -->
+        <rect class="track" x="490" y="60" width="70" height="160" rx="5"/>
+        <rect class="g" x="490" y="74.4" width="70" height="145.6" rx="5"/>
+        <text class="val" x="525" y="66" text-anchor="middle">91%</text>
+        <text class="cap" x="525" y="242" text-anchor="middle">Sản lượng</text>
+        <!-- Số hóa đơn 63 (red) -->
+        <rect class="track" x="650" y="60" width="70" height="160" rx="5"/>
+        <rect class="r" x="650" y="119.2" width="70" height="100.8" rx="5"/>
+        <text class="val" x="685" y="111" text-anchor="middle">63%</text>
+        <text class="cap" x="685" y="242" text-anchor="middle">Số hóa đơn</text>
+        <!-- legend -->
+        <rect class="g" x="200" y="278" width="13" height="13" rx="3"/><text class="leg" x="220" y="289">Đạt</text>
+        <rect class="a" x="300" y="278" width="13" height="13" rx="3"/><text class="leg" x="320" y="289">Theo dõi / Cảnh báo</text>
+        <rect class="r" x="500" y="278" width="13" height="13" rx="3"/><text class="leg" x="520" y="289">Báo động</text>
+      </svg>
+    </div>
+    <p class="lead" style="margin-top:4px">Số liệu chảy vào tự động; ô nào tụt dưới ngưỡng sẽ đổi màu và nổi lên ở báo cáo — không cần ai canh bảng tính.</p>
   </section>
 
   <!-- 11 · Execution module -->
@@ -385,7 +493,7 @@
 <div class="hud">
   <button id="prev" aria-label="Slide trước">‹</button>
   <div class="dots" id="dots"></div>
-  <span class="count" id="count">1 / 18</span>
+  <span class="count" id="count">1 / 20</span>
   <button id="next" aria-label="Slide kế">›</button>
   <button class="theme-btn" id="theme" aria-label="Đổi giao diện sáng/tối">◐</button>
 </div>
@@ -418,6 +526,7 @@
     const isDark = cur ? cur === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
     document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
   });
+  countEl.textContent = '1 / ' + slides.length;
   progress.style.width = (1 / slides.length * 100) + '%';
 </script>
 </body>
