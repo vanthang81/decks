@@ -957,6 +957,9 @@ i.cal-task, .cal-dot.cal-task { background: var(--primary); } i.cal-meeting, .ca
 .tour-step { font-size: 11px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: .05em; }
 .tour-title { font-size: 16px; font-weight: 800; margin: 4px 0 6px; color: var(--ink); line-height: 1.3; }
 .tour-body { font-size: 13.5px; color: #444; line-height: 1.55; }
+.tour-deck-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 8px 13px; border-radius: 8px;
+  background: var(--primary-tint); color: var(--primary); font-weight: 700; font-size: 13px; text-decoration: none; border: 1px solid transparent; }
+.tour-deck-link:hover { background: #fff; border-color: var(--primary); }
 .tour-dots { display: flex; gap: 5px; margin: 13px 0; }
 .tour-dots span { width: 7px; height: 7px; border-radius: 50%; background: #d9d2c8; transition: all .15s; }
 .tour-dots span.on { background: var(--primary); width: 18px; border-radius: 4px; }

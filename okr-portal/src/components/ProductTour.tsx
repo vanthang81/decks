@@ -6,7 +6,10 @@ import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 // Tự chứa (không thư viện ngoài): spotlight khoét sáng phần tử + bong bóng hướng dẫn.
 // Bước trỏ tới phần tử [data-tour="key"]; nếu không thấy (vd mobile ẩn nav) → thẻ giữa màn.
 
-type Step = { target?: string; title: string; body: string };
+type Step = { target?: string; title: string; body: string; link?: { href: string; label: string } };
+
+// Tài liệu giới thiệu hệ thống dạng slide (mở tab mới) — cập nhật khi đổi deck.
+const DECK_URL = 'https://deck.consultx.vn/d/he-thong-quan-tri-hieu-suat-btmh';
 
 const STEPS: Step[] = [
   {
@@ -46,6 +49,7 @@ const STEPS: Step[] = [
   {
     title: '🎉 Sẵn sàng rồi!',
     body: 'Gợi ý thứ tự: Chiến lược → OKR → gắn KPI → tạo Dự án/Công việc → check-in định kỳ. Cần xem lại chi tiết, mở mục "Hướng dẫn" trên menu bất cứ lúc nào. Chúc bạn điều hành hiệu quả!',
+    link: { href: DECK_URL, label: '📖 Xem tài liệu giới thiệu hệ thống (slide)' },
   },
 ];
 
@@ -147,6 +151,9 @@ export default function ProductTour({ userKey, force }: { userKey: string; force
         <div className="tour-step">Bước {i + 1}/{STEPS.length}</div>
         <div className="tour-title">{step.title}</div>
         <div className="tour-body">{step.body}</div>
+        {step.link && (
+          <a className="tour-deck-link" href={step.link.href} target="_blank" rel="noopener noreferrer">{step.link.label}</a>
+        )}
         <div className="tour-dots">
           {STEPS.map((_, k) => <span key={k} className={k === i ? 'on' : ''} />)}
         </div>

@@ -50,8 +50,11 @@ export default async function GuidePage() {
             OKR BTMH.
           </p>
           <span className="ver">Phiên bản tài liệu · {GUIDE_VERSION}</span>
-          <div style={{ marginTop: 12 }}>
+          <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <a className="btn ghost sm" href="/?tour=1">🧭 Chạy lại hướng dẫn nhanh trên màn hình</a>
+            <a className="btn sm" href="https://deck.consultx.vn/d/he-thong-quan-tri-hieu-suat-btmh" target="_blank" rel="noopener noreferrer">
+              📖 Tài liệu giới thiệu hệ thống (slide)
+            </a>
           </div>
         </div>
 
