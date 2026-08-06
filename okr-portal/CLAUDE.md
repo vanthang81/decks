@@ -64,6 +64,12 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   (FEATURES/CHANGELOG + bump `GUIDE_VERSION`) VÀ bước hướng dẫn onboarding tour tương ứng — CFO không
   phải nhắc.
 
+## ⭐ QUY TẮC XỬ LÝ YÊU CẦU (CFO 06/08 — luôn ghi nhớ)
+- **Làm LẦN LƯỢT theo thứ tự nhận (FIFO)**: request sau chỉ bắt đầu khi request trước ĐÃ HOÀN THÀNH TRỌN VẸN.
+- **Mỗi request đều có bước QC** trước khi coi là xong: `npm run build` xanh + chụp Chromium (globals.css thật)
+  desktop ~1300px & mobile ~390px, rà kỹ; deck HTML thì QA 4 tầng Playwright theo SOP. Chắc chắn OK mới báo/đi tiếp.
+- Yêu cầu mới đến giữa chừng ⇒ ghi vào hàng đợi (TaskCreate), làm sau khi xong việc đang chạy.
+
 ## Vị trí & lý do
 - App Next.js **độc lập, self-contained** trong thư mục `okr-portal/` của repo `decks` (KHÔNG tạo
   được repo riêng do integration bị chặn quyền tạo repo). Có `package.json` / `Dockerfile` / DB schema
@@ -189,10 +195,19 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
 - **Publish/cập nhật**: tool MCP `deck-publisher` `deck_publish` (slug trên, `visibility:'public'`, category 'Hướng dẫn').
   Gọi lại cùng slug = ghi đè. Link deck cũng gắn ở bước cuối tour onboarding + trang `/guide`.
 - **QUY TẮC THƯỜNG TRỰC (CFO 06/08 — KHÔNG cần hỏi lại)**: **mỗi khi thêm/đổi tính năng ⇒ TỰ ĐỘNG cập nhật
-  deck này + republish + tự QC** (chụp Chromium vài slide). Thêm mục vào phụ lục **Nhật ký cập nhật** (ngày +
-  tính năng) — KHÔNG ghi số version. Viết cho người **non-tech** (không lộ chi tiết kỹ thuật/hạ tầng/code).
-- **Cho dễ dùng/minh họa (CFO 06/08)**: ưu tiên **ảnh chụp màn hình app** (render faithful qua harness QC =
-  globals.css thật + data mẫu → nhúng data-URI), **sơ đồ/So SVG, charts/graphs, hình phác họa, link** — không chỉ chữ.
+  deck này + republish + tự QC**. Thêm mục vào phụ lục **Nhật ký cập nhật** (ngày + tính năng) — KHÔNG ghi số
+  version trong nội dung. Viết cho người **non-tech** (không lộ chi tiết kỹ thuật/hạ tầng/code).
+- **⭐ BẮT BUỘC theo ĐÚNG SOP tạo Slide Deck HTML của BTMH (CFO 06/08 — luôn ghi nhớ)**: mọi lần tạo/cập nhật
+  deck HTML PHẢI tuân thủ **SOP trên Outline**: "BTMH — SOP Tạo Slide Deck HTML" (doc id `85bc0c64-2350-4d23-91e3-fe235a690b34`,
+  url `outline.vanthang.io/doc/…LxPm6Wh9J2`). Đọc SOP TRƯỚC khi dựng. Điểm cốt lõi: slide cố định 1280×720
+  (#deck scale-to-fit), **logo là ẢNH THẬT** (base64, 3 biến thể lockup/monogram maroon/ivory — asset gốc
+  `price-engine/public/logo-btmh-white.png` + `brand.ts` LOGO_WORDMARK), 4 loại slide (cover/divider/nội
+  dung/kết thúc), **takeaway title** (câu khẳng định), **số đếm viết bằng chữ số**, dòng `.src` nguồn ở mọi
+  slide nội dung, em-dash→gạch nối, tooltip thuật ngữ auto-annotate, nav 8 nút (⇱ ‹ › ▦ Aa ⛶ ⎙ ?) + phím tắt
+  + overview + glossary + help + progress + deep-link + print, nền `body` đổi động, mobile auto-rotate, biểu
+  đồ SVG tự vẽ. **QA 4 tầng bằng Playwright** (đo `getBoundingClientRect` so với mép vùng nội dung, KHÔNG nhìn
+  ảnh; chạy tới `0/N slide lỗi`). Publish: deck này CFO chốt **public** (SOP mặc định protected — chỉ đổi khi
+  CFO yêu cầu, mà CFO đã yêu cầu public cho deck giới thiệu). Mỗi lỗi mới phát hiện → tự ghi vào Mục 17 SOP.
 
 ## Logic quan trọng (src/lib/)
 - `okr.ts`: `computeKrProgress` (theo hướng tăng/giảm, clamp 0..100), `recomputeUp` (lan tiến độ

@@ -1,4 +1,13 @@
-<!doctype html><html lang="vi"><head>
+# -*- coding: utf-8 -*-
+# Builder deck HTML tuân thủ SOP BTMH — Slide Deck HTML v1.0.
+import os
+D = os.path.dirname(os.path.abspath(__file__))
+def b64(f): return open(os.path.join(D, f)).read().strip()
+LG = b64('logo_lockup_white.b64')   # lockup trắng (cover/closing trên nền maroon)
+MM = b64('mono_maroon.b64')         # monogram maroon (footer slide sáng)
+MI = b64('mono_ivory.b64')          # monogram ivory (footer slide tối)
+
+HEAD = '''<!doctype html><html lang="vi"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Hệ thống Quản trị Hiệu suất BTMH — Giới thiệu</title>
 <style>
@@ -6,7 +15,7 @@
  --maroon:#7C0312;--maroon-dk:#54000C;--maroon-lt:#9E2233;--gold:#B08D2E;--gold-lt:#D9BE72;
  --gold-pale:#EFE3C4;--cream:#F5F2EC;--cream2:#FAF8F4;--ink:#1C1C1C;--grey:#6B6B6B;--line:#E2DCD3;--white:#fff;
  --ok:#2E6B4F;--warn:#B4741A;--bad:#A32218;
- --lg:url("data:image/png;base64,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");--mm:url("data:image/png;base64,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");--mi:url("data:image/png;base64,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");
+ --lg:url("data:image/png;base64,%LG%");--mm:url("data:image/png;base64,%MM%");--mi:url("data:image/png;base64,%MI%");
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
@@ -140,7 +149,17 @@ body.overlay-open #ctl{opacity:1}
 @media print{body{background:#fff;overflow:visible}#stage{position:static;display:block}#deck{transform:none!important;width:auto;height:auto}.slide{display:flex!important;position:relative;page-break-after:always}#ctl,#bar,#ov,#hp,#gs,#tip,#rot{display:none!important}@page{size:1280px 720px;margin:0}}
 </style></head><body>
 <div id="stage"><div id="deck">
-<section class="slide cover" data-t="Bìa" data-d="1">
+'''.replace('%LG%',LG).replace('%MM%',MM).replace('%MI%',MI)
+
+def src(t): return '<div class="src">%s</div>'%t
+SRCV='Nguồn: Hệ thống Quản trị Hiệu suất BTMH · trạng thái 06/08/2026. Số mục tiêu 2030 theo Financial Model “Project Imperial” v52.1 (ước tính, chưa kiểm toán).'
+
+def content(eyebrow,tk,body,source=SRCV,dt=None):
+    return '<section class="slide" data-t="%s"><div class="eyebrow">%s</div><h1 class="tk">%s</h1><div class="rule"></div><div class="body">%s</div>%s</section>\n'%(tk.replace('"',"'")[:60],eyebrow,tk,body,src(source))
+
+SLIDES=[]
+# 1 Cover
+SLIDES.append('''<section class="slide cover" data-t="Bìa" data-d="1">
  <div class="clogo"></div>
  <h1>Hệ thống Quản trị Hiệu suất</h1>
  <div class="csub">Nối tầm nhìn dài hạn của BTMH với công việc hằng ngày của mỗi khối, mỗi phòng, mỗi người - và đo được kết quả gần như tức thời.</div>
@@ -151,8 +170,12 @@ body.overlay-open #ctl{opacity:1}
   <div>Kỳ dữ liệu<b>Tháng 8/2026</b></div>
   <div>Điều hướng<b>&larr; &rarr; hoặc Space</b></div>
  </div>
-</section>
-<section class="slide" data-t="Một nền tảng nối liền chiến lược tới thực thi, giúp <em>mọi "><div class="eyebrow">0 · TÓM TẮT ĐIỀU HÀNH</div><h1 class="tk">Một nền tảng nối liền chiến lược tới thực thi, giúp <em>mọi mục tiêu, con số và đầu việc luôn nhìn thấy được và có người chịu trách nhiệm</em>.</h1><div class="rule"></div><div class="body"><div class="kpis">
+</section>\n''')
+
+# 2 Executive summary
+SLIDES.append(content('0 · TÓM TẮT ĐIỀU HÀNH',
+ 'Một nền tảng nối liền chiến lược tới thực thi, giúp <em>mọi mục tiêu, con số và đầu việc luôn nhìn thấy được và có người chịu trách nhiệm</em>.',
+ '''<div class="kpis">
   <div class="kpi"><div class="n">5</div><div class="l">mắt xích của chuỗi: chiến lược &rarr; mục tiêu &rarr; đo lường &rarr; hành động &rarr; nhìn lại</div></div>
   <div class="kpi g"><div class="n">8</div><div class="l">phân hệ liên kết chặt trong một nền tảng</div></div>
   <div class="kpi"><div class="n">13<small> khối</small></div><div class="l">&amp; 36 phòng cùng nhịp, cùng hướng</div></div>
@@ -161,15 +184,28 @@ body.overlay-open #ctl{opacity:1}
  <div class="cols">
   <div class="c60 box"><h4>Bài toán</h4><p>Chiến lược lớn dễ &ldquo;trôi&rdquo; nếu không nối được với hành động hằng ngày. Giữa một kế hoạch nhiều năm và việc một nhân viên làm sáng nay là khoảng cách rất dài - và thường là nơi chiến lược thất thoát.</p></div>
   <div class="c40 hl"><h4>Lời giải</h4><p>Một nơi duy nhất để đặt mục tiêu, đo lường tự động, giao việc, họp - và nhìn lại; ai cũng thấy việc mình phục vụ mục tiêu nào ở trên.</p></div>
- </div></div><div class="src">Nguồn: Hệ thống Quản trị Hiệu suất BTMH · trạng thái 06/08/2026. Số mục tiêu 2030 theo Financial Model “Project Imperial” v52.1 (ước tính, chưa kiểm toán).</div></section>
-<section class="slide" data-t="Bốn phần - từ vì sao, tới phương pháp, các phân hệ, và cách "><div class="eyebrow">MỤC LỤC</div><h1 class="tk">Bốn phần - từ vì sao, tới phương pháp, các phân hệ, và cách vận hành.</h1><div class="rule"></div><div class="body"><div class="cols">
+ </div>'''))
+
+# 3 TOC
+SLIDES.append(content('MỤC LỤC','Bốn phần - từ vì sao, tới phương pháp, các phân hệ, và cách vận hành.',
+ '''<div class="cols">
   <div class="c50 card m"><h4>Phần 1 · Bài toán &amp; lời giải</h4><p>Vì sao cần hệ thống; chuỗi giá trị nối chiến lược tới thực thi.</p></div>
   <div class="c50 card"><h4>Phần 2 · Phương pháp</h4><p>OKR, KPI &amp; Thẻ điểm cân bằng, cấu trúc phân cấp, cascade.</p></div>
   <div class="c50 card"><h4>Phần 3 · Các phân hệ &amp; liên kết</h4><p>Bản đồ 8 phân hệ; thực thi, cuộc họp, báo cáo, minh bạch.</p></div>
   <div class="c50 card m"><h4>Phần 4 · Vận hành hiệu quả</h4><p>Dùng theo vai trò, nhịp vận hành, lợi ích cho BTMH.</p></div>
- </div></div><div class="src">Tài liệu tự đứng độc lập - toàn bộ nội dung nằm trong deck này.</div></section>
-<section class="slide divider" data-t="Bài toán &amp; lời giải" data-d="1"><div class="pnum">01</div><h2>Bài toán &amp; lời giải</h2><div class="dlead">Vì sao BTMH cần một nền tảng nối chiến lược tới thực thi - và hình hài của lời giải.</div><div class="dots"><i class="on"></i><i class=""></i><i class=""></i><i class=""></i></div></section>
-<section class="slide" data-t="BTMH đặt mục tiêu tăng trưởng mạnh tới 2030 - nhưng <em>chiế"><div class="eyebrow">1.1 · BÀI TOÁN</div><h1 class="tk">BTMH đặt mục tiêu tăng trưởng mạnh tới 2030 - nhưng <em>chiến lược dễ thất thoát ở khoảng cách giữa kế hoạch và việc làm hằng ngày</em>.</h1><div class="rule"></div><div class="body"><div class="kpis">
+ </div>''',source='Tài liệu tự đứng độc lập - toàn bộ nội dung nằm trong deck này.'))
+
+def divider(pnum,title,lead,dot_on,dots_total=4):
+    ds=''.join('<i class="%s"></i>'%('on' if k==dot_on else '') for k in range(dots_total))
+    return '<section class="slide divider" data-t="%s" data-d="1"><div class="pnum">%s</div><h2>%s</h2><div class="dlead">%s</div><div class="dots">%s</div></section>\n'%(title.replace('"',"'"),pnum,title,lead,ds)
+
+# 4 Divider 1
+SLIDES.append(divider('01','Bài toán &amp; lời giải','Vì sao BTMH cần một nền tảng nối chiến lược tới thực thi - và hình hài của lời giải.',0))
+
+# 5 Problem
+SLIDES.append(content('1.1 · BÀI TOÁN',
+ 'BTMH đặt mục tiêu tăng trưởng mạnh tới 2030 - nhưng <em>chiến lược dễ thất thoát ở khoảng cách giữa kế hoạch và việc làm hằng ngày</em>.',
+ '''<div class="kpis">
   <div class="kpi"><div class="n">261</div><div class="l">cửa hàng mục tiêu 2030</div><div class="d">từ 80 năm 2026</div></div>
   <div class="kpi g"><div class="n">~180<small> nghìn tỷ</small></div><div class="l">doanh thu thuần mục tiêu 2030</div></div>
   <div class="kpi"><div class="n">~5<small> nghìn tỷ</small></div><div class="l">lợi nhuận sau thuế mục tiêu 2030</div></div>
@@ -180,8 +216,12 @@ body.overlay-open #ctl{opacity:1}
   <div class="c33 box"><h4>Mục tiêu mờ</h4><p>Chiến lược trên giấy không rõ ai chịu trách nhiệm, đo bằng gì, tới mốc nào.</p></div>
   <div class="c33 box"><h4>Việc rời rạc</h4><p>Đầu việc hằng ngày không nối được với mục tiêu - làm nhiều mà không rõ phục vụ điều gì.</p></div>
   <div class="c33 box"><h4>Số liệu trễ</h4><p>Báo cáo tổng hợp thủ công cuối kỳ - biết vấn đề thì đã muộn để điều chỉnh.</p></div>
- </div></div><div class="src">Nguồn: Hệ thống Quản trị Hiệu suất BTMH · trạng thái 06/08/2026. Số mục tiêu 2030 theo Financial Model “Project Imperial” v52.1 (ước tính, chưa kiểm toán).</div></section>
-<section class="slide" data-t="Một chuỗi liền mạch: <em>chiến lược &rarr; mục tiêu &rarr; đ"><div class="eyebrow">1.2 · LỜI GIẢI</div><h1 class="tk">Một chuỗi liền mạch: <em>chiến lược &rarr; mục tiêu &rarr; đo lường &rarr; hành động &rarr; nhìn lại</em> - mỗi mắt xích nối vào mắt xích kế bên.</h1><div class="rule"></div><div class="body"><div class="flow">
+ </div>'''))
+
+# 6 Solution chain
+SLIDES.append(content('1.2 · LỜI GIẢI',
+ 'Một chuỗi liền mạch: <em>chiến lược &rarr; mục tiêu &rarr; đo lường &rarr; hành động &rarr; nhìn lại</em> - mỗi mắt xích nối vào mắt xích kế bên.',
+ '''<div class="flow">
   <div class="nd"><b>Chiến lược</b><span>Tầm nhìn 2026-2030</span></div><span class="ar">&rarr;</span>
   <div class="nd"><b>OKR</b><span>Mục tiêu &amp; KR</span></div><span class="ar">&rarr;</span>
   <div class="nd"><b>KPI</b><span>Đo sức khỏe</span></div><span class="ar">&rarr;</span>
@@ -191,9 +231,15 @@ body.overlay-open #ctl{opacity:1}
  <div class="cols">
   <div class="c50 box"><h4>Với người thực thi</h4><p>Ai cũng thấy việc mình làm phục vụ mục tiêu nào của khối, của công ty - làm việc có ngữ cảnh, không rời rạc.</p></div>
   <div class="c50 box"><h4>Với lãnh đạo</h4><p>Thấy chiến lược đang đi tới đâu theo thời gian thực, lần được từ tổng thể xuống tận nơi thực thi.</p></div>
- </div></div><div class="src">Chuỗi giá trị chuẩn của hệ thống - áp dụng cho mọi cấp đơn vị.</div></section>
-<section class="slide divider" data-t="Phương pháp" data-d="1"><div class="pnum">02</div><h2>Phương pháp</h2><div class="dlead">OKR đặt hướng, KPI theo dõi sức khỏe, và cấu trúc gắn kết mọi thứ theo tổ chức lẫn thời gian.</div><div class="dots"><i class=""></i><i class="on"></i><i class=""></i><i class=""></i></div></section>
-<section class="slide" data-t="<em>Mục tiêu truyền cảm hứng, đo bằng kết quả cụ thể</em> - "><div class="eyebrow">2.1 · PHƯƠNG PHÁP OKR</div><h1 class="tk"><em>Mục tiêu truyền cảm hứng, đo bằng kết quả cụ thể</em> - hệ thống tự tính % và cuộn lên các cấp.</h1><div class="rule"></div><div class="body"><div class="cols">
+ </div>''',source='Chuỗi giá trị chuẩn của hệ thống - áp dụng cho mọi cấp đơn vị.'))
+
+# 7 Divider 2
+SLIDES.append(divider('02','Phương pháp','OKR đặt hướng, KPI theo dõi sức khỏe, và cấu trúc gắn kết mọi thứ theo tổ chức lẫn thời gian.',1))
+
+# 8 OKR method
+SLIDES.append(content('2.1 · PHƯƠNG PHÁP OKR',
+ '<em>Mục tiêu truyền cảm hứng, đo bằng kết quả cụ thể</em> - hệ thống tự tính % và cuộn lên các cấp.',
+ '''<div class="cols">
   <div class="c50 box"><h4>Objective - Mục tiêu</h4><p>Một câu ngắn, tạo động lực, có tính định hướng. Ví dụ: &ldquo;Đưa kênh bán online thành trụ cột tăng trưởng của khối bán lẻ&rdquo;.</p></div>
   <div class="c50 box"><h4>Key Results - Kết quả then chốt</h4><p>2-5 con số đo được, có mốc đầu kỳ &rarr; mục tiêu. Mỗi <span class="gl" data-t="KR" data-d="Key Result: kết quả then chốt đo được của một Objective, có mốc đầu kỳ và mục tiêu.">KR</span> có trọng số nói lên mức đóng góp.</p></div>
  </div>
@@ -204,8 +250,12 @@ body.overlay-open #ctl{opacity:1}
   <tr><td>KR1 &middot; Doanh thu online</td><td class="n">18 &rarr; 56 tỷ</td><td class="n">40%</td></tr>
   <tr><td>KR2 &middot; Tỷ lệ đơn hoàn thành</td><td class="n">92% &rarr; 98%</td><td class="n">35%</td></tr>
   <tr><td>KR3 &middot; Chi phí thu hút khách/đơn</td><td class="n">220k &rarr; 150k đ</td><td class="n">25%</td></tr>
-  </table></div></div><div class="src">Phương pháp OKR (Objectives &amp; Key Results) - chuẩn quản trị mục tiêu hiện đại. Ví dụ minh họa.</div></section>
-<section class="slide" data-t="OKR đặt hướng đi; <em>KPI theo dõi sức khỏe vận hành</em> - "><div class="eyebrow">2.2 · KPI &amp; THẺ ĐIỂM CÂN BẰNG</div><h1 class="tk">OKR đặt hướng đi; <em>KPI theo dõi sức khỏe vận hành</em> - nhiều chỉ số tự lấy từ dữ liệu bán hàng.</h1><div class="rule"></div><div class="body"><div class="cols">
+  </table></div>''',source='Phương pháp OKR (Objectives &amp; Key Results) - chuẩn quản trị mục tiêu hiện đại. Ví dụ minh họa.'))
+
+# 9 KPI & BSC
+SLIDES.append(content('2.2 · KPI &amp; THẺ ĐIỂM CÂN BẰNG',
+ 'OKR đặt hướng đi; <em>KPI theo dõi sức khỏe vận hành</em> - nhiều chỉ số tự lấy từ dữ liệu bán hàng.',
+ '''<div class="cols">
   <div class="c50 box"><h4>KPI - chỉ số thường trực</h4><p>Doanh thu, lãi gộp, sản lượng, tồn kho, số hóa đơn... có ngưỡng Theo dõi &middot; Cảnh báo &middot; Báo động. Cập nhật nhiều lần mỗi ngày, không nhập tay.</p></div>
   <div class="c50 box"><h4><span class="gl" data-t="BSC" data-d="Balanced Scorecard - Thẻ điểm cân bằng: nhìn doanh nghiệp qua 4 mặt Tài chính, Khách hàng, Quy trình nội bộ, Học hỏi &amp; phát triển.">BSC</span> - nhìn 4 mặt</h4><p>Tài chính &middot; Khách hàng &middot; Quy trình nội bộ &middot; Học hỏi &amp; phát triển. Không chỉ chạy theo doanh số mà bỏ quên con người, quy trình, khách hàng.</p></div>
  </div>
@@ -218,8 +268,10 @@ body.overlay-open #ctl{opacity:1}
  <ul class="tick">
   <li>OKR trả lời &ldquo;ta thay đổi điều gì&rdquo;; KPI trả lời &ldquo;nền tảng có đang khỏe không&rdquo; - hai lớp bổ trợ nhau.</li>
   <li>Chỉ số tụt dưới ngưỡng sẽ tự đổi màu và nổi lên ở báo cáo &amp; bản tin - lãnh đạo thấy ngay điểm cần can thiệp.</li>
- </ul></div><div class="src">KPI tự động từ dữ liệu bán hàng; ngưỡng Theo dõi/Cảnh báo/Báo động cấu hình theo từng chỉ số.</div></section>
-<section class="slide" data-t="Gắn kết theo cả tổ chức lẫn thời gian - <em>một con số luôn "><div class="eyebrow">2.3 · CẤU TRÚC &amp; CASCADE</div><h1 class="tk">Gắn kết theo cả tổ chức lẫn thời gian - <em>một con số luôn trả lời được: của ai, thuộc mục tiêu nào, kỳ nào</em>.</h1><div class="rule"></div><div class="body"><div class="chartwrap"><div class="ct">Cascade: một mục tiêu công ty rải xuống tới từng người</div>
+ </ul>''',source='KPI tự động từ dữ liệu bán hàng; ngưỡng Theo dõi/Cảnh báo/Báo động cấu hình theo từng chỉ số.'))
+
+# 10 Cascade tree (SVG)
+CASC='''<div class="chartwrap"><div class="ct">Cascade: một mục tiêu công ty rải xuống tới từng người</div>
 <svg viewBox="0 0 960 300" style="width:100%;max-height:360px">
  <path d="M480 54 C480 84,250 84,250 112" fill="none" stroke="#B08D2E" stroke-width="1.6" opacity=".55"/>
  <path d="M480 54 C480 84,710 84,710 112" fill="none" stroke="#B08D2E" stroke-width="1.6" opacity=".55"/>
@@ -237,17 +289,47 @@ body.overlay-open #ctl{opacity:1}
  <text x="150" y="278" text-anchor="middle" fill="#6B6B6B" font-size="11">Việc &amp; KR cá nhân</text>
  <text x="610" y="278" text-anchor="middle" fill="#6B6B6B" font-size="11">Việc &amp; KR cá nhân</text>
 </svg></div>
-<p style="text-align:center;color:var(--grey);font-size:12.5px">Nhìn một sơ đồ là hiểu: việc của một nhân viên cuối cùng phục vụ mục tiêu nào của công ty.</p></div><div class="src">Cây tổ chức Công ty &rarr; Khối &rarr; Phòng &rarr; Cá nhân; khung thời gian Nhiều năm &rarr; Năm &rarr; Quý &rarr; Tháng &rarr; Tuần.</div></section>
-<section class="slide divider" data-t="Các phân hệ &amp; liên kết" data-d="1"><div class="pnum">03</div><h2>Các phân hệ &amp; liên kết</h2><div class="dlead">Tám phân hệ không rời rạc - một công việc gắn với KR của một OKR, thuộc một dự án, giao trong một cuộc họp.</div><div class="dots"><i class=""></i><i class=""></i><i class="on"></i><i class=""></i></div></section>
-<section class="slide" data-t="Tám phân hệ liên kết chặt - <em>một công việc gắn với KR của"><div class="eyebrow">3.1 · BẢN ĐỒ HỆ THỐNG</div><h1 class="tk">Tám phân hệ liên kết chặt - <em>một công việc gắn với KR của một OKR, thuộc một dự án, giao trong một cuộc họp, hiện ở báo cáo &amp; hồ sơ</em>.</h1><div class="rule"></div><div class="body"><div class="cols"><div class="c25 box" style="flex:0 1 calc(25% - 17px)"><h4>&#127919; Chiến lược</h4><p>Tầm nhìn, trụ cột, BSC</p></div><div class="c25 box" style="flex:0 1 calc(25% - 17px)"><h4>&#128202; OKR</h4><p>Mục tiêu, cascade, check-in</p></div><div class="c25 box" style="flex:0 1 calc(25% - 17px)"><h4>&#128200; KPI &amp; Scorecard</h4><p>Chỉ số tự động, cảnh báo</p></div><div class="c25 box" style="flex:0 1 calc(25% - 17px)"><h4>&#128451; Dự án &amp; Việc</h4><p>Danh sách &middot; Kanban &middot; Gantt</p></div><div class="c25 box" style="flex:0 1 calc(25% - 17px)"><h4>&#128197; Cuộc họp</h4><p>Giao việc, biên bản, nối chuỗi</p></div><div class="c25 box" style="flex:0 1 calc(25% - 17px)"><h4>&#128240; Báo cáo &amp; Bản tin</h4><p>Họp điều hành, khuyến nghị</p></div><div class="c25 box" style="flex:0 1 calc(25% - 17px)"><h4>&#128100; Hồ sơ 360&deg;</h4><p>Toàn cảnh mỗi người</p></div><div class="c25 box" style="flex:0 1 calc(25% - 17px)"><h4>&#128737; Toàn vẹn dữ liệu</h4><p>Tự soi lỗ hổng, mồ côi</p></div></div><div class="hl"><h4>Không rời rạc</h4><p>Chính sự liên kết này làm dữ liệu nhất quán một chiều: cập nhật ở một nơi, mọi nơi liên quan tự phản ánh.</p></div></div><div class="src">Kiến trúc phân hệ của hệ thống - 8 phân hệ trong một nền tảng.</div></section>
-<section class="slide" data-t="Biến mục tiêu thành <em>việc làm được, theo dõi được</em> - "><div class="eyebrow">3.2 · PHÂN HỆ THỰC THI</div><h1 class="tk">Biến mục tiêu thành <em>việc làm được, theo dõi được</em> - 3 cách nhìn và ràng buộc thứ tự.</h1><div class="rule"></div><div class="body"><div class="cols">
+<p style="text-align:center;color:var(--grey);font-size:12.5px">Nhìn một sơ đồ là hiểu: việc của một nhân viên cuối cùng phục vụ mục tiêu nào của công ty.</p>'''
+SLIDES.append(content('2.3 · CẤU TRÚC &amp; CASCADE',
+ 'Gắn kết theo cả tổ chức lẫn thời gian - <em>một con số luôn trả lời được: của ai, thuộc mục tiêu nào, kỳ nào</em>.',
+ CASC, source='Cây tổ chức Công ty &rarr; Khối &rarr; Phòng &rarr; Cá nhân; khung thời gian Nhiều năm &rarr; Năm &rarr; Quý &rarr; Tháng &rarr; Tuần.'))
+
+# 11 Divider 3
+SLIDES.append(divider('03','Các phân hệ &amp; liên kết','Tám phân hệ không rời rạc - một công việc gắn với KR của một OKR, thuộc một dự án, giao trong một cuộc họp.',2))
+
+# 12 Module map
+def mod(ic,name,desc): return '<div class="c25 box" style="flex:0 1 calc(25%% - 17px)"><h4>%s %s</h4><p>%s</p></div>'%(ic,name,desc)
+MODS='<div class="cols">'+''.join([
+ mod('&#127919;','Chiến lược','Tầm nhìn, trụ cột, BSC'),
+ mod('&#128202;','OKR','Mục tiêu, cascade, check-in'),
+ mod('&#128200;','KPI &amp; Scorecard','Chỉ số tự động, cảnh báo'),
+ mod('&#128451;','Dự án &amp; Việc','Danh sách &middot; Kanban &middot; Gantt'),
+ mod('&#128197;','Cuộc họp','Giao việc, biên bản, nối chuỗi'),
+ mod('&#128240;','Báo cáo &amp; Bản tin','Họp điều hành, khuyến nghị'),
+ mod('&#128100;','Hồ sơ 360&deg;','Toàn cảnh mỗi người'),
+ mod('&#128737;','Toàn vẹn dữ liệu','Tự soi lỗ hổng, mồ côi'),
+])+'</div>'
+SLIDES.append(content('3.1 · BẢN ĐỒ HỆ THỐNG',
+ 'Tám phân hệ liên kết chặt - <em>một công việc gắn với KR của một OKR, thuộc một dự án, giao trong một cuộc họp, hiện ở báo cáo &amp; hồ sơ</em>.',
+ MODS+'<div class="hl"><h4>Không rời rạc</h4><p>Chính sự liên kết này làm dữ liệu nhất quán một chiều: cập nhật ở một nơi, mọi nơi liên quan tự phản ánh.</p></div>',
+ source='Kiến trúc phân hệ của hệ thống - 8 phân hệ trong một nền tảng.'))
+
+# 13 Execution
+SLIDES.append(content('3.2 · PHÂN HỆ THỰC THI',
+ 'Biến mục tiêu thành <em>việc làm được, theo dõi được</em> - 3 cách nhìn và ràng buộc thứ tự.',
+ '''<div class="cols">
   <div class="c33 box"><h4>Dự án xuyên OKR</h4><p>Một dự án gom việc từ nhiều khối/OKR; có cây Dự án &rarr; Tiểu dự án &rarr; Công việc và ngân sách.</p></div>
   <div class="c33 box"><h4>3 cách nhìn</h4><p><b>Danh sách</b> để lọc, <b>Kanban</b> để kéo-thả theo trạng thái, <b>Gantt</b> để xem theo dòng thời gian.</p></div>
   <div class="c33 box"><h4>Ràng buộc &amp; hạn</h4><p>Việc có thể phụ thuộc việc khác (waterfall); cảnh báo quá hạn / sắp đến hạn / đang chờ việc trước.</p></div>
  </div>
  <ul class="tick"><li>Mỗi việc biết nó thuộc mục tiêu nào, ai phụ trách, bao giờ xong - và tiến độ tự cuộn ngược lên OKR.</li>
- <li>Bấm một việc mở chi tiết trước, rồi mới bấm Sửa - kèm thảo luận ngay tại việc.</li></ul></div><div class="src">Phân hệ Dự án &amp; Công việc - quản trị thực thi gắn OKR.</div></section>
-<section class="slide" data-t="Họp ra quyết định thành việc có chủ; <em>báo cáo biến dữ liệ"><div class="eyebrow">3.3 · CUỘC HỌP &amp; BÁO CÁO</div><h1 class="tk">Họp ra quyết định thành việc có chủ; <em>báo cáo biến dữ liệu thô thành nhận định để hành động</em>.</h1><div class="rule"></div><div class="body"><div class="cols">
+ <li>Bấm một việc mở chi tiết trước, rồi mới bấm Sửa - kèm thảo luận ngay tại việc.</li></ul>''',
+ source='Phân hệ Dự án &amp; Công việc - quản trị thực thi gắn OKR.'))
+
+# 14 Meetings + reporting
+SLIDES.append(content('3.3 · CUỘC HỌP &amp; BÁO CÁO',
+ 'Họp ra quyết định thành việc có chủ; <em>báo cáo biến dữ liệu thô thành nhận định để hành động</em>.',
+ '''<div class="cols">
   <div class="c50 stack">
    <div class="box"><h4>Cuộc họp điều hành</h4><p>Lịch họp theo loại; chủ trì, đồng chủ trì &amp; thư ký đều biên tập được; giao việc ngay tại họp; biên bản, quyết định, nối chuỗi họp.</p></div>
    <div class="card"><h4>Kết quả</h4><p>Cuộc họp không kết thúc bằng một biên bản để đó, mà bằng những đầu việc đã có người &amp; hạn trong hệ thống.</p></div>
@@ -257,8 +339,14 @@ body.overlay-open #ctl{opacity:1}
    <div class="card m"><h4>Tự sinh</h4><p>Bản tin tuần &amp; báo cáo kỳ được hệ thống tổng hợp sẵn - không ai phải gom số thủ công.</p></div>
   </div>
  </div>
- <div class="hl"><h4>Minh bạch, không &ldquo;số trơ&rdquo;</h4><p>Mọi con số tổng hợp đều bấm được để truy ngược tới danh sách đích danh các mục cấu thành.</p></div></div><div class="src">Phân hệ Cuộc họp điều hành &amp; Báo cáo/Bản tin tuần.</div></section>
-<section class="slide" data-t="Số liệu tự chảy vào; <em>ô nào tụt dưới ngưỡng sẽ đổi màu và"><div class="eyebrow">3.4 · MINH HỌA BẢNG ĐIỂM KPI</div><h1 class="tk">Số liệu tự chảy vào; <em>ô nào tụt dưới ngưỡng sẽ đổi màu và nổi lên ở báo cáo</em> - không cần ai canh bảng tính.</h1><div class="rule"></div><div class="body"><div class="chartwrap"><div class="ct">Bảng điểm KPI - thực hiện so với mục tiêu, màu theo ngưỡng</div>
+ <div class="hl"><h4>Minh bạch, không &ldquo;số trơ&rdquo;</h4><p>Mọi con số tổng hợp đều bấm được để truy ngược tới danh sách đích danh các mục cấu thành.</p></div>''',
+ source='Phân hệ Cuộc họp điều hành &amp; Báo cáo/Bản tin tuần.'))
+
+# 15 KPI chart (SVG)
+def bar(x,val,cls,lbl):
+    h=val*1.5; y=210-h
+    return '<rect x="%d" y="60" width="66" height="150" rx="5" fill="#E2DCD3" opacity=".35"/><rect x="%d" y="%.1f" width="66" height="%.1f" rx="5" fill="%s"/><text x="%d" y="%.1f" text-anchor="middle" fill="#1C1C1C" font-size="12.5" font-weight="700">%d%%</text><text x="%d" y="232" text-anchor="middle" fill="#6B6B6B" font-size="12">%s</text>'%(x,x,y,h,cls,x+33,y-8,val,x+33,lbl)
+KC='''<div class="chartwrap"><div class="ct">Bảng điểm KPI - thực hiện so với mục tiêu, màu theo ngưỡng</div>
 <svg viewBox="0 0 900 260" style="width:88%;margin:0 auto;display:block">
  <line x1="110" y1="60" x2="840" y2="60" stroke="#E2DCD3" stroke-dasharray="3 4"/>
  <line x1="110" y1="135" x2="840" y2="135" stroke="#E2DCD3" stroke-dasharray="3 4"/>
@@ -267,10 +355,19 @@ body.overlay-open #ctl{opacity:1}
  <text x="104" y="139" text-anchor="end" fill="#6B6B6B" font-size="11">50%</text>
  <text x="104" y="214" text-anchor="end" fill="#6B6B6B" font-size="11">0%</text>
  <line x1="110" y1="60" x2="840" y2="60" stroke="#B08D2E" stroke-width="1.4" stroke-dasharray="6 4"/>
- <rect x="160" y="60" width="66" height="150" rx="5" fill="#E2DCD3" opacity=".35"/><rect x="160" y="87.0" width="66" height="123.0" rx="5" fill="#2E6B4F"/><text x="193" y="79.0" text-anchor="middle" fill="#1C1C1C" font-size="12.5" font-weight="700">82%</text><text x="193" y="232" text-anchor="middle" fill="#6B6B6B" font-size="12">Doanh thu</text><rect x="340" y="60" width="66" height="150" rx="5" fill="#E2DCD3" opacity=".35"/><rect x="340" y="96.0" width="66" height="114.0" rx="5" fill="#B4741A"/><text x="373" y="88.0" text-anchor="middle" fill="#1C1C1C" font-size="12.5" font-weight="700">76%</text><text x="373" y="232" text-anchor="middle" fill="#6B6B6B" font-size="12">Lãi gộp</text><rect x="520" y="60" width="66" height="150" rx="5" fill="#E2DCD3" opacity=".35"/><rect x="520" y="73.5" width="66" height="136.5" rx="5" fill="#2E6B4F"/><text x="553" y="65.5" text-anchor="middle" fill="#1C1C1C" font-size="12.5" font-weight="700">91%</text><text x="553" y="232" text-anchor="middle" fill="#6B6B6B" font-size="12">Sản lượng</text><rect x="700" y="60" width="66" height="150" rx="5" fill="#E2DCD3" opacity=".35"/><rect x="700" y="115.5" width="66" height="94.5" rx="5" fill="#A32218"/><text x="733" y="107.5" text-anchor="middle" fill="#1C1C1C" font-size="12.5" font-weight="700">63%</text><text x="733" y="232" text-anchor="middle" fill="#6B6B6B" font-size="12">Số hóa đơn</text>
+ __BARS__
 </svg>
-<div class="lg"><span><i style="background:#2E6B4F"></i>Đạt</span><span><i style="background:#B4741A"></i>Theo dõi / Cảnh báo</span><span><i style="background:#A32218"></i>Báo động</span></div></div></div><div class="src">Minh họa - giá trị mô phỏng. Trên hệ thống, số thực hiện lấy tự động từ dữ liệu bán hàng theo thời gian thực.</div></section>
-<section class="slide" data-t="Ai làm gì, dữ liệu có sạch không, ai được xem gì - <em>hệ th"><div class="eyebrow">3.5 · MINH BẠCH &amp; TIN CẬY</div><h1 class="tk">Ai làm gì, dữ liệu có sạch không, ai được xem gì - <em>hệ thống chủ động chỉ ra chỗ chưa ổn để sửa sớm</em>.</h1><div class="rule"></div><div class="body"><div class="cols">
+<div class="lg"><span><i style="background:#2E6B4F"></i>Đạt</span><span><i style="background:#B4741A"></i>Theo dõi / Cảnh báo</span><span><i style="background:#A32218"></i>Báo động</span></div></div>'''
+BARS=bar(160,82,'#2E6B4F','Doanh thu')+bar(340,76,'#B4741A','Lãi gộp')+bar(520,91,'#2E6B4F','Sản lượng')+bar(700,63,'#A32218','Số hóa đơn')
+KC=KC.replace('__BARS__',BARS)
+SLIDES.append(content('3.4 · MINH HỌA BẢNG ĐIỂM KPI',
+ 'Số liệu tự chảy vào; <em>ô nào tụt dưới ngưỡng sẽ đổi màu và nổi lên ở báo cáo</em> - không cần ai canh bảng tính.',
+ KC, source='Minh họa - giá trị mô phỏng. Trên hệ thống, số thực hiện lấy tự động từ dữ liệu bán hàng theo thời gian thực.'))
+
+# 16 Trust
+SLIDES.append(content('3.5 · MINH BẠCH &amp; TIN CẬY',
+ 'Ai làm gì, dữ liệu có sạch không, ai được xem gì - <em>hệ thống chủ động chỉ ra chỗ chưa ổn để sửa sớm</em>.',
+ '''<div class="cols">
   <div class="c33 box"><h4>Hồ sơ 360&deg;</h4><p>Bấm tên một người &rarr; xem toàn cảnh: đơn vị, OKR chủ trì, dự án, công việc, quá hạn, cuộc họp.</p></div>
   <div class="c33 box"><h4>Toàn vẹn dữ liệu</h4><p>Tự soi lỗ hổng: OKR chưa cascade, KR chưa có việc, dự án rỗng, ngân sách lệch, ràng buộc gắn nhầm.</p></div>
   <div class="c33 box"><h4>Phân quyền theo vai trò</h4><p>Điều hành xem toàn cảnh; nhân viên xem trong phạm vi đơn vị mình; quyền sửa giới hạn theo trách nhiệm.</p></div>
@@ -280,21 +377,35 @@ body.overlay-open #ctl{opacity:1}
   <div class="c40 stack">
    <div class="card"><h4>Tin cậy để ra quyết định</h4><p>Mỗi con số đều truy được về nguồn và người chịu trách nhiệm.</p></div>
   </div>
- </div></div><div class="src">Phân hệ Hồ sơ 360&deg;, Toàn vẹn dữ liệu, và Phân quyền theo vai trò.</div></section>
-<section class="slide divider" data-t="Vận hành hiệu quả" data-d="1"><div class="pnum">04</div><h2>Vận hành hiệu quả</h2><div class="dlead">Mỗi vai trò một cách khai thác, đưa hệ thống vào nhịp thói quen - và lợi ích thu về.</div><div class="dots"><i class=""></i><i class=""></i><i class=""></i><i class="on"></i></div></section>
-<section class="slide" data-t="Mỗi vai trò một cách khai thác - <em>từ điều hành toàn cảnh "><div class="eyebrow">4.1 · DÙNG THEO VAI TRÒ</div><h1 class="tk">Mỗi vai trò một cách khai thác - <em>từ điều hành toàn cảnh tới tập trung việc của mình</em>.</h1><div class="rule"></div><div class="body"><table class="t"><tr><th style="width:150px">Vai trò</th><th>Khai thác chính</th></tr>
+ </div>''',source='Phân hệ Hồ sơ 360&deg;, Toàn vẹn dữ liệu, và Phân quyền theo vai trò.'))
+
+# 17 Divider 4
+SLIDES.append(divider('04','Vận hành hiệu quả','Mỗi vai trò một cách khai thác, đưa hệ thống vào nhịp thói quen - và lợi ích thu về.',3))
+
+# 18 Roles
+SLIDES.append(content('4.1 · DÙNG THEO VAI TRÒ',
+ 'Mỗi vai trò một cách khai thác - <em>từ điều hành toàn cảnh tới tập trung việc của mình</em>.',
+ '''<table class="t"><tr><th style="width:150px">Vai trò</th><th>Khai thác chính</th></tr>
  <tr><td class="em">CEO / CFO</td><td>Theo dõi tiến độ công ty &amp; các khối, sức khỏe OKR, cảnh báo KPI; chủ trì họp điều hành, nhận bản tin tuần.</td></tr>
  <tr><td class="em">Giám đốc khối</td><td>Cascade mục tiêu công ty xuống phòng, phân bổ dự án/việc, duyệt check-in, xử lý việc quá hạn của khối.</td></tr>
  <tr><td class="em">Trưởng phòng</td><td>Giao việc cho nhân viên, theo dõi Kanban/Gantt của phòng, cập nhật KR, chuẩn bị số liệu họp.</td></tr>
  <tr><td class="em">Nhân viên</td><td>Trang &ldquo;Của tôi&rdquo;: tổng quan công việc, cập nhật trạng thái &amp; tiến độ; xem OKR trong phạm vi đơn vị mình.</td></tr>
- </table></div><div class="src">Phân quyền &amp; luồng sử dụng theo 4 nhóm vai trò của hệ thống.</div></section>
-<section class="slide" data-t="Đưa hệ thống vào <em>thói quen - không phải sự kiện</em>: 4 "><div class="eyebrow">4.2 · NHỊP VẬN HÀNH</div><h1 class="tk">Đưa hệ thống vào <em>thói quen - không phải sự kiện</em>: 4 nhịp ngày / tuần / tháng / quý.</h1><div class="rule"></div><div class="body"><ol class="num">
+ </table>''',source='Phân quyền &amp; luồng sử dụng theo 4 nhóm vai trò của hệ thống.'))
+
+# 19 Rhythm
+SLIDES.append(content('4.2 · NHỊP VẬN HÀNH',
+ 'Đưa hệ thống vào <em>thói quen - không phải sự kiện</em>: 4 nhịp ngày / tuần / tháng / quý.',
+ '''<ol class="num">
  <li><b>Hằng ngày.</b> Nhân viên cập nhật trạng thái việc; trưởng phòng nhìn Kanban để gỡ vướng.</li>
  <li><b>Hằng tuần.</b> Check-in KR + độ tự tin; họp điều hành tuần giao/rà việc; hệ thống gửi bản tin.</li>
  <li><b>Hằng tháng.</b> Rà KPI theo ngưỡng, sức khỏe OKR, ngân sách; đọc Nhận định &amp; Khuyến nghị để điều chỉnh.</li>
  <li><b>Hằng quý.</b> Chấm điểm OKR, đặt OKR kỳ mới, soi Toàn vẹn dữ liệu trước khi bước sang kỳ.</li>
- </ol></div><div class="src">Nhịp vận hành đề xuất (best practice) cho triển khai OKR/KPI.</div></section>
-<section class="slide" data-t="Năm lợi ích cốt lõi - <em>chiến lược không thất thoát, quyết"><div class="eyebrow">4.3 · LỢI ÍCH CHO BTMH</div><h1 class="tk">Năm lợi ích cốt lõi - <em>chiến lược không thất thoát, quyết định nhanh &amp; đúng, trách nhiệm rõ ràng</em>.</h1><div class="rule"></div><div class="body"><div class="cols">
+ </ol>''',source='Nhịp vận hành đề xuất (best practice) cho triển khai OKR/KPI.'))
+
+# 20 Benefits
+SLIDES.append(content('4.3 · LỢI ÍCH CHO BTMH',
+ 'Năm lợi ích cốt lõi - <em>chiến lược không thất thoát, quyết định nhanh &amp; đúng, trách nhiệm rõ ràng</em>.',
+ '''<div class="cols">
   <div class="c50 stack">
    <div class="card m"><h4>Chiến lược không thất thoát</h4><p>Từ tầm nhìn tới việc của mỗi người đều nhìn thấy và nối liền.</p></div>
    <div class="card"><h4>Ra quyết định nhanh &amp; đúng</h4><p>Số liệu tươi, cảnh báo sớm, khuyến nghị sẵn.</p></div>
@@ -304,8 +415,12 @@ body.overlay-open #ctl{opacity:1}
    <div class="card"><h4>Tiết kiệm thời gian tổng hợp</h4><p>Báo cáo &amp; bản tin tự sinh, thay cho gom số thủ công.</p></div>
    <div class="hl"><h4>Sẵn sàng cho quy mô lớn</h4><p>Chuẩn hóa cách vận hành khi công ty mở rộng tới hàng trăm điểm bán - nền tảng lớn cùng doanh nghiệp.</p></div>
   </div>
- </div></div><div class="src">Lợi ích kỳ vọng khi vận hành hệ thống đúng nhịp; gắn với mục tiêu tăng trưởng 2026-2030.</div></section>
-<section class="slide" data-t="Vài lưu ý khi đọc, và <em>hệ thống được nâng cấp liên tục</e"><div class="eyebrow">4.4 · LƯU Ý &amp; NHẬT KÝ CẬP NHẬT</div><h1 class="tk">Vài lưu ý khi đọc, và <em>hệ thống được nâng cấp liên tục</em>.</h1><div class="rule"></div><div class="body"><div class="cols">
+ </div>''',source='Lợi ích kỳ vọng khi vận hành hệ thống đúng nhịp; gắn với mục tiêu tăng trưởng 2026-2030.'))
+
+# 21 Method note + changelog
+SLIDES.append(content('4.4 · LƯU Ý &amp; NHẬT KÝ CẬP NHẬT',
+ 'Vài lưu ý khi đọc, và <em>hệ thống được nâng cấp liên tục</em>.',
+ '''<div class="cols">
   <div class="c40 box"><h4>Lưu ý phương pháp</h4><ul class="tick" style="margin-top:4px">
    <li>Số mục tiêu 2030 là kế hoạch theo Financial Model, chưa kiểm toán.</li>
    <li>Minh họa KPI dùng giá trị mô phỏng; số thật lấy tự động trên hệ thống.</li>
@@ -318,8 +433,10 @@ body.overlay-open #ctl{opacity:1}
    <tr><td class="em">02-03/08/2026</td><td>Họp điều hành (WBR/MBR); bản tin tuần; Sức khỏe OKR; Nhận định &amp; Khuyến nghị; Toàn vẹn dữ liệu.</td></tr>
    <tr><td class="em">31/07/2026</td><td>KPI tự động; Thư viện KPI &amp; Scorecard theo BSC; quản trị dự án gắn OKR; nhắc check-in.</td></tr>
    </table></div>
- </div></div><div class="src">Nhật ký rút gọn - bản đầy đủ trong mục Hướng dẫn của hệ thống.</div></section>
-<section class="slide cover" data-t="Kết thúc" data-d="1">
+ </div>''',source='Nhật ký rút gọn - bản đầy đủ trong mục Hướng dẫn của hệ thống.'))
+
+# 22 Closing
+SLIDES.append('''<section class="slide cover" data-t="Kết thúc" data-d="1">
  <div class="clogo"></div>
  <h1 style="font-size:46px">Cảm ơn.</h1>
  <div class="csub">Hệ thống Quản trị Hiệu suất BTMH - từ chiến lược tới thực thi.</div>
@@ -329,8 +446,27 @@ body.overlay-open #ctl{opacity:1}
   <div>Kỳ dữ liệu<b>Tháng 8/2026</b></div>
   <div>Điều hướng<b>&larr; &rarr; · phím O xem lưới · G bảng thuật ngữ</b></div>
  </div>
-</section>
-</div></div>
+</section>\n''')
+
+# Glossary dictionary (JS)
+GLOSS = {
+ 'OKR':'Objectives &amp; Key Results - phương pháp quản trị mục tiêu: đặt Mục tiêu định tính và 2-5 Kết quả then chốt đo được.',
+ 'KR':'Key Result - kết quả then chốt đo được của một Objective, có mốc đầu kỳ và mục tiêu.',
+ 'KPI':'Key Performance Indicator - chỉ số hiệu suất then chốt, theo dõi sức khỏe vận hành theo thời gian.',
+ 'BSC':'Balanced Scorecard - Thẻ điểm cân bằng: nhìn doanh nghiệp qua 4 mặt Tài chính, Khách hàng, Quy trình nội bộ, Học hỏi &amp; phát triển.',
+ 'Kanban':'Bảng cột theo trạng thái (Chưa làm / Đang làm / Xong...), kéo-thả thẻ việc giữa các cột.',
+ 'Gantt':'Biểu đồ thanh theo dòng thời gian, thể hiện ngày bắt đầu - hạn của từng việc.',
+ 'cascade':'Rải mục tiêu từ cấp trên xuống cấp dưới (Công ty &rarr; Khối &rarr; Phòng &rarr; Cá nhân) để mọi cấp align cùng hướng.',
+ 'waterfall':'Ràng buộc thứ tự: một việc phải chờ việc tiên quyết hoàn thành trước mới bắt đầu.',
+ 'check-in':'Cập nhật tiến độ định kỳ (thường hằng tuần) kèm mức độ tự tin đạt mục tiêu.',
+ 'WBR':'Weekly Business Review - họp rà soát kết quả kinh doanh hằng tuần.',
+ 'MBR':'Monthly Business Review - họp rà soát kết quả kinh doanh hằng tháng.',
+ 'roll-up':'Cuộn/gộp tiến độ từ cấp thấp lên cấp cao theo trọng số.',
+}
+import json
+GLOSS_JS = json.dumps(GLOSS, ensure_ascii=False)
+
+TAIL = '''</div></div>
 <div id="ctl">
  <button data-a="first" title="Về slide 1 (Home)">&#8945;</button>
  <button data-a="prev" title="Slide trước (←)">&#8249;</button>
@@ -349,7 +485,7 @@ body.overlay-open #ctl{opacity:1}
 <div id="tip"></div>
 <div id="rot">&#8635; Xoay ngang thiết bị để xem rõ hơn</div>
 <script>
-var GLOSS={"OKR": "Objectives &amp; Key Results - phương pháp quản trị mục tiêu: đặt Mục tiêu định tính và 2-5 Kết quả then chốt đo được.", "KR": "Key Result - kết quả then chốt đo được của một Objective, có mốc đầu kỳ và mục tiêu.", "KPI": "Key Performance Indicator - chỉ số hiệu suất then chốt, theo dõi sức khỏe vận hành theo thời gian.", "BSC": "Balanced Scorecard - Thẻ điểm cân bằng: nhìn doanh nghiệp qua 4 mặt Tài chính, Khách hàng, Quy trình nội bộ, Học hỏi &amp; phát triển.", "Kanban": "Bảng cột theo trạng thái (Chưa làm / Đang làm / Xong...), kéo-thả thẻ việc giữa các cột.", "Gantt": "Biểu đồ thanh theo dòng thời gian, thể hiện ngày bắt đầu - hạn của từng việc.", "cascade": "Rải mục tiêu từ cấp trên xuống cấp dưới (Công ty &rarr; Khối &rarr; Phòng &rarr; Cá nhân) để mọi cấp align cùng hướng.", "waterfall": "Ràng buộc thứ tự: một việc phải chờ việc tiên quyết hoàn thành trước mới bắt đầu.", "check-in": "Cập nhật tiến độ định kỳ (thường hằng tuần) kèm mức độ tự tin đạt mục tiêu.", "WBR": "Weekly Business Review - họp rà soát kết quả kinh doanh hằng tuần.", "MBR": "Monthly Business Review - họp rà soát kết quả kinh doanh hằng tháng.", "roll-up": "Cuộn/gộp tiến độ từ cấp thấp lên cấp cao theo trọng số."};
+var GLOSS=__GLOSS__;
 (function(){
  var S=[].slice.call(document.querySelectorAll('.slide')),N=S.length,i=0,buf='',rotated=false;
  var deck=document.getElementById('deck'),bar=document.getElementById('bar');
@@ -366,8 +502,8 @@ var GLOSS={"OKR": "Objectives &amp; Key Results - phương pháp quản trị m�
  });
 
  // ---- tooltip auto-annotate ----
- function esc(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
- var VN='A-Za-z0-9\u00C0-\u024F\u1E00-\u1EFF';
+ function esc(s){return s.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&');}
+ var VN='A-Za-z0-9\\u00C0-\\u024F\\u1E00-\\u1EFF';
  var terms=Object.keys(GLOSS).sort(function(a,b){return b.length-a.length;});
  function annotate(){
    S.forEach(function(s){
@@ -483,4 +619,15 @@ var GLOSS={"OKR": "Objectives &amp; Key Results - phương pháp quản trị m�
  var hh=parseInt((location.hash||'').replace('#',''),10);
  show(isNaN(hh)?0:hh-1);
 })();
-</script></body></html>
+</script></body></html>'''
+TAIL = TAIL.replace('__GLOSS__', GLOSS_JS)
+
+html = HEAD + ''.join(SLIDES) + TAIL
+out = os.path.join(D,'deck.html')
+open(out,'w',encoding='utf-8').write(html)
+print('KB', round(len(html.encode())/1024,1))
+print('sections', html.count('<section class="slide'), '/', html.count('</section>'))
+print('div', html.count('<div'), html.count('</div>'))
+print('svg', html.count('<svg'), html.count('</svg>'))
+print('slides(logical)', len(SLIDES))
+print('written', out)
