@@ -208,6 +208,15 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   đồ SVG tự vẽ. **QA 4 tầng bằng Playwright** (đo `getBoundingClientRect` so với mép vùng nội dung, KHÔNG nhìn
   ảnh; chạy tới `0/N slide lỗi`). Publish: deck này CFO chốt **public** (SOP mặc định protected — chỉ đổi khi
   CFO yêu cầu, mà CFO đã yêu cầu public cho deck giới thiệu). Mỗi lỗi mới phát hiện → tự ghi vào Mục 17 SOP.
+  - **QA 4 tầng CHỈ bắt TRÀN, KHÔNG bắt THƯA**: phải đo thêm **mật độ (SOP #8)** — với mỗi slide nội dung,
+    tính khoảng trống từ phần tử cuối `.body` tới đáy `.body`; **giữ ≤25% chiều cao `.body`** (script
+    `density.cjs`: nếu >25% = thưa, làm dày bằng nội dung THẬT: card/KPI/list/bảng nhỏ/flow, KHÔNG padding rỗng).
+    Và giữ **tối đa 1 khối `.hl` mỗi slide** (SOP 5.2). Harness QA chạy bằng **Node Playwright**
+    (`NODE_PATH=/opt/node22/lib/node_modules node qa.cjs`, `executablePath=/opt/pw-browsers/chromium`) — bản
+    Playwright ở đây là gói Node, KHÔNG phải Python. Bắt buộc chạy đối chiếu bản-lỗi-biết-trước để tin "0 lỗi".
+  - Publish an toàn (deck lớn, tránh sai lệch base64 logo): KHÔNG in lại HTML vào tool call — dùng workflow
+    n8n SSH một-lần đọc THẲNG file đã commit trên VPS (`/home/thang/okr-portal-src/okr-portal/docs/...`) rồi
+    POST `/api/publish` (key trong `/home/thang/decks-portal/.env`), xong archive workflow.
 
 ## Logic quan trọng (src/lib/)
 - `okr.ts`: `computeKrProgress` (theo hướng tăng/giảm, clamp 0..100), `recomputeUp` (lan tiến độ
