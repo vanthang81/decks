@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getDeckById, hasDeckContent, listCategories, listCompanies } from '@/lib/decks';
+import { getDeckById, hasDeckContent, listCategories, listCompanies, getDeckPassword } from '@/lib/decks';
 import { listGrantsForDeck } from '@/lib/grants';
 import { listGroups, grantedGroupsForDeck } from '@/lib/groups';
 import { listRequestsForDeck } from '@/lib/accessRequests';
@@ -37,6 +37,7 @@ export default async function DeckDetailPage({
   const pendingCount = requests.filter((r) => r.status === 'pending').length;
   const categories = await listCategories().catch(() => []);
   const companies = await listCompanies().catch(() => []);
+  const currentPw = deck.has_password ? await getDeckPassword(deck.id).catch(() => null) : null;
 
   return (
     <div>
@@ -139,6 +140,21 @@ export default async function DeckDetailPage({
       <div style={{ maxWidth: 560, marginBottom: 14 }}>
         <CopyField label="Link xem (gửi cho người xem)" value={viewUrl} />
       </div>
+      {deck.has_password && (
+        currentPw ? (
+          <details style={{ maxWidth: 560, marginBottom: 16, border: '1px solid var(--line)', borderRadius: 8, padding: '10px 14px' }}>
+            <summary style={{ cursor: 'pointer', color: 'var(--brand)', fontWeight: 600 }}>🔑 Hiện mật khẩu hiện tại</summary>
+            <div style={{ marginTop: 10 }}>
+              <CopyField label="Mật khẩu hiện tại (gửi kèm link)" value={currentPw} mono />
+            </div>
+          </details>
+        ) : (
+          <p className="muted" style={{ maxWidth: 560, marginBottom: 16 }}>
+            Mật khẩu hiện tại được đặt <b>trước khi có tính năng xem lại</b> nên chỉ lưu dạng băm — không hiển thị lại được.
+            Bấm <b>Tạo tự động</b> hoặc đặt mật khẩu mới bên dưới; từ đó về sau sẽ xem/copy lại được ở đây.
+          </p>
+        )
+      )}
       <div className="row" style={{ maxWidth: 560, marginBottom: 32, alignItems: 'flex-end' }}>
         <form action={setDeckPasswordAction} className="row" style={{ flex: 1, alignItems: 'flex-end' }}>
           <input type="hidden" name="deck_id" value={deck.id} />

@@ -61,12 +61,23 @@ export function hashDeckPassword(pw: string): string {
   return createHash('sha256').update(pw).digest('hex');
 }
 
-// Đặt (pw chuỗi) hoặc gỡ (pw null) mật khẩu cho deck.
+// Đặt (pw chuỗi) hoặc gỡ (pw null) mật khẩu cho deck. Lưu cả hash (verify) lẫn plain (admin xem lại).
 export async function setDeckPassword(deckId: string, pw: string | null): Promise<void> {
-  await query('UPDATE deck_decks SET password_hash=$2, updated_at=now() WHERE id=$1', [
+  await query('UPDATE deck_decks SET password_hash=$2, password_plain=$3, updated_at=now() WHERE id=$1', [
     deckId,
     pw ? hashDeckPassword(pw) : null,
+    pw ?? null,
   ]);
+}
+
+// Mật khẩu deck dạng đọc-được (để admin xem/gửi lại). null nếu chưa đặt HOẶC đặt trước khi có cột này.
+// CHỈ gọi ở trang chi tiết deck (đã gác admin) — KHÔNG đưa vào DECK_COLS/list để tránh lộ.
+export async function getDeckPassword(deckId: string): Promise<string | null> {
+  const r = await queryOne<{ password_plain: string | null }>(
+    'SELECT password_plain FROM deck_decks WHERE id=$1',
+    [deckId],
+  );
+  return r?.password_plain ?? null;
 }
 
 export async function verifyDeckPassword(deckId: string, pw: string): Promise<boolean> {
