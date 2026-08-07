@@ -25,7 +25,8 @@ phục vụ + chèn watermark/log.
   deck_group_decks = entitlement nhóm↔deck, `005_deck_password.sql` cột deck_decks.password_hash,
   `006_deck_meta.sql` cột category/tags(text[])/company(default BTMH)/thumbnail = thư viện phân loại,
   `007_access_events.sql` mở rộng CHECK deck_access_log.event thêm pw_ok/pw_fail/link_resend,
-  `008_access_requests.sql` bảng deck_access_requests = yêu cầu xin cấp quyền xem)
+  `008_access_requests.sql` bảng deck_access_requests = yêu cầu xin cấp quyền xem,
+  `009_deck_password_plain.sql` cột password_plain = mật khẩu deck dạng đọc-được cho admin xem lại)
   — chạy bằng superuser postgres qua
   `docker exec` (hoặc n8n admin cred); app dùng user `btmh_app` (đã GRANT). Typecheck: `npm run build`.
 - **`mcp-server/` là project RIÊNG** (deps riêng, image Docker riêng `decks-mcp`) → ĐÃ loại khỏi
@@ -81,9 +82,12 @@ phục vụ + chèn watermark/log.
   `requireAdminEmail` (mọi server action) → viewer KHÔNG thấy thư viện/khu quản trị, không gọi được action quản trị,
   `/api/thumb` cũng gác `is_active`. Login page nhận `callbackUrl` (chỉ path nội bộ, chặn open-redirect).
   Đặt/gỡ ở trang chi tiết deck (đặt tay / **tạo tự động** / gỡ; hiện 1 lần qua `?pw`, có nút Copy —
-  `src/components/CopyField.tsx`). API publish + tool MCP `deck_publish` nhận thêm `password` (đặt/gỡ) và
+  `src/components/CopyField.tsx`). **Admin xem lại mật khẩu bất cứ lúc nào**: lưu thêm `deck_decks.password_plain`
+  (db/009) vì mật khẩu chung là "mã cửa" admin chủ động phát; `getDeckPassword(id)` (NGOÀI DECK_COLS, chỉ đọc ở
+  trang chi tiết deck đã gác admin) → mục "🔑 Hiện mật khẩu hiện tại". Mật khẩu đặt TRƯỚC db/009 chỉ có hash →
+  hiện ghi chú "đặt lại để xem được". API publish + tool MCP `deck_publish` nhận thêm `password` (đặt/gỡ) và
   `generate_password` (tự sinh, TRẢ VỀ mật khẩu trong response). `src/lib/decks.ts`
-  (setDeckPassword/verifyDeckPassword/generateDeckPassword). **Đổi schema tool MCP thì phải rebuild
+  (setDeckPassword lưu cả hash+plain / verifyDeckPassword / generateDeckPassword / getDeckPassword). **Đổi schema tool MCP thì phải rebuild
   `decks-mcp` VÀ reconnect connector claude.ai (hoặc mở chat mới) để nạp schema mới.**
 - **Trang chủ `/` = thư viện deck NỘI BỘ, ĐÃ KHOÁ sau đăng nhập** (middleware gác `/` + `/admin/*`;
   khách chưa login → đẩy về `/login`). Liệt kê **mọi** deck (badge công khai/bảo mật/OTP/nháp), card mở
