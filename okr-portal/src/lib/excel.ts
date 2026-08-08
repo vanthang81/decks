@@ -13,11 +13,22 @@ const KR_HEAD = ['Mã', 'Mã Objective', 'Tiêu đề', 'Loại đo', 'Hướng'
 const INIT_HEAD = ['Mã', 'Mã Objective', 'Mã cha', 'Loại', 'Tiêu đề', 'Mô tả', 'Người phụ trách (email)', 'Trạng thái', 'Ưu tiên', 'Tiến độ %', 'Bắt đầu', 'Kết thúc', 'NS kế hoạch', 'Thực chi'];
 
 // ============ EXPORT ============
-export async function buildOkrWorkbook(periodId: string | null, unitId: string | null): Promise<Buffer> {
+export async function buildOkrWorkbook(
+  periodId: string | null,
+  unitId: string | null,
+  // Phạm vi xem theo đơn vị (nhân viên): CHỈ xuất OKR cấp Công ty + trong phạm vi đơn vị mình +
+  // OKR mình chủ trì — khớp đúng canViewObjectiveUnit ở giao diện. null = xuất tất cả (điều hành/quản lý).
+  scope: { unitIds: string[]; email: string } | null = null,
+): Promise<Buffer> {
   const objWhere: string[] = [];
   const p: unknown[] = [];
   if (periodId) { p.push(periodId); objWhere.push(`o.period_id=$${p.length}`); }
   if (unitId) { p.push(unitId); objWhere.push(`o.unit_id=$${p.length}`); }
+  if (scope) {
+    p.push(scope.unitIds); const ui = p.length;
+    p.push(scope.email); const em = p.length;
+    objWhere.push(`(o.level='company' OR o.unit_id::text = ANY($${ui}::text[]) OR lower(o.owner_email)=lower($${em}))`);
+  }
   const wsql = objWhere.length ? 'WHERE ' + objWhere.join(' AND ') : '';
 
   const objs = await query<{ code: string; period: string; level: string; unit: string | null; owner: string | null; title: string; description: string | null; okr_type: string; status: string; progress: number; parent_code: string | null }>(

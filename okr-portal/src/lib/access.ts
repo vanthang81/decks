@@ -2,7 +2,7 @@
 // Vai trò tổ chức (exec/division_lead/dept_lead/staff) giữ để tính PHẠM VI;
 // Nhóm quyền quyết định NĂNG LỰC. CEO/CFO (exec) LUÔN toàn quyền.
 import { getSetting } from './settings';
-import { manageScope, type Unit } from './org';
+import { manageScope, objectiveViewScope, type Unit } from './org';
 import type { OkrUser } from './users';
 import type { Objective, Level } from './okr';
 import {
@@ -101,11 +101,13 @@ function inScope(user: OkrUser, unitId: string | null, units: Unit[], access: Ac
 }
 
 export function canEditObjective(user: OkrUser, obj: ObjScope, units: Unit[], access: Access): boolean {
+  if (user.role === 'staff') return false; // Nhân viên = CHỈ XEM OKR/KR (CFO 08/08) — không sửa, kể cả OKR mình chủ trì
   if (ownerOrCreator(user, obj)) return true; // chủ trì/người tạo luôn sửa OKR của mình
   if (!hasCap(user, 'okr.edit', access)) return false;
   return inScope(user, obj.unit_id, units, access);
 }
 export function canDeleteObjective(user: OkrUser, obj: ObjScope, units: Unit[], access: Access): boolean {
+  if (user.role === 'staff') return false; // Nhân viên = chỉ xem
   if (!hasCap(user, 'okr.delete', access)) return false;
   return inScope(user, obj.unit_id, units, access);
 }
@@ -116,6 +118,7 @@ export function canCreateObjective(
   units: Unit[],
   access: Access,
 ): boolean {
+  if (user.role === 'staff') return false; // Nhân viên = chỉ xem, không tạo OKR
   if (level === 'individual') return true; // OKR cá nhân: ai cũng tạo cho mình
   if (!hasCap(user, 'okr.create', access)) return false;
   return inScope(user, unitId, units, access);
@@ -145,8 +148,11 @@ export function buildTaskViewCtx(
   units: Unit[],
   access: Access,
 ): TaskViewCtx {
-  const seeAll = hasCap(user, 'scope.all', access);
-  const scope = manageScope(user, units); // null = exec (không giới hạn)
+  // NHÂN VIÊN (staff) = phạm vi XEM theo VAI TRÒ (đơn vị mình + hậu duệ + tổ tiên), BỎ QUA cap
+  // 'scope.all' để nhất quán với trang OKR (objectiveViewScope). Vai trò khác giữ theo năng lực.
+  const staff = user.role === 'staff';
+  const seeAll = staff ? false : hasCap(user, 'scope.all', access);
+  const scope = staff ? objectiveViewScope(user, units) : manageScope(user, units); // null = exec (không giới hạn)
   const e = user.email.toLowerCase();
   const myProjects = new Set<string>();
   for (const t of tasks) {

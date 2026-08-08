@@ -2,7 +2,7 @@ import HelpTip from '@/components/HelpTip';
 import SiteHeader from '@/components/SiteHeader';
 import TaskExplorer from '@/components/TaskExplorer';
 import { requireUser } from '@/lib/current-user';
-import { listUnits } from '@/lib/org';
+import { listUnits, objectiveViewScope } from '@/lib/org';
 import { listUsers } from '@/lib/users';
 import { listAllProjectOptions } from '@/lib/projects';
 import { listAllInitiatives } from '@/lib/initiatives';
@@ -49,7 +49,10 @@ export default async function TasksPage({
   const depsMap: Record<string, string[]> = {};
   for (const [k, v] of depsMapRaw) depsMap[k] = v;
 
-  const unitOpts = units.map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort }));
+  // Nhân viên: ô lọc "Đơn vị" chỉ liệt kê đơn vị TRONG PHẠM VI (khớp phạm vi xem việc); vai trò khác = mọi đơn vị.
+  const taskUnitScope = objectiveViewScope(user, units);
+  const scopedUnits = taskUnitScope === null ? units : units.filter((u) => taskUnitScope.has(u.id));
+  const unitOpts = scopedUnits.map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort }));
   const userOpts = users.map((u) => ({
     email: u.email,
     name: u.display_name || u.email,

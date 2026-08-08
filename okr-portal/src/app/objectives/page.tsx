@@ -99,7 +99,7 @@ export default async function ObjectivesPage({
                 ⬇ Xuất Excel
               </a>
             )}
-            {period && (
+            {period && user.role !== 'staff' && (
               <Link className="btn" href={`/objectives/new?period=${period.id}`}>
                 + Tạo OKR
               </Link>
