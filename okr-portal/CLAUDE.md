@@ -244,6 +244,17 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   (staff) CHỈ xem OKR trong phạm vi đơn vị mình** (đơn vị + chuỗi cấp trên align lên) — `objectiveViewScope`/
   `canViewObjectiveUnit` trong `org.ts`, lọc ở `/objectives` + gác `/objectives/[id]` (CFO 06/08). Quyền SỬA
   giới hạn theo `canManageObjective`.
+- **NHÂN VIÊN = CHỈ XEM TOÀN BỘ module OKR + đúng phạm vi đơn vị ở MỌI đường ra (CFO 08/08 — ghi nhớ)**:
+  1) `canEditObjective`/`canDeleteObjective`/`canCreateObjective` (access.ts) trả **false ngay nếu `role==='staff'`**
+     (BỎ QUA cap `okr.edit`/`scope.all`) → ẩn mọi nút sửa/xoá/tạo trên `/objectives/[id]` VÀ chặn mọi server
+     action OKR/KR (sửa OKR, tạo/sửa/xoá KR, check-in, gắn KPI, đặt BSC — đều qua `canManageObjectiveId`→`canEditObjective`).
+     Ẩn '+ Tạo OKR' + redirect `/objectives/new` cho staff. Việc ĐƯỢC GIAO staff vẫn cập nhật (đường `assignee`
+     trong `canUpdateInitiative`, KHÔNG đổi). 2) **Xuất Excel** `/api/export` truyền `scope` xuống `buildOkrWorkbook`
+     (lọc Objectives/KeyResults/Initiatives = cấp Công ty + đơn vị trong scope + OKR mình chủ trì) — tránh rò rỉ qua file.
+     3) **Trang /tasks**: `buildTaskViewCtx` dùng **objectiveViewScope theo VAI TRÒ cho staff** (bỏ qua cap `scope.all`),
+     `canViewInitiative` lọc; ô lọc "Đơn vị" cũng chỉ liệt kê đơn vị trong scope. → Khi thêm bất kỳ đường XEM/XUẤT
+     OKR/việc mới, PHẢI áp cùng `objectiveViewScope` (role-based), đừng chỉ dựa cap. QC bằng psql: role=staff,
+     obj/task_scoped < total (đã kiểm 08/08: 21/39 OKR, 25/262 việc).
   Admin hệ thống (users/org/periods) chỉ `exec` (`canAdmin`), guard không xoá exec cuối/chính mình.
 
 ## Trang (src/app/)
