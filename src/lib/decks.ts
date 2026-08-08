@@ -162,6 +162,11 @@ export async function listCompanies(): Promise<string[]> {
   return rows.map((r) => r.company);
 }
 
+// Đổi chế độ hiển thị (public ↔ protected). protected = cần link cá nhân/Google/yêu cầu (không mở tự do).
+export async function setDeckVisibility(id: string, visibility: Visibility): Promise<void> {
+  await query('UPDATE deck_decks SET visibility=$2, updated_at=now() WHERE id=$1', [id, visibility]);
+}
+
 // Lưu trữ / khôi phục: bật-tắt is_published. Deck ẩn (false) → /d/<slug> trả 404, không hiện cho người xem.
 export async function setDeckPublished(id: string, published: boolean): Promise<void> {
   await query('UPDATE deck_decks SET is_published=$2, updated_at=now() WHERE id=$1', [id, published]);

@@ -78,9 +78,14 @@ function UrlBar({ url }: { url: string }) {
 function Badges({ d }: { d: DeckLite }) {
   return (
     <span className="row" style={{ gap: 5 }}>
-      <span className={`tag ${d.visibility === 'public' ? '' : 'protected'}`} style={{ fontSize: 10 }}>
-        {d.visibility === 'public' ? 'Công khai' : 'Bảo mật'}
-      </span>
+      {(() => {
+        const openPublic = d.visibility === 'public' && !d.has_password;
+        return (
+          <span className={`tag ${openPublic ? '' : 'protected'}`} style={{ fontSize: 10 }}>
+            {openPublic ? 'Công khai' : 'Bảo mật'}
+          </span>
+        );
+      })()}
       {d.has_password && <span className="pill" style={{ fontSize: 10 }}>🔒 mật khẩu</span>}
       {d.require_otp && <span className="pill" style={{ fontSize: 10 }}>OTP</span>}
       {!d.is_published && <span className="pill bad" style={{ fontSize: 10 }}>đã ẩn</span>}

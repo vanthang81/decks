@@ -5,7 +5,7 @@ import { listGroups, grantedGroupsForDeck } from '@/lib/groups';
 import { listRequestsForDeck } from '@/lib/accessRequests';
 import { parseUA } from '@/lib/ua';
 import { listDeckLog } from '@/lib/log';
-import { issueLinkAction, revokeLinkAction, updateContentAction, grantDeckToGroupAction, revokeGroupOnDeckAction, setDeckPasswordAction, generateDeckPasswordAction, clearDeckPasswordAction, updateDeckMetaAction, generateThumbnailAction, setDeckPublishedAction, deleteDeckAction, approveRequestAction, denyRequestAction } from '../../actions';
+import { issueLinkAction, revokeLinkAction, updateContentAction, grantDeckToGroupAction, revokeGroupOnDeckAction, setDeckPasswordAction, generateDeckPasswordAction, clearDeckPasswordAction, updateDeckMetaAction, generateThumbnailAction, setDeckPublishedAction, setDeckVisibilityAction, deleteDeckAction, approveRequestAction, denyRequestAction } from '../../actions';
 import CopyField from '@/components/CopyField';
 
 export const dynamic = 'force-dynamic';
@@ -44,7 +44,7 @@ export default async function DeckDetailPage({
       <h2>{deck.title}</h2>
       <p className="muted">
         slug <code>{deck.slug}</code> ·{' '}
-        {deck.visibility === 'public' ? 'Công khai' : 'Bảo mật'}
+        {deck.visibility === 'public' && !deck.has_password ? 'Công khai (mở tự do)' : 'Bảo mật'}
         {deck.require_otp ? ' · OTP' : ''}
         {deck.has_password ? ' · 🔒 Có mật khẩu' : ''} ·{' '}
         {deck.is_published ? 'Đã xuất bản' : <b style={{ color: 'var(--bad)' }}>Đã ẩn (lưu trữ)</b>}
@@ -56,16 +56,26 @@ export default async function DeckDetailPage({
         </div>
       )}
 
-      <form action={setDeckPublishedAction} style={{ marginBottom: 24 }}>
-        <input type="hidden" name="deck_id" value={deck.id} />
-        <input type="hidden" name="published" value={deck.is_published ? 'false' : 'true'} />
-        <button className={`btn ${deck.is_published ? '' : 'primary'}`} type="submit">
-          {deck.is_published ? '📥 Ẩn / lưu trữ deck' : '↩︎ Khôi phục (xuất bản lại)'}
-        </button>
-        <span className="muted" style={{ marginLeft: 10, fontSize: 13 }}>
-          {deck.is_published ? 'Tạm ẩn khỏi người xem, giữ nguyên nội dung + link đã cấp. Khôi phục lại bất cứ lúc nào.' : ''}
-        </span>
-      </form>
+      <div className="row" style={{ marginBottom: 12, gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <form action={setDeckPublishedAction}>
+          <input type="hidden" name="deck_id" value={deck.id} />
+          <input type="hidden" name="published" value={deck.is_published ? 'false' : 'true'} />
+          <button className={`btn ${deck.is_published ? '' : 'primary'}`} type="submit">
+            {deck.is_published ? '📥 Ẩn / lưu trữ deck' : '↩︎ Khôi phục (xuất bản lại)'}
+          </button>
+        </form>
+        <form action={setDeckVisibilityAction}>
+          <input type="hidden" name="deck_id" value={deck.id} />
+          <input type="hidden" name="visibility" value={deck.visibility === 'public' ? 'protected' : 'public'} />
+          <button className="btn" type="submit">
+            {deck.visibility === 'public' ? '🔒 Chuyển sang Bảo mật' : '🌐 Chuyển sang Công khai'}
+          </button>
+        </form>
+      </div>
+      <p className="muted" style={{ marginBottom: 24, fontSize: 13, maxWidth: 660 }}>
+        <b>Công khai</b> = ai có link là xem được (nếu có đặt mật khẩu thì vẫn phải nhập mật khẩu).{' '}
+        <b>Bảo mật</b> = cần link cá nhân được cấp / đăng nhập Google / gửi yêu cầu duyệt (kiểm soát từng người).
+      </p>
 
       {searchParams.link && (
         <div className="card" style={{ marginBottom: 20 }}>

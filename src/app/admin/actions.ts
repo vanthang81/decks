@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import {
   upsertDeck, getDeckById, updateDeckContent, updateDeckMeta,
-  setDeckPassword, generateDeckPassword, setDeckPublished, deleteDeck, type Visibility,
+  setDeckPassword, generateDeckPassword, setDeckPublished, setDeckVisibility, deleteDeck, type Visibility,
 } from '@/lib/decks';
 import { generateDeckThumbnail } from '@/lib/thumbnail';
 import { upsertViewer } from '@/lib/viewers';
@@ -199,6 +199,18 @@ export async function createDeckAction(formData: FormData) {
     company: String(formData.get('company') ?? '').trim() || 'BTMH',
   });
   if (content) await generateDeckThumbnail({ id: deck.id, slug: deck.slug }).catch(() => false);
+  revalidatePath('/admin');
+  revalidatePath('/');
+}
+
+// ---- Chế độ hiển thị (công khai ↔ bảo mật) ----
+export async function setDeckVisibilityAction(formData: FormData) {
+  await requireAdminEmail();
+  const deckId = String(formData.get('deck_id') ?? '');
+  const visibility = (String(formData.get('visibility') ?? '') === 'public' ? 'public' : 'protected') as Visibility;
+  if (!deckId) return;
+  await setDeckVisibility(deckId, visibility);
+  revalidatePath(`/admin/decks/${deckId}`);
   revalidatePath('/admin');
   revalidatePath('/');
 }

@@ -35,8 +35,8 @@ export default async function AdminDecksPage({
               <td>{d.title}</td>
               <td className="muted">{d.slug}</td>
               <td>
-                <span className={`pill ${d.visibility === 'public' ? 'ok' : ''}`}>
-                  {d.visibility === 'public' ? 'Công khai' : 'Bảo mật'}
+                <span className={`pill ${d.visibility === 'public' && !d.has_password ? 'ok' : ''}`}>
+                  {d.visibility === 'public' && !d.has_password ? 'Công khai' : 'Bảo mật'}
                 </span>
                 {d.require_otp && <span className="pill" style={{ marginLeft: 6 }}>OTP</span>}
               </td>
