@@ -93,7 +93,9 @@ phục vụ + chèn watermark/log.
   khách chưa login → đẩy về `/login`). Liệt kê **mọi** deck (badge công khai/bảo mật/OTP/nháp), card mở
   trang quản trị deck. `src/app/page.tsx` + `auth()` guard (defense-in-depth). KHÔNG để lộ danh sách deck ra ngoài.
 - **Deck public**: `/d/<slug>` vẫn mở tự do qua link trực tiếp (không watermark) — nhưng KHÔNG còn liệt kê
-  công khai ở `/` nữa (muốn khoá luôn cả xem-qua-link thì đổi route `/d`).
+  công khai ở `/` nữa (muốn khoá luôn cả xem-qua-link thì đổi route `/d`). **Nhãn "Công khai" CHỈ hiện khi
+  `visibility=public` VÀ KHÔNG mật khẩu**; public+mật khẩu → nhãn "Bảo mật" (vẫn đòi mật khẩu ở gate). Trang chi
+  tiết deck có nút **đổi chế độ Công khai↔Bảo mật** (`setDeckVisibilityAction`).
 - **Lưu trữ (ẩn) & xoá deck** (trang chi tiết deck): **Ẩn/lưu trữ** = tắt `is_published` (`setDeckPublished`) →
   `/d/<slug>` trả 404, ẩn khỏi người xem, GIỮ nội dung + link đã cấp, khôi phục lại bất cứ lúc nào (badge
   "đã ẩn" ở thư viện/list admin). **Xoá vĩnh viễn** = `deleteDeck` (`DELETE FROM deck_decks`) — phải gõ đúng
