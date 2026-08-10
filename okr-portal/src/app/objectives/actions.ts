@@ -436,6 +436,60 @@ export async function createInitiativeAction(fd: FormData) {
   revalidatePath(`/objectives/${objectiveId}`);
 }
 
+// Tạo OKR CÁ NHÂN từ popup ở trang "Của tôi" (/my) — KHÔNG redirect (để popup tự đóng + refresh
+// ở lại trang Của tôi). Ai cũng tạo được OKR cá nhân cho MÌNH (level=individual, owner=self).
+export async function createPersonalOkrAction(fd: FormData) {
+  const user = await requireUser();
+  const [units, access] = await Promise.all([listUnits(), loadAccess()]);
+  if (!canCreateObjective(user, 'individual', null, units, access)) {
+    throw new Error('Bạn không có quyền tạo OKR cá nhân.');
+  }
+  const title = str(fd, 'title').trim();
+  const periodId = str(fd, 'period_id');
+  if (!title) throw new Error('Thiếu tên mục tiêu.');
+  if (!periodId) throw new Error('Thiếu kỳ.');
+  const id = await createObjective({
+    period_id: periodId,
+    level: 'individual',
+    unit_id: null,
+    owner_email: user.email,
+    parent_id: null,
+    title,
+    description: orNull(str(fd, 'description')),
+    status: 'active' as ObjStatus,
+    okr_type: (str(fd, 'okr_type') || 'committed') as OkrType,
+    bsc_perspective: null,
+    created_by: user.email,
+  });
+  // KR nhập ngay tại popup (JSON) — tạo luôn để OKR có thước đo (best-effort từng KR).
+  try {
+    const rows = JSON.parse(str(fd, 'krs') || '[]') as Array<Record<string, unknown>>;
+    for (const k of Array.isArray(rows) ? rows : []) {
+      const kt = String(k.title ?? '').trim();
+      if (!kt) continue;
+      const mt = (['number', 'percent', 'currency', 'boolean'].includes(String(k.metric_type)) ? k.metric_type : 'number') as MetricType;
+      const start = parseNum(k.start_value, 0);
+      const target = parseNum(k.target_value, mt === 'boolean' ? 1 : 100);
+      await createKeyResult({
+        objective_id: id,
+        title: kt,
+        metric_type: mt,
+        direction: (k.direction === 'decrease' ? 'decrease' : 'increase') as Direction,
+        unit_label: k.unit_label ? String(k.unit_label) : null,
+        start_value: start,
+        target_value: target,
+        current_value: start,
+        weight: parseNum(k.weight, 1) || 1,
+        kpi_source: null,
+        indicator: (k.indicator === 'leading' ? 'leading' : 'lagging') as Indicator,
+      }).catch(() => {});
+    }
+  } catch {
+    /* krs không hợp lệ → bỏ qua, OKR vẫn tạo */
+  }
+  revalidatePath('/my');
+}
+
 // Tạo CÔNG VIỆC lẻ ngay ở trang "Công việc" (/tasks) — dành cho QUẢN LÝ (không phải nhân viên).
 // Việc có thể đứng độc lập, hoặc gắn tuỳ chọn vào 1 OKR / 1 dự án (phải có quyền quản mục đó).
 export async function createTaskAction(fd: FormData) {

@@ -118,8 +118,8 @@ export function canCreateObjective(
   units: Unit[],
   access: Access,
 ): boolean {
-  if (user.role === 'staff') return false; // Nhân viên = chỉ xem, không tạo OKR
-  if (level === 'individual') return true; // OKR cá nhân: ai cũng tạo cho mình
+  if (level === 'individual') return true; // OKR CÁ NHÂN: ai cũng tạo cho mình (kể cả nhân viên)
+  if (user.role === 'staff') return false; // Nhân viên KHÔNG tạo OKR đơn vị/công ty
   if (!hasCap(user, 'okr.create', access)) return false;
   return inScope(user, unitId, units, access);
 }

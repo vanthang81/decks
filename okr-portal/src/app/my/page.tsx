@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import HelpTip from '@/components/HelpTip';
 import SiteHeader from '@/components/SiteHeader';
+import NewPersonalOkrModal from '@/components/NewPersonalOkrModal';
 import { ProgressBar, StatusBadge } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
 import { getCurrentPeriod, listPeriods } from '@/lib/periods';
 import { listObjectivesForOwner } from '@/lib/okr';
 import { listInitiativesForOwner, taskCountsForOwner, INIT_STATUS_LABEL } from '@/lib/initiatives';
+import { createPersonalOkrAction } from '@/app/objectives/actions';
 import { fmtVnd, fmtDate } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
@@ -36,9 +38,9 @@ export default async function MyPage() {
             </p>
           </div>
           {period && (
-            <Link className="btn" href={`/objectives/new?period=${period.id}`}>
-              + Tạo OKR cá nhân
-            </Link>
+            <div>
+              <NewPersonalOkrModal periodId={period.id} action={createPersonalOkrAction} />
+            </div>
           )}
         </div>
 
