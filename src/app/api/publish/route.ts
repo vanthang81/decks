@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
-import { upsertDeck, setDeckPassword, generateDeckPassword, getDeckBySlug, updateDeckMeta } from '@/lib/decks';
+import { upsertDeck, setDeckPassword, generateDeckPassword, getDeckBySlug, updateDeckMeta, setDeckSource } from '@/lib/decks';
 import { resolveCategory } from '@/lib/categorize';
 import { generateDeckThumbnail } from '@/lib/thumbnail';
 import { isValidSlug } from '@/lib/content';
@@ -25,6 +25,7 @@ const Body = z.object({
   category: z.string().nullish(),
   tags: z.array(z.string()).optional(),
   company: z.string().optional(),
+  source_url: z.string().nullish(),
 });
 
 export async function POST(req: NextRequest) {
@@ -87,6 +88,11 @@ export async function POST(req: NextRequest) {
     ...(d.tags !== undefined ? { tags: d.tags } : {}),
     ...(d.company !== undefined ? { company: d.company } : {}),
   });
+
+  // Link nguồn / chat gốc (tuỳ chọn). Chỉ đặt khi truyền vào (không truyền = giữ nguyên).
+  if (d.source_url !== undefined) {
+    await setDeckSource(deck.id, d.source_url ?? null);
+  }
 
   // Ảnh preview: tự chụp slide đầu (best-effort, không chặn kết quả nếu lỗi).
   await generateDeckThumbnail({ id: deck.id, slug }).catch(() => false);

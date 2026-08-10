@@ -5,7 +5,7 @@ import { listGroups, grantedGroupsForDeck } from '@/lib/groups';
 import { listRequestsForDeck } from '@/lib/accessRequests';
 import { parseUA } from '@/lib/ua';
 import { listDeckLog } from '@/lib/log';
-import { issueLinkAction, revokeLinkAction, updateContentAction, grantDeckToGroupAction, revokeGroupOnDeckAction, setDeckPasswordAction, generateDeckPasswordAction, clearDeckPasswordAction, updateDeckMetaAction, generateThumbnailAction, setDeckPublishedAction, setDeckVisibilityAction, deleteDeckAction, approveRequestAction, denyRequestAction } from '../../actions';
+import { issueLinkAction, revokeLinkAction, updateContentAction, grantDeckToGroupAction, revokeGroupOnDeckAction, setDeckPasswordAction, generateDeckPasswordAction, clearDeckPasswordAction, updateDeckMetaAction, generateThumbnailAction, setDeckPublishedAction, setDeckVisibilityAction, setDeckSourceAction, deleteDeckAction, approveRequestAction, denyRequestAction } from '../../actions';
 import CopyField from '@/components/CopyField';
 
 export const dynamic = 'force-dynamic';
@@ -76,6 +76,32 @@ export default async function DeckDetailPage({
         <b>Công khai</b> = ai có link là xem được (nếu có đặt mật khẩu thì vẫn phải nhập mật khẩu).{' '}
         <b>Bảo mật</b> = cần link cá nhân được cấp / đăng nhập Google / gửi yêu cầu duyệt (kiểm soát từng người).
       </p>
+
+      <h2 style={{ marginTop: 8 }}>🔗 Nguồn / Chat gốc</h2>
+      <p className="muted">Link tới cuộc chat Claude (hoặc nguồn khác) đã tạo deck — để mở lại và điều chỉnh/cập nhật khi cần. Tuỳ chọn.</p>
+      {deck.source_url && (
+        <div className="row" style={{ gap: 10, marginBottom: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <a className="btn primary" href={deck.source_url} target="_blank" rel="noreferrer">Mở nguồn ↗</a>
+          <span className="muted" style={{ fontSize: 12, wordBreak: 'break-all', flex: 1, minWidth: 240 }}>{deck.source_url}</span>
+        </div>
+      )}
+      <div className="row" style={{ maxWidth: 640, marginBottom: 32, alignItems: 'flex-end', gap: 10 }}>
+        <form action={setDeckSourceAction} className="row" style={{ flex: 1, alignItems: 'flex-end' }}>
+          <input type="hidden" name="deck_id" value={deck.id} />
+          <div style={{ flex: 1 }}>
+            <label htmlFor="source_url">{deck.source_url ? 'Đổi link nguồn' : 'Dán link nguồn (chat Claude / Google Doc / Outline…)'}</label>
+            <input id="source_url" name="source_url" type="url" placeholder="https://claude.ai/chat/…" defaultValue={deck.source_url ?? ''} />
+          </div>
+          <button className="btn" type="submit">Lưu</button>
+        </form>
+        {deck.source_url && (
+          <form action={setDeckSourceAction}>
+            <input type="hidden" name="deck_id" value={deck.id} />
+            <input type="hidden" name="source_url" value="" />
+            <button className="btn" type="submit" title="Gỡ link nguồn">Gỡ</button>
+          </form>
+        )}
+      </div>
 
       {searchParams.link && (
         <div className="card" style={{ marginBottom: 20 }}>

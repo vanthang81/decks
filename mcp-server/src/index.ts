@@ -46,6 +46,7 @@ Args:
   - company (string, tùy chọn): tên công ty, mặc định BTMH — để phân loại ở thư viện
   - category (string, tùy chọn): danh mục deck (vd 'Nhà đầu tư', 'Đối tác', 'Nội bộ')
   - tags (string[], tùy chọn): danh sách thẻ để lọc/tìm ở thư viện
+  - source_url (string, tùy chọn): link "Nguồn / Chat gốc" (vd URL cuộc chat claude.ai này) để admin mở lại chat mà chỉnh sửa deck sau
 
 Ảnh preview (chụp slide đầu) được TỰ ĐỘNG tạo sau khi publish.
 
@@ -73,6 +74,10 @@ Lưu ý: gọi lại cùng slug = cập nhật (ghi đè nội dung) deck đó. 
         company: z.string().optional().describe('Tên công ty (mặc định BTMH) — để phân loại ở thư viện'),
         category: z.string().optional().describe("Danh mục deck, vd 'Nhà đầu tư', 'Đối tác', 'Nội bộ'"),
         tags: z.array(z.string()).optional().describe('Danh sách thẻ (tags) để lọc/tìm, vd ["2026","chiến lược"]'),
+        source_url: z
+          .string()
+          .optional()
+          .describe('Link "Nguồn / Chat gốc" (vd URL cuộc chat claude.ai này) để admin mở lại chat mà chỉnh sửa deck sau'),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     },

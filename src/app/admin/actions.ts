@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import {
   upsertDeck, getDeckById, updateDeckContent, updateDeckMeta,
-  setDeckPassword, generateDeckPassword, setDeckPublished, setDeckVisibility, deleteDeck, type Visibility,
+  setDeckPassword, generateDeckPassword, setDeckPublished, setDeckVisibility, setDeckSource, deleteDeck, type Visibility,
 } from '@/lib/decks';
 import { resolveCategory } from '@/lib/categorize';
 import { generateDeckThumbnail } from '@/lib/thumbnail';
@@ -209,6 +209,15 @@ export async function createDeckAction(formData: FormData) {
   if (content) await generateDeckThumbnail({ id: deck.id, slug: deck.slug }).catch(() => false);
   revalidatePath('/admin');
   revalidatePath('/');
+}
+
+// ---- Nguồn / Chat gốc (link tuỳ chọn để mở lại chat đã tạo deck) ----
+export async function setDeckSourceAction(formData: FormData) {
+  await requireAdminEmail();
+  const deckId = String(formData.get('deck_id') ?? '');
+  if (!deckId) return;
+  await setDeckSource(deckId, String(formData.get('source_url') ?? '')); // sanitizeUrl bên trong (rỗng/không hợp lệ → null)
+  revalidatePath(`/admin/decks/${deckId}`);
 }
 
 // ---- Chế độ hiển thị (công khai ↔ bảo mật) ----

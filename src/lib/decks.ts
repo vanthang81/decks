@@ -16,6 +16,7 @@ export type Deck = {
   tags: string[];
   company: string;
   has_thumbnail: boolean; // true nếu có ảnh preview (phục vụ qua /api/thumb/<id>)
+  source_url: string | null; // link "Nguồn / Chat gốc" (tuỳ chọn) — chỉ hiện ở admin
   created_at?: string;
   updated_at?: string;
 };
@@ -33,8 +34,20 @@ export function decodeEntities(s: string): string {
 }
 
 const DECK_COLS =
-  "id, slug, title, description, visibility, require_otp, is_published, category, tags, company, " +
+  "id, slug, title, description, visibility, require_otp, is_published, category, tags, company, source_url, " +
   "(password_hash IS NOT NULL) AS has_password, (thumbnail IS NOT NULL) AS has_thumbnail";
+
+// Chỉ nhận URL http(s) (chống href javascript:). Trả URL đã trim hoặc null.
+export function sanitizeUrl(u: string | null | undefined): string | null {
+  const s = (u ?? '').trim();
+  if (!s) return null;
+  return /^https?:\/\/[^\s]+$/i.test(s) ? s : null;
+}
+
+// Đặt/gỡ link nguồn (chat gốc) cho deck.
+export async function setDeckSource(id: string, url: string | null): Promise<void> {
+  await query('UPDATE deck_decks SET source_url=$2, updated_at=now() WHERE id=$1', [id, sanitizeUrl(url)]);
+}
 
 export async function listDecks(): Promise<Deck[]> {
   return query<Deck>(
