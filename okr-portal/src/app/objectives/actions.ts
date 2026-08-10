@@ -436,6 +436,50 @@ export async function createInitiativeAction(fd: FormData) {
   revalidatePath(`/objectives/${objectiveId}`);
 }
 
+// Tạo CÔNG VIỆC lẻ ngay ở trang "Công việc" (/tasks) — dành cho QUẢN LÝ (không phải nhân viên).
+// Việc có thể đứng độc lập, hoặc gắn tuỳ chọn vào 1 OKR / 1 dự án (phải có quyền quản mục đó).
+export async function createTaskAction(fd: FormData) {
+  const user = await requireUser();
+  if (user.role === 'staff') throw new Error('Chỉ quản lý mới tạo được công việc ở đây.');
+  const title = str(fd, 'title').trim();
+  if (!title) throw new Error('Thiếu tên công việc.');
+  const [units, access] = await Promise.all([listUnits(), loadAccess()]);
+  const objectiveId = orNull(str(fd, 'objective_id'));
+  const projectId = orNull(str(fd, 'project_id'));
+  if (objectiveId) {
+    const obj = await getObjective(objectiveId);
+    if (!obj) throw new Error('Không tìm thấy OKR.');
+    if (!canEditObjective(user, obj, units, access)) throw new Error('Bạn không có quyền gắn việc vào OKR này.');
+  }
+  if (projectId) {
+    const pr = await getProject(projectId);
+    if (!pr) throw new Error('Không tìm thấy dự án.');
+    if (!canManageProject(user, pr, units, access)) throw new Error('Bạn không có quyền gắn việc vào dự án này.');
+  }
+  await createInitiative({
+    objective_id: objectiveId,
+    key_result_id: null,
+    parent_id: null,
+    kind: 'action',
+    title,
+    description: orNull(str(fd, 'description')),
+    owner_email: orNull(str(fd, 'owner_email')),
+    unit_id: orNull(str(fd, 'unit_id')),
+    project_id: projectId,
+    status: (str(fd, 'status') || 'todo') as InitStatus,
+    priority: (str(fd, 'priority') || 'medium') as Priority,
+    start_on: orNull(str(fd, 'start_on')),
+    due_on: orNull(str(fd, 'due_on')),
+    budget_planned: num(fd, 'budget_planned'),
+    budget_actual: num(fd, 'budget_actual'),
+    budget_source: null,
+    created_by: user.email,
+  });
+  if (objectiveId) revalidatePath(`/objectives/${objectiveId}`);
+  if (projectId) revalidatePath(`/projects/${projectId}`);
+  revalidatePath('/tasks');
+}
+
 // Cập nhật: quản lý sửa đầy đủ; người được giao chỉ đổi trạng thái + tiến độ việc của mình.
 export async function updateInitiativeAction(fd: FormData) {
   const user = await requireUser();

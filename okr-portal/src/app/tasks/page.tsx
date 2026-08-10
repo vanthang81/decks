@@ -1,14 +1,17 @@
 import HelpTip from '@/components/HelpTip';
 import SiteHeader from '@/components/SiteHeader';
 import TaskExplorer from '@/components/TaskExplorer';
+import NewTaskModal from '@/components/NewTaskModal';
 import { requireUser } from '@/lib/current-user';
 import { listUnits, objectiveViewScope } from '@/lib/org';
 import { listUsers } from '@/lib/users';
 import { listAllProjectOptions } from '@/lib/projects';
 import { listAllInitiatives } from '@/lib/initiatives';
+import { listObjectivesByPeriod } from '@/lib/okr';
+import { getCurrentPeriod } from '@/lib/periods';
 import { depsForTasks } from '@/lib/deps';
 import { loadAccess, buildTaskViewCtx, canViewInitiative, canEditObjective } from '@/lib/access';
-import { editInitiativeAction, deleteInitiativeAction, moveInitiativeAction } from '@/app/objectives/actions';
+import { editInitiativeAction, deleteInitiativeAction, moveInitiativeAction, createTaskAction } from '@/app/objectives/actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,6 +62,20 @@ export default async function TasksPage({
     avatar: u.avatar_url,
   }));
 
+  // Tạo công việc mới ngay tại đây: chỉ QUẢN LÝ (không phải nhân viên). Ô "Thuộc OKR" chỉ liệt kê
+  // OKR kỳ hiện tại mà người này có quyền quản (để gắn việc hợp lệ).
+  const canCreateTask = user.role !== 'staff';
+  let objOpts: { id: string; label: string }[] = [];
+  if (canCreateTask) {
+    const period = await getCurrentPeriod();
+    if (period) {
+      const objs = await listObjectivesByPeriod(period.id);
+      objOpts = objs
+        .filter((o) => canEditObjective(user, { unit_id: o.unit_id, owner_email: o.owner_email, created_by: o.created_by }, units, access))
+        .map((o) => ({ id: o.id, label: `${o.code ? o.code + ' · ' : ''}${o.unit_name ? '[' + o.unit_name + '] ' : ''}${o.title}` }));
+    }
+  }
+
   return (
     <>
       <SiteHeader active="tasks" />
@@ -71,6 +88,17 @@ export default async function TasksPage({
               bấm một dòng để cập nhật.
             </p>
           </div>
+          {canCreateTask && (
+            <div>
+              <NewTaskModal
+                users={userOpts}
+                units={unitOpts}
+                projects={projects}
+                objectives={objOpts}
+                action={createTaskAction}
+              />
+            </div>
+          )}
         </div>
 
         <TaskExplorer
