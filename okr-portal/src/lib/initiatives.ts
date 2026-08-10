@@ -59,6 +59,7 @@ export type Initiative = {
   budget_actual: number;
   budget_currency: string;
   budget_source: string | null;
+  created_by: string | null;
 };
 
 // Nút cây (có con) — dùng để render phân cấp.
@@ -73,7 +74,7 @@ const SELECT = `
          i.status, i.priority,
          i.progress::float8 AS progress, i.start_on::text, i.due_on::text, i.done_on::text,
          i.budget_planned::float8 AS budget_planned, i.budget_actual::float8 AS budget_actual,
-         i.budget_currency, i.budget_source
+         i.budget_currency, i.budget_source, i.created_by
     FROM okr_initiatives i
     LEFT JOIN okr_users u ON u.email = i.owner_email
     LEFT JOIN okr_units un ON un.id = i.unit_id

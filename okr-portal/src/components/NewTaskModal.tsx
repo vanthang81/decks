@@ -9,23 +9,26 @@ import type { PersonOpt, UnitOpt, ProjectOpt } from '@/components/ExecutionTabs'
 export type ObjOptLite = { id: string; label: string };
 
 // Nút "+ Tạo công việc" ở trang Công việc (/tasks) — mở popup form tạo 1 việc lẻ.
-// Chỉ render khi người dùng có quyền (gác ở trang gọi: quản lý, không phải nhân viên).
+// Hiện cho MỌI người: quản lý dùng form đầy đủ (giao cho ai, gắn OKR/dự án…);
+// nhân viên (personal) dùng form gọn = VIỆC CÁ NHÂN tự giao cho mình.
 export default function NewTaskModal({
   users,
   units,
   projects,
   objectives,
   action,
+  personal = false,
 }: {
   users: PersonOpt[];
   units: UnitOpt[];
   projects: ProjectOpt[];
   objectives: ObjOptLite[];
   action: (fd: FormData) => Promise<void>;
+  personal?: boolean;
 }) {
   return (
     <EditModal
-      title="Tạo công việc mới"
+      title={personal ? 'Tạo công việc cá nhân' : 'Tạo công việc mới'}
       label="+ Tạo công việc"
       submitLabel="Tạo công việc"
       action={action}
@@ -38,18 +41,20 @@ export default function NewTaskModal({
       <label className="f">Mô tả</label>
       <textarea className="i" name="description" rows={2} placeholder="Nội dung cần làm (tuỳ chọn)" />
 
-      <div className="row">
-        <div>
-          <label className="f">Giao cho</label>
-          <SearchSelect name="owner_email" emptyLabel="— Chưa giao —"
-            options={users.map((u) => ({ value: u.email, label: u.name }))} />
+      {!personal && (
+        <div className="row">
+          <div>
+            <label className="f">Giao cho</label>
+            <SearchSelect name="owner_email" emptyLabel="— Chưa giao —"
+              options={users.map((u) => ({ value: u.email, label: u.name }))} />
+          </div>
+          <div>
+            <label className="f">Đơn vị phụ trách</label>
+            <SearchSelect name="unit_id" emptyLabel="— Không gắn —"
+              options={unitTreeOptions(units, { excludeCompany: true })} />
+          </div>
         </div>
-        <div>
-          <label className="f">Đơn vị phụ trách</label>
-          <SearchSelect name="unit_id" emptyLabel="— Không gắn —"
-            options={unitTreeOptions(units, { excludeCompany: true })} />
-        </div>
-      </div>
+      )}
 
       <div className="row">
         <div>
@@ -82,32 +87,38 @@ export default function NewTaskModal({
         </div>
       </div>
 
-      <div className="row">
-        <div>
-          <label className="f">Thuộc OKR <span className="muted" style={{ fontWeight: 400 }}>— tuỳ chọn</span></label>
-          <SearchSelect name="objective_id" emptyLabel="— Không gắn OKR —"
-            options={objectives.map((o) => ({ value: o.id, label: o.label }))} />
-        </div>
-        <div>
-          <label className="f">Thuộc dự án <span className="muted" style={{ fontWeight: 400 }}>— tuỳ chọn</span></label>
-          <SearchSelect name="project_id" emptyLabel="— Không gắn dự án —"
-            options={projects.map((p) => ({ value: p.id, label: `${p.code ? p.code + ' · ' : ''}${p.name}` }))} />
-        </div>
-      </div>
+      {!personal && (
+        <>
+          <div className="row">
+            <div>
+              <label className="f">Thuộc OKR <span className="muted" style={{ fontWeight: 400 }}>— tuỳ chọn</span></label>
+              <SearchSelect name="objective_id" emptyLabel="— Không gắn OKR —"
+                options={objectives.map((o) => ({ value: o.id, label: o.label }))} />
+            </div>
+            <div>
+              <label className="f">Thuộc dự án <span className="muted" style={{ fontWeight: 400 }}>— tuỳ chọn</span></label>
+              <SearchSelect name="project_id" emptyLabel="— Không gắn dự án —"
+                options={projects.map((p) => ({ value: p.id, label: `${p.code ? p.code + ' · ' : ''}${p.name}` }))} />
+            </div>
+          </div>
 
-      <div className="row">
-        <div>
-          <label className="f">NS kế hoạch (VND)</label>
-          <NumberInput name="budget_planned" />
-        </div>
-        <div>
-          <label className="f">Đã chi (VND)</label>
-          <NumberInput name="budget_actual" />
-        </div>
-      </div>
+          <div className="row">
+            <div>
+              <label className="f">NS kế hoạch (VND)</label>
+              <NumberInput name="budget_planned" />
+            </div>
+            <div>
+              <label className="f">Đã chi (VND)</label>
+              <NumberInput name="budget_actual" />
+            </div>
+          </div>
+        </>
+      )}
 
       <p className="muted" style={{ fontSize: 12.5, marginTop: 4 }}>
-        Việc có thể đứng độc lập, hoặc gắn vào một OKR / dự án bạn quản để tiến độ tự cuộn lên.
+        {personal
+          ? 'Việc cá nhân — tự giao cho bạn. Xem & cập nhật ở trang “Của tôi” và “Công việc”.'
+          : 'Việc có thể đứng độc lập (chỉ cần người phụ trách), hoặc gắn vào một OKR / dự án bạn quản để tiến độ tự cuộn lên.'}
       </p>
     </EditModal>
   );

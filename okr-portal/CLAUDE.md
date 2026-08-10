@@ -255,6 +255,17 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
      `canViewInitiative` lọc; ô lọc "Đơn vị" cũng chỉ liệt kê đơn vị trong scope. → Khi thêm bất kỳ đường XEM/XUẤT
      OKR/việc mới, PHẢI áp cùng `objectiveViewScope` (role-based), đừng chỉ dựa cap. QC bằng psql: role=staff,
      obj/task_scoped < total (đã kiểm 08/08: 21/39 OKR, 25/262 việc).
+  4) **NGOẠI LỆ — CÁ NHÂN tự tạo cho mình (CFO 10/08)**: nhân viên VẪN tạo được (a) **OKR cá nhân** (level
+     `individual` — `canCreateObjective` cho phép mọi vai trò khi level=individual; popup ở `/my`
+     `NewPersonalOkrModal` + action `createPersonalOkrAction`, owner=self, không redirect) và (b) **VIỆC CÁ
+     NHÂN** ở `/tasks` (nút "+ Tạo công việc" hiện cho MỌI người; staff → `NewTaskModal personal` form gọn,
+     `createTaskAction` ép owner=self, KHÔNG gắn OKR/dự án/đơn vị/ngân sách). Việc cá nhân = **owner-anchored**:
+     nới ràng buộc DB `okr_init_attach_ck` (migration **`db/440_personal_task_anchor.sql`**) để việc chỉ cần
+     `owner_email` là hợp lệ (không bắt buộc OKR/KR/dự án/cuộc họp). Chính chủ **toàn quyền sửa/xoá** việc cá
+     nhân của mình: `canManageTaskLoose` trả true khi việc KHÔNG gắn OKR/KR/dự án/họp và owner/created_by=mình;
+     `editInitiativeAction` nhận thêm `owner_email` làm điểm neo; `/tasks` page thêm việc cá nhân vào `manageIds`.
+     `Initiative` type + `SELECT` bổ sung cột `created_by`. **⚠ Deploy PHẢI chạy migration 440** (superuser)
+     trước/khi build, nếu không INSERT việc cá nhân sẽ vi phạm CHECK cũ.
   Admin hệ thống (users/org/periods) chỉ `exec` (`canAdmin`), guard không xoá exec cuối/chính mình.
 
 ## Trang (src/app/)

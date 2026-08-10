@@ -234,6 +234,12 @@ async function canManageTaskLoose(user: OkrUser, init: Initiative): Promise<bool
     const pr = await getProject(init.project_id);
     if (pr && canManageProject(user, pr, units, access)) return true;
   }
+  // VIỆC CÁ NHÂN (không gắn OKR/dự án/cuộc họp) → người phụ trách/người tạo toàn quyền sửa/xoá việc của mình.
+  if (!init.objective_id && !init.key_result_id && !init.meeting_id && !init.project_id) {
+    const e = user.email.toLowerCase();
+    if (init.owner_email && init.owner_email.toLowerCase() === e) return true;
+    if (init.created_by && init.created_by.toLowerCase() === e) return true;
+  }
   return false;
 }
 
@@ -494,12 +500,17 @@ export async function createPersonalOkrAction(fd: FormData) {
 // Việc có thể đứng độc lập, hoặc gắn tuỳ chọn vào 1 OKR / 1 dự án (phải có quyền quản mục đó).
 export async function createTaskAction(fd: FormData) {
   const user = await requireUser();
-  if (user.role === 'staff') throw new Error('Chỉ quản lý mới tạo được công việc ở đây.');
   const title = str(fd, 'title').trim();
   if (!title) throw new Error('Thiếu tên công việc.');
   const [units, access] = await Promise.all([listUnits(), loadAccess()]);
-  const objectiveId = orNull(str(fd, 'objective_id'));
-  const projectId = orNull(str(fd, 'project_id'));
+  const isStaff = user.role === 'staff';
+
+  // NHÂN VIÊN: chỉ tạo VIỆC CÁ NHÂN cho chính mình — ép người phụ trách = mình,
+  // KHÔNG gắn OKR/dự án/đơn vị/ngân sách (không có quyền quản các thực thể đó).
+  const objectiveId = isStaff ? null : orNull(str(fd, 'objective_id'));
+  const projectId = isStaff ? null : orNull(str(fd, 'project_id'));
+  const ownerEmail = isStaff ? user.email : orNull(str(fd, 'owner_email'));
+
   if (objectiveId) {
     const obj = await getObjective(objectiveId);
     if (!obj) throw new Error('Không tìm thấy OKR.');
@@ -510,6 +521,10 @@ export async function createTaskAction(fd: FormData) {
     if (!pr) throw new Error('Không tìm thấy dự án.');
     if (!canManageProject(user, pr, units, access)) throw new Error('Bạn không có quyền gắn việc vào dự án này.');
   }
+  // Mọi việc phải có ÍT NHẤT một "điểm neo": OKR / dự án / người phụ trách (ràng buộc DB okr_init_attach_ck).
+  if (!objectiveId && !projectId && !ownerEmail)
+    throw new Error('Việc phải có người phụ trách, hoặc gắn vào một OKR / dự án.');
+
   await createInitiative({
     objective_id: objectiveId,
     key_result_id: null,
@@ -517,20 +532,21 @@ export async function createTaskAction(fd: FormData) {
     kind: 'action',
     title,
     description: orNull(str(fd, 'description')),
-    owner_email: orNull(str(fd, 'owner_email')),
-    unit_id: orNull(str(fd, 'unit_id')),
+    owner_email: ownerEmail,
+    unit_id: isStaff ? null : orNull(str(fd, 'unit_id')),
     project_id: projectId,
     status: (str(fd, 'status') || 'todo') as InitStatus,
     priority: (str(fd, 'priority') || 'medium') as Priority,
     start_on: orNull(str(fd, 'start_on')),
     due_on: orNull(str(fd, 'due_on')),
-    budget_planned: num(fd, 'budget_planned'),
-    budget_actual: num(fd, 'budget_actual'),
+    budget_planned: isStaff ? 0 : num(fd, 'budget_planned'),
+    budget_actual: isStaff ? 0 : num(fd, 'budget_actual'),
     budget_source: null,
     created_by: user.email,
   });
   if (objectiveId) revalidatePath(`/objectives/${objectiveId}`);
   if (projectId) revalidatePath(`/projects/${projectId}`);
+  revalidatePath('/my');
   revalidatePath('/tasks');
 }
 
@@ -588,9 +604,11 @@ export async function editInitiativeAction(fd: FormData) {
         throw new Error('Bạn không có quyền gắn việc vào OKR đã chọn.');
     }
     if (!objectiveId) keyResultId = null; // không gắn OKR thì bỏ KR
-    // Việc PHẢI còn ít nhất một điểm neo (OKR / KR / dự án / cuộc họp) — tránh vi phạm ràng buộc DB.
-    const anchored = objectiveId || keyResultId || orNull(str(fd, 'project_id')) || orNull(str(fd, 'meeting_id'));
-    if (!anchored) throw new Error('Việc phải gắn ít nhất một OKR, dự án hoặc cuộc họp.');
+    // Việc PHẢI còn ít nhất một điểm neo (OKR / KR / dự án / cuộc họp / NGƯỜI PHỤ TRÁCH) — tránh vi phạm ràng buộc DB.
+    const anchored =
+      objectiveId || keyResultId || orNull(str(fd, 'project_id')) ||
+      orNull(str(fd, 'meeting_id')) || orNull(str(fd, 'owner_email'));
+    if (!anchored) throw new Error('Việc phải có người phụ trách, hoặc gắn OKR / dự án / cuộc họp.');
     await editInitiative(id, {
       title: str(fd, 'title') || init.title,
       description: orNull(str(fd, 'description')),

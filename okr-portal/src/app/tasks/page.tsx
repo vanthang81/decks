@@ -43,7 +43,11 @@ export default async function TasksPage({
       ) ||
       (t.project_id && ctx.myProjects.has(t.project_id)) ||
       (t.meeting_owner && t.meeting_owner.toLowerCase() === emailLc) ||
-      (t.meeting_secretary && t.meeting_secretary.toLowerCase() === emailLc),
+      (t.meeting_secretary && t.meeting_secretary.toLowerCase() === emailLc) ||
+      // VIỆC CÁ NHÂN (không gắn OKR/dự án/cuộc họp) → chính chủ toàn quyền sửa/xoá.
+      (!t.objective_id && !t.key_result_id && !t.project_id && !t.meeting_id &&
+        ((t.owner_email && t.owner_email.toLowerCase() === emailLc) ||
+          (t.created_by && t.created_by.toLowerCase() === emailLc))),
     )
     .map((t) => t.id);
 
@@ -62,11 +66,12 @@ export default async function TasksPage({
     avatar: u.avatar_url,
   }));
 
-  // Tạo công việc mới ngay tại đây: chỉ QUẢN LÝ (không phải nhân viên). Ô "Thuộc OKR" chỉ liệt kê
-  // OKR kỳ hiện tại mà người này có quyền quản (để gắn việc hợp lệ).
-  const canCreateTask = user.role !== 'staff';
+  // Tạo công việc mới ngay tại đây: MỌI người đều tạo được. Nhân viên (staff) chỉ tạo VIỆC CÁ NHÂN
+  // cho mình (form gọn, ép owner=mình) → dùng `personalTask`. Quản lý dùng form đầy đủ: ô "Thuộc OKR"
+  // chỉ liệt kê OKR kỳ hiện tại mà người này có quyền quản (để gắn việc hợp lệ).
+  const personalTask = user.role === 'staff';
   let objOpts: { id: string; label: string }[] = [];
-  if (canCreateTask) {
+  if (!personalTask) {
     const period = await getCurrentPeriod();
     if (period) {
       const objs = await listObjectivesByPeriod(period.id);
@@ -88,17 +93,16 @@ export default async function TasksPage({
               bấm một dòng để cập nhật.
             </p>
           </div>
-          {canCreateTask && (
-            <div>
-              <NewTaskModal
-                users={userOpts}
-                units={unitOpts}
-                projects={projects}
-                objectives={objOpts}
-                action={createTaskAction}
-              />
-            </div>
-          )}
+          <div>
+            <NewTaskModal
+              users={userOpts}
+              units={unitOpts}
+              projects={projects}
+              objectives={objOpts}
+              action={createTaskAction}
+              personal={personalTask}
+            />
+          </div>
         </div>
 
         <TaskExplorer

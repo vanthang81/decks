@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-06.101';
+export const GUIDE_VERSION = '2026-08-10.102';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -377,6 +377,7 @@ export const FEATURES: Feature[] = [
       'Đầy đủ bộ lọc: tìm kiếm (tên/mã/OKR/dự án), Phụ trách, Đơn vị, OKR, Dự án, Trạng thái, Ưu tiên, Loại, Kỳ, "⚠ Quá hạn" và "👤 Việc của tôi".',
       'Bấm tiêu đề cột để sắp xếp (bấm lại đổi chiều); header cột đóng băng khi cuộn cả trang. Mỗi dòng liên kết thẳng tới OKR/dự án gốc.',
       'Bấm vào một dòng để mở cửa sổ cập nhật / sửa / xoá công việc (theo phân quyền của bạn).',
+      'TẠO CÔNG VIỆC: nút "+ Tạo công việc" (góc phải trên) hiện cho MỌI người. Quản lý (Trưởng phòng trở lên) dùng form đầy đủ: đặt tên, giao cho ai, gắn OKR / dự án bạn quản, đơn vị, ngân sách. NHÂN VIÊN dùng form gọn để tạo VIỆC CÁ NHÂN của mình (tên, mô tả, trạng thái, ưu tiên, ngày bắt đầu/hạn) — tự giao cho chính bạn; xem & cập nhật ở trang "Của tôi" và "Công việc". Việc cá nhân toàn quyền tự sửa/xoá.',
       'Phân quyền XEM (need-to-know): cây OKR vẫn minh bạch cho mọi người, nhưng bảng công việc chỉ hiện việc bạn CÓ LIÊN QUAN — bạn được giao, bạn giao/tạo, bạn chủ trì OKR chứa việc, bạn là thành viên dự án (chủ trì hoặc có việc trong dự án đó), hoặc việc thuộc phạm vi đơn vị bạn quản (Giám đốc khối/Trưởng phòng thấy toàn bộ đơn vị mình + cấp dưới).',
       'CEO/CFO và nhóm có năng lực "Toàn phạm vi" (chỉnh ở Phân quyền) xem tất cả.',
     ],
@@ -594,6 +595,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '10/08/2026 (Mọi người tự tạo công việc cá nhân)',
+    items: [
+      'Nút "+ Tạo công việc" ở trang Công việc nay hiện cho MỌI người. Nhân viên tạo được VIỆC CÁ NHÂN của mình bằng một form gọn (tên, mô tả, trạng thái, ưu tiên, ngày) — tự giao cho chính mình, không cần gắn OKR/dự án.',
+      'Việc cá nhân hiện ngay ở trang "Của tôi" và "Công việc"; chính chủ toàn quyền cập nhật, sửa, xoá. Quản lý vẫn dùng form đầy đủ (giao cho người khác, gắn OKR/dự án/ngân sách).',
+    ],
+  },
   {
     date: '06/08/2026 (Bấm công việc: xem chi tiết trước, sửa sau)',
     items: [
