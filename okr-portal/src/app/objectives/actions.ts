@@ -9,6 +9,7 @@ import { listUnits, subtreeIds } from '@/lib/org';
 import {
   createObjective,
   updateObjective,
+  setObjectiveParent,
   setObjectiveBsc,
   linkKrKpi,
   syncKrFromKpi,
@@ -251,8 +252,16 @@ export async function editObjectiveAction(fd: FormData) {
     throw new Error('Bạn không có quyền sửa OKR này.');
   const title = str(fd, 'title');
   if (!title) throw new Error('Thiếu tiêu đề.');
-  // Cá nhân giữ nguyên là cá nhân (không unit); còn lại cho đổi đơn vị phụ trách.
-  const unitId = obj.level === 'individual' ? null : orNull(str(fd, 'unit_id'));
+
+  // Cấp OKR: cho đổi (mặc định giữ nguyên). Đơn vị bắt buộc với Khối/Phòng, để trống với Công ty/Cá nhân.
+  const level = (orNull(str(fd, 'level')) ?? obj.level) as Level;
+  const unitId = level === 'individual' || level === 'company' ? null : orNull(str(fd, 'unit_id'));
+  if ((level === 'division' || level === 'department') && !unitId)
+    throw new Error('Chọn đơn vị (Khối/Phòng) cho OKR cấp này.');
+  // Đổi cấp/đơn vị → phải có quyền TẠO ở phạm vi mới (chống chuyển OKR ra ngoài quyền).
+  if ((level !== obj.level || unitId !== obj.unit_id) && !canCreateObjective(user, level, unitId, units, access))
+    throw new Error('Bạn không có quyền đặt OKR ở cấp/đơn vị này.');
+
   await updateObjective(id, {
     title,
     description: orNull(str(fd, 'description')),
@@ -260,7 +269,25 @@ export async function editObjectiveAction(fd: FormData) {
     okr_type: (str(fd, 'okr_type') || obj.okr_type) as OkrType,
     owner_email: orNull(str(fd, 'owner_email')),
     unit_id: unitId,
+    level,
   });
+
+  // Liên kết lên OKR cha (alignment). Kiểm cấp cha hợp lệ (cao hơn) + chống vòng lặp (setObjectiveParent).
+  if (fd.has('parent_id')) {
+    const parentId = orNull(str(fd, 'parent_id'));
+    if (parentId) {
+      const parent = await getObjective(parentId);
+      if (!parent) throw new Error('OKR cha đã chọn không tồn tại.');
+      const okParentLevel: Record<string, string[]> = {
+        company: ['company'], division: ['company'], department: ['division'], individual: ['department', 'division'],
+      };
+      if (!(okParentLevel[level] ?? []).includes(parent.level))
+        throw new Error('OKR cha phải ở cấp cao hơn phù hợp (Cá nhân→Phòng/Khối · Phòng→Khối · Khối→Công ty).');
+    }
+    const ok = await setObjectiveParent(id, parentId);
+    if (!ok) throw new Error('Không thể liên kết: sẽ tạo vòng lặp cascade (OKR cha là hậu duệ của OKR này).');
+  }
+
   revalidatePath(`/objectives/${id}`);
   revalidatePath('/objectives');
 }

@@ -67,6 +67,7 @@ import {
 import { createProjectForInitiativeAction } from '@/app/projects/actions';
 import { withinEditWindow } from '@/lib/moderation';
 import { loadAccess, canEditObjective, canDeleteObjective, canCreateObjective } from '@/lib/access';
+import { buildObjectiveFormProps } from '@/lib/objective-form';
 import { unitIcon } from '@/lib/unit-icons';
 
 export const dynamic = 'force-dynamic';
@@ -144,6 +145,9 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
   const childUnitOpts = childUnitPool
     .filter((u) => allowedChildLevels.includes(u.type as Level) && canCreateObjective(user, u.type as Level, u.id, units, access))
     .map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort }));
+
+  // Dữ liệu cho popup "Sửa OKR" (cấp + liên kết cha) — dùng CHUNG helper với form Tạo OKR.
+  const objFormProps = canManage && obj.period_id ? await buildObjectiveFormProps(user, obj.period_id) : null;
 
   const kpiSources = listKpiMetrics();
   const projectOpts = await listProjectOptions(obj.period_id);
@@ -372,9 +376,13 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                       owner_email: obj.owner_email,
                       unit_id: obj.unit_id,
                       level: obj.level,
+                      parent_id: obj.parent_id,
                     }}
                     users={personOpts.map((p) => ({ email: p.email, name: p.name }))}
                     units={unitOpts}
+                    allowedLevels={objFormProps?.allowedLevels ?? [obj.level]}
+                    periodObjectives={objFormProps?.periodObjectives ?? []}
+                    pillars={objFormProps?.pillars ?? []}
                     canDelete={canDelete}
                     save={editObjectiveAction}
                     del={deleteObjectiveAction}

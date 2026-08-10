@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-10.104';
+export const GUIDE_VERSION = '2026-08-10.105';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -597,6 +597,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '10/08/2026 (Sửa OKR: đổi Cấp & Liên kết cấp trên)',
+    items: [
+      'Cửa sổ "Sửa OKR" nay có thêm trường "Cấp OKR" và "Liên kết lên OKR cấp trên" — gắn/đổi mục tiêu cha (alignment) ngay khi sửa, không phải xoá rồi tạo lại. Hệ thống tự chặn liên kết sai cấp và vòng lặp.',
+    ],
+  },
   {
     date: '10/08/2026 (Tạo OKR bằng cửa sổ pop-up)',
     items: [

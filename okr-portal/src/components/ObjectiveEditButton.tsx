@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import ConfirmButton from './ConfirmButton';
 import SearchSelect from '@/components/SearchSelect';
@@ -15,9 +15,12 @@ export type ObjData = {
   owner_email: string | null;
   unit_id: string | null;
   level: string;
+  parent_id: string | null;
 };
 type PersonOpt = { email: string; name: string };
 type UnitOpt = { id: string; name: string; type: 'company' | 'division' | 'department' };
+type ParentCand = { id: string; code: string | null; title: string; level: string };
+type PillarCand = { id: string; code: string | null; title: string };
 
 const STATUS_LABEL: Record<string, string> = {
   draft: 'Nháp',
@@ -31,10 +34,21 @@ const TYPE_LABEL: Record<string, string> = {
   learning: 'Học hỏi',
 };
 
+const LEVEL_LABEL: Record<string, string> = {
+  company: 'Công ty', division: 'Khối', department: 'Phòng', individual: 'Cá nhân',
+};
+// Cấp cha hợp lệ theo cấp con (con phải thấp hơn cha).
+const PARENT_LEVELS: Record<string, string[]> = {
+  company: [], division: ['company'], department: ['division'], individual: ['department', 'division'],
+};
+
 export default function ObjectiveEditButton({
   objective,
   users,
   units,
+  allowedLevels,
+  periodObjectives,
+  pillars,
   canDelete,
   save,
   del,
@@ -42,6 +56,9 @@ export default function ObjectiveEditButton({
   objective: ObjData;
   users: PersonOpt[];
   units: UnitOpt[];
+  allowedLevels: string[];       // cấp user được phép đặt (luôn gộp thêm cấp hiện tại)
+  periodObjectives: ParentCand[]; // OKR cùng kỳ (ứng viên cha cho division/department/individual)
+  pillars: PillarCand[];          // trụ cột chiến lược (ứng viên cha cho company)
   canDelete: boolean;
   save: (fd: FormData) => Promise<void>;
   del: (fd: FormData) => Promise<void>;
@@ -50,6 +67,8 @@ export default function ObjectiveEditButton({
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [err, setErr] = useState<string | null>(null);
+  const [level, setLevel] = useState(objective.level);
+  const [parentId, setParentId] = useState(objective.parent_id ?? '');
 
   useEffect(() => {
     if (!open) return;
@@ -60,12 +79,36 @@ export default function ObjectiveEditButton({
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
-  const isIndividual = objective.level === 'individual';
+  // Mở lại popup → đồng bộ state theo giá trị hiện tại của OKR.
+  useEffect(() => { if (open) { setLevel(objective.level); setParentId(objective.parent_id ?? ''); } }, [open, objective.level, objective.parent_id]);
+
+  const levelOpts = useMemo(() => Array.from(new Set([objective.level, ...allowedLevels])), [objective.level, allowedLevels]);
+  const needsUnit = level === 'division' || level === 'department';
+  const unitChoices = useMemo(
+    () => units.filter((u) => (level === 'division' ? u.type === 'division' : level === 'department' ? u.type === 'department' : false)),
+    [units, level],
+  );
+  // Ứng viên OKR cha theo cấp đang chọn (loại chính nó để tránh tự liên kết).
+  const parentOpts = useMemo(() => {
+    if (level === 'company') return pillars.map((p) => ({ id: p.id, label: `${p.code ? p.code + ' · ' : ''}${p.title}` }));
+    const want = PARENT_LEVELS[level] ?? [];
+    return periodObjectives
+      .filter((o) => o.id !== objective.id && want.includes(o.level))
+      .map((o) => ({ id: o.id, label: `[${LEVEL_LABEL[o.level] ?? o.level}] ${o.code ? o.code + ' · ' : ''}${o.title}` }));
+  }, [level, pillars, periodObjectives, objective.id]);
+  // Đổi cấp → nếu OKR cha đang chọn không còn hợp lệ thì bỏ chọn.
+  useEffect(() => { if (parentId && !parentOpts.some((p) => p.id === parentId)) setParentId(''); }, [parentOpts, parentId]);
+
+  const parentLabel = level === 'company' ? 'Liên kết lên Trụ cột chiến lược'
+    : level === 'division' ? 'Liên kết lên OKR Công ty'
+    : level === 'department' ? 'Liên kết lên OKR Khối' : 'Liên kết lên OKR Khối/Phòng';
 
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     fd.set('id', objective.id);
+    fd.set('level', level);
+    fd.set('parent_id', parentId); // luôn gửi (rỗng = gỡ liên kết)
     setErr(null);
     startTransition(async () => {
       try {
@@ -138,13 +181,25 @@ export default function ObjectiveEditButton({
                 </div>
               </div>
 
-              {!isIndividual && (
-                <>
-                  <label className="f">Đơn vị phụ trách (Khối / Phòng)</label>
-                  <SearchSelect name="unit_id" defaultValue={objective.unit_id ?? ''} emptyLabel="— Không gắn —"
-                    options={unitTreeOptions(units, { excludeCompany: true })} />
-                </>
-              )}
+              <div className="row">
+                <div>
+                  <label className="f">Cấp OKR</label>
+                  <select className="i" value={level} onChange={(e) => setLevel(e.target.value)}>
+                    {levelOpts.map((l) => <option key={l} value={l}>{LEVEL_LABEL[l] ?? l}</option>)}
+                  </select>
+                </div>
+                {needsUnit && (
+                  <div>
+                    <label className="f">Đơn vị phụ trách ({level === 'division' ? 'Khối' : 'Phòng'})</label>
+                    <SearchSelect key={level} name="unit_id" defaultValue={objective.unit_id ?? ''} emptyLabel="— Chọn đơn vị —"
+                      options={unitChoices.map((u) => ({ value: u.id, label: u.name }))} />
+                  </div>
+                )}
+              </div>
+
+              <label className="f">{parentLabel} <span className="muted" style={{ fontWeight: 400 }}>— tuỳ chọn</span></label>
+              <SearchSelect name="_parent_pick" value={parentId} onChange={setParentId} emptyLabel="— Không liên kết —"
+                options={parentOpts.map((p) => ({ value: p.id, label: p.label }))} />
 
               <label className="f">Mô tả</label>
               <textarea className="i" name="description" defaultValue={objective.description ?? ''} rows={2} />

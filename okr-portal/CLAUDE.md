@@ -279,6 +279,11 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   redirect (đóng popup + refresh tại chỗ). Dữ liệu form gom ở helper CHUNG **`src/lib/objective-form.ts`
   `buildObjectiveFormProps(user, periodId)`** — DÙNG CHUNG cho popup VÀ trang `/objectives/new` (giữ đồng bộ).
   → Mọi nút tạo (OKR/OKR con/OKR cá nhân/Công việc/Dự án) đều là popup đóng+refresh tại chỗ.
+- **Sửa OKR: đổi Cấp + Liên kết cha (CFO 10/08)**: `ObjectiveEditButton` thêm select **Cấp OKR** (allowedLevels)
+  + **Liên kết lên OKR cha** (ứng viên theo cấp: pillars cho company, OKR cấp trên cho division/dept/individual;
+  loại chính nó). `editObjectiveAction` nhận `level`+`parent_id`: đổi cấp/đơn vị phải `canCreateObjective` phạm vi mới;
+  parent kiểm cấp hợp lệ (Cá nhân→Phòng/Khối · Phòng→Khối · Khối→Công ty) + `setObjectiveParent` chống vòng lặp.
+  `updateObjective` thêm cột `level` (tuỳ chọn). Dữ liệu ứng viên lấy từ `buildObjectiveFormProps` (dùng chung).
 - **Tạo OKR con NGAY trong OKR cha (CFO 10/08)**: khối "OKR con (alignment xuống)" ở `/objectives/[id]`
   có nút "+ Tạo OKR con" (góc phải-trên, `NewChildOkrModal` — popup EditModal) hiện **luôn** khi
   `canCreateChild` (trước chỉ có link khi rỗng). Server `createChildObjectiveAction` (KHÔNG redirect →

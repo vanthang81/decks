@@ -334,8 +334,18 @@ export async function updateObjective(
     okr_type: OkrType;
     owner_email: string | null;
     unit_id: string | null;
+    level?: Level; // tuỳ chọn: đổi cấp OKR (company/division/department/individual)
   },
 ): Promise<void> {
+  if (input.level) {
+    await query(
+      `UPDATE okr_objectives
+          SET title=$2, description=$3, status=$4, okr_type=$5, owner_email=$6, unit_id=$7, level=$8, updated_at=now()
+         WHERE id=$1`,
+      [id, input.title, input.description, input.status, input.okr_type, input.owner_email, input.unit_id, input.level],
+    );
+    return;
+  }
   await query(
     `UPDATE okr_objectives
         SET title=$2, description=$3, status=$4, okr_type=$5, owner_email=$6, unit_id=$7, updated_at=now()
