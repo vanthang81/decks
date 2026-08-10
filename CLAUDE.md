@@ -26,7 +26,8 @@ phục vụ + chèn watermark/log.
   `006_deck_meta.sql` cột category/tags(text[])/company(default BTMH)/thumbnail = thư viện phân loại,
   `007_access_events.sql` mở rộng CHECK deck_access_log.event thêm pw_ok/pw_fail/link_resend,
   `008_access_requests.sql` bảng deck_access_requests = yêu cầu xin cấp quyền xem,
-  `009_deck_password_plain.sql` cột password_plain = mật khẩu deck dạng đọc-được cho admin xem lại)
+  `009_deck_password_plain.sql` cột password_plain = mật khẩu deck dạng đọc-được cho admin xem lại,
+  `010_deck_source.sql` cột source_url = link "Nguồn / Chat gốc" tuỳ chọn mỗi deck)
   — chạy bằng superuser postgres qua
   `docker exec` (hoặc n8n admin cred); app dùng user `btmh_app` (đã GRANT). Typecheck: `npm run build`.
 - **`mcp-server/` là project RIÊNG** (deps riêng, image Docker riêng `decks-mcp`) → ĐÃ loại khỏi
@@ -96,6 +97,13 @@ phục vụ + chèn watermark/log.
   công khai ở `/` nữa (muốn khoá luôn cả xem-qua-link thì đổi route `/d`). **Nhãn "Công khai" CHỈ hiện khi
   `visibility=public` VÀ KHÔNG mật khẩu**; public+mật khẩu → nhãn "Bảo mật" (vẫn đòi mật khẩu ở gate). Trang chi
   tiết deck có nút **đổi chế độ Công khai↔Bảo mật** (`setDeckVisibilityAction`).
+- **Nguồn / Chat gốc mỗi deck** (`db/010`, cột `source_url`, chỉ hiện ở admin): link tuỳ chọn tới cuộc chat
+  Claude (hoặc Google Doc/Outline…) đã tạo deck, để mở lại mà chỉnh sửa. Đặt/đổi/gỡ ở trang chi tiết deck (nút
+  "Mở nguồn ↗"); `setDeckSource`/`sanitizeUrl` (CHỈ http/https, chống `javascript:`). API `/api/publish` + tool
+  MCP `deck_publish` nhận thêm `source_url` (không truyền = giữ nguyên) → khi Claude publish deck từ chat có thể
+  đính link chat luôn. **HỆ KHÔNG tự biết chat gốc** (MCP/API không mang URL chat, Claude không tự biết URL claude.ai
+  của mình) → trường này là **thủ công / opt-in** (dán tay hoặc CFO bảo "kèm link chat này"). Đổi schema MCP →
+  đã rebuild `decks-mcp`; muốn dùng `source_url` từ chat thì **reconnect connector claude.ai**.
 - **Lưu trữ (ẩn) & xoá deck** (trang chi tiết deck): **Ẩn/lưu trữ** = tắt `is_published` (`setDeckPublished`) →
   `/d/<slug>` trả 404, ẩn khỏi người xem, GIỮ nội dung + link đã cấp, khôi phục lại bất cứ lúc nào (badge
   "đã ẩn" ở thư viện/list admin). **Xoá vĩnh viễn** = `deleteDeck` (`DELETE FROM deck_decks`) — phải gõ đúng
