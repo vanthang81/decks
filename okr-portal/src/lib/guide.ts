@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-10.110';
+export const GUIDE_VERSION = '2026-08-10.111';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -597,6 +597,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '10/08/2026 (Rà soát & củng cố toàn hệ thống)',
+    items: [
+      'Nhân viên nay TỰ cập nhật & check-in OKR CÁ NHÂN của chính mình (tiêu đề, mô tả, Key Result, tiến độ) — trước đây tạo xong không sửa được. Vẫn chỉ xem OKR đơn vị/công ty; không đổi được cấp/đơn vị/liên kết cha của OKR cá nhân.',
+      '"Hạn" của công việc được khoá chắc ở máy chủ (không sửa lén được) để đánh giá đúng/trễ hạn công bằng.',
+      'Củng cố an toàn: chống vòng lặp khi sắp xếp Cây tổ chức; chống chèn OKR trái phép vào cây đơn vị khác; xuất Excel OKR gộp đủ cả công việc gắn theo Key Result.',
+    ],
+  },
   {
     date: '10/08/2026 (Cây tổ chức: sửa đơn vị + lịch sử theo thời gian)',
     items: [

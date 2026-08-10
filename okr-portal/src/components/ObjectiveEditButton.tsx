@@ -50,6 +50,7 @@ export default function ObjectiveEditButton({
   periodObjectives,
   pillars,
   canDelete,
+  canReparent = true,
   save,
   del,
 }: {
@@ -60,6 +61,7 @@ export default function ObjectiveEditButton({
   periodObjectives: ParentCand[]; // OKR cùng kỳ (ứng viên cha cho division/department/individual)
   pillars: PillarCand[];          // trụ cột chiến lược (ứng viên cha cho company)
   canDelete: boolean;
+  canReparent?: boolean;          // false = nhân viên sửa OKR cá nhân: chỉ nội dung, KHOÁ cấp/đơn vị/chủ trì/cha
   save: (fd: FormData) => Promise<void>;
   del: (fd: FormData) => Promise<void>;
 }) {
@@ -107,8 +109,10 @@ export default function ObjectiveEditButton({
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     fd.set('id', objective.id);
-    fd.set('level', level);
-    fd.set('parent_id', parentId); // luôn gửi (rỗng = gỡ liên kết)
+    if (canReparent) {
+      fd.set('level', level);
+      fd.set('parent_id', parentId); // luôn gửi (rỗng = gỡ liên kết)
+    }
     setErr(null);
     startTransition(async () => {
       try {
@@ -174,32 +178,38 @@ export default function ObjectiveEditButton({
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="f">Chủ trì (cá nhân)</label>
-                  <SearchSelect name="owner_email" defaultValue={objective.owner_email ?? ''} emptyLabel="— Chưa gán —"
-                    options={users.map((u) => ({ value: u.email, label: u.name }))} />
-                </div>
-              </div>
-
-              <div className="row">
-                <div>
-                  <label className="f">Cấp OKR</label>
-                  <select className="i" value={level} onChange={(e) => setLevel(e.target.value)}>
-                    {levelOpts.map((l) => <option key={l} value={l}>{LEVEL_LABEL[l] ?? l}</option>)}
-                  </select>
-                </div>
-                {needsUnit && (
+                {canReparent && (
                   <div>
-                    <label className="f">Đơn vị phụ trách ({level === 'division' ? 'Khối' : 'Phòng'})</label>
-                    <SearchSelect key={level} name="unit_id" defaultValue={objective.unit_id ?? ''} emptyLabel="— Chọn đơn vị —"
-                      options={unitChoices.map((u) => ({ value: u.id, label: u.name }))} />
+                    <label className="f">Chủ trì (cá nhân)</label>
+                    <SearchSelect name="owner_email" defaultValue={objective.owner_email ?? ''} emptyLabel="— Chưa gán —"
+                      options={users.map((u) => ({ value: u.email, label: u.name }))} />
                   </div>
                 )}
               </div>
 
-              <label className="f">{parentLabel} <span className="muted" style={{ fontWeight: 400 }}>— tuỳ chọn</span></label>
-              <SearchSelect name="_parent_pick" value={parentId} onChange={setParentId} emptyLabel="— Không liên kết —"
-                options={parentOpts.map((p) => ({ value: p.id, label: p.label }))} />
+              {canReparent && (
+                <>
+                  <div className="row">
+                    <div>
+                      <label className="f">Cấp OKR</label>
+                      <select className="i" value={level} onChange={(e) => setLevel(e.target.value)}>
+                        {levelOpts.map((l) => <option key={l} value={l}>{LEVEL_LABEL[l] ?? l}</option>)}
+                      </select>
+                    </div>
+                    {needsUnit && (
+                      <div>
+                        <label className="f">Đơn vị phụ trách ({level === 'division' ? 'Khối' : 'Phòng'})</label>
+                        <SearchSelect key={level} name="unit_id" defaultValue={objective.unit_id ?? ''} emptyLabel="— Chọn đơn vị —"
+                          options={unitChoices.map((u) => ({ value: u.id, label: u.name }))} />
+                      </div>
+                    )}
+                  </div>
+
+                  <label className="f">{parentLabel} <span className="muted" style={{ fontWeight: 400 }}>— tuỳ chọn</span></label>
+                  <SearchSelect name="_parent_pick" value={parentId} onChange={setParentId} emptyLabel="— Không liên kết —"
+                    options={parentOpts.map((p) => ({ value: p.id, label: p.label }))} />
+                </>
+              )}
 
               <label className="f">Mô tả</label>
               <textarea className="i" name="description" defaultValue={objective.description ?? ''} rows={2} />

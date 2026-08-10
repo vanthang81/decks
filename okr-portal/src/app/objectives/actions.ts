@@ -276,10 +276,13 @@ export async function editObjectiveAction(fd: FormData) {
   const title = str(fd, 'title');
   if (!title) throw new Error('Thiếu tiêu đề.');
 
+  // Nhân viên chỉ được cập nhật NỘI DUNG OKR cá nhân của mình (canEditObjective đã cho qua ở trên): KHOÁ
+  // đổi cấp/đơn vị/chủ trì/liên kết cha (chống dùng quyền sửa để chèn OKR vào cây đơn vị khác).
+  const isStaff = user.role === 'staff';
   // Cấp OKR: cho đổi (mặc định giữ nguyên). Đơn vị bắt buộc với Khối/Phòng, để trống với Công ty/Cá nhân.
-  const level = (orNull(str(fd, 'level')) ?? obj.level) as Level;
-  const unitId = level === 'individual' || level === 'company' ? null : orNull(str(fd, 'unit_id'));
-  if ((level === 'division' || level === 'department') && !unitId)
+  const level = isStaff ? (obj.level as Level) : ((orNull(str(fd, 'level')) ?? obj.level) as Level);
+  const unitId = isStaff ? obj.unit_id : (level === 'individual' || level === 'company' ? null : orNull(str(fd, 'unit_id')));
+  if (!isStaff && (level === 'division' || level === 'department') && !unitId)
     throw new Error('Chọn đơn vị (Khối/Phòng) cho OKR cấp này.');
   // Đổi cấp/đơn vị → phải có quyền TẠO ở phạm vi mới (chống chuyển OKR ra ngoài quyền).
   if ((level !== obj.level || unitId !== obj.unit_id) && !canCreateObjective(user, level, unitId, units, access))
@@ -290,13 +293,14 @@ export async function editObjectiveAction(fd: FormData) {
     description: orNull(str(fd, 'description')),
     status: (str(fd, 'status') || obj.status) as ObjStatus,
     okr_type: (str(fd, 'okr_type') || obj.okr_type) as OkrType,
-    owner_email: orNull(str(fd, 'owner_email')),
+    owner_email: isStaff ? obj.owner_email : orNull(str(fd, 'owner_email')),
     unit_id: unitId,
     level,
   });
 
   // Liên kết lên OKR cha (alignment). Kiểm cấp cha hợp lệ (cao hơn) + chống vòng lặp (setObjectiveParent).
-  if (fd.has('parent_id')) {
+  // Nhân viên KHÔNG được đổi liên kết cha (giữ OKR cá nhân đứng độc lập / do quản lý gắn).
+  if (!isStaff && fd.has('parent_id')) {
     const parentId = orNull(str(fd, 'parent_id'));
     if (parentId) {
       const parent = await getObjective(parentId);

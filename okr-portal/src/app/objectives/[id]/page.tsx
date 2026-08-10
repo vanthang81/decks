@@ -384,6 +384,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                     periodObjectives={objFormProps?.periodObjectives ?? []}
                     pillars={objFormProps?.pillars ?? []}
                     canDelete={canDelete}
+                    canReparent={user.role !== 'staff'}
                     save={editObjectiveAction}
                     del={deleteObjectiveAction}
                   />

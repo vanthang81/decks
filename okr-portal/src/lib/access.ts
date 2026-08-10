@@ -84,7 +84,8 @@ export function canInputKpi(user: OkrUser, access: Access): boolean {
 }
 
 // ---- Kiểm quyền theo OKR (năng lực × phạm vi) ----
-type ObjScope = Pick<Objective, 'unit_id' | 'owner_email' | 'created_by'>;
+// level tuỳ chọn: có → bật ngoại lệ "chủ nhân OKR cá nhân tự cập nhật"; thiếu → giữ hành vi cũ.
+type ObjScope = Pick<Objective, 'unit_id' | 'owner_email' | 'created_by'> & { level?: Level };
 
 function ownerOrCreator(user: OkrUser, obj: ObjScope): boolean {
   const e = user.email.toLowerCase();
@@ -101,7 +102,10 @@ function inScope(user: OkrUser, unitId: string | null, units: Unit[], access: Ac
 }
 
 export function canEditObjective(user: OkrUser, obj: ObjScope, units: Unit[], access: Access): boolean {
-  if (user.role === 'staff') return false; // Nhân viên = CHỈ XEM OKR/KR (CFO 08/08) — không sửa, kể cả OKR mình chủ trì
+  // Chủ nhân OKR CÁ NHÂN tự cập nhật (check-in / sửa KR / nội dung) OKR của chính mình — kể cả nhân viên
+  // (CFO 10/08). Vẫn KHÔNG đổi được cấp/đơn vị/liên kết cha (khoá ở editObjectiveAction cho nhân viên).
+  if (obj.level === 'individual' && ownerOrCreator(user, obj)) return true;
+  if (user.role === 'staff') return false; // Nhân viên = CHỈ XEM OKR ĐƠN VỊ/CÔNG TY — không sửa
   if (ownerOrCreator(user, obj)) return true; // chủ trì/người tạo luôn sửa OKR của mình
   if (!hasCap(user, 'okr.edit', access)) return false;
   return inScope(user, obj.unit_id, units, access);
