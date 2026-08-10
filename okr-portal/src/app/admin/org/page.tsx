@@ -39,7 +39,7 @@ export default async function AdminOrg({ searchParams }: { searchParams: { asof?
           <div className="row-actions">
             <EditUnitButton
               unit={{ id: n.id, name: n.name, code: n.code, type: n.type, parent_id: n.parent_id, sort: n.sort, is_active: n.is_active }}
-              units={units.map((u) => ({ id: u.id, name: u.name, type: u.type }))}
+              units={units.map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id }))}
               action={updateUnitAction}
             />
             {n.type !== 'company' && (

@@ -66,12 +66,12 @@ export function subtreeIds(units: Unit[], rootId: string): Set<string> {
   return out;
 }
 
-/** Chuỗi id tổ tiên của unit (gồm chính nó). */
+/** Chuỗi id tổ tiên của unit (gồm chính nó). An toàn với vòng lặp cha↔con (thoát khi gặp id đã thăm). */
 export function ancestorIds(units: Unit[], unitId: string): Set<string> {
   const byId = new Map(units.map((u) => [u.id, u]));
   const out = new Set<string>();
   let cur: Unit | undefined = byId.get(unitId);
-  while (cur) {
+  while (cur && !out.has(cur.id)) {
     out.add(cur.id);
     cur = cur.parent_id ? byId.get(cur.parent_id) : undefined;
   }
@@ -176,7 +176,7 @@ export async function listUnitsAsOf(dateIso: string): Promise<Unit[]> {
          SELECT name, code, parent_id, sort, is_active
            FROM okr_unit_versions vv
           WHERE vv.unit_id = u.id AND vv.effective_from <= $1
-          ORDER BY vv.effective_from DESC LIMIT 1
+          ORDER BY vv.effective_from DESC, vv.created_at DESC LIMIT 1
        ) v ON true
       ORDER BY u.type, v.sort, v.name`,
     [dateIso],
@@ -192,8 +192,8 @@ export async function applyDueUnitVersions(): Promise<void> {
        FROM (
          SELECT DISTINCT ON (unit_id) unit_id, name, code, parent_id, sort, is_active
            FROM okr_unit_versions
-          WHERE effective_from <= CURRENT_DATE
-          ORDER BY unit_id, effective_from DESC
+          WHERE effective_from <= (now() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date
+          ORDER BY unit_id, effective_from DESC, created_at DESC
        ) v
       WHERE u.id = v.unit_id
         AND (u.name, COALESCE(u.code,''), COALESCE(u.parent_id::text,''), u.sort, u.is_active)

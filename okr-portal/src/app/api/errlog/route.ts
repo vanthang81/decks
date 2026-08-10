@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
       kind: 'client',
       path: typeof body.path === 'string' ? body.path.slice(0, 300) : null,
       digest: typeof body.digest === 'string' ? body.digest.slice(0, 60) : null,
-      message: typeof body.message === 'string' ? body.message : null,
+      message: typeof body.message === 'string' ? body.message.slice(0, 2000) : null,
       user_email: s?.user?.email ?? null,
     });
   } catch {

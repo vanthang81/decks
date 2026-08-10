@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS okr_unit_versions (
   created_at     timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS okr_unit_versions_unit_idx ON okr_unit_versions (unit_id, effective_from DESC);
+-- Tie-break theo created_at: nhiều lần sửa CÙNG NGÀY → luôn lấy bản GHI SAU CÙNG (mới nhất).
+CREATE INDEX IF NOT EXISTS okr_unit_versions_unit_eff2_idx ON okr_unit_versions (unit_id, effective_from DESC, created_at DESC);
 GRANT SELECT, INSERT, UPDATE, DELETE ON okr_unit_versions TO btmh_app;
 
 -- Seed: 1 phiên bản khởi tạo cho mỗi đơn vị hiện có (hiệu lực từ 01/01/2026 = đầu kỳ chiến lược).

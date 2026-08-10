@@ -12,7 +12,7 @@ import {
   countActiveExecs,
   getUser,
 } from '@/lib/users';
-import { createUnit, updateUnit, deleteUnit, recordUnitVersion, type UnitType } from '@/lib/org';
+import { createUnit, updateUnit, deleteUnit, recordUnitVersion, listUnits, subtreeIds, type UnitType } from '@/lib/org';
 import { createPeriod, setCurrentPeriod, setPeriodStatus } from '@/lib/periods';
 import { syncAllKpi } from '@/lib/kpi';
 import { redirect } from 'next/navigation';
@@ -101,9 +101,12 @@ export async function createUnitAction(fd: FormData) {
   if (!input.name) throw new Error('Thiếu tên đơn vị.');
   const eff = effDate(fd);
   const today = todayVn();
-  const id = await createUnit(input); // ảnh hiện tại dùng ngay
+  const id = await createUnit(input); // ảnh hiện tại dùng ngay (FK phiên bản cần đơn vị tồn tại)
+  // Đơn vị mới có hiệu lực TỪ HÔM NAY trở đi: KHÔNG đặt lịch tương lai (ảnh hiện tại đã tạo ngay →
+  // nếu ghi phiên bản ở ngày tương lai thì "xem cơ cấu hôm nay" lại thiếu đơn vị này = mâu thuẫn).
+  // Cho phép LÙI ngày (ghi nhận đơn vị đã tồn tại từ trước); ngày tương lai bị kẹp về hôm nay.
   await recordUnitVersion(id, {
-    ...input, is_active: true, effective_from: eff > today ? eff : today,
+    ...input, is_active: true, effective_from: eff < today ? eff : today,
     note: 'thêm đơn vị', created_by: me.email,
   });
   revalidatePath('/admin/org');
@@ -114,6 +117,13 @@ export async function updateUnitAction(fd: FormData) {
   const id = str(fd, 'id');
   const parentId = orNull(str(fd, 'parent_id'));
   if (parentId === id) throw new Error('Đơn vị không thể trực thuộc chính nó.');
+  // Chống VÒNG LẶP cây: không cho chuyển đơn vị vào chính hậu duệ của nó (A→B rồi B→A sẽ tạo chu trình
+  // parent_id, làm treo mọi trang tính phạm vi tổ chức). Kiểm theo subtree hiện tại.
+  if (parentId) {
+    const units = await listUnits();
+    if (subtreeIds(units, id).has(parentId))
+      throw new Error('Không thể chuyển đơn vị vào chính đơn vị con/cháu của nó.');
+  }
   const name = str(fd, 'name');
   if (!name) throw new Error('Thiếu tên đơn vị.');
   const fields = {

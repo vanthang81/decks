@@ -48,14 +48,16 @@ export async function buildOkrWorkbook(
             k.target_value::float8 AS target_value, k.weight::float8 AS weight, k.kpi_source, k.indicator,
             k.progress::float8 AS progress
        FROM okr_key_results k JOIN okr_objectives o ON o.id=k.objective_id
-       ${wsql ? wsql.replace(/o\./g, 'o.') : ''}
+       ${wsql}
       ORDER BY k.code`, p);
 
   const inits = await query<{ code: string; obj: string | null; parent_code: string | null; kind: string; title: string; description: string | null; owner: string | null; status: string; priority: string; progress: number; start_on: string | null; due_on: string | null; bp: number; ba: number }>(
     `SELECT i.code, o.code AS obj, pi.code AS parent_code, i.kind, i.title, i.description,
             i.owner_email AS owner, i.status, i.priority, i.progress::float8 AS progress,
             i.start_on::text, i.due_on::text, i.budget_planned::float8 AS bp, i.budget_actual::float8 AS ba
-       FROM okr_initiatives i JOIN okr_objectives o ON o.id=i.objective_id
+       FROM okr_initiatives i
+       LEFT JOIN okr_key_results kr ON kr.id=i.key_result_id
+       JOIN okr_objectives o ON o.id = COALESCE(i.objective_id, kr.objective_id)
        LEFT JOIN okr_initiatives pi ON pi.id=i.parent_id
        ${wsql}
       ORDER BY i.code`, p);

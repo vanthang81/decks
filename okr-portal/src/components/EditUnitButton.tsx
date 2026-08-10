@@ -12,10 +12,21 @@ export default function EditUnitButton({
   action,
 }: {
   unit: { id: string; name: string; code: string | null; type: string; parent_id: string | null; sort: number; is_active: boolean };
-  units: { id: string; name: string; type: string }[];
+  units: { id: string; name: string; type: string; parent_id: string | null }[];
   action: (fd: FormData) => Promise<void>;
 }) {
-  const parentChoices = units.filter((u) => u.id !== unit.id); // không cho tự làm cha của mình
+  // Loại chính đơn vị + TOÀN BỘ hậu duệ khỏi lựa chọn "Trực thuộc" (chọn con làm cha sẽ tạo vòng lặp cây).
+  const descendants = new Set<string>([unit.id]);
+  for (let changed = true; changed; ) {
+    changed = false;
+    for (const u of units) {
+      if (u.parent_id && descendants.has(u.parent_id) && !descendants.has(u.id)) {
+        descendants.add(u.id);
+        changed = true;
+      }
+    }
+  }
+  const parentChoices = units.filter((u) => !descendants.has(u.id));
 
   return (
     <EditModal title={`Sửa: ${unit.name}`} label="Sửa" submitLabel="Lưu thay đổi" action={action} triggerClass="btn ghost sm">

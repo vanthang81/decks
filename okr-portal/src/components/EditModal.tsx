@@ -44,6 +44,8 @@ export default function EditModal({
         setOpen(false);
         router.refresh();
       } catch (e2) {
+        // Action điều hướng (redirect) ném NEXT_REDIRECT — không phải lỗi: đóng popup, để router chuyển trang.
+        if (e2 instanceof Error && /NEXT_REDIRECT/.test(e2.message)) { setOpen(false); return; }
         setErr(e2 instanceof Error ? e2.message : 'Không lưu được. Thử lại.');
       }
     });

@@ -74,12 +74,23 @@ function orNull(s: string): string | null {
   return s === '' ? null : s;
 }
 
+// Cấp OKR cha HỢP LỆ cho từng cấp con (alignment đúng chiều: con luôn ở cấp thấp hơn cha phù hợp).
+const PARENT_LEVEL_OK: Record<string, string[]> = {
+  company: ['company'], division: ['company'], department: ['division'], individual: ['department', 'division'],
+};
+
 export async function createObjectiveAction(fd: FormData) {
   const user = await requireUser();
   const units = await listUnits();
   const level = str(fd, 'level') as Level;
   const unitId = orNull(str(fd, 'unit_id'));
-  const ownerEmail = orNull(str(fd, 'owner_email')) ?? (level === 'individual' ? user.email : null);
+  const isStaff = user.role === 'staff';
+  // Nhân viên (view-only) chỉ tạo OKR CÁ NHÂN cho CHÍNH MÌNH, KHÔNG được đặt chủ trì người khác hay gắn
+  // cha (chống chèn node vào cây đơn vị khác + đầu độc roll-up của OKR cha không có KR). Quản lý giữ nguyên.
+  const ownerEmail = isStaff
+    ? user.email
+    : (orNull(str(fd, 'owner_email')) ?? (level === 'individual' ? user.email : null));
+  const parentId = isStaff ? null : orNull(str(fd, 'parent_id'));
   const periodId = str(fd, 'period_id');
   const title = str(fd, 'title');
 
@@ -88,13 +99,20 @@ export async function createObjectiveAction(fd: FormData) {
   if (!canCreateObjective(user, level, unitId, units, access)) {
     throw new Error('Bạn không có quyền tạo OKR ở phạm vi này.');
   }
+  // Kiểm cấp OKR cha hợp lệ trước khi gắn (không cho gắn cha sai chiều/không tồn tại).
+  if (parentId) {
+    const parent = await getObjective(parentId);
+    if (!parent) throw new Error('OKR cha đã chọn không tồn tại.');
+    if (!(PARENT_LEVEL_OK[level] ?? []).includes(parent.level))
+      throw new Error('OKR cha phải ở cấp cao hơn phù hợp (Cá nhân→Phòng/Khối · Phòng→Khối · Khối→Công ty).');
+  }
 
   const id = await createObjective({
     period_id: periodId,
     level,
     unit_id: level === 'individual' || level === 'company' ? null : unitId,
     owner_email: ownerEmail,
-    parent_id: orNull(str(fd, 'parent_id')),
+    parent_id: parentId,
     title,
     description: orNull(str(fd, 'description')),
     status: (str(fd, 'status') || 'active') as ObjStatus,
@@ -144,6 +162,9 @@ export async function createObjectiveAction(fd: FormData) {
 // Kế thừa kỳ của cha; đơn vị con phải nằm TRONG cây đơn vị của cha (alignment đúng cấp).
 export async function createChildObjectiveAction(fd: FormData) {
   const user = await requireUser();
+  // "Thêm OKR con" là thao tác QUẢN LÝ cây OKR. Nhân viên (view-only) tạo OKR cá nhân ở /my (đường riêng),
+  // không được chèn OKR con vào cây đơn vị khác qua đây (chống đầu độc roll-up OKR cha).
+  if (user.role === 'staff') throw new Error('Nhân viên tạo OKR cá nhân ở trang "Của tôi".');
   const parentId = str(fd, 'parent_id');
   if (!parentId) throw new Error('Thiếu OKR cha.');
   const parent = await getObjective(parentId);
@@ -153,6 +174,8 @@ export async function createChildObjectiveAction(fd: FormData) {
   const access = await loadAccess();
   const level = str(fd, 'level') as Level;
   if (level === 'company') throw new Error('OKR con không thể ở cấp Công ty.');
+  if (!(PARENT_LEVEL_OK[level] ?? []).includes(parent.level))
+    throw new Error('OKR cha phải ở cấp cao hơn phù hợp (Cá nhân→Phòng/Khối · Phòng→Khối · Khối→Công ty).');
   const unitId = level === 'individual' ? null : orNull(str(fd, 'unit_id'));
   const title = str(fd, 'title').trim();
   if (!title) throw new Error('Thiếu tên mục tiêu.');
@@ -729,7 +752,9 @@ export async function editInitiativeAction(fd: FormData) {
       progress: num(fd, 'progress'),
       priority: (str(fd, 'priority') || 'medium') as Priority,
       start_on: orNull(str(fd, 'start_on')),
-      due_on: orNull(str(fd, 'due_on')),
+      // HẠN (due_on) KHOÁ: form sửa việc hiển thị read-only để đánh giá đúng/trễ hạn công bằng → server
+      // GIỮ giá trị đã lưu, KHÔNG nhận từ form (chống sửa lén hidden input làm sai badge "Đúng hạn/Trễ").
+      due_on: init.due_on,
       done_on: fd.has('done_on') ? orNull(str(fd, 'done_on')) : undefined,
       budget_planned: num(fd, 'budget_planned'),
       budget_actual: num(fd, 'budget_actual'),
