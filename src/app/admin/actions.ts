@@ -7,6 +7,7 @@ import {
   upsertDeck, getDeckById, updateDeckContent, updateDeckMeta,
   setDeckPassword, generateDeckPassword, setDeckPublished, setDeckVisibility, deleteDeck, type Visibility,
 } from '@/lib/decks';
+import { resolveCategory } from '@/lib/categorize';
 import { generateDeckThumbnail } from '@/lib/thumbnail';
 import { upsertViewer } from '@/lib/viewers';
 import { issueGrant, revokeGrant, revokeGroupOnDeck } from '@/lib/grants';
@@ -144,9 +145,14 @@ export async function updateDeckMetaAction(formData: FormData) {
   await requireAdminEmail();
   const deckId = String(formData.get('deck_id') ?? '');
   if (!deckId) return;
+  const tags = parseTags(String(formData.get('tags') ?? ''));
+  const catInput = String(formData.get('category') ?? '').trim();
+  // Bỏ trống danh mục → tự suy (không để deck không có danh mục). Có nhập → dùng đúng giá trị.
+  const deck = catInput ? null : await getDeckById(deckId);
+  const category = resolveCategory(catInput, null, { title: deck?.title, description: deck?.description, tags });
   await updateDeckMeta(deckId, {
-    category: String(formData.get('category') ?? '').trim() || null,
-    tags: parseTags(String(formData.get('tags') ?? '')),
+    category,
+    tags,
     company: String(formData.get('company') ?? '').trim() || 'BTMH',
   });
   revalidatePath(`/admin/decks/${deckId}`);
@@ -193,9 +199,11 @@ export async function createDeckAction(formData: FormData) {
     content,
     createdBy: by,
   });
+  const tags = parseTags(String(formData.get('tags') ?? ''));
   await updateDeckMeta(deck.id, {
-    category: String(formData.get('category') ?? '').trim() || null,
-    tags: parseTags(String(formData.get('tags') ?? '')),
+    // Luôn đảm bảo có danh mục: admin nhập > danh mục hiện có (nếu upsert trúng deck cũ) > tự suy.
+    category: resolveCategory(String(formData.get('category') ?? ''), deck.category, { title, description: deck.description, tags }),
+    tags,
     company: String(formData.get('company') ?? '').trim() || 'BTMH',
   });
   if (content) await generateDeckThumbnail({ id: deck.id, slug: deck.slug }).catch(() => false);

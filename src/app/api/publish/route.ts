@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 import { upsertDeck, setDeckPassword, generateDeckPassword, getDeckBySlug, updateDeckMeta } from '@/lib/decks';
+import { resolveCategory } from '@/lib/categorize';
 import { generateDeckThumbnail } from '@/lib/thumbnail';
 import { isValidSlug } from '@/lib/content';
 
@@ -76,14 +77,16 @@ export async function POST(req: NextRequest) {
     hasPassword = (await getDeckBySlug(slug))?.has_password ?? false; // giữ nguyên
   }
 
-  // Metadata phân loại (chỉ cập nhật field được truyền).
-  if (d.category !== undefined || d.tags !== undefined || d.company !== undefined) {
-    await updateDeckMeta(deck.id, {
-      ...(d.category !== undefined ? { category: d.category ?? null } : {}),
-      ...(d.tags !== undefined ? { tags: d.tags } : {}),
-      ...(d.company !== undefined ? { company: d.company } : {}),
-    });
-  }
+  // Metadata phân loại. LUÔN đảm bảo deck có danh mục: ưu tiên category truyền vào > danh mục hiện có >
+  // tự suy từ tiêu đề/mô tả/thẻ (có thể sinh danh mục mới). deck.category = danh mục hiện tại (upsert không đổi nó).
+  const category = resolveCategory(d.category, deck.category, {
+    title: d.title, description: d.description, tags: d.tags,
+  });
+  await updateDeckMeta(deck.id, {
+    category,
+    ...(d.tags !== undefined ? { tags: d.tags } : {}),
+    ...(d.company !== undefined ? { company: d.company } : {}),
+  });
 
   // Ảnh preview: tự chụp slide đầu (best-effort, không chặn kết quả nếu lỗi).
   await generateDeckThumbnail({ id: deck.id, slug }).catch(() => false);
