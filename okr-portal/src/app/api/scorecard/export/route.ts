@@ -9,7 +9,8 @@ export async function GET(req: NextRequest) {
   await requireUser();
   const period = req.nextUrl.searchParams.get('period');
   const unit = req.nextUrl.searchParams.get('unit');
-  const buf = await buildScorecardWorkbook(period || null, unit || null);
+  const bsc = req.nextUrl.searchParams.get('bsc');
+  const buf = await buildScorecardWorkbook(period || null, unit || null, bsc || null);
   const stamp = new Date().toISOString().slice(0, 10);
   return new NextResponse(new Uint8Array(buf), {
     headers: {

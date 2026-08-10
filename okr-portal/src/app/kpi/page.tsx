@@ -5,9 +5,10 @@ import { ProgressBar } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
 import { listUnits, manageScope, buildTree, type UnitNode } from '@/lib/org';
 import { getCurrentPeriod, listPeriods, getPeriod, orderPeriodsHierarchically, PERIOD_KIND_LABEL } from '@/lib/periods';
-import { loadAccess, canInputKpi, hasCap } from '@/lib/access';
+import { loadAccess, canInputKpi, canManageKpi, hasCap } from '@/lib/access';
 import { BSC_PERSPECTIVES, BSC_PERSPECTIVE_LABEL, BSC_PERSPECTIVE_ICON } from '@/lib/okr';
 import { TIER_LABEL } from '@/lib/kpis';
+import NewKpiModal from '@/components/NewKpiModal';
 import {
   listScorecard,
   scorecardScore,
@@ -17,7 +18,7 @@ import {
   STATUS_CLS,
   type ScorecardRow,
 } from '@/lib/kpi-values';
-import { upsertKpiValueAction } from './actions';
+import { upsertKpiValueAction, createKpiAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,6 +43,7 @@ export default async function KpiScorecardPage({
 
   const scope = manageScope(user, units);
   const canInput = !!unit && canInputKpi(user, access) && (hasCap(user, 'scope.all', access) || scope === null || scope.has(unitId));
+  const canMakeKpi = canManageKpi(user, access);
 
   let rows: ScorecardRow[] = period && unit ? await listScorecard(period.id, unit.id) : [];
   const fbsc = searchParams.bsc || '';
@@ -69,12 +71,21 @@ export default async function KpiScorecardPage({
       <div className="wrap">
         <div className="flexbtw">
           <div className="pagetitle">Scorecard KPI<HelpTip k="kpi-scorecard" /></div>
-          <a
-            className="btn ghost"
-            href={`/api/scorecard/export?period=${period?.id ?? ''}&unit=${unitId}`}
-          >
-            ⬇ Xuất Excel
-          </a>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <a
+              className="btn ghost"
+              href={`/api/scorecard/export?period=${period?.id ?? ''}&unit=${unitId}${fbsc ? `&bsc=${fbsc}` : ''}`}
+            >
+              ⬇ Xuất Excel
+            </a>
+            {canMakeKpi && (
+              <NewKpiModal
+                action={createKpiAction}
+                defaultBsc={fbsc}
+                bscOptions={BSC_PERSPECTIVES.map((b) => ({ value: b, label: `${BSC_PERSPECTIVE_ICON[b]} ${BSC_PERSPECTIVE_LABEL[b]}` }))}
+              />
+            )}
+          </div>
         </div>
         <p className="subtitle">
           Đo chỉ số theo <b>{unit?.name ?? '—'}</b> · kỳ <b>{period?.name ?? '—'}</b>. Mục tiêu &amp; thực hiện,

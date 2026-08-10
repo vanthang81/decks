@@ -123,14 +123,15 @@ const SC_HEAD = ['Kỳ', 'Đơn vị', 'Mã KPI', 'KPI', 'Viễn cảnh', 'Tần
 const BSC_VN: Record<string, string> = { financial: 'Tài chính', customer: 'Khách hàng', process: 'Quy trình nội bộ', learning: 'Học hỏi & Phát triển' };
 const TIER_VN: Record<string, string> = { result: 'Kết quả', driver: 'Động cơ', enabler: 'Bộ máy' };
 
-export async function buildScorecardWorkbook(periodId: string | null, unitId: string | null): Promise<Buffer> {
+export async function buildScorecardWorkbook(periodId: string | null, unitId: string | null, bsc?: string | null): Promise<Buffer> {
+  // Xuất MỌI KPI đang hoạt động trong phạm vi lọc (kỳ×đơn vị[×viễn cảnh]) — KHÔNG chỉ KPI đã có số.
+  // Bắt đầu từ okr_kpis + LEFT JOIN giá trị (giống listScorecard trên màn hình) để không rớt KPI trống.
   const where: string[] = ['k.is_active'];
-  const p: unknown[] = [];
-  if (periodId) { p.push(periodId); where.push(`v.period_id=$${p.length}`); }
-  if (unitId) { p.push(unitId); where.push(`v.unit_id=$${p.length}`); }
+  const p: unknown[] = [periodId, unitId]; // $1=period, $2=unit (dùng trong điều kiện LEFT JOIN)
+  if (bsc) { p.push(bsc); where.push(`k.bsc_perspective=$${p.length}`); }
 
   const rows = await query<{
-    period: string; unit: string | null; code: string | null; name: string;
+    period: string | null; unit: string | null; code: string | null; name: string;
     bsc: string | null; tier: string | null; weight: number; direction: KpiDirection;
     target: number | null; actual: number | null;
     tw: number | null; ta: number | null; te: number | null; note: string | null;
@@ -140,13 +141,13 @@ export async function buildScorecardWorkbook(periodId: string | null, unitId: st
             v.target::float8 AS target, v.actual::float8 AS actual,
             k.threshold_watch::float8 AS tw, k.threshold_alert::float8 AS ta, k.threshold_escalate::float8 AS te,
             v.note
-       FROM okr_kpi_values v
-       JOIN okr_kpis k ON k.id=v.kpi_id
-       JOIN okr_periods pe ON pe.id=v.period_id
-       LEFT JOIN okr_units u ON u.id=v.unit_id
+       FROM okr_kpis k
+       LEFT JOIN okr_kpi_values v ON v.kpi_id=k.id AND v.period_id=$1 AND v.unit_id=$2
+       LEFT JOIN okr_periods pe ON pe.id=$1
+       LEFT JOIN okr_units u ON u.id=$2
       WHERE ${where.join(' AND ')}
-      ORDER BY pe.name, u.name NULLS FIRST,
-               CASE k.tier WHEN 'result' THEN 0 WHEN 'driver' THEN 1 WHEN 'enabler' THEN 2 ELSE 3 END, k.weight DESC, k.name`,
+      ORDER BY CASE k.tier WHEN 'result' THEN 0 WHEN 'driver' THEN 1 WHEN 'enabler' THEN 2 ELSE 3 END,
+               k.weight DESC, k.name`,
     p,
   );
 
@@ -155,7 +156,7 @@ export async function buildScorecardWorkbook(periodId: string | null, unitId: st
     const at = attainment(r.direction, r.target, r.actual);
     const st = kpiStatus({ direction: r.direction, threshold_watch: r.tw, threshold_alert: r.ta, threshold_escalate: r.te }, r.actual, r.target);
     aoa.push([
-      r.period, r.unit ?? 'Công ty', r.code ?? '', r.name,
+      r.period ?? '', r.unit ?? 'Công ty', r.code ?? '', r.name,
       r.bsc ? BSC_VN[r.bsc] ?? r.bsc : '', r.tier ? TIER_VN[r.tier] ?? r.tier : '',
       r.weight, r.direction === 'down' ? 'Thấp tốt' : 'Cao tốt',
       r.target ?? '', r.actual ?? '',

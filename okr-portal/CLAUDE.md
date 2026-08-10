@@ -291,6 +291,12 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   (`done_on`) + huy hiệu đúng/trễ hạn (so `done_on` vs `due_on`). `editInitiative` nhận `done_on`
   (`CASE WHEN status='done' THEN COALESCE($done_on,done_on,now()) ELSE NULL`); `editInitiativeAction` truyền
   `done_on` khi form gửi. `Card`/`TaskRow` + TASK_SELECT thêm cột `done_on`.
+- **Scorecard KPI — xuất đủ + tạo KPI (CFO 10/08)**: (a) `buildScorecardWorkbook(period,unit,bsc?)` sửa để
+  bắt đầu **FROM okr_kpis LEFT JOIN okr_kpi_values** (giống `listScorecard`) → xuất MỌI KPI active trong lọc,
+  kể cả KPI chưa có số (trước FROM okr_kpi_values nên rớt KPI trống). Route `/api/scorecard/export` nhận thêm
+  `bsc`; link "Xuất Excel" ở `/kpi` gắn `&bsc=`. (b) Nút **"+ Tạo KPI"** trên `/kpi` (`NewKpiModal`, gác
+  `canManageKpi`) → `createKpiAction` trong `src/app/kpi/actions.ts` (source='manual', unit_id=null = KPI dùng
+  chung; revalidate `/kpi`+`/admin/kpi`). Thư viện KPI đầy đủ vẫn ở `/admin/kpi`.
 - **Tạo OKR con NGAY trong OKR cha (CFO 10/08)**: khối "OKR con (alignment xuống)" ở `/objectives/[id]`
   có nút "+ Tạo OKR con" (góc phải-trên, `NewChildOkrModal` — popup EditModal) hiện **luôn** khi
   `canCreateChild` (trước chỉ có link khi rỗng). Server `createChildObjectiveAction` (KHÔNG redirect →

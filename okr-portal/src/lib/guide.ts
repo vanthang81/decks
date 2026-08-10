@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-10.106';
+export const GUIDE_VERSION = '2026-08-10.107';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -597,6 +597,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '10/08/2026 (Scorecard KPI: xuất đủ + tạo KPI)',
+    items: [
+      'Xuất Excel Scorecard nay ra TOÀN BỘ KPI trong phạm vi lọc (kỳ · đơn vị · viễn cảnh) — kể cả KPI chưa nhập số Thực hiện (trước đây chỉ ra KPI đã có số).',
+      'Thêm nút "+ Tạo KPI" ngay trên Scorecard (cho người có quyền quản lý Thư viện KPI): mở cửa sổ khai báo chỉ tiêu mới (tên, viễn cảnh, tầng, đơn vị đo, hướng tốt, trọng số, ngưỡng cảnh báo), lưu xong hiện ngay trong bảng.',
+    ],
+  },
   {
     date: '10/08/2026 (Công việc: hoàn thành đúng hạn + tự điền đơn vị)',
     items: [
