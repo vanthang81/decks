@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-10.105';
+export const GUIDE_VERSION = '2026-08-10.106';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -597,6 +597,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '10/08/2026 (Công việc: hoàn thành đúng hạn + tự điền đơn vị)',
+    items: [
+      'Cửa sổ tạo công việc: chọn "Giao cho" một người thì "Đơn vị phụ trách" TỰ nhảy theo đơn vị của người đó (vẫn sửa lại được).',
+      'Cửa sổ cập nhật công việc: thêm trường "Hoàn thành" (ngày hoàn thành thực tế, tự điền khi chuyển "Xong"), và "Hạn" nay CỐ ĐỊNH (không sửa) để đánh giá đúng hạn khách quan. Hệ thống tự hiện huy hiệu "Đúng hạn" hoặc "Trễ N ngày".',
+    ],
+  },
   {
     date: '10/08/2026 (Sửa OKR: đổi Cấp & Liên kết cấp trên)',
     items: [

@@ -730,6 +730,7 @@ export async function editInitiativeAction(fd: FormData) {
       priority: (str(fd, 'priority') || 'medium') as Priority,
       start_on: orNull(str(fd, 'start_on')),
       due_on: orNull(str(fd, 'due_on')),
+      done_on: fd.has('done_on') ? orNull(str(fd, 'done_on')) : undefined,
       budget_planned: num(fd, 'budget_planned'),
       budget_actual: num(fd, 'budget_actual'),
     });

@@ -127,6 +127,7 @@ export type TaskRow = {
   progress: number;
   start_on: string | null;
   due_on: string | null;
+  done_on: string | null;
   owner_email: string | null;
   owner_name: string | null;
   owner_avatar: string | null;
@@ -163,7 +164,7 @@ export type TaskRow = {
 const TASK_SELECT = `
   SELECT i.id, i.code, i.kind, i.title, i.status, i.priority, i.description, i.parent_id,
          EXISTS (SELECT 1 FROM okr_initiatives c WHERE c.parent_id = i.id) AS has_children,
-         i.progress::float8 AS progress, i.start_on::text, i.due_on::text,
+         i.progress::float8 AS progress, i.start_on::text, i.due_on::text, i.done_on::text,
          i.owner_email, u.display_name AS owner_name, u.avatar_url AS owner_avatar, i.created_by,
          i.unit_id, un.name AS unit_name,
          i.project_id, pr.code AS project_code, pr.name AS project_name, pr.owner_email AS project_owner,
@@ -381,6 +382,7 @@ export async function editInitiative(
     priority: Priority;
     start_on: string | null;
     due_on: string | null;
+    done_on?: string | null; // thời gian hoàn thành THỰC TẾ (cho nhập/sửa tay; auto khi chuyển 'done')
     budget_planned: number;
     budget_actual: number;
   },
@@ -391,12 +393,11 @@ export async function editInitiative(
         status=$6, progress=$7, priority=$8, start_on=$9, due_on=$10,
         budget_planned=$11, budget_actual=$12, project_id=$13, meeting_id=$14,
         objective_id=$15, key_result_id=$16,
-        done_on = CASE WHEN $6='done' AND done_on IS NULL THEN now()::date
-                       WHEN $6<>'done' THEN NULL ELSE done_on END,
+        done_on = CASE WHEN $6='done' THEN COALESCE($17::date, done_on, now()::date) ELSE NULL END,
         updated_at=now() WHERE id=$1`,
     [id, input.title, input.description, input.unit_id, input.owner_email, input.status, prog,
      input.priority, input.start_on, input.due_on, input.budget_planned, input.budget_actual,
-     input.project_id, input.meeting_id, input.objective_id, input.key_result_id],
+     input.project_id, input.meeting_id, input.objective_id, input.key_result_id, input.done_on ?? null],
   );
   await recomputeInitiativeUp(id);
 }

@@ -83,11 +83,12 @@ export type Card = {
   progress: number;
   start_on: string | null;
   due_on: string | null;
+  done_on?: string | null;
   budget_planned: number;
   budget_actual: number;
 };
 
-export type PersonOpt = { email: string; name: string; avatar?: string | null };
+export type PersonOpt = { email: string; name: string; avatar?: string | null; unit_id?: string | null };
 export type UnitOpt = { id: string; name: string; type: 'company' | 'division' | 'department'; parent_id?: string | null; sort?: number | null };
 export type ProjectOpt = { id: string; code: string | null; name: string };
 export type MeetingOpt = { id: string; code: string | null; title: string };
@@ -860,9 +861,30 @@ function EditModal({
                     <input className="i" type="date" name="start_on" defaultValue={card.start_on ?? ''} />
                   </div>
                   <div>
-                    <label className="f">Hạn</label>
-                    <input className="i" type="date" name="due_on" defaultValue={card.due_on ?? ''} />
+                    <label className="f">Hạn <span className="muted" style={{ fontWeight: 400 }}>— cố định</span></label>
+                    {/* Hạn KHOÁ để đánh giá đúng/trễ hạn khách quan; giá trị vẫn gửi qua input ẩn. */}
+                    <input className="i" type="date" defaultValue={card.due_on ?? ''} disabled
+                      title="Hạn cố định để đánh giá đúng hạn — không sửa ở đây" />
+                    <input type="hidden" name="due_on" value={card.due_on ?? ''} />
                   </div>
+                  <div>
+                    <label className="f">Hoàn thành</label>
+                    <input className="i" type="date" name="done_on" defaultValue={card.done_on ?? ''}
+                      title="Ngày hoàn thành thực tế (tự điền khi chuyển 'Xong', sửa được)" />
+                  </div>
+                </div>
+                {card.due_on && card.done_on && (() => {
+                  const late = card.done_on > card.due_on;
+                  const days = Math.round((Date.parse(card.done_on) - Date.parse(card.due_on)) / 86400000);
+                  return (
+                    <p style={{ margin: '2px 0 8px', fontSize: 12.5 }}>
+                      <span className={`badge ${late ? 'red' : 'green'}`}>
+                        {late ? `Trễ hạn ${days} ngày` : 'Hoàn thành đúng hạn'}
+                      </span>
+                    </p>
+                  );
+                })()}
+                <div className="row">
                   <div>
                     <label className="f">NS kế hoạch (VND)</label>
                     <NumberInput name="budget_planned" defaultValue={card.budget_planned} />

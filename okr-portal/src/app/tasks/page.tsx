@@ -64,6 +64,7 @@ export default async function TasksPage({
     email: u.email,
     name: u.display_name || u.email,
     avatar: u.avatar_url,
+    unit_id: u.unit_id,
   }));
 
   // Tạo công việc mới ngay tại đây: MỌI người đều tạo được. Nhân viên (staff) chỉ tạo VIỆC CÁ NHÂN

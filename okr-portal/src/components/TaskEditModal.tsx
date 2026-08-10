@@ -146,6 +146,20 @@ export default function TaskEditModal({
                 <tr><td className="muted">Ưu tiên</td><td>{PRIO_LABEL[task.priority] ?? task.priority}</td></tr>
                 <tr><td className="muted">Bắt đầu</td><td>{task.start_on ? fmtDate(task.start_on) : <span className="muted">—</span>}</td></tr>
                 <tr><td className="muted">Hạn</td><td>{task.due_on ? fmtDate(task.due_on) : <span className="muted">—</span>}</td></tr>
+                <tr><td className="muted">Hoàn thành</td><td>
+                  {task.done_on ? (
+                    <>
+                      {fmtDate(task.done_on)}
+                      {task.due_on && (
+                        <span className={`badge ${task.done_on > task.due_on ? 'red' : 'green'}`} style={{ marginLeft: 6 }}>
+                          {task.done_on > task.due_on
+                            ? `Trễ ${Math.round((Date.parse(task.done_on) - Date.parse(task.due_on)) / 86400000)} ngày`
+                            : 'Đúng hạn'}
+                        </span>
+                      )}
+                    </>
+                  ) : <span className="muted">— chưa xong</span>}
+                </td></tr>
                 <tr><td className="muted">NS kế hoạch</td><td className="mono">{fmtVnd(task.budget_planned)}</td></tr>
                 <tr><td className="muted">Đã chi</td><td className="mono">{fmtVnd(task.budget_actual)}</td></tr>
                 {depLabels.length > 0 && <tr><td className="muted">⏳ Phụ thuộc</td><td>{depLabels.join(' · ')}</td></tr>}
@@ -206,16 +220,33 @@ export default function TaskEditModal({
                   <input className="i" type="date" name="start_on" defaultValue={task.start_on ?? ''} />
                 </div>
                 <div>
-                  <label className="f">Hạn</label>
-                  <input className="i" type="date" name="due_on" defaultValue={task.due_on ?? ''} />
+                  <label className="f">Hạn <span className="muted" style={{ fontWeight: 400 }}>— cố định</span></label>
+                  {/* Hạn KHOÁ để đánh giá đúng/trễ hạn khách quan; giá trị vẫn gửi qua input ẩn. */}
+                  <input className="i" type="date" defaultValue={task.due_on ?? ''} disabled
+                    title="Hạn cố định để đánh giá đúng hạn — không sửa ở đây" />
+                  <input type="hidden" name="due_on" value={task.due_on ?? ''} />
                 </div>
+                <div>
+                  <label className="f">Hoàn thành</label>
+                  <input className="i" type="date" name="done_on" defaultValue={task.done_on ?? ''}
+                    title="Ngày hoàn thành thực tế (tự điền khi chuyển 'Xong', sửa được)" />
+                </div>
+              </div>
+              {task.due_on && task.done_on && (
+                <p style={{ margin: '2px 0 8px', fontSize: 12.5 }}>
+                  <span className={`badge ${task.done_on > task.due_on ? 'red' : 'green'}`}>
+                    {task.done_on > task.due_on
+                      ? `Trễ hạn ${Math.round((Date.parse(task.done_on) - Date.parse(task.due_on)) / 86400000)} ngày`
+                      : 'Hoàn thành đúng hạn'}
+                  </span>
+                </p>
+              )}
+              <div className="row">
                 <div>
                   <label className="f">Thuộc dự án</label>
                   <SearchSelect name="project_id" defaultValue={task.project_id ?? ''} emptyLabel="— Không —"
                     options={projects.map((p) => ({ value: p.id, label: `${p.code ? p.code + ' · ' : ''}${p.name}` }))} />
                 </div>
-              </div>
-              <div className="row">
                 <div>
                   <label className="f">NS kế hoạch (VND)</label>
                   <NumberInput name="budget_planned" defaultValue={task.budget_planned} />

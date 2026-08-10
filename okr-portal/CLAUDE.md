@@ -284,6 +284,13 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   loại chính nó). `editObjectiveAction` nhận `level`+`parent_id`: đổi cấp/đơn vị phải `canCreateObjective` phạm vi mới;
   parent kiểm cấp hợp lệ (Cá nhân→Phòng/Khối · Phòng→Khối · Khối→Công ty) + `setObjectiveParent` chống vòng lặp.
   `updateObjective` thêm cột `level` (tuỳ chọn). Dữ liệu ứng viên lấy từ `buildObjectiveFormProps` (dùng chung).
+- **Công việc — tự điền đơn vị + hoàn thành đúng hạn (CFO 10/08)**: (a) `NewTaskModal` — chọn "Giao cho"
+  (owner) → tự set `unit_id` = đơn vị của người đó (owner/unit thành controlled; chỉ nhảy khi unit trong
+  phạm vi); PersonOpt + userOpts thêm `unit_id`. (b) Cập nhật công việc (**cả `TaskEditModal` /tasks LẪN
+  `ExecutionTabs` OKR-detail**): trường **Hạn KHOÁ** (disabled + input ẩn giữ giá trị) + thêm **Hoàn thành**
+  (`done_on`) + huy hiệu đúng/trễ hạn (so `done_on` vs `due_on`). `editInitiative` nhận `done_on`
+  (`CASE WHEN status='done' THEN COALESCE($done_on,done_on,now()) ELSE NULL`); `editInitiativeAction` truyền
+  `done_on` khi form gửi. `Card`/`TaskRow` + TASK_SELECT thêm cột `done_on`.
 - **Tạo OKR con NGAY trong OKR cha (CFO 10/08)**: khối "OKR con (alignment xuống)" ở `/objectives/[id]`
   có nút "+ Tạo OKR con" (góc phải-trên, `NewChildOkrModal` — popup EditModal) hiện **luôn** khi
   `canCreateChild` (trước chỉ có link khi rỗng). Server `createChildObjectiveAction` (KHÔNG redirect →
