@@ -1,10 +1,11 @@
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import ConfirmButton from '@/components/ConfirmButton';
+import EditUnitButton from '@/components/EditUnitButton';
 import { requireUser } from '@/lib/current-user';
 import { loadAccess, canManageSystem } from '@/lib/access';
 import { listUnits, buildTree, type UnitNode } from '@/lib/org';
-import { createUnitAction, deleteUnitAction } from '../actions';
+import { createUnitAction, updateUnitAction, deleteUnitAction } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,18 +30,25 @@ export default async function AdminOrg() {
           {n.code ? <span className="obj-meta"> · mã {n.code}</span> : null}
           {!n.is_active && <span className="badge red" style={{ marginLeft: 6 }}>ẩn</span>}
         </div>
-        {n.type !== 'company' && (
-          <form action={deleteUnitAction}>
-            <input type="hidden" name="id" value={n.id} />
-            <ConfirmButton
-              className="btn ghost sm danger"
-              label="Xoá"
-              title="Xoá đơn vị"
-              message={`Xoá "${n.name}"? Mọi đơn vị con bên dưới cũng sẽ bị xoá theo.`}
-              confirmLabel="Xoá hẳn"
-            />
-          </form>
-        )}
+        <div className="row-actions">
+          <EditUnitButton
+            unit={{ id: n.id, name: n.name, code: n.code, type: n.type, parent_id: n.parent_id, sort: n.sort, is_active: n.is_active }}
+            units={units.map((u) => ({ id: u.id, name: u.name, type: u.type }))}
+            action={updateUnitAction}
+          />
+          {n.type !== 'company' && (
+            <form action={deleteUnitAction}>
+              <input type="hidden" name="id" value={n.id} />
+              <ConfirmButton
+                className="btn ghost sm danger"
+                label="Xoá"
+                title="Xoá đơn vị"
+                message={`Xoá "${n.name}"? Mọi đơn vị con bên dưới cũng sẽ bị xoá theo.`}
+                confirmLabel="Xoá hẳn"
+              />
+            </form>
+          )}
+        </div>
       </div>
       {n.children.map((c) => renderNode(c, depth + 1))}
     </div>

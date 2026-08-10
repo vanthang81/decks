@@ -302,6 +302,11 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   (tương tự unit/units). Nút "Xuất Excel" ở `/objectives` = `ExportOkrModal` (popup, 2 `MultiSelect` kỳ+đơn vị,
   form GET tới `/api/export`, MultiSelect gửi CSV). Vẫn áp `objectiveViewScope` (nhân viên chỉ xuất phạm vi mình).
   Cây OKR trên màn hình GIỮ 1 kỳ (dễ đọc); đa kỳ/đa đơn vị chỉ ở đường XUẤT.
+- **Cây tổ chức: SỬA đơn vị (CFO 10/08)**: `/admin/org` thêm nút "Sửa" mỗi đơn vị (`EditUnitButton` popup) →
+  `updateUnitAction` (đã có sẵn, gác `requireExec`=**canManageSystem** nên admin hệ thống dùng được, không chỉ
+  exec — đáp ứng "OKR quản trị trở lên"). Đổi tên/mã/thứ tự/trực thuộc/ẩn-hiện; chặn tự làm cha của mình; loại
+  đơn vị giữ nguyên. `.row-actions` gom Sửa+Xoá. **CHƯA làm: hiệu lực theo thời gian (effective-date org theo
+  kỳ)** — quyết định kiến trúc lớn (org phẳng, OKR tham chiếu unit_id trực tiếp), ĐANG chờ CFO chốt phạm vi.
 - **Tạo OKR con NGAY trong OKR cha (CFO 10/08)**: khối "OKR con (alignment xuống)" ở `/objectives/[id]`
   có nút "+ Tạo OKR con" (góc phải-trên, `NewChildOkrModal` — popup EditModal) hiện **luôn** khi
   `canCreateChild` (trước chỉ có link khi rỗng). Server `createChildObjectiveAction` (KHÔNG redirect →

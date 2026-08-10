@@ -95,14 +95,19 @@ export async function createUnitAction(fd: FormData) {
 
 export async function updateUnitAction(fd: FormData) {
   await requireExec();
-  await updateUnit(str(fd, 'id'), {
+  const id = str(fd, 'id');
+  const parentId = orNull(str(fd, 'parent_id'));
+  if (parentId === id) throw new Error('Đơn vị không thể trực thuộc chính nó.');
+  if (!str(fd, 'name')) throw new Error('Thiếu tên đơn vị.');
+  await updateUnit(id, {
     name: str(fd, 'name'),
     code: orNull(str(fd, 'code')),
-    parent_id: orNull(str(fd, 'parent_id')),
+    parent_id: parentId,
     sort: Number(str(fd, 'sort')) || 0,
-    is_active: str(fd, 'is_active') === '1',
+    is_active: str(fd, 'is_active') !== '0', // mặc định hiển thị; chỉ ẩn khi chọn '0'
   });
   revalidatePath('/admin/org');
+  revalidatePath('/objectives');
 }
 
 export async function deleteUnitAction(fd: FormData) {

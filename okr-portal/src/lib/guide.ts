@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-10.108';
+export const GUIDE_VERSION = '2026-08-10.109';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -597,6 +597,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '10/08/2026 (Cây tổ chức: sửa đơn vị)',
+    items: [
+      'Cây tổ chức (Quản trị) nay có nút "Sửa" từng đơn vị — đổi tên, mã, thứ tự, đơn vị trực thuộc và ẩn/hiện — không phải xoá rồi tạo lại. Quyền dành cho vai trò Quản trị hệ thống trở lên.',
+    ],
+  },
   {
     date: '10/08/2026 (Xuất OKR nhiều kỳ · nhiều đơn vị)',
     items: [
