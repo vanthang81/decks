@@ -12,10 +12,11 @@ import CommentThread from '@/components/CommentThread';
 import CheckinRow from '@/components/CheckinRow';
 import ObjectiveEditButton from '@/components/ObjectiveEditButton';
 import KeyResultEditButton from '@/components/KeyResultEditButton';
+import NewChildOkrModal from '@/components/NewChildOkrModal';
 import { Sparkline } from '@/components/charts';
 import { ProgressBar, LevelBadge, StatusBadge } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
-import { listUnits, objectiveViewScope, canViewObjectiveUnit } from '@/lib/org';
+import { listUnits, objectiveViewScope, canViewObjectiveUnit, subtreeIds } from '@/lib/org';
 import { listUsers } from '@/lib/users';
 import {
   getObjective,
@@ -31,6 +32,8 @@ import {
   BSC_PERSPECTIVES,
   BSC_PERSPECTIVE_LABEL,
   BSC_PERSPECTIVE_ICON,
+  LEVEL_LABEL,
+  type Level,
 } from '@/lib/okr';
 import {
   listInitiativesForObjective,
@@ -59,10 +62,11 @@ import {
   moveInitiativeAction,
   setObjectiveBscAction,
   linkKrKpiAction,
+  createChildObjectiveAction,
 } from '../actions';
 import { createProjectForInitiativeAction } from '@/app/projects/actions';
 import { withinEditWindow } from '@/lib/moderation';
-import { loadAccess, canEditObjective, canDeleteObjective } from '@/lib/access';
+import { loadAccess, canEditObjective, canDeleteObjective, canCreateObjective } from '@/lib/access';
 import { unitIcon } from '@/lib/unit-icons';
 
 export const dynamic = 'force-dynamic';
@@ -117,6 +121,30 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
     listCheckInsForObjective(obj.id),
   ]);
   const parent = obj.parent_id ? await getObjective(obj.parent_id) : null;
+
+  // --- "+ Tạo OKR con": cấp con hợp lệ (thấp hơn cha) + đơn vị trong nhánh của cha, theo QUYỀN ---
+  // company → division/department/individual · division → department/individual · department/individual → individual.
+  const CHILD_LEVELS: Record<string, Level[]> = {
+    company: ['division', 'department', 'individual'],
+    division: ['department', 'individual'],
+    department: ['individual'],
+    individual: ['individual'],
+  };
+  // Đơn vị con: nếu cha gắn đơn vị → chỉ trong CÂY của đơn vị đó (bỏ chính nó); cha là công ty → mọi đơn vị.
+  const parentSub = obj.unit_id ? subtreeIds(units, obj.unit_id) : null;
+  const childUnitPool = units.filter(
+    (u) => u.type !== 'company' && (parentSub ? parentSub.has(u.id) && u.id !== obj.unit_id : true),
+  );
+  const allowedChildLevels = (CHILD_LEVELS[obj.level] ?? []).filter((lv) => {
+    if (lv === 'individual') return canManage; // cá nhân align vào OKR này: người quản OKR mới thêm ở đây
+    return childUnitPool.some((u) => u.type === lv && canCreateObjective(user, lv, u.id, units, access));
+  });
+  const canCreateChild = allowedChildLevels.length > 0;
+  const childLevelOpts = allowedChildLevels.map((lv) => ({ value: lv, label: LEVEL_LABEL[lv] }));
+  const childUnitOpts = childUnitPool
+    .filter((u) => allowedChildLevels.includes(u.type as Level) && canCreateObjective(user, u.type as Level, u.id, units, access))
+    .map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort }));
+
   const kpiSources = listKpiMetrics();
   const projectOpts = await listProjectOptions(obj.period_id);
   const meetingOpts = await listMeetingOptions(user);
@@ -600,11 +628,24 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
           </div>
 
           <div className="card">
-            <h3 style={{ marginTop: 0 }}>OKR con (alignment xuống)</h3>
+            <div className="flexbtw" style={{ alignItems: 'flex-start' }}>
+              <h3 style={{ marginTop: 0 }}>OKR con (alignment xuống)</h3>
+              {canCreateChild && (
+                <NewChildOkrModal
+                  parentId={obj.id}
+                  parentTitle={obj.title}
+                  levels={childLevelOpts}
+                  defaultLevel={childLevelOpts[0].value}
+                  units={childUnitOpts}
+                  users={personOpts}
+                  action={createChildObjectiveAction}
+                />
+              )}
+            </div>
             {children.length === 0 && (
               <p className="muted">
-                Chưa có OKR cấp dưới liên kết.{' '}
-                <Link href={`/objectives/new?period=${obj.period_id}&parent=${obj.id}`}>+ Tạo OKR con</Link>
+                Chưa có OKR cấp dưới liên kết.
+                {canCreateChild ? ' Dùng nút “+ Tạo OKR con” để thêm.' : ''}
               </p>
             )}
             {children.map((c) => (

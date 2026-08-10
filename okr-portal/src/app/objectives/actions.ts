@@ -5,7 +5,7 @@ import { setTaskDeps } from '@/lib/deps';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/current-user';
-import { listUnits } from '@/lib/org';
+import { listUnits, subtreeIds } from '@/lib/org';
 import {
   createObjective,
   updateObjective,
@@ -131,6 +131,80 @@ export async function createObjectiveAction(fd: FormData) {
   }
 
   redirect(`/objectives/${id}`);
+}
+
+// Tạo OKR CON ngay trong màn hình OKR cha (popup, KHÔNG redirect → đóng + refresh tại chỗ).
+// Kế thừa kỳ của cha; đơn vị con phải nằm TRONG cây đơn vị của cha (alignment đúng cấp).
+export async function createChildObjectiveAction(fd: FormData) {
+  const user = await requireUser();
+  const parentId = str(fd, 'parent_id');
+  if (!parentId) throw new Error('Thiếu OKR cha.');
+  const parent = await getObjective(parentId);
+  if (!parent) throw new Error('Không tìm thấy OKR cha.');
+
+  const units = await listUnits();
+  const access = await loadAccess();
+  const level = str(fd, 'level') as Level;
+  if (level === 'company') throw new Error('OKR con không thể ở cấp Công ty.');
+  const unitId = level === 'individual' ? null : orNull(str(fd, 'unit_id'));
+  const title = str(fd, 'title').trim();
+  if (!title) throw new Error('Thiếu tên mục tiêu.');
+  if ((level === 'division' || level === 'department') && !unitId)
+    throw new Error('Chọn đơn vị cho OKR con cấp Khối/Phòng.');
+
+  if (!canCreateObjective(user, level, unitId, units, access))
+    throw new Error('Bạn không có quyền tạo OKR ở phạm vi này.');
+
+  // Đơn vị con phải thuộc CÂY của đơn vị cha (nếu cha gắn đơn vị) → giữ alignment đúng nhánh.
+  if (unitId && parent.unit_id) {
+    const sub = subtreeIds(units, parent.unit_id);
+    if (!sub.has(unitId)) throw new Error('Đơn vị con phải thuộc phạm vi của OKR cha.');
+  }
+
+  const ownerEmail = orNull(str(fd, 'owner_email')) ?? (level === 'individual' ? user.email : null);
+  const id = await createObjective({
+    period_id: parent.period_id,
+    level,
+    unit_id: unitId,
+    owner_email: ownerEmail,
+    parent_id: parentId,
+    title,
+    description: orNull(str(fd, 'description')),
+    status: 'active' as ObjStatus,
+    okr_type: (str(fd, 'okr_type') || 'committed') as OkrType,
+    bsc_perspective: (orNull(str(fd, 'bsc_perspective')) as BscPerspective | null) ?? parent.bsc_perspective,
+    created_by: user.email,
+  });
+
+  // KR nhập ngay (JSON) — best-effort từng dòng (giống form tạo OKR).
+  try {
+    const rows = JSON.parse(str(fd, 'krs') || '[]') as Array<Record<string, unknown>>;
+    for (const k of Array.isArray(rows) ? rows : []) {
+      const kt = String(k.title ?? '').trim();
+      if (!kt) continue;
+      const mt = (['number', 'percent', 'currency', 'boolean'].includes(String(k.metric_type)) ? k.metric_type : 'number') as MetricType;
+      const start = parseNum(k.start_value, 0);
+      const target = parseNum(k.target_value, mt === 'boolean' ? 1 : 100);
+      await createKeyResult({
+        objective_id: id,
+        title: kt,
+        metric_type: mt,
+        direction: (k.direction === 'decrease' ? 'decrease' : 'increase') as Direction,
+        unit_label: k.unit_label ? String(k.unit_label) : null,
+        start_value: start,
+        target_value: target,
+        current_value: start,
+        weight: parseNum(k.weight, 1) || 1,
+        kpi_source: null,
+        indicator: (k.indicator === 'leading' ? 'leading' : 'lagging') as Indicator,
+      }).catch(() => {});
+    }
+  } catch {
+    /* krs không hợp lệ → bỏ qua */
+  }
+
+  revalidatePath(`/objectives/${parentId}`);
+  revalidatePath('/objectives');
 }
 
 /** Gắn KPI thư viện vào 1 KR (rồi kéo số từ KPI theo kỳ+đơn vị của OKR). Chỉ người quản OKR. */

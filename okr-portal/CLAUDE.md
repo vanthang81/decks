@@ -274,6 +274,12 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   `/my` OKR & việc của tôi · `/admin` + `/admin/{users,org,periods}` (chỉ exec) · `/login` Google.
 - Server Actions ở `src/app/objectives/actions.ts` + `src/app/admin/actions.ts` (đều `requireUser`/
   `requireExec` + kiểm quyền trước khi ghi).
+- **Tạo OKR con NGAY trong OKR cha (CFO 10/08)**: khối "OKR con (alignment xuống)" ở `/objectives/[id]`
+  có nút "+ Tạo OKR con" (góc phải-trên, `NewChildOkrModal` — popup EditModal) hiện **luôn** khi
+  `canCreateChild` (trước chỉ có link khi rỗng). Server `createChildObjectiveAction` (KHÔNG redirect →
+  `revalidatePath('/objectives/[id]')`): parent_id cố định, kỳ + BSC kế thừa cha; cấp con phải THẤP hơn
+  cha (`CHILD_LEVELS`); đơn vị con phải ∈ `subtreeIds(parent.unit_id)`; gác `canCreateObjective(level,unit)`.
+  Cấp 'individual' chỉ hiện khi `canManage` OKR này. `childLevelOpts`/`childUnitOpts` tính ở page theo quyền.
 
 ## Deploy (ĐÃ LIVE 31/07/2026 — https://okr.consultx.vn)
 - VPS `45.77.247.185`, biên host nginx + certbot (giống deck/price/ideas). Container Docker

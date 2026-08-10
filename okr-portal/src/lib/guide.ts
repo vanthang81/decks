@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-10.102';
+export const GUIDE_VERSION = '2026-08-10.103';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -169,8 +169,10 @@ export const FEATURES: Feature[] = [
     title: 'OKR & liên kết (cascade)',
     where: 'Menu "OKR"',
     help: 'Cây mục tiêu Công ty → Khối → Phòng → Cá nhân, thu gọn/mở rộng + BỘ LỌC (khối/phòng, cấp, trạng thái, loại, tìm kiếm).',
-    detail:
+    detail: [
       'Trang OKR hiển thị toàn bộ mục tiêu trong kỳ dạng cây theo alignment. Có THANH LỌC: tìm theo tên/mã/người chủ trì + lọc theo Khối/Phòng, Cấp, Trạng thái, Loại OKR — khi lọc sẽ hiện danh sách kết quả khớp (kèm số lượng), bỏ lọc để về lại cây. Mỗi nút CÓ cấp con hiện mũi tên ▸ để thu gọn/mở rộng (kèm số OKR con); có nút "Mở rộng tất cả / Thu gọn tất cả". Mặc định mở tới cấp Khối, thu gọn từ Phòng trở xuống. Khi tạo OKR, chọn cấp, đơn vị, người chủ trì và "Liên kết lên" một OKR cấp trên để tạo dòng chảy chiến lược.',
+      'TẠO OKR CON NGAY TRONG OKR CHA: mở một OKR (vd cấp Khối) → khối "OKR con (alignment xuống)" có nút "+ Tạo OKR con" ở góc phải-trên (luôn hiện, kể cả khi đã có OKR con). Bấm mở cửa sổ tạo nhanh: chọn cấp con hợp lệ (thấp hơn cha), đơn vị (giới hạn trong nhánh của cha), người chủ trì, loại OKR và Key Result — OKR con tự kế thừa kỳ + viễn cảnh BSC của cha, lưu xong đóng cửa sổ và hiện ngay. Chỉ hiện với người có quyền tạo OKR trong phạm vi đó.',
+    ],
   },
   {
     key: 'okr-import',
@@ -595,6 +597,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '10/08/2026 (Tạo OKR con ngay trong OKR cha)',
+    items: [
+      'Màn hình chi tiết OKR: khối "OKR con (alignment xuống)" có nút "+ Tạo OKR con" ở góc phải-trên, LUÔN hiện (trước đây chỉ hiện khi chưa có OKR con nào).',
+      'Bấm mở cửa sổ tạo nhanh OKR con: chọn cấp con hợp lệ + đơn vị trong nhánh của cha + người chủ trì + Key Result; tự kế thừa kỳ & viễn cảnh BSC của cha; lưu xong đóng + hiện ngay tại chỗ.',
+    ],
+  },
   {
     date: '10/08/2026 (Mọi người tự tạo công việc cá nhân)',
     items: [
