@@ -14,16 +14,17 @@ const INIT_HEAD = ['Mã', 'Mã Objective', 'Mã cha', 'Loại', 'Tiêu đề', '
 
 // ============ EXPORT ============
 export async function buildOkrWorkbook(
-  periodId: string | null,
-  unitId: string | null,
+  periodIds: string[],
+  unitIds: string[],
   // Phạm vi xem theo đơn vị (nhân viên): CHỈ xuất OKR cấp Công ty + trong phạm vi đơn vị mình +
   // OKR mình chủ trì — khớp đúng canViewObjectiveUnit ở giao diện. null = xuất tất cả (điều hành/quản lý).
   scope: { unitIds: string[]; email: string } | null = null,
 ): Promise<Buffer> {
   const objWhere: string[] = [];
   const p: unknown[] = [];
-  if (periodId) { p.push(periodId); objWhere.push(`o.period_id=$${p.length}`); }
-  if (unitId) { p.push(unitId); objWhere.push(`o.unit_id=$${p.length}`); }
+  // Lọc NHIỀU kỳ + NHIỀU đơn vị (rỗng = tất cả). Ép ::text để so mảng text đồng nhất.
+  if (periodIds.length) { p.push(periodIds); objWhere.push(`o.period_id::text = ANY($${p.length}::text[])`); }
+  if (unitIds.length) { p.push(unitIds); objWhere.push(`o.unit_id::text = ANY($${p.length}::text[])`); }
   if (scope) {
     p.push(scope.unitIds); const ui = p.length;
     p.push(scope.email); const em = p.length;

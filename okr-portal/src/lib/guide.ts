@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-10.107';
+export const GUIDE_VERSION = '2026-08-10.108';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -597,6 +597,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '10/08/2026 (Xuất OKR nhiều kỳ · nhiều đơn vị)',
+    items: [
+      'Nút "Xuất Excel" ở trang OKR nay mở cửa sổ chọn NHIỀU kỳ (tháng/quý/năm) và NHIỀU khối/phòng cùng lúc rồi tải một file — để trống = xuất toàn bộ. Trước đây chỉ xuất được 1 kỳ đang xem.',
+    ],
+  },
   {
     date: '10/08/2026 (Scorecard KPI: xuất đủ + tạo KPI)',
     items: [

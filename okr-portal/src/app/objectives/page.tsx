@@ -4,6 +4,7 @@ import PeriodPicker from '@/components/PeriodPicker';
 import HelpTip from '@/components/HelpTip';
 import ImportOkr from '@/components/ImportOkr';
 import NewObjectiveModal from '@/components/NewObjectiveModal';
+import ExportOkrModal from '@/components/ExportOkrModal';
 import { buildObjectiveFormProps } from '@/lib/objective-form';
 import { createObjectiveAction } from './actions';
 import { requireUser } from '@/lib/current-user';
@@ -98,11 +99,14 @@ export default async function ObjectivesPage({
                 ⬇ Form mẫu
               </a>
             )}
-            {period && (
-              <a className="btn ghost" href={`/api/export?period=${period.id}`} title="Xuất toàn bộ OKR kỳ này ra Excel">
-                ⬇ Xuất Excel
-              </a>
-            )}
+            <ExportOkrModal
+              periods={orderPeriodsHierarchically(periods).map(({ period: p, depth }) => ({
+                value: p.id,
+                label: `${'· '.repeat(depth)}${PERIOD_KIND_LABEL[p.kind]}: ${p.name}`,
+              }))}
+              units={unitOptions}
+              currentPeriodId={period?.id ?? null}
+            />
             {okrFormProps && (
               <NewObjectiveModal formProps={okrFormProps} create={createObjectiveAction} />
             )}

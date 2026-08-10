@@ -297,6 +297,11 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   `bsc`; link "Xuất Excel" ở `/kpi` gắn `&bsc=`. (b) Nút **"+ Tạo KPI"** trên `/kpi` (`NewKpiModal`, gác
   `canManageKpi`) → `createKpiAction` trong `src/app/kpi/actions.ts` (source='manual', unit_id=null = KPI dùng
   chung; revalidate `/kpi`+`/admin/kpi`). Thư viện KPI đầy đủ vẫn ở `/admin/kpi`.
+- **Xuất OKR nhiều kỳ · nhiều đơn vị (CFO 10/08)**: `buildOkrWorkbook(periodIds[], unitIds[], scope)` nhận
+  MẢNG (rỗng=tất cả, dùng `= ANY($n::text[])`). Route `/api/export` parse `getAll('period')`+CSV `periods`
+  (tương tự unit/units). Nút "Xuất Excel" ở `/objectives` = `ExportOkrModal` (popup, 2 `MultiSelect` kỳ+đơn vị,
+  form GET tới `/api/export`, MultiSelect gửi CSV). Vẫn áp `objectiveViewScope` (nhân viên chỉ xuất phạm vi mình).
+  Cây OKR trên màn hình GIỮ 1 kỳ (dễ đọc); đa kỳ/đa đơn vị chỉ ở đường XUẤT.
 - **Tạo OKR con NGAY trong OKR cha (CFO 10/08)**: khối "OKR con (alignment xuống)" ở `/objectives/[id]`
   có nút "+ Tạo OKR con" (góc phải-trên, `NewChildOkrModal` — popup EditModal) hiện **luôn** khi
   `canCreateChild` (trước chỉ có link khi rỗng). Server `createChildObjectiveAction` (KHÔNG redirect →
