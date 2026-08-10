@@ -47,11 +47,22 @@ export default function EditUnitButton({
         ))}
       </select>
 
-      <label className="f">Trạng thái</label>
-      <select className="i" name="is_active" defaultValue={unit.is_active ? '1' : '0'}>
-        <option value="1">Hiển thị</option>
-        <option value="0">Ẩn (lưu trữ)</option>
-      </select>
+      <div className="row">
+        <div>
+          <label className="f">Trạng thái</label>
+          <select className="i" name="is_active" defaultValue={unit.is_active ? '1' : '0'}>
+            <option value="1">Hiển thị</option>
+            <option value="0">Ẩn (lưu trữ)</option>
+          </select>
+        </div>
+        <div>
+          <label className="f">Áp dụng từ ngày</label>
+          <input className="i" type="date" name="effective_from" />
+        </div>
+      </div>
+      <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+        Để trống = áp dụng ngay hôm nay. Chọn ngày tương lai để đặt lịch đổi cơ cấu (tự có hiệu lực đúng ngày). Mọi thay đổi đều được lưu vào lịch sử.
+      </p>
     </EditModal>
   );
 }

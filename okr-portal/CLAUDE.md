@@ -305,8 +305,17 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
 - **Cây tổ chức: SỬA đơn vị (CFO 10/08)**: `/admin/org` thêm nút "Sửa" mỗi đơn vị (`EditUnitButton` popup) →
   `updateUnitAction` (đã có sẵn, gác `requireExec`=**canManageSystem** nên admin hệ thống dùng được, không chỉ
   exec — đáp ứng "OKR quản trị trở lên"). Đổi tên/mã/thứ tự/trực thuộc/ẩn-hiện; chặn tự làm cha của mình; loại
-  đơn vị giữ nguyên. `.row-actions` gom Sửa+Xoá. **CHƯA làm: hiệu lực theo thời gian (effective-date org theo
-  kỳ)** — quyết định kiến trúc lớn (org phẳng, OKR tham chiếu unit_id trực tiếp), ĐANG chờ CFO chốt phạm vi.
+  đơn vị giữ nguyên. `.row-actions` gom Sửa+Xoá.
+- **Cơ cấu hiệu lực theo thời gian — Phase 1 (CFO chốt 10/08 "hiệu lực theo mốc")**: `db/450_unit_history.sql`
+  bảng **`okr_unit_versions`** (unit_id, effective_from, name/code/parent_id/sort/is_active, note, created_by) +
+  seed 1 phiên bản/đơn vị (01/01/2026). `okr_units` GIỮ **ẢNH HIỆN TẠI** (phiên bản hiệu lực ≤ hôm nay mới
+  nhất) → mọi query OKR KHÔNG đổi (0 blast radius). `org.ts`: `recordUnitVersion` (ghi mỗi lần thêm/sửa),
+  `listUnitsAsOf(date)` (LATERAL lấy phiên bản ≤ ngày), `applyDueUnitVersions()` (áp phiên bản đặt-lịch đã
+  tới hạn vào okr_units — gọi khi mở `/admin/org`), `listUnitVersions`. `createUnitAction`/`updateUnitAction`
+  nhận `effective_from` (mặc định hôm nay; tương lai → chỉ ghi version, chưa đụng ảnh hiện tại). UI: nút "Sửa"
+  + form Thêm có ô "Áp dụng từ ngày"; `/admin/org?asof=YYYY-MM-DD` = xem cơ cấu tại thời điểm (chỉ xem).
+  **Phase 2 (CHƯA làm, blast radius rộng)**: hiển thị TÊN đơn vị *as-of kỳ* trong mọi view OKR/báo cáo (đổi
+  join `okr_units` → resolve version theo period.starts_on) — cần regression kỹ, làm task riêng.
 - **Tạo OKR con NGAY trong OKR cha (CFO 10/08)**: khối "OKR con (alignment xuống)" ở `/objectives/[id]`
   có nút "+ Tạo OKR con" (góc phải-trên, `NewChildOkrModal` — popup EditModal) hiện **luôn** khi
   `canCreateChild` (trước chỉ có link khi rỗng). Server `createChildObjectiveAction` (KHÔNG redirect →

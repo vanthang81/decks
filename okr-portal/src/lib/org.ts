@@ -126,12 +126,13 @@ export async function createUnit(input: {
   type: UnitType;
   parent_id: string | null;
   sort: number;
-}): Promise<void> {
-  await query(
+}): Promise<string> {
+  const row = await queryOne<{ id: string }>(
     `INSERT INTO okr_units (name, code, type, parent_id, sort)
-     VALUES ($1, NULLIF($2,''), $3, $4, $5)`,
+     VALUES ($1, NULLIF($2,''), $3, $4, $5) RETURNING id`,
     [input.name, input.code ?? '', input.type, input.parent_id, input.sort],
   );
+  return row!.id;
 }
 
 export async function updateUnit(
@@ -148,6 +149,67 @@ export async function updateUnit(
 export async function deleteUnit(id: string): Promise<void> {
   await query('DELETE FROM okr_units WHERE id=$1', [id]);
 }
+
+// ─── LỊCH SỬ CƠ CẤU (effective-dated) — db/450_unit_history ───
+export type UnitVersionInput = {
+  name: string; code: string | null; parent_id: string | null; sort: number; is_active: boolean;
+  effective_from: string; // 'YYYY-MM-DD'
+  note?: string | null; created_by?: string | null;
+};
+
+/** Ghi 1 phiên bản cơ cấu cho đơn vị (mỗi lần thêm/sửa có ngày hiệu lực). */
+export async function recordUnitVersion(unitId: string, v: UnitVersionInput): Promise<void> {
+  await query(
+    `INSERT INTO okr_unit_versions (unit_id, effective_from, name, code, parent_id, sort, is_active, note, created_by)
+     VALUES ($1,$2,$3,NULLIF($4,''),$5,$6,$7,$8,$9)`,
+    [unitId, v.effective_from, v.name, v.code ?? '', v.parent_id, v.sort, v.is_active, v.note ?? null, v.created_by ?? null],
+  );
+}
+
+/** Cơ cấu tổ chức TẠI THỜI ĐIỂM `dateIso` (YYYY-MM-DD): mỗi đơn vị lấy phiên bản hiệu lực ≤ ngày, mới nhất.
+ *  Đơn vị chưa có phiên bản nào ≤ ngày (chưa tồn tại) sẽ bị loại. type lấy từ okr_units (không đổi). */
+export async function listUnitsAsOf(dateIso: string): Promise<Unit[]> {
+  return query<Unit>(
+    `SELECT u.id, v.name, v.code, u.type, v.parent_id, v.sort, v.is_active
+       FROM okr_units u
+       JOIN LATERAL (
+         SELECT name, code, parent_id, sort, is_active
+           FROM okr_unit_versions vv
+          WHERE vv.unit_id = u.id AND vv.effective_from <= $1
+          ORDER BY vv.effective_from DESC LIMIT 1
+       ) v ON true
+      ORDER BY u.type, v.sort, v.name`,
+    [dateIso],
+  );
+}
+
+/** Áp các phiên bản ĐÃ ĐẾN HẠN (effective_from ≤ hôm nay) vào ảnh hiện tại okr_units.
+ *  Gọi khi mở trang Cây tổ chức để thay đổi đặt lịch tương lai tự có hiệu lực đúng ngày. Idempotent. */
+export async function applyDueUnitVersions(): Promise<void> {
+  await query(
+    `UPDATE okr_units u
+        SET name=v.name, code=v.code, parent_id=v.parent_id, sort=v.sort, is_active=v.is_active, updated_at=now()
+       FROM (
+         SELECT DISTINCT ON (unit_id) unit_id, name, code, parent_id, sort, is_active
+           FROM okr_unit_versions
+          WHERE effective_from <= CURRENT_DATE
+          ORDER BY unit_id, effective_from DESC
+       ) v
+      WHERE u.id = v.unit_id
+        AND (u.name, COALESCE(u.code,''), COALESCE(u.parent_id::text,''), u.sort, u.is_active)
+            IS DISTINCT FROM (v.name, COALESCE(v.code,''), COALESCE(v.parent_id::text,''), v.sort, v.is_active)`,
+  );
+}
+
+/** Lịch sử phiên bản của 1 đơn vị (mới nhất trước) — cho panel "Lịch sử thay đổi". */
+export async function listUnitVersions(unitId: string): Promise<Array<UnitVersionInput & { id: string; created_at: string }>> {
+  return query(
+    `SELECT id, effective_from::text AS effective_from, name, code, parent_id, sort, is_active, note, created_by, created_at::text AS created_at
+       FROM okr_unit_versions WHERE unit_id=$1 ORDER BY effective_from DESC, created_at DESC`,
+    [unitId],
+  );
+}
+
 
 export const ROLE_CAN_MANAGE_ROLE: Record<Role, boolean> = {
   exec: true,

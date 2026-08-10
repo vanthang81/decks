@@ -12,7 +12,7 @@ import {
   countActiveExecs,
   getUser,
 } from '@/lib/users';
-import { createUnit, updateUnit, deleteUnit, type UnitType } from '@/lib/org';
+import { createUnit, updateUnit, deleteUnit, recordUnitVersion, type UnitType } from '@/lib/org';
 import { createPeriod, setCurrentPeriod, setPeriodStatus } from '@/lib/periods';
 import { syncAllKpi } from '@/lib/kpi';
 import { redirect } from 'next/navigation';
@@ -81,33 +81,58 @@ export async function removeUserAction(fd: FormData) {
 }
 
 // ---------- Cây tổ chức ----------
+// Ngày hiệu lực hợp lệ (YYYY-MM-DD); mặc định hôm nay (~giờ VN) nếu trống/sai.
+function effDate(fd: FormData): string {
+  const v = str(fd, 'effective_from');
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+  return new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
+}
+const todayVn = () => new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
+
 export async function createUnitAction(fd: FormData) {
-  await requireExec();
-  await createUnit({
+  const me = await requireExec();
+  const input = {
     name: str(fd, 'name'),
     code: orNull(str(fd, 'code')),
     type: (str(fd, 'type') || 'department') as UnitType,
     parent_id: orNull(str(fd, 'parent_id')),
     sort: Number(str(fd, 'sort')) || 0,
+  };
+  if (!input.name) throw new Error('Thiếu tên đơn vị.');
+  const eff = effDate(fd);
+  const today = todayVn();
+  const id = await createUnit(input); // ảnh hiện tại dùng ngay
+  await recordUnitVersion(id, {
+    ...input, is_active: true, effective_from: eff > today ? eff : today,
+    note: 'thêm đơn vị', created_by: me.email,
   });
   revalidatePath('/admin/org');
 }
 
 export async function updateUnitAction(fd: FormData) {
-  await requireExec();
+  const me = await requireExec();
   const id = str(fd, 'id');
   const parentId = orNull(str(fd, 'parent_id'));
   if (parentId === id) throw new Error('Đơn vị không thể trực thuộc chính nó.');
-  if (!str(fd, 'name')) throw new Error('Thiếu tên đơn vị.');
-  await updateUnit(id, {
-    name: str(fd, 'name'),
+  const name = str(fd, 'name');
+  if (!name) throw new Error('Thiếu tên đơn vị.');
+  const fields = {
+    name,
     code: orNull(str(fd, 'code')),
     parent_id: parentId,
     sort: Number(str(fd, 'sort')) || 0,
     is_active: str(fd, 'is_active') !== '0', // mặc định hiển thị; chỉ ẩn khi chọn '0'
-  });
+  };
+  const eff = effDate(fd);
+  const today = todayVn();
+  // LUÔN ghi 1 phiên bản (kèm ngày hiệu lực) → giữ lịch sử cơ cấu.
+  await recordUnitVersion(id, { ...fields, effective_from: eff, note: 'sửa đơn vị', created_by: me.email });
+  // Cập nhật ẢNH HIỆN TẠI chỉ khi hiệu lực ≤ hôm nay; hiệu lực tương lai giữ nguyên, tự áp khi tới ngày.
+  if (eff <= today) {
+    await updateUnit(id, fields);
+    revalidatePath('/objectives');
+  }
   revalidatePath('/admin/org');
-  revalidatePath('/objectives');
 }
 
 export async function deleteUnitAction(fd: FormData) {

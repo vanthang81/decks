@@ -4,7 +4,7 @@ import ConfirmButton from '@/components/ConfirmButton';
 import EditUnitButton from '@/components/EditUnitButton';
 import { requireUser } from '@/lib/current-user';
 import { loadAccess, canManageSystem } from '@/lib/access';
-import { listUnits, buildTree, type UnitNode } from '@/lib/org';
+import { listUnits, listUnitsAsOf, applyDueUnitVersions, buildTree, type UnitNode } from '@/lib/org';
 import { createUnitAction, updateUnitAction, deleteUnitAction } from '../actions';
 
 export const dynamic = 'force-dynamic';
@@ -15,11 +15,16 @@ const TYPE_LABEL: Record<string, string> = {
   department: 'Phòng ban',
 };
 
-export default async function AdminOrg() {
+export default async function AdminOrg({ searchParams }: { searchParams: { asof?: string } }) {
   const me = await requireUser();
   if (!canManageSystem(me, await loadAccess())) redirect('/');
-  const units = await listUnits();
+
+  // XEM CƠ CẤU TẠI THỜI ĐIỂM (?asof=YYYY-MM-DD) = chỉ xem lịch sử; không có ?asof = cơ cấu HIỆN TẠI (sửa được).
+  const asof = /^\d{4}-\d{2}-\d{2}$/.test(searchParams.asof ?? '') ? searchParams.asof! : '';
+  if (!asof) await applyDueUnitVersions(); // áp các thay đổi đặt lịch đã tới hạn vào ảnh hiện tại
+  const units = asof ? await listUnitsAsOf(asof) : await listUnits();
   const tree = buildTree(units);
+  const readOnly = !!asof;
 
   const renderNode = (n: UnitNode, depth: number): React.ReactNode => (
     <div key={n.id}>
@@ -30,25 +35,27 @@ export default async function AdminOrg() {
           {n.code ? <span className="obj-meta"> · mã {n.code}</span> : null}
           {!n.is_active && <span className="badge red" style={{ marginLeft: 6 }}>ẩn</span>}
         </div>
-        <div className="row-actions">
-          <EditUnitButton
-            unit={{ id: n.id, name: n.name, code: n.code, type: n.type, parent_id: n.parent_id, sort: n.sort, is_active: n.is_active }}
-            units={units.map((u) => ({ id: u.id, name: u.name, type: u.type }))}
-            action={updateUnitAction}
-          />
-          {n.type !== 'company' && (
-            <form action={deleteUnitAction}>
-              <input type="hidden" name="id" value={n.id} />
-              <ConfirmButton
-                className="btn ghost sm danger"
-                label="Xoá"
-                title="Xoá đơn vị"
-                message={`Xoá "${n.name}"? Mọi đơn vị con bên dưới cũng sẽ bị xoá theo.`}
-                confirmLabel="Xoá hẳn"
-              />
-            </form>
-          )}
-        </div>
+        {!readOnly && (
+          <div className="row-actions">
+            <EditUnitButton
+              unit={{ id: n.id, name: n.name, code: n.code, type: n.type, parent_id: n.parent_id, sort: n.sort, is_active: n.is_active }}
+              units={units.map((u) => ({ id: u.id, name: u.name, type: u.type }))}
+              action={updateUnitAction}
+            />
+            {n.type !== 'company' && (
+              <form action={deleteUnitAction}>
+                <input type="hidden" name="id" value={n.id} />
+                <ConfirmButton
+                  className="btn ghost sm danger"
+                  label="Xoá"
+                  title="Xoá đơn vị"
+                  message={`Xoá "${n.name}"? Mọi đơn vị con bên dưới cũng sẽ bị xoá theo.`}
+                  confirmLabel="Xoá hẳn"
+                />
+              </form>
+            )}
+          </div>
+        )}
       </div>
       {n.children.map((c) => renderNode(c, depth + 1))}
     </div>
@@ -63,8 +70,21 @@ export default async function AdminOrg() {
 
         <div className="grid two">
           <div className="card">
-            <h3 style={{ marginTop: 0 }}>Sơ đồ tổ chức</h3>
-            {tree.length === 0 && <p className="muted">Chưa có đơn vị nào.</p>}
+            <div className="flexbtw" style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: 8 }}>
+              <h3 style={{ marginTop: 0 }}>Sơ đồ tổ chức</h3>
+              <form method="get" style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                <label className="muted" style={{ fontSize: 12.5 }}>Xem cơ cấu tại ngày</label>
+                <input className="i" type="date" name="asof" defaultValue={asof} style={{ width: 'auto' }} />
+                <button className="btn ghost sm" type="submit">Xem</button>
+                {asof && <a className="btn ghost sm" href="/admin/org">← Hiện tại</a>}
+              </form>
+            </div>
+            {readOnly && (
+              <div className="gnote" style={{ background: 'var(--gold-tint, #fbf3e0)', borderColor: 'var(--accent, #B07B32)', marginBottom: 10 }}>
+                Đang xem cơ cấu tại <b>{asof.split('-').reverse().join('/')}</b> — chỉ xem (không sửa). Bấm “← Hiện tại” để về cơ cấu đang dùng.
+              </div>
+            )}
+            {tree.length === 0 && <p className="muted">{readOnly ? 'Chưa có đơn vị nào tại thời điểm này.' : 'Chưa có đơn vị nào.'}</p>}
             {tree.map((n) => renderNode(n, 0))}
           </div>
 
@@ -91,15 +111,23 @@ export default async function AdminOrg() {
                   <input className="i" name="sort" defaultValue="0" />
                 </div>
               </div>
-              <label className="f">Trực thuộc</label>
-              <select className="i" name="parent_id" defaultValue="">
-                <option value="">— Gốc (Công ty) —</option>
-                {units.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({TYPE_LABEL[u.type]})
-                  </option>
-                ))}
-              </select>
+              <div className="row">
+                <div>
+                  <label className="f">Trực thuộc</label>
+                  <select className="i" name="parent_id" defaultValue="">
+                    <option value="">— Gốc (Công ty) —</option>
+                    {units.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name} ({TYPE_LABEL[u.type]})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="f">Áp dụng từ ngày</label>
+                  <input className="i" type="date" name="effective_from" />
+                </div>
+              </div>
               <div style={{ marginTop: 12 }}>
                 <button className="btn" type="submit">
                   Thêm đơn vị
