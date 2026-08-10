@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-10.103';
+export const GUIDE_VERSION = '2026-08-10.104';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -597,6 +597,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '10/08/2026 (Tạo OKR bằng cửa sổ pop-up)',
+    items: [
+      'Nút "+ Tạo OKR" ở trang OKR nay mở CỬA SỔ pop-up ngay tại chỗ (thay vì chuyển sang trang riêng); tạo xong tự đóng cửa sổ và làm mới cây OKR để thấy mục tiêu mới — đồng bộ với cách tạo Công việc / Dự án / OKR cá nhân.',
+    ],
+  },
   {
     date: '10/08/2026 (Tạo OKR con ngay trong OKR cha)',
     items: [

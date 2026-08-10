@@ -130,6 +130,12 @@ export async function createObjectiveAction(fd: FormData) {
     /* krs không hợp lệ → bỏ qua, OKR vẫn tạo */
   }
 
+  // Gọi từ POPUP (inline=1) → KHÔNG redirect, chỉ revalidate để đóng cửa sổ + làm mới danh sách tại chỗ.
+  if (str(fd, 'inline')) {
+    revalidatePath('/objectives');
+    revalidatePath('/my');
+    return;
+  }
   redirect(`/objectives/${id}`);
 }
 

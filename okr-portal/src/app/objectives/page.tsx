@@ -1,9 +1,11 @@
-import Link from 'next/link';
 import SiteHeader from '@/components/SiteHeader';
 import ObjectiveTree, { type TreeObjective } from '@/components/ObjectiveTree';
 import PeriodPicker from '@/components/PeriodPicker';
 import HelpTip from '@/components/HelpTip';
 import ImportOkr from '@/components/ImportOkr';
+import NewObjectiveModal from '@/components/NewObjectiveModal';
+import { buildObjectiveFormProps } from '@/lib/objective-form';
+import { createObjectiveAction } from './actions';
 import { requireUser } from '@/lib/current-user';
 import { listUnits, objectiveViewScope, canViewObjectiveUnit } from '@/lib/org';
 import { unitTreeOptions } from '@/lib/unit-options';
@@ -46,6 +48,8 @@ export default async function ObjectivesPage({
     : allObjectives.filter((o) => canViewObjectiveUnit(viewScope, o, user.email));
   const scopedView = viewScope !== null;
   const unitOptions = unitTreeOptions(units, { excludeCompany: true });
+  // Dữ liệu cho popup "+ Tạo OKR" (chỉ khi có kỳ + không phải nhân viên).
+  const okrFormProps = period && user.role !== 'staff' ? await buildObjectiveFormProps(user, period.id) : null;
 
   // Chỉ truyền field cần cho cây (serializable) sang client component.
   const treeData: TreeObjective[] = objectives.map((o) => ({
@@ -99,10 +103,8 @@ export default async function ObjectivesPage({
                 ⬇ Xuất Excel
               </a>
             )}
-            {period && user.role !== 'staff' && (
-              <Link className="btn" href={`/objectives/new?period=${period.id}`}>
-                + Tạo OKR
-              </Link>
+            {okrFormProps && (
+              <NewObjectiveModal formProps={okrFormProps} create={createObjectiveAction} />
             )}
           </div>
         </div>

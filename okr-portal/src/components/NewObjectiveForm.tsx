@@ -23,6 +23,7 @@ const METRICS = [{ v: 'number', l: 'Số' }, { v: 'percent', l: '%' }, { v: 'cur
 export default function NewObjectiveForm({
   periodId, currentEmail, allowedLevels, defaultLevel, levelLabels,
   units, users, periodObjectives, pillars, bscOptions, okrTypeOptions, create,
+  inline = false, onSuccess, onCancel,
 }: {
   periodId: string;
   currentEmail: string;
@@ -36,6 +37,10 @@ export default function NewObjectiveForm({
   bscOptions: BscOpt[];
   okrTypeOptions: { value: string; label: string; expect: string }[];
   create: (fd: FormData) => Promise<void>;
+  // Khi nhúng trong POPUP: inline=true (server action revalidate thay vì redirect), onSuccess đóng+refresh, onCancel đóng.
+  inline?: boolean;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }) {
   const [level, setLevel] = useState<Level>(defaultLevel);
   const [unitId, setUnitId] = useState('');
@@ -103,9 +108,13 @@ export default function NewObjectiveForm({
     fd.set('bsc_perspective', bsc);
     fd.set('title', title.trim());
     fd.set('description', description);
+    if (inline) fd.set('inline', '1');
     fd.set('krs', JSON.stringify(krs.filter((k) => k.title.trim())));
     startTransition(async () => {
-      try { await create(fd); } catch (e2) {
+      try {
+        await create(fd);
+        onSuccess?.(); // chỉ tới đây khi inline (không redirect) → đóng popup + refresh
+      } catch (e2) {
         const msg = e2 instanceof Error ? e2.message : String(e2);
         if (msg.includes('NEXT_REDIRECT')) return;
         setErr(msg);
@@ -194,9 +203,11 @@ export default function NewObjectiveForm({
       {/* owner_email được gửi qua fd.set('owner_email', owner) trong submit */}
 
       {err && <p className="form-err">{err}</p>}
-      <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
+      <div style={{ marginTop: 16, display: 'flex', gap: 10, justifyContent: inline ? 'flex-end' : 'flex-start' }}>
+        {onCancel
+          ? <button type="button" className="btn ghost" onClick={onCancel} disabled={pending}>Huỷ</button>
+          : <Link className="btn ghost" href="/objectives">Huỷ</Link>}
         <button className="btn" type="submit" disabled={pending}>{pending ? 'Đang tạo…' : 'Tạo OKR'}</button>
-        <Link className="btn ghost" href="/objectives">Huỷ</Link>
       </div>
     </form>
   );

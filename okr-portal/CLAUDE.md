@@ -274,6 +274,11 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   `/my` OKR & việc của tôi · `/admin` + `/admin/{users,org,periods}` (chỉ exec) · `/login` Google.
 - Server Actions ở `src/app/objectives/actions.ts` + `src/app/admin/actions.ts` (đều `requireUser`/
   `requireExec` + kiểm quyền trước khi ghi).
+- **Nút "+ Tạo OKR" ở /objectives = POPUP (CFO 10/08)**: `NewObjectiveModal` bọc `NewObjectiveForm`
+  (prop `inline`/`onSuccess`/`onCancel`); `createObjectiveAction` nhận `inline=1` → revalidate thay vì
+  redirect (đóng popup + refresh tại chỗ). Dữ liệu form gom ở helper CHUNG **`src/lib/objective-form.ts`
+  `buildObjectiveFormProps(user, periodId)`** — DÙNG CHUNG cho popup VÀ trang `/objectives/new` (giữ đồng bộ).
+  → Mọi nút tạo (OKR/OKR con/OKR cá nhân/Công việc/Dự án) đều là popup đóng+refresh tại chỗ.
 - **Tạo OKR con NGAY trong OKR cha (CFO 10/08)**: khối "OKR con (alignment xuống)" ở `/objectives/[id]`
   có nút "+ Tạo OKR con" (góc phải-trên, `NewChildOkrModal` — popup EditModal) hiện **luôn** khi
   `canCreateChild` (trước chỉ có link khi rỗng). Server `createChildObjectiveAction` (KHÔNG redirect →
