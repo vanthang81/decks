@@ -9,6 +9,8 @@ import MeetingFields from '@/components/MeetingFields';
 import ExecutionTabs from '@/components/ExecutionTabs';
 import AddTaskToMeeting from '@/components/AddTaskToMeeting';
 import MinutesEditor from '@/components/MinutesEditor';
+import ActivityLogButton from '@/components/ActivityLogButton';
+import { loadEntityAuditAction } from '@/app/audit/actions';
 import { sanitizeRichHtml } from '@/lib/sanitizeHtml';
 import { requireUser } from '@/lib/current-user';
 import { listUsers } from '@/lib/users';
@@ -139,8 +141,10 @@ export default async function MeetingDetail({ params }: { params: { id: string }
                 </div>
               )}
             </div>
-            {canManage && (
-              <div className="row-actions">
+            <div className="row-actions">
+              <ActivityLogButton entity="meeting" entityId={m.id} load={loadEntityAuditAction} />
+              {canManage && (
+              <>
                 <EditModal title="Sửa cuộc họp" label="Sửa" icon={<NavIcon name="pencil" />} submitLabel="Lưu cuộc họp" action={updateMeetingAction} wide>
                   <MeetingFields users={users} units={units} projects={projectOpts} meetings={meetingOpts} defaultOwner={user.email} meeting={m} participantsText={participantsText} cohostText={cohostText} secretaryText={secretaryText} unitIds={unitIds} projectIds={projectIds} />
                 </EditModal>
@@ -148,8 +152,9 @@ export default async function MeetingDetail({ params }: { params: { id: string }
                   <input type="hidden" name="id" value={m.id} />
                   <ConfirmButton label={<NavIcon name="trash" />} className="icon-btn danger" title="Xoá cuộc họp" message={`Xoá cuộc họp "${m.title}"? Không hoàn tác.`} />
                 </form>
-              </div>
-            )}
+              </>
+              )}
+            </div>
           </div>
         </div>
 

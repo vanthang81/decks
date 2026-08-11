@@ -4,6 +4,8 @@ import SiteHeader from '@/components/SiteHeader';
 import { ProgressBar } from '@/components/ui';
 import ExecutionTabs from '@/components/ExecutionTabs';
 import ProjectEditButton from '@/components/ProjectEditButton';
+import ActivityLogButton from '@/components/ActivityLogButton';
+import { loadEntityAuditAction } from '@/app/audit/actions';
 import AddTaskToProject from '@/components/AddTaskToProject';
 import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
@@ -115,6 +117,9 @@ export default async function ProjectDetail({ params }: { params: { id: string }
               {p.description && <p style={{ marginBottom: 0 }}>{p.description}</p>}
             </div>
             <div style={{ width: 210, textAlign: 'right', flexShrink: 0 }}>
+              <div style={{ marginBottom: 8, display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                <ActivityLogButton entity="project" entityId={p.id} load={loadEntityAuditAction} />
+              </div>
               {canManage && (
                 <div style={{ marginBottom: 8 }}>
                   <ProjectEditButton

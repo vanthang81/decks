@@ -2,6 +2,7 @@
 
 import { parseNum } from '@/lib/num';
 import { revalidatePath } from 'next/cache';
+import { logAudit } from '@/lib/audit';
 import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/current-user';
 import { listUnits } from '@/lib/org';
@@ -48,6 +49,7 @@ export async function createProjectAction(fd: FormData) {
     budget_actual: num(fd, 'budget_actual'),
     created_by: user.email,
   });
+  await logAudit({ actor: user.email, action: 'project.create', entity: 'project', entityId: id, detail: { title: name } });
   redirect(`/projects/${id}`);
 }
 
@@ -93,6 +95,7 @@ export async function updateProjectAction(fd: FormData) {
     budget_planned: num(fd, 'budget_planned'),
     budget_actual: num(fd, 'budget_actual'),
   });
+  await logAudit({ actor: user.email, action: 'project.update', entity: 'project', entityId: id, detail: { title: str(fd, 'name') || p.name } });
   revalidatePath(`/projects/${id}`);
   revalidatePath('/projects');
 }
@@ -123,6 +126,7 @@ export async function deleteProjectAction(fd: FormData) {
   if (!p) return;
   if (!canManageProject(user, p, units, await loadAccess()))
     throw new Error('Bạn không có quyền xoá dự án này.');
+  await logAudit({ actor: user.email, action: 'project.delete', entity: 'project', entityId: id, detail: { title: p.name } });
   await deleteProject(id);
   redirect('/projects');
 }

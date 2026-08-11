@@ -2,6 +2,7 @@
 
 import { parseNum } from '@/lib/num';
 import { setTaskDeps } from '@/lib/deps';
+import { logAudit } from '@/lib/audit';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/current-user';
@@ -150,6 +151,7 @@ export async function createObjectiveAction(fd: FormData) {
     /* krs không hợp lệ → bỏ qua, OKR vẫn tạo */
   }
 
+  await logAudit({ actor: user.email, action: 'objective.create', entity: 'objective', entityId: id, detail: { title } });
   // Gọi từ POPUP (inline=1) → KHÔNG redirect, chỉ revalidate để đóng cửa sổ + làm mới danh sách tại chỗ.
   if (str(fd, 'inline')) {
     revalidatePath('/objectives');
@@ -234,6 +236,7 @@ export async function createChildObjectiveAction(fd: FormData) {
     /* krs không hợp lệ → bỏ qua */
   }
 
+  await logAudit({ actor: user.email, action: 'objective.create', entity: 'objective', entityId: id, detail: { title } });
   revalidatePath(`/objectives/${parentId}`);
   revalidatePath('/objectives');
 }
@@ -320,6 +323,7 @@ export async function editObjectiveAction(fd: FormData) {
     if (!ok) throw new Error('Không thể liên kết: sẽ tạo vòng lặp cascade (OKR cha là hậu duệ của OKR này).');
   }
 
+  await logAudit({ actor: user.email, action: 'objective.update', entity: 'objective', entityId: id, detail: { title } });
   revalidatePath(`/objectives/${id}`);
   revalidatePath('/objectives');
 }
@@ -335,6 +339,7 @@ export async function deleteObjectiveAction(fd: FormData) {
   if (!obj) return;
   if (!canDeleteObjective(user, obj, units, access))
     throw new Error('Chỉ người có quyền Xoá OKR mới thực hiện được.');
+  await logAudit({ actor: user.email, action: 'objective.delete', entity: 'objective', entityId: id, detail: { title: obj.title } });
   await deleteObjective(id);
   redirect('/objectives?deleted=1');
 }
@@ -382,6 +387,25 @@ async function canManageTaskLoose(user: OkrUser, init: Initiative): Promise<bool
   return false;
 }
 
+/** Thực thể "chủ" của 1 công việc để ghi nhật ký (OKR > dự án > cuộc họp). */
+function taskAuditTarget(
+  init: Pick<Initiative, 'objective_id' | 'meeting_id' | 'project_id'>,
+): { entity: string; id: string } | null {
+  if (init.objective_id) return { entity: 'objective', id: init.objective_id };
+  if (init.project_id) return { entity: 'project', id: init.project_id };
+  if (init.meeting_id) return { entity: 'meeting', id: init.meeting_id };
+  return null;
+}
+/** Ghi nhật ký thay đổi 1 công việc dưới thực thể chủ (best-effort). */
+async function auditTask(
+  actor: string, action: string,
+  init: Pick<Initiative, 'objective_id' | 'meeting_id' | 'project_id'>,
+  detail?: Record<string, unknown>,
+) {
+  const t = taskAuditTarget(init);
+  if (t) await logAudit({ actor, action, entity: t.entity, entityId: t.id, detail });
+}
+
 /** Revalidate mọi trang liên quan tới 1 công việc (OKR gốc + cuộc họp + dự án + danh sách việc). */
 function revalidateTask(init: Pick<Initiative, 'objective_id' | 'meeting_id' | 'project_id'>) {
   if (init.objective_id) revalidatePath(`/objectives/${init.objective_id}`);
@@ -392,7 +416,7 @@ function revalidateTask(init: Pick<Initiative, 'objective_id' | 'meeting_id' | '
 
 export async function createKeyResultAction(fd: FormData) {
   const objectiveId = str(fd, 'objective_id');
-  await assertCanManageObjective(objectiveId);
+  const { user } = await assertCanManageObjective(objectiveId);
   const kpiSource = orNull(str(fd, 'kpi_source'));
   const isAuto = isKpiMetric(kpiSource);
   const id = await createKeyResult({
@@ -417,6 +441,7 @@ export async function createKeyResultAction(fd: FormData) {
       /* best-effort: BigQuery lỗi không chặn tạo KR */
     }
   }
+  await logAudit({ actor: user.email, action: 'kr.create', entity: 'objective', entityId: objectiveId, detail: { title: str(fd, 'title') } });
   revalidatePath(`/objectives/${objectiveId}`);
 }
 
@@ -424,7 +449,7 @@ export async function editKeyResultAction(fd: FormData) {
   const krId = str(fd, 'key_result_id');
   const kr = await getKeyResult(krId);
   if (!kr) throw new Error('Không tìm thấy KR.');
-  await assertCanManageObjective(kr.objective_id);
+  const { user } = await assertCanManageObjective(kr.objective_id);
   const title = str(fd, 'title');
   if (!title) throw new Error('Thiếu tiêu đề KR.');
   const kpiSource = orNull(str(fd, 'kpi_source'));
@@ -448,6 +473,7 @@ export async function editKeyResultAction(fd: FormData) {
       /* best-effort */
     }
   }
+  await logAudit({ actor: user.email, action: 'kr.update', entity: 'objective', entityId: kr.objective_id, detail: { title } });
   revalidatePath(`/objectives/${kr.objective_id}`);
 }
 
@@ -478,6 +504,7 @@ export async function checkInAction(fd: FormData) {
     evidence_url: orNull(evidence),
     author_email: user.email,
   });
+  await logAudit({ actor: user.email, action: 'checkin.create', entity: 'objective', entityId: kr.objective_id, detail: { title: kr.title } });
   revalidatePath(`/objectives/${kr.objective_id}`);
 }
 
@@ -541,8 +568,9 @@ export async function deleteKeyResultAction(fd: FormData) {
   const krId = str(fd, 'key_result_id');
   const kr = await getKeyResult(krId);
   if (!kr) return;
-  await assertCanManageObjective(kr.objective_id);
+  const { user } = await assertCanManageObjective(kr.objective_id);
   await deleteKeyResult(krId);
+  await logAudit({ actor: user.email, action: 'kr.delete', entity: 'objective', entityId: kr.objective_id, detail: { title: kr.title } });
   revalidatePath(`/objectives/${kr.objective_id}`);
 }
 
@@ -578,6 +606,7 @@ export async function createInitiativeAction(fd: FormData) {
     budget_source: orNull(str(fd, 'budget_source')),
     created_by: user.email,
   });
+  await logAudit({ actor: user.email, action: 'initiative.create', entity: 'objective', entityId: objectiveId, detail: { title: str(fd, 'title') } });
   revalidatePath(`/objectives/${objectiveId}`);
 }
 
@@ -683,6 +712,7 @@ export async function createTaskAction(fd: FormData) {
     budget_source: null,
     created_by: user.email,
   });
+  await auditTask(user.email, 'initiative.create', { objective_id: objectiveId, project_id: projectId, meeting_id: null }, { title });
   if (objectiveId) revalidatePath(`/objectives/${objectiveId}`);
   if (projectId) revalidatePath(`/projects/${projectId}`);
   revalidatePath('/my');
@@ -718,6 +748,7 @@ export async function updateInitiativeAction(fd: FormData) {
       progress: num(fd, 'progress'),
     });
   }
+  await auditTask(user.email, 'initiative.update', init, { title: init.title });
   revalidatePath(`/objectives/${obj.id}`);
   revalidatePath('/tasks');
 }
@@ -785,6 +816,7 @@ export async function editInitiativeAction(fd: FormData) {
       progress: num(fd, 'progress'),
     });
   }
+  await auditTask(user.email, 'initiative.update', init, { title: str(fd, 'title') || init.title });
   revalidateTask(init);
   // meeting_id / objective_id có thể vừa đổi → revalidate cả mục mới chọn.
   const newMeeting = orNull(str(fd, 'meeting_id'));
@@ -802,6 +834,7 @@ export async function deleteInitiativeAction(fd: FormData) {
   if (!init) return;
   if (!(await canManageTaskLoose(user, init))) throw new Error('Bạn không có quyền xoá việc này.');
   await deleteInitiative(id);
+  await auditTask(user.email, 'initiative.delete', init, { title: init.title });
   revalidateTask(init);
 }
 
@@ -814,5 +847,6 @@ export async function moveInitiativeAction(id: string, status: InitStatus) {
   const perm = canUpdateInitiative(user, init, manage);
   if (!perm.manage && !perm.assignee) throw new Error('Bạn không có quyền cập nhật việc này.');
   await setInitiativeStatus(id, status);
+  await auditTask(user.email, 'initiative.status', init, { title: init.title, status });
   revalidateTask(init);
 }

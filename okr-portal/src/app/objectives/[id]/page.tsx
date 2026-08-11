@@ -11,6 +11,8 @@ import NumberInput from '@/components/NumberInput';
 import CommentThread from '@/components/CommentThread';
 import CheckinRow from '@/components/CheckinRow';
 import ObjectiveEditButton from '@/components/ObjectiveEditButton';
+import ActivityLogButton from '@/components/ActivityLogButton';
+import { loadEntityAuditAction } from '@/app/audit/actions';
 import KeyResultEditButton from '@/components/KeyResultEditButton';
 import NewChildOkrModal from '@/components/NewChildOkrModal';
 import { Sparkline } from '@/components/charts';
@@ -364,8 +366,9 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                 {obj.progress.toFixed(0)}%
               </div>
               <ProgressBar value={obj.progress} lg />
-              {canManage && (
-                <div style={{ marginTop: 10, display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <div style={{ marginTop: 10, display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                <ActivityLogButton entity="objective" entityId={obj.id} load={loadEntityAuditAction} />
+                {canManage && (
                   <ObjectiveEditButton
                     objective={{
                       id: obj.id,
@@ -389,8 +392,8 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                     save={editObjectiveAction}
                     del={deleteObjectiveAction}
                   />
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>

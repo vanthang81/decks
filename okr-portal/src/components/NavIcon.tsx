@@ -39,6 +39,7 @@ const P: Record<string, ReactNode> = {
   check: <><rect x="4" y="4" width="16" height="16" rx="2.5" /><path d="M8 12.2l2.6 2.6L16 9.4" /></>,
   user: <><circle cx="12" cy="8.2" r="3.8" /><path d="M5 19.5c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6" /></>,
   'user-plus': <><circle cx="9.5" cy="8.2" r="3.4" /><path d="M3.5 19.5c0-3.4 2.7-5.4 6-5.4 1.1 0 2.1.2 3 .6" /><path d="M17.5 14.5v5M15 17h5" /></>,
+  history: <><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1M3.5 4.5V9H8" /><path d="M12 7.5V12l3 1.8" /></>,
   book: <><path d="M12 6.5C10.5 5 8 4.5 4 4.5v13c4 0 6.5.5 8 2 1.5-1.5 4-2 8-2v-13c-4 0-6.5.5-8 2z" /><path d="M12 6.5v12" /></>,
   sliders: (
     <>

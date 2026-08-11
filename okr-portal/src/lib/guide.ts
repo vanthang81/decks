@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-11.119';
+export const GUIDE_VERSION = '2026-08-11.120';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -514,6 +514,14 @@ export const FEATURES: Feature[] = [
       'Tạo cuộc họp theo loại (Check-in dự án · Điều hành tuần/tháng · Cấp khối/phòng · IBP…), chọn chủ trì/thư ký, người tham gia và phạm vi xem. LIÊN QUAN NHIỀU KHỐI/PHÒNG & NHIỀU DỰ ÁN: ô "Khối/Phòng liên quan" và "Dự án liên quan" cho chọn NHIỀU mục (gõ để tìm, hiện dạng thẻ) — một cuộc họp có thể gắn nhiều bộ phận & nhiều dự án; quyền xem "Cả đơn vị" áp cho MỌI khối/phòng đã gắn. Sau họp: chủ trì/thư ký ghi Biên bản & Quyết định; các công việc gắn cuộc họp hiện ở mục "Hành động". GẮN VIỆC VÀO CUỘC HỌP: khi sửa một công việc (ở trang OKR hoặc Dự án), tick "🗓 Thuộc cuộc họp" rồi chọn cuộc họp → công việc đó trở thành một "hành động" của cuộc họp và hiện chip 🗓 để truy vết ngược. CHUỖI CUỘC HỌP: mỗi cuộc họp có thể chọn "Cuộc họp trước" để nối chuỗi (vd chuỗi check-in dự án hàng tuần) — trang chi tiết hiện link "← Trước" và "Tiếp →" để đi lại giữa các kỳ họp. BẢO MẬT: chỉ người tham gia / được thêm (hoặc CEO/CFO) mới xem được nội dung; người ngoài có thể gửi "yêu cầu xem" → chủ trì/thư ký duyệt (có thông báo hai chiều). GHI BIÊN BẢN: ô soạn Biên bản & Quyết định TỰ LƯU nháp liên tục khi bạn gõ (chỉ báo "Đã lưu nháp lúc…") — không lo mất nội dung; nút "Lưu & đóng" để chốt và đóng cửa sổ.',
   },
   {
+    key: 'activity-log',
+    title: 'Nhật ký thay đổi theo từng mục',
+    where: 'Nút hình đồng hồ ở góc phải-trên OKR · Dự án · Cuộc họp',
+    help: 'Xem ai đã tạo/sửa/xoá gì và khi nào cho đúng mục đang xem.',
+    detail:
+      'Ở trang chi tiết OKR, Dự án và Cuộc họp có một nút nhỏ hình đồng hồ — bấm để mở "Nhật ký thay đổi" của đúng mục đó: danh sách thao tác theo thời gian (mới nhất trên cùng) kèm tên người thực hiện và thời điểm. Ghi nhận: tạo/sửa/xoá OKR, thêm/sửa/xoá Key Result, check-in tiến độ, thêm/sửa/xoá & đổi trạng thái công việc, sửa cuộc họp và cập nhật biên bản. Nhật ký ghi TỰ ĐỘNG mỗi khi có thao tác (từ 11/08/2026) — phục vụ truy vết trách nhiệm & minh bạch quản trị.',
+  },
+  {
     key: 'user-invite',
     title: 'Mời người dùng qua email + Duyệt người dùng',
     where: 'Nút "Mời người dùng" trên thanh header (mọi trang) · Quản trị → "Lời mời"',
@@ -614,6 +622,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '11/08/2026 (Nhật ký thay đổi theo từng mục)',
+    items: [
+      'Mỗi OKR, Dự án và Cuộc họp nay có nút nhỏ hình đồng hồ ở góc phải-trên → mở popup "Nhật ký thay đổi": ai làm gì, khi nào (tạo/sửa/xoá OKR · thêm/sửa/xoá Key Result · check-in · thêm/sửa/xoá/đổi trạng thái công việc · sửa cuộc họp · cập nhật biên bản…).',
+      'Nhật ký ghi tự động từ nay trở đi khi có thao tác — giúp truy vết trách nhiệm rõ ràng, minh bạch.',
+    ],
+  },
   {
     date: '11/08/2026 (Mời người dùng qua email + quyền Duyệt người dùng)',
     items: [

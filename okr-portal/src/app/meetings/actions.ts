@@ -10,6 +10,7 @@ import {
   type MeetingInput, type MeetingType, type MeetingStatus, type MeetingVisibility, MEETING_TYPES,
 } from '@/lib/meetings';
 import { notifySimple } from '@/lib/notifications';
+import { logAudit } from '@/lib/audit';
 import { createInitiative } from '@/lib/initiatives';
 import { getObjective } from '@/lib/okr';
 import { canEditObjective, loadAccess } from '@/lib/access';
@@ -78,6 +79,7 @@ export async function createMeetingAction(fd: FormData) {
   if (secs.length) input.secretary_email = secs[0];
   const id = await createMeeting(input, user.email);
   await setParticipants(id, buildPeople(fd, input));
+  await logAudit({ actor: user.email, action: 'meeting.create', entity: 'meeting', entityId: id, detail: { title: input.title } });
   revalidatePath('/meetings');
   redirect(`/meetings/${id}`);
 }
@@ -93,7 +95,7 @@ async function guardManage(id: string) {
 
 export async function updateMeetingAction(fd: FormData) {
   const id = str(fd, 'id');
-  await guardManage(id);
+  const { user } = await guardManage(id);
   const input = readInput(fd);
   if (!input.title) throw new Error('Thiếu tiêu đề cuộc họp.');
   const secs = emailList(str(fd, 'secretary_emails'));
@@ -101,17 +103,19 @@ export async function updateMeetingAction(fd: FormData) {
   else if (fd.has('secretary_emails')) input.secretary_email = null; // đã xoá hết thư ký
   await updateMeeting(id, input);
   await setParticipants(id, buildPeople(fd, input));
+  await logAudit({ actor: user.email, action: 'meeting.update', entity: 'meeting', entityId: id, detail: { title: input.title } });
   revalidatePath(`/meetings/${id}`);
   revalidatePath('/meetings');
 }
 
 export async function saveMinutesAction(fd: FormData) {
   const id = str(fd, 'id');
-  await guardManage(id);
+  const { user } = await guardManage(id);
   // LÀM SẠCH HTML rich-text trước khi lưu (chống XSS); rỗng → NULL.
   const minutes = sanitizeRichHtml(str(fd, 'minutes'));
   const decisions = sanitizeRichHtml(str(fd, 'decisions'));
   await updateMinutes(id, isRichEmpty(minutes) ? null : minutes, isRichEmpty(decisions) ? null : decisions);
+  await logAudit({ actor: user.email, action: 'meeting.minutes', entity: 'meeting', entityId: id });
   revalidatePath(`/meetings/${id}`);
 }
 
@@ -130,10 +134,11 @@ export async function autosaveMinutesAction(fd: FormData) {
 
 export async function deleteMeetingAction(fd: FormData) {
   const id = str(fd, 'id');
-  const { user } = await guardManage(id);
+  const { user, m } = await guardManage(id);
   if (!isExec(user.role)) {
     // chỉ chủ trì/thư ký/exec — guardManage đã kiểm; cho xoá.
   }
+  await logAudit({ actor: user.email, action: 'meeting.delete', entity: 'meeting', entityId: id, detail: { title: m.title } });
   await deleteMeeting(id);
   redirect('/meetings?deleted=1');
 }
