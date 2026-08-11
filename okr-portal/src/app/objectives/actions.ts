@@ -3,6 +3,7 @@
 import { parseNum } from '@/lib/num';
 import { setTaskDeps } from '@/lib/deps';
 import { logAudit } from '@/lib/audit';
+import { syncTaskCalendar, removeTaskCalendar } from '@/lib/gcal';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/current-user';
@@ -587,7 +588,7 @@ export async function createInitiativeAction(fd: FormData) {
     if (!CHILD_KIND[parent.kind].includes(kind)) kind = CHILD_KIND[parent.kind][0] ?? 'action';
     keyResultId = parent.key_result_id; // con kế thừa gắn KR của cha
   }
-  await createInitiative({
+  const newInitId = await createInitiative({
     objective_id: objectiveId,
     key_result_id: keyResultId,
     parent_id: parentId,
@@ -607,6 +608,7 @@ export async function createInitiativeAction(fd: FormData) {
     created_by: user.email,
   });
   await logAudit({ actor: user.email, action: 'initiative.create', entity: 'objective', entityId: objectiveId, detail: { title: str(fd, 'title') } });
+  await syncTaskCalendar(newInitId).catch(() => {});
   revalidatePath(`/objectives/${objectiveId}`);
 }
 
@@ -693,7 +695,7 @@ export async function createTaskAction(fd: FormData) {
   if (!objectiveId && !projectId && !ownerEmail)
     throw new Error('Việc phải có người phụ trách, hoặc gắn vào một OKR / dự án.');
 
-  await createInitiative({
+  const newTaskId = await createInitiative({
     objective_id: objectiveId,
     key_result_id: null,
     parent_id: null,
@@ -713,6 +715,7 @@ export async function createTaskAction(fd: FormData) {
     created_by: user.email,
   });
   await auditTask(user.email, 'initiative.create', { objective_id: objectiveId, project_id: projectId, meeting_id: null }, { title });
+  await syncTaskCalendar(newTaskId).catch(() => {});
   if (objectiveId) revalidatePath(`/objectives/${objectiveId}`);
   if (projectId) revalidatePath(`/projects/${projectId}`);
   revalidatePath('/my');
@@ -749,6 +752,7 @@ export async function updateInitiativeAction(fd: FormData) {
     });
   }
   await auditTask(user.email, 'initiative.update', init, { title: init.title });
+  await syncTaskCalendar(id).catch(() => {});
   revalidatePath(`/objectives/${obj.id}`);
   revalidatePath('/tasks');
 }
@@ -817,6 +821,7 @@ export async function editInitiativeAction(fd: FormData) {
     });
   }
   await auditTask(user.email, 'initiative.update', init, { title: str(fd, 'title') || init.title });
+  await syncTaskCalendar(id).catch(() => {});
   revalidateTask(init);
   // meeting_id / objective_id có thể vừa đổi → revalidate cả mục mới chọn.
   const newMeeting = orNull(str(fd, 'meeting_id'));
@@ -833,6 +838,7 @@ export async function deleteInitiativeAction(fd: FormData) {
   const init = await getInitiative(id);
   if (!init) return;
   if (!(await canManageTaskLoose(user, init))) throw new Error('Bạn không có quyền xoá việc này.');
+  await removeTaskCalendar(id).catch(() => {}); // xoá sự kiện lịch trước khi xoá bản ghi
   await deleteInitiative(id);
   await auditTask(user.email, 'initiative.delete', init, { title: init.title });
   revalidateTask(init);
@@ -848,5 +854,6 @@ export async function moveInitiativeAction(id: string, status: InitStatus) {
   if (!perm.manage && !perm.assignee) throw new Error('Bạn không có quyền cập nhật việc này.');
   await setInitiativeStatus(id, status);
   await auditTask(user.email, 'initiative.status', init, { title: init.title, status });
+  await syncTaskCalendar(id).catch(() => {});
   revalidateTask(init);
 }

@@ -11,6 +11,7 @@ import {
 } from '@/lib/meetings';
 import { notifySimple } from '@/lib/notifications';
 import { logAudit } from '@/lib/audit';
+import { syncMeetingCalendar, removeMeetingCalendar } from '@/lib/gcal';
 import { createInitiative } from '@/lib/initiatives';
 import { getObjective } from '@/lib/okr';
 import { canEditObjective, loadAccess } from '@/lib/access';
@@ -80,6 +81,7 @@ export async function createMeetingAction(fd: FormData) {
   const id = await createMeeting(input, user.email);
   await setParticipants(id, buildPeople(fd, input));
   await logAudit({ actor: user.email, action: 'meeting.create', entity: 'meeting', entityId: id, detail: { title: input.title } });
+  await syncMeetingCalendar(id).catch(() => {}); // ghi lịch Google (no-op nếu chưa bật)
   revalidatePath('/meetings');
   redirect(`/meetings/${id}`);
 }
@@ -104,6 +106,7 @@ export async function updateMeetingAction(fd: FormData) {
   await updateMeeting(id, input);
   await setParticipants(id, buildPeople(fd, input));
   await logAudit({ actor: user.email, action: 'meeting.update', entity: 'meeting', entityId: id, detail: { title: input.title } });
+  await syncMeetingCalendar(id).catch(() => {});
   revalidatePath(`/meetings/${id}`);
   revalidatePath('/meetings');
 }
@@ -139,6 +142,7 @@ export async function deleteMeetingAction(fd: FormData) {
     // chỉ chủ trì/thư ký/exec — guardManage đã kiểm; cho xoá.
   }
   await logAudit({ actor: user.email, action: 'meeting.delete', entity: 'meeting', entityId: id, detail: { title: m.title } });
+  await removeMeetingCalendar(id).catch(() => {}); // xoá sự kiện lịch trước khi xoá bản ghi
   await deleteMeeting(id);
   redirect('/meetings?deleted=1');
 }

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-11.120';
+export const GUIDE_VERSION = '2026-08-11.121';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -622,6 +622,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '11/08/2026 (Ghi thẳng Google Calendar — đã code sẵn, chờ bật)',
+    items: [
+      'Đã dựng sẵn khả năng TỰ THÊM cuộc họp & công việc-có-hạn vào Google Calendar của từng người (theo đúng email): tạo/sửa/huỷ đều đồng bộ, cuộc họp tự mời người tham gia. Tính năng đang TẮT để không ảnh hưởng đăng nhập.',
+      'Để bật: quản trị làm theo hướng dẫn "Bật Google Calendar" (bật Calendar API + scope ở Google Console, đặt biến môi trường, người dùng đăng nhập lại cấp quyền). Chi tiết ở tài liệu kỹ thuật docs/GOOGLE-CALENDAR-SETUP.md.',
+    ],
+  },
   {
     date: '11/08/2026 (Nhật ký thay đổi theo từng mục)',
     items: [
