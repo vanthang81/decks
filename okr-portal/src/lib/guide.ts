@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-11.117';
+export const GUIDE_VERSION = '2026-08-11.118';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -511,7 +511,7 @@ export const FEATURES: Feature[] = [
     where: 'Menu "Tổng quan" → "Cuộc họp"',
     help: 'Tổ chức cuộc họp, ghi biên bản, theo dõi hành động; nội dung bảo mật theo người tham gia.',
     detail:
-      'Tạo cuộc họp theo loại (Check-in dự án · Điều hành tuần/tháng · Cấp khối/phòng · IBP…), chọn chủ trì/thư ký, người tham gia và phạm vi xem. LIÊN QUAN NHIỀU KHỐI/PHÒNG & NHIỀU DỰ ÁN: ô "Khối/Phòng liên quan" và "Dự án liên quan" cho chọn NHIỀU mục (gõ để tìm, hiện dạng thẻ) — một cuộc họp có thể gắn nhiều bộ phận & nhiều dự án; quyền xem "Cả đơn vị" áp cho MỌI khối/phòng đã gắn. Sau họp: chủ trì/thư ký ghi Biên bản & Quyết định; các công việc gắn cuộc họp hiện ở mục "Hành động". GẮN VIỆC VÀO CUỘC HỌP: khi sửa một công việc (ở trang OKR hoặc Dự án), tick "🗓 Thuộc cuộc họp" rồi chọn cuộc họp → công việc đó trở thành một "hành động" của cuộc họp và hiện chip 🗓 để truy vết ngược. CHUỖI CUỘC HỌP: mỗi cuộc họp có thể chọn "Cuộc họp trước" để nối chuỗi (vd chuỗi check-in dự án hàng tuần) — trang chi tiết hiện link "← Trước" và "Tiếp →" để đi lại giữa các kỳ họp. BẢO MẬT: chỉ người tham gia / được thêm (hoặc CEO/CFO) mới xem được nội dung; người ngoài có thể gửi "yêu cầu xem" → chủ trì/thư ký duyệt (có thông báo hai chiều).',
+      'Tạo cuộc họp theo loại (Check-in dự án · Điều hành tuần/tháng · Cấp khối/phòng · IBP…), chọn chủ trì/thư ký, người tham gia và phạm vi xem. LIÊN QUAN NHIỀU KHỐI/PHÒNG & NHIỀU DỰ ÁN: ô "Khối/Phòng liên quan" và "Dự án liên quan" cho chọn NHIỀU mục (gõ để tìm, hiện dạng thẻ) — một cuộc họp có thể gắn nhiều bộ phận & nhiều dự án; quyền xem "Cả đơn vị" áp cho MỌI khối/phòng đã gắn. Sau họp: chủ trì/thư ký ghi Biên bản & Quyết định; các công việc gắn cuộc họp hiện ở mục "Hành động". GẮN VIỆC VÀO CUỘC HỌP: khi sửa một công việc (ở trang OKR hoặc Dự án), tick "🗓 Thuộc cuộc họp" rồi chọn cuộc họp → công việc đó trở thành một "hành động" của cuộc họp và hiện chip 🗓 để truy vết ngược. CHUỖI CUỘC HỌP: mỗi cuộc họp có thể chọn "Cuộc họp trước" để nối chuỗi (vd chuỗi check-in dự án hàng tuần) — trang chi tiết hiện link "← Trước" và "Tiếp →" để đi lại giữa các kỳ họp. BẢO MẬT: chỉ người tham gia / được thêm (hoặc CEO/CFO) mới xem được nội dung; người ngoài có thể gửi "yêu cầu xem" → chủ trì/thư ký duyệt (có thông báo hai chiều). GHI BIÊN BẢN: ô soạn Biên bản & Quyết định TỰ LƯU nháp liên tục khi bạn gõ (chỉ báo "Đã lưu nháp lúc…") — không lo mất nội dung; nút "Lưu & đóng" để chốt và đóng cửa sổ.',
   },
   {
     key: 'user-profile',
@@ -606,6 +606,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '11/08/2026 (Biên bản họp: tự lưu nháp liên tục)',
+    items: [
+      'Khi ghi Biên bản & Quyết định của cuộc họp, hệ thống TỰ LƯU nháp liên tục trong lúc bạn gõ (khoảng 1 giây sau khi ngừng) — không lo mất thông tin nếu lỡ đóng tab hay mất mạng. Có chỉ báo trạng thái ngay trên ô soạn: "Sẽ tự lưu…" → "Đang lưu nháp…" → "Đã lưu nháp lúc HH:MM:SS" (đỏ nếu lỗi, sẽ tự thử lại).',
+      'Nút "Lưu & đóng" vẫn dùng để lưu chính thức và đóng cửa sổ như trước.',
+    ],
+  },
   {
     date: '11/08/2026 (Cuộc họp: gắn nhiều Khối/Phòng & nhiều Dự án)',
     items: [

@@ -828,6 +828,21 @@ input.i, select.i, textarea.i {
 textarea.i { min-height: 70px; resize: vertical; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; }
 .row > * { flex: 1; min-width: 120px; }
+
+/* Chỉ báo TỰ LƯU NHÁP (biên bản họp) */
+.autosave { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600;
+  padding: 4px 10px; border-radius: 999px; margin-bottom: 8px; border: 1px solid var(--line);
+  background: var(--card); color: var(--muted); }
+.autosave-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+.autosave-pending { color: #92600a; border-color: #f0d9a8; background: #fdf6e6; }
+.autosave-pending .autosave-dot { background: #d99a1c; }
+.autosave-saving { color: #1d4ed8; border-color: #bcd0f7; background: #eef3fe; }
+.autosave-saving .autosave-dot { background: #2563eb; animation: autosave-pulse 1s ease-in-out infinite; }
+.autosave-saved { color: #15803d; border-color: #bbe3c6; background: #eefaf0; }
+.autosave-saved .autosave-dot { background: #22a34a; }
+.autosave-error { color: #b42318; border-color: #f3c0bb; background: #fdeeec; }
+.autosave-error .autosave-dot { background: #d64535; }
+@keyframes autosave-pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
 /* MOBILE: mỗi ô trong .row full-width (xếp DỌC) — đặt SAU rule gốc để thắng cascade
    (rule stack ở @media 760px phía trên bị rule gốc này ghi đè do source-order). */
 @media (max-width: 760px) { .row > * { min-width: 100%; } }

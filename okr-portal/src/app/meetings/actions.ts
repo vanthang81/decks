@@ -115,6 +115,19 @@ export async function saveMinutesAction(fd: FormData) {
   revalidatePath(`/meetings/${id}`);
 }
 
+/**
+ * TỰ LƯU NHÁP biên bản khi đang gõ (CFO 11/08) — lưu THẲNG vào DB, KHÔNG revalidate
+ * để tránh làm mới trang giữa lúc soạn (mất con trỏ/nội dung đang gõ). Vẫn kiểm quyền +
+ * làm sạch HTML như lưu chính thức. Nút "Lưu biên bản" (saveMinutesAction) đóng popup như cũ.
+ */
+export async function autosaveMinutesAction(fd: FormData) {
+  const id = str(fd, 'id');
+  await guardManage(id);
+  const minutes = sanitizeRichHtml(str(fd, 'minutes'));
+  const decisions = sanitizeRichHtml(str(fd, 'decisions'));
+  await updateMinutes(id, isRichEmpty(minutes) ? null : minutes, isRichEmpty(decisions) ? null : decisions);
+}
+
 export async function deleteMeetingAction(fd: FormData) {
   const id = str(fd, 'id');
   const { user } = await guardManage(id);

@@ -14,11 +14,13 @@ export default function RichEditor({
   defaultValue = '',
   placeholder = 'Nhập nội dung…',
   minHeight = 140,
+  onChange,
 }: {
   name: string;
   defaultValue?: string;
   placeholder?: string;
   minHeight?: number;
+  onChange?: (html: string) => void;   // gọi mỗi lần nội dung đổi (để tự lưu nháp)
 }) {
   const edRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -27,7 +29,9 @@ export default function RichEditor({
     if (inputRef.current && edRef.current) {
       // Nếu chỉ còn <br> rỗng thì coi như trống.
       const html = edRef.current.innerHTML;
-      inputRef.current.value = html === '<br>' ? '' : html;
+      const val = html === '<br>' ? '' : html;
+      inputRef.current.value = val;
+      onChange?.(val);
     }
   };
   const exec = (command: string, value?: string) => {

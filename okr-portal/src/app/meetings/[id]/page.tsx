@@ -8,7 +8,7 @@ import ConfirmButton from '@/components/ConfirmButton';
 import MeetingFields from '@/components/MeetingFields';
 import ExecutionTabs from '@/components/ExecutionTabs';
 import AddTaskToMeeting from '@/components/AddTaskToMeeting';
-import RichEditor from '@/components/RichEditor';
+import MinutesEditor from '@/components/MinutesEditor';
 import { sanitizeRichHtml } from '@/lib/sanitizeHtml';
 import { requireUser } from '@/lib/current-user';
 import { listUsers } from '@/lib/users';
@@ -24,7 +24,7 @@ import {
 import { listInitiativesForMeeting } from '@/lib/initiatives';
 import { fmtDateTime } from '@/lib/format';
 import {
-  updateMeetingAction, saveMinutesAction, deleteMeetingAction,
+  updateMeetingAction, saveMinutesAction, autosaveMinutesAction, deleteMeetingAction,
   requestMeetingAccessAction, decideMeetingAccessAction, createMeetingTaskAction,
 } from '../actions';
 import {
@@ -166,12 +166,9 @@ export default async function MeetingDetail({ params }: { params: { id: string }
           <div className="flexbtw flexbtw-top">
             <h3 style={{ marginTop: 0 }}>Biên bản &amp; Quyết định</h3>
             {canManage && (
-              <EditModal title="Ghi biên bản cuộc họp" label={m.minutes || m.decisions ? 'Sửa biên bản' : 'Ghi biên bản'} icon={<NavIcon name="pencil" />} submitLabel="Lưu biên bản" action={saveMinutesAction} wide>
+              <EditModal title="Ghi biên bản cuộc họp" label={m.minutes || m.decisions ? 'Sửa biên bản' : 'Ghi biên bản'} icon={<NavIcon name="pencil" />} submitLabel="Lưu &amp; đóng" action={saveMinutesAction} wide>
                 <input type="hidden" name="id" value={m.id} />
-                <label className="f">Biên bản (minutes)</label>
-                <RichEditor name="minutes" defaultValue={m.minutes ?? ''} placeholder="Nội dung trao đổi, ý kiến, kết luận…" minHeight={180} />
-                <label className="f" style={{ marginTop: 12 }}>Quyết định chính</label>
-                <RichEditor name="decisions" defaultValue={m.decisions ?? ''} placeholder="Các quyết định đã chốt…" minHeight={120} />
+                <MinutesEditor meetingId={m.id} initialMinutes={m.minutes ?? ''} initialDecisions={m.decisions ?? ''} action={autosaveMinutesAction} />
               </EditModal>
             )}
           </div>
