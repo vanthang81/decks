@@ -1,15 +1,35 @@
 import { query, queryOne } from './db';
+import { getSetting } from './settings';
 
-// GHI THẲNG GOOGLE CALENDAR (app-side). NGỦ hoàn toàn tới khi bật env GOOGLE_CALENDAR_ENABLED=1
-// (đồng thời phải cấu hình scope calendar.events ở Google Console cho CẢ 2 OAuth client + user
-// đăng nhập lại để cấp quyền). Mọi hàm best-effort: lỗi/KHÔNG bật/KHÔNG có token → no-op, KHÔNG
-// làm hỏng thao tác tạo/sửa/xoá việc & cuộc họp. Xem docs/GOOGLE-CALENDAR-SETUP.md.
+// GHI THẲNG GOOGLE CALENDAR (app-side). Ba tầng kiểm soát:
+//  (1) env GOOGLE_CALENDAR_ENABLED=1 — bật SCOPE lúc đăng nhập + master (đổi cần redeploy);
+//  (2) công tắc TOÀN CỤC ở Quản trị — okr_settings key 'calendar_sync' (mặc định true, đổi runtime);
+//  (3) tuỳ chọn MỖI NGƯỜI — okr_users.calendar_enabled (mặc định true).
+// Chỉ ghi khi CẢ BA ON + người đó đã cấp quyền (có token). Mọi hàm best-effort: no-op khi tắt/lỗi.
+// Xem docs/GOOGLE-CALENDAR-SETUP.md.
 
 const API = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 
+export const CALENDAR_SYNC_KEY = 'calendar_sync';
+
 export function isCalendarEnabled(): boolean {
   return process.env.GOOGLE_CALENDAR_ENABLED === '1';
+}
+
+/** Công tắc toàn cục (Quản trị) — mặc định BẬT khi env đã bật. */
+export async function calendarGloballyOn(): Promise<boolean> {
+  if (!isCalendarEnabled()) return false;
+  return getSetting<boolean>(CALENDAR_SYNC_KEY, true).catch(() => true);
+}
+
+/** Có được ghi lịch của 1 người không = env + toàn cục + tuỳ chọn cá nhân (mặc định bật). */
+async function userCalendarOn(email: string | null): Promise<boolean> {
+  if (!email || !(await calendarGloballyOn())) return false;
+  const r = await queryOne<{ calendar_enabled: boolean }>(
+    'SELECT calendar_enabled FROM okr_users WHERE lower(email)=lower($1)', [email],
+  ).catch(() => null);
+  return r ? r.calendar_enabled !== false : false; // email ngoài hệ thống → không ghi lịch của họ
 }
 
 type TokenRow = { access_token: string | null; refresh_token: string | null; expiry: string | null; scope: string | null };
@@ -140,8 +160,8 @@ export async function syncMeetingCalendar(meetingId: string): Promise<void> {
       `SELECT owner_email, title, agenda, location, meeting_at::text AS meeting_at, status, gcal_event_id
          FROM okr_meetings WHERE id=$1`, [meetingId]);
     if (!m || !m.owner_email || !m.meeting_at) return;
-    // Cuộc họp đã huỷ → xoá sự kiện nếu có.
-    if (m.status === 'cancelled') {
+    // Đã huỷ HOẶC chủ trì tắt đồng bộ lịch (toàn cục/cá nhân) → xoá sự kiện nếu có, rồi thôi.
+    if (m.status === 'cancelled' || !(await userCalendarOn(m.owner_email))) {
       if (m.gcal_event_id) { await deleteEvent(m.owner_email, m.gcal_event_id); await query('UPDATE okr_meetings SET gcal_event_id=NULL WHERE id=$1', [meetingId]); }
       return;
     }
@@ -175,8 +195,8 @@ export async function syncTaskCalendar(initId: string): Promise<void> {
          FROM okr_initiatives WHERE id=$1`, [initId]);
     if (!t || !t.owner_email) return;
     const day = t.due_on || t.start_on;
-    // Không có mốc thời gian, hoặc đã xong/huỷ → xoá sự kiện nếu có.
-    if (!day || t.status === 'done' || t.status === 'cancelled') {
+    // Không có mốc / đã xong/huỷ / người phụ trách tắt đồng bộ → xoá sự kiện nếu có, rồi thôi.
+    if (!day || t.status === 'done' || t.status === 'cancelled' || !(await userCalendarOn(t.owner_email))) {
       if (t.gcal_event_id) { await deleteEvent(t.owner_email, t.gcal_event_id); await query('UPDATE okr_initiatives SET gcal_event_id=NULL WHERE id=$1', [initId]); }
       return;
     }

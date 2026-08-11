@@ -11,6 +11,7 @@ export type OkrUser = {
   notify_email: boolean;
   avatar_url: string | null;
   perm_group: string | null;
+  calendar_enabled: boolean;
 };
 
 /** Ghi nhận ĐĂNG NHẬP (gọi ở callback signIn). Best-effort. */
@@ -44,7 +45,7 @@ export async function getUser(email: string): Promise<OkrUser | null> {
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < TTL) return hit.user;
   const user = await queryOne<OkrUser>(
-    `SELECT email, display_name, title, role, unit_id, is_active, notify_email, avatar_url, perm_group
+    `SELECT email, display_name, title, role, unit_id, is_active, notify_email, avatar_url, perm_group, calendar_enabled
        FROM okr_users WHERE lower(email) = lower($1)`,
     [email],
   );
@@ -57,7 +58,7 @@ export async function listUsers(): Promise<
 > {
   return query(
     `SELECT u.email, u.display_name, u.title, u.role, u.unit_id, u.is_active, u.notify_email, u.avatar_url,
-            u.perm_group, n.name AS unit_name, n.code AS unit_code
+            u.perm_group, u.calendar_enabled, n.name AS unit_name, n.code AS unit_code
        FROM okr_users u
        LEFT JOIN okr_units n ON n.id = u.unit_id
       ORDER BY CASE u.role WHEN 'exec' THEN 0 WHEN 'ceo' THEN 0 WHEN 'cfo' THEN 0 WHEN 'division_lead' THEN 1
@@ -110,6 +111,12 @@ export async function setUserActive(email: string, active: boolean): Promise<voi
     email,
     active,
   ]);
+  invalidateUser(email);
+}
+
+/** Tuỳ chọn cá nhân: bật/tắt tự thêm cuộc họp & việc vào Google Calendar của mình. */
+export async function setUserCalendarPref(email: string, on: boolean): Promise<void> {
+  await query('UPDATE okr_users SET calendar_enabled=$2, updated_at=now() WHERE lower(email)=lower($1)', [email, on]);
   invalidateUser(email);
 }
 

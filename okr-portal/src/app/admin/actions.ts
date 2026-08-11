@@ -17,6 +17,7 @@ import { createPeriod, setCurrentPeriod, setPeriodStatus } from '@/lib/periods';
 import { syncAllKpi } from '@/lib/kpi';
 import { redirect } from 'next/navigation';
 import { setSetting } from '@/lib/settings';
+import { CALENDAR_SYNC_KEY } from '@/lib/gcal';
 import { REMINDER_KEY, runCheckinReminders, type ReminderConfig } from '@/lib/reminders';
 
 async function requireExec() {
@@ -247,4 +248,13 @@ export async function sendDigestAction() {
     msg = `err:${String(e).slice(0, 60)}`;
   }
   redirect(`/admin?digest=${encodeURIComponent(msg)}`);
+}
+
+// Công tắc TOÀN CỤC ghi Google Calendar (bật/tắt runtime, không cần redeploy).
+export async function setCalendarSyncAction(fd: FormData) {
+  await requireExec();
+  const on = fd.get('calendar_sync') === 'on' || fd.get('calendar_sync') === '1';
+  await setSetting(CALENDAR_SYNC_KEY, on);
+  revalidatePath('/admin');
+  revalidatePath('/settings');
 }

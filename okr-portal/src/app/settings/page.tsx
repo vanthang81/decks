@@ -2,18 +2,20 @@ import Link from 'next/link';
 import SiteHeader from '@/components/SiteHeader';
 import HelpTip from '@/components/HelpTip';
 import NotifSettingsForm from '@/components/NotifSettingsForm';
+import ToastForm from '@/components/ToastForm';
 import { requireUser } from '@/lib/current-user';
 import { getNotifSettings, NOTIF_TYPE_META } from '@/lib/notifications';
+import { calendarGloballyOn } from '@/lib/gcal';
 import { listUnits } from '@/lib/org';
 import { ROLE_LABEL, type Role } from '@/lib/rbac';
-import { saveNotifSettingsAction } from './actions';
+import { saveNotifSettingsAction, saveCalendarPrefAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Cài đặt cá nhân · BTMH OKR' };
 
 export default async function SettingsPage() {
   const user = await requireUser();
-  const [settings, units] = await Promise.all([getNotifSettings(user.email), listUnits()]);
+  const [settings, units, calOn] = await Promise.all([getNotifSettings(user.email), listUnits(), calendarGloballyOn()]);
   const unitName = user.unit_id ? units.find((u) => u.id === user.unit_id)?.name ?? null : null;
   const roleLabel = ROLE_LABEL[user.role as Role] ?? user.role;
 
@@ -61,6 +63,24 @@ export default async function SettingsPage() {
             action={saveNotifSettingsAction}
           />
         </div>
+
+        {/* Google Calendar — chỉ hiện khi tính năng đã được bật (máy chủ + quản trị) */}
+        {calOn && (
+          <div className="card">
+            <h3 style={{ marginTop: 0 }}>Google Calendar</h3>
+            <p className="subtitle" style={{ marginTop: 0 }}>
+              Khi bật, cuộc họp bạn chủ trì và công việc có hạn được giao cho bạn sẽ tự thêm vào Google
+              Calendar của bạn (theo email đăng nhập). Lần đầu cần đăng nhập lại để cấp quyền lịch.
+            </p>
+            <ToastForm action={saveCalendarPrefAction} done="Đã lưu tuỳ chọn lịch">
+              <label className="chk" style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <input type="checkbox" name="calendar_enabled" defaultChecked={user.calendar_enabled !== false} />
+                <span>Tự thêm cuộc họp &amp; công việc vào Google Calendar của tôi</span>
+              </label>
+              <div style={{ marginTop: 12 }}><button className="btn" type="submit">Lưu</button></div>
+            </ToastForm>
+          </div>
+        )}
       </div>
     </>
   );
