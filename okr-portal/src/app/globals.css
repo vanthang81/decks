@@ -829,6 +829,13 @@ textarea.i { min-height: 70px; resize: vertical; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; }
 .row > * { flex: 1; min-width: 120px; }
 
+/* Nút "Mời người dùng" trên thanh header (icon vàng trên nền maroon) */
+.hdr-invite .icon-btn { background: transparent; border: 1px solid rgba(255,255,255,.28); color: var(--accent); }
+.hdr-invite .icon-btn:hover { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.5); }
+.hdr-invite .icon-btn .nav-ic { color: var(--accent); }
+.mobile-invite { margin: 8px 0; }
+.mobile-invite .btn { width: 100%; justify-content: center; }
+
 /* Chỉ báo TỰ LƯU NHÁP (biên bản họp) */
 .autosave { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600;
   padding: 4px 10px; border-radius: 999px; margin-bottom: 8px; border: 1px solid var(--line);

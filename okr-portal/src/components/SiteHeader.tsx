@@ -5,9 +5,12 @@ import { LOGO_WORDMARK } from '@/lib/brand';
 import { ROLE_LABEL, isExec, type Role } from '@/lib/rbac';
 import NavIcon from '@/components/NavIcon';
 import NotifBell from '@/components/NotifBell';
+import InviteUserButton from '@/components/InviteUserButton';
 import { unreadCount } from '@/lib/notifications';
 import { getUser } from '@/lib/users';
-import { loadAccess, canManageSystem } from '@/lib/access';
+import { loadAccess, canManageSystem, canApproveUsers } from '@/lib/access';
+import { countPendingInvites } from '@/lib/invites';
+import { listUnits } from '@/lib/org';
 
 export default async function SiteHeader({ active }: { active?: string }) {
   const session = await auth();
@@ -20,6 +23,12 @@ export default async function SiteHeader({ active }: { active?: string }) {
   const access = await loadAccess();
   const showAdmin = me ? canManageSystem(me, access) : false;
   const showBudget = me ? isExec(me.role) : false;
+  const showInvites = me ? canApproveUsers(me, access) : false;
+  const pendingInvites = showInvites ? await countPendingInvites().catch(() => 0) : 0;
+  // Đơn vị cho ô "Mời người dùng" (hiện ở mọi trang). Chỉ nạp khi đã đăng nhập.
+  const unitOpts = email
+    ? (await listUnits().catch(() => [])).map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort }))
+    : [];
 
   // Sắp xếp theo dòng chảy: Tổng quan → Chiến lược & Đo lường → Thực thi → Cá nhân → Quản trị.
   // icon = biểu tượng nhận diện nhanh (hiện ở cả dropdown desktop lẫn menu mobile).
@@ -38,6 +47,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
     { href: '/budget', label: 'Ngân sách', key: 'budget', group: 'exec', icon: 'wallet', show: showBudget },
     { href: '/my', label: 'Của tôi', key: 'my', group: 'personal', icon: 'user', show: true },
     { href: '/guide', label: 'Hướng dẫn', key: 'guide', group: 'personal', icon: 'book', show: true },
+    { href: '/admin/invites', label: pendingInvites > 0 ? `Lời mời (${pendingInvites})` : 'Lời mời', key: 'invites', group: 'admin', icon: 'user-plus', show: showInvites },
     { href: '/admin', label: 'Quản trị', key: 'admin', group: 'admin', icon: 'sliders', show: showAdmin },
   ].filter((l) => l.show);
 
@@ -111,6 +121,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
           })}
         </nav>
         <div className="spacer" />
+        {email && <span className="hdr-invite" title="Mời người dùng qua email"><InviteUserButton units={unitOpts} compact /></span>}
         {email && <span data-tour="tour-bell"><NotifBell initialCount={notifCount} /></span>}
         <div className="userchip userchip-desktop">
           {session?.user?.image && (
@@ -139,6 +150,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
           </summary>
           <div className="mobile-panel">
             <Link href="/settings" className="mobile-user mobile-user-link">⚙ {who} · Cài đặt</Link>
+            {email && <div className="mobile-invite"><InviteUserButton units={unitOpts} /></div>}
             <nav className="mobile-nav">
               {links.map((l, i) => (
                 <Fragment key={l.key}>

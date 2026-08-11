@@ -70,6 +70,9 @@ export function canManageSystem(user: OkrUser, access: Access): boolean {
 export function canAssignPerms(user: OkrUser, access: Access): boolean {
   return hasCap(user, 'system.permissions', access);
 }
+export function canApproveUsers(user: OkrUser, access: Access): boolean {
+  return hasCap(user, 'user.approve', access);
+}
 export function canImportData(user: OkrUser, access: Access): boolean {
   return hasCap(user, 'data.import', access);
 }

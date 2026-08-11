@@ -27,6 +27,10 @@ const TYPE_LABEL: Record<string, string> = {
   reply: 'đã trả lời bạn',
   comment_mine: 'đã bình luận ở mục bạn phụ trách',
   assignment: 'đã giao việc cho bạn',
+  user_invite_pending: '', // preview đã đủ nghĩa ("… đề xuất thêm người dùng …")
+  user_invite_decided: '',
+  meeting_access_request: '',
+  meeting_access_decided: '',
 };
 
 export default function NotifList() {

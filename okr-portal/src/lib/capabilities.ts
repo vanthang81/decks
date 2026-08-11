@@ -8,6 +8,7 @@
 export type CapKey =
   | 'system.admin'
   | 'system.permissions'
+  | 'user.approve'
   | 'scope.all'
   | 'okr.create'
   | 'okr.edit'
@@ -31,6 +32,7 @@ export const CAP_CATEGORIES: { key: string; label: string }[] = [
 export const CAPABILITIES: Capability[] = [
   { key: 'system.admin', cat: 'system', label: 'Quản trị hệ thống', desc: 'Quản lý người dùng, cây tổ chức, kỳ OKR, cấu hình nhắc nhở.' },
   { key: 'system.permissions', cat: 'system', label: 'Phân quyền người dùng', desc: 'Gán Nhóm quyền cho người khác và chỉnh Nhóm quyền.' },
+  { key: 'user.approve', cat: 'system', label: 'Duyệt người dùng', desc: 'Duyệt/từ chối lời mời thêm người dùng mới (qua email) do người khác đề xuất.' },
   { key: 'scope.all', cat: 'system', label: 'Toàn phạm vi (mọi đơn vị)', desc: 'Bỏ qua giới hạn phạm vi tổ chức — thao tác được MỌI OKR/đơn vị VÀ xem TẤT CẢ công việc ở trang "Công việc" (không có quyền này chỉ thấy việc liên quan tới mình + phạm vi đơn vị mình quản).' },
   { key: 'okr.create', cat: 'okr', label: 'Tạo OKR', desc: 'Tạo Objective mới (trong phạm vi, trừ khi có "Toàn phạm vi").' },
   { key: 'okr.edit', cat: 'okr', label: 'Sửa OKR / KR / check-in', desc: 'Sửa Objective, Key Result, ghi & sửa check-in, quản việc thực thi; duyệt bình luận.' },
@@ -58,14 +60,14 @@ export const DEFAULT_GROUPS: PermGroup[] = [
     label: 'Quản trị hệ thống',
     icon: '🛡️',
     desc: 'Toàn quyền: quản trị hệ thống + phân quyền + mọi thao tác OKR.',
-    caps: ['system.admin', 'system.permissions', 'scope.all', 'okr.create', 'okr.edit', 'okr.delete', 'project.manage', 'data.import', 'kpi.sync', 'kpi.manage', 'kpi.input'],
+    caps: ['system.admin', 'system.permissions', 'user.approve', 'scope.all', 'okr.create', 'okr.edit', 'okr.delete', 'project.manage', 'data.import', 'kpi.sync', 'kpi.manage', 'kpi.input'],
   },
   {
     key: 'okr_admin',
     label: 'Quản trị OKR',
     icon: '⭐',
     desc: 'Sửa/Xoá/Tạo MỌI OKR (toàn phạm vi) + quản dự án, KPI. Không quản trị hệ thống.',
-    caps: ['scope.all', 'okr.create', 'okr.edit', 'okr.delete', 'project.manage', 'kpi.sync', 'kpi.manage', 'kpi.input'],
+    caps: ['user.approve', 'scope.all', 'okr.create', 'okr.edit', 'okr.delete', 'project.manage', 'kpi.sync', 'kpi.manage', 'kpi.input'],
   },
   {
     key: 'manager',
