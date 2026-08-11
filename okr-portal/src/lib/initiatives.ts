@@ -1,6 +1,7 @@
 import { query, queryOne } from './db';
 import type { OkrUser } from './users';
 import { nextInitCode } from './codes';
+import { notifyTaskAssigned } from './notifications';
 
 export type InitStatus = 'todo' | 'in_progress' | 'blocked' | 'done' | 'canceled';
 export type Priority = 'low' | 'medium' | 'high';
@@ -302,6 +303,19 @@ export async function createInitiative(input: {
     ],
   );
   if (input.parent_id) await recomputeInitiativeUp(input.parent_id);
+  // Thông báo cho người được giao (nếu là người khác) — bắt MỌI luồng tạo việc (OKR/dự án/cuộc họp/cá nhân).
+  await notifyTaskAssigned(
+    {
+      id: row!.id,
+      title: input.title,
+      owner_email: input.owner_email,
+      due_on: input.due_on,
+      objective_id: input.objective_id,
+      project_id: input.project_id,
+      meeting_id: input.meeting_id ?? null,
+    },
+    input.created_by,
+  );
   return row!.id;
 }
 

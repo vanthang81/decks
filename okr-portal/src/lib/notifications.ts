@@ -160,3 +160,67 @@ export async function notify(input: {
     await sendMail({ to: u.email, subject, html }); // best-effort, tự nuốt lỗi
   }
 }
+
+/**
+ * Thông báo "ĐƯỢC GIAO VIỆC" cho người phụ trách khi một công việc được TẠO hoặc GIAO cho họ
+ * bởi NGƯỜI KHÁC (không tự nhắc mình). Best-effort — lỗi KHÔNG làm hỏng thao tác tạo/sửa việc.
+ * Ngữ cảnh (link + nhãn) suy theo nơi việc thuộc về: OKR → /objectives · Dự án → /projects ·
+ * Cuộc họp → /meetings · việc cá nhân → /my. Tôn trọng tuỳ chọn nhận thông báo/email của người nhận.
+ */
+export async function notifyTaskAssigned(
+  task: {
+    id: string;
+    title: string;
+    owner_email: string | null;
+    due_on?: string | null;
+    objective_id: string | null;
+    project_id: string | null;
+    meeting_id?: string | null;
+  },
+  actorEmail: string,
+): Promise<void> {
+  const owner = (task.owner_email ?? '').trim();
+  if (!owner || owner.toLowerCase() === actorEmail.toLowerCase()) return; // không có người nhận / tự giao cho mình
+  try {
+    let link = '/my';
+    let label = 'việc cá nhân';
+    if (task.objective_id) {
+      const o = await queryOne<{ title: string; code: string | null }>(
+        'SELECT title, code FROM okr_objectives WHERE id=$1',
+        [task.objective_id],
+      );
+      link = `/objectives/${task.objective_id}`;
+      label = o ? `OKR ${o.code ? o.code + ' · ' : ''}${o.title}` : 'OKR';
+    } else if (task.project_id) {
+      const p = await queryOne<{ name: string; code: string | null }>(
+        'SELECT name, code FROM okr_projects WHERE id=$1',
+        [task.project_id],
+      );
+      link = `/projects/${task.project_id}`;
+      label = p ? `Dự án ${p.code ? p.code + ' · ' : ''}${p.name}` : 'Dự án';
+    } else if (task.meeting_id) {
+      const m = await queryOne<{ title: string }>('SELECT title FROM okr_meetings WHERE id=$1', [task.meeting_id]);
+      link = `/meetings/${task.meeting_id}`;
+      label = m ? `Cuộc họp: ${m.title}` : 'Cuộc họp';
+    }
+    const actor = await queryOne<{ display_name: string | null }>(
+      'SELECT display_name FROM okr_users WHERE email=$1',
+      [actorEmail],
+    );
+    const due = task.due_on ? ` · hạn ${task.due_on.split('-').reverse().join('/')}` : '';
+    await notify({
+      recipients: [owner],
+      type: 'assignment',
+      actorEmail,
+      actorName: actor?.display_name ?? null,
+      entityType: 'initiative',
+      entityId: task.id,
+      commentId: null,
+      preview: `${task.title}${due}`,
+      link,
+      entityLabel: label,
+    });
+  } catch (e) {
+    console.error('[notify] assignment failed', e);
+  }
+}

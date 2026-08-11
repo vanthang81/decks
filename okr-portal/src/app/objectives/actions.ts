@@ -57,6 +57,7 @@ import { getProject, canManageProject } from '@/lib/projects';
 import type { Initiative } from '@/lib/initiatives';
 import type { OkrUser } from '@/lib/users';
 import { canManageObjectiveId, withinEditWindow } from '@/lib/moderation';
+import { notifyTaskAssigned } from '@/lib/notifications';
 import {
   loadAccess,
   canEditObjective,
@@ -767,6 +768,12 @@ export async function editInitiativeAction(fd: FormData) {
     if (fd.has('depends_on')) {
       const preds = str(fd, 'depends_on').split(',').map((x) => x.trim()).filter(Boolean);
       await setTaskDeps(id, preds);
+    }
+    // GIAO LẠI cho người khác → thông báo cho người MỚI được giao (chỉ khi đổi sang người khác).
+    const newOwner = orNull(str(fd, 'owner_email'));
+    if (newOwner && newOwner.toLowerCase() !== (init.owner_email ?? '').toLowerCase()) {
+      const fresh = await getInitiative(id);
+      if (fresh) await notifyTaskAssigned(fresh, user.email);
     }
   } else {
     await setInitiativeProgress(id, {

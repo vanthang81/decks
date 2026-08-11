@@ -22,7 +22,12 @@ function fmtTime(iso: string): string {
     day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
   }).format(d);
 }
-const TYPE_LABEL: Record<string, string> = { mention: 'đã nhắc bạn', reply: 'đã trả lời bạn' };
+const TYPE_LABEL: Record<string, string> = {
+  mention: 'đã nhắc bạn',
+  reply: 'đã trả lời bạn',
+  comment_mine: 'đã bình luận ở mục bạn phụ trách',
+  assignment: 'đã giao việc cho bạn',
+};
 
 export default function NotifList() {
   const router = useRouter();

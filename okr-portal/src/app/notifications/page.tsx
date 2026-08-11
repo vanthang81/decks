@@ -14,7 +14,7 @@ export default async function NotificationsPage() {
       <div className="wrap">
         <div className="pagetitle">Thông báo<HelpTip k="notifications" /></div>
         <p className="subtitle">
-          Khi ai đó nhắc (@) bạn hoặc trả lời bình luận của bạn, thông báo hiện ở đây và (tuỳ chọn) gửi email.
+          Khi bạn được giao việc mới, được nhắc (@), hoặc có người trả lời/bình luận ở mục bạn phụ trách — thông báo hiện ở đây và (tuỳ chọn) gửi email.
         </p>
         <div className="card">
           <NotifList />
