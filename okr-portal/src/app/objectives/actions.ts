@@ -289,6 +289,9 @@ export async function editObjectiveAction(fd: FormData) {
   if ((level !== obj.level || unitId !== obj.unit_id) && !canCreateObjective(user, level, unitId, units, access))
     throw new Error('Bạn không có quyền đặt OKR ở cấp/đơn vị này.');
 
+  // Trọng số OKR (báo cáo tổng theo trọng số). Gửi rỗng/≤0 → giữ nguyên (updateObjective COALESCE).
+  const wRaw = str(fd, 'weight');
+  const weight = wRaw === '' ? undefined : Math.max(0, parseNum(wRaw, obj.weight ?? 1));
   await updateObjective(id, {
     title,
     description: orNull(str(fd, 'description')),
@@ -297,6 +300,7 @@ export async function editObjectiveAction(fd: FormData) {
     owner_email: isStaff ? obj.owner_email : orNull(str(fd, 'owner_email')),
     unit_id: unitId,
     level,
+    weight,
   });
 
   // Liên kết lên OKR cha (alignment). Kiểm cấp cha hợp lệ (cao hơn) + chống vòng lặp (setObjectiveParent).

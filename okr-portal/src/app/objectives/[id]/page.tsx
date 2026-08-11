@@ -376,6 +376,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                       owner_email: obj.owner_email,
                       unit_id: obj.unit_id,
                       level: obj.level,
+                      weight: obj.weight,
                       parent_id: obj.parent_id,
                     }}
                     users={personOpts.map((p) => ({ email: p.email, name: p.name }))}

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-11.115';
+export const GUIDE_VERSION = '2026-08-11.116';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -164,6 +164,15 @@ export type Feature = {
 };
 
 export const FEATURES: Feature[] = [
+  {
+    key: 'report-levels',
+    title: 'Báo cáo theo cấp (kết quả tổng có trọng số)',
+    where: 'Menu "Tổng quan" → "Báo cáo theo cấp"',
+    help: 'Xem kết quả OKR theo Công ty → Khối → Phòng → Cá nhân; mỗi nhóm có tổng tính THEO TRỌNG SỐ từng OKR.',
+    detail: [
+      'Trang "Báo cáo theo cấp" tổng hợp OKR của một kỳ theo bốn cấp: Công ty, Khối, Phòng ban, Cá nhân. Mỗi nhóm hiện KẾT QUẢ TỔNG = bình quân CÓ TRỌNG SỐ tiến độ các OKR trong nhóm (Σ tiến độ×trọng số ÷ Σ trọng số). Đặt trọng số cho từng OKR ở ô "Trọng số" trong cửa sổ Sửa OKR (mặc định 1 = mọi OKR cân nhau). Mở từng nhóm để xem danh sách OKR cấu thành, bấm vào là tới chi tiết OKR (trace-back).',
+    ],
+  },
   {
     key: 'okr-cascade',
     title: 'OKR & liên kết (cascade)',
@@ -597,6 +606,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '11/08/2026 (Báo cáo theo cấp — tổng có trọng số)',
+    items: [
+      'Thêm trang "Báo cáo theo cấp" (menu Tổng quan): xem kết quả OKR theo Công ty → Khối → Phòng → Cá nhân, mỗi nhóm có KẾT QUẢ TỔNG tính theo TRỌNG SỐ từng OKR. Đặt trọng số ở ô "Trọng số" trong cửa sổ Sửa OKR (mặc định 1).',
+    ],
+  },
   {
     date: '11/08/2026 (Sửa "Tiến độ theo Khối" ở Tổng quan)',
     items: [

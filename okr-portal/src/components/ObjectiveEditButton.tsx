@@ -16,6 +16,7 @@ export type ObjData = {
   owner_email: string | null;
   unit_id: string | null;
   level: string;
+  weight: number;
   parent_id: string | null;
 };
 type PersonOpt = { email: string; name: string };
@@ -172,6 +173,12 @@ export default function ObjectiveEditButton({
                       <option key={k} value={k}>{v}</option>
                     ))}
                   </select>
+                </div>
+                <div>
+                  <label className="f">Trọng số <span className="muted" style={{ fontWeight: 400 }}>· báo cáo</span></label>
+                  <input className="i" name="weight" type="number" min="0" step="0.1"
+                    defaultValue={String(objective.weight ?? 1)}
+                    title="Trọng số của OKR khi tính kết quả tổng của nhóm (Công ty/Khối/Phòng/Cá nhân). Mặc định 1." />
                 </div>
                 <div>
                   <label className="f">Trạng thái</label>
