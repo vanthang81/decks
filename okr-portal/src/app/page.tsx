@@ -11,6 +11,7 @@ import {
   BSC_PERSPECTIVE_LABEL,
   BSC_PERSPECTIVE_ICON,
 } from '@/lib/okr';
+import { listUnits } from '@/lib/org';
 import { periodInsights } from '@/lib/insights';
 import { integrityIssues } from '@/lib/integrity';
 import { reviewData } from '@/lib/review';
@@ -52,21 +53,27 @@ export default async function Dashboard({ searchParams }: { searchParams: { tour
     const now = Date.now();
     elapsed = e > s ? Math.max(0, Math.min(100, Math.round(((now - s) / (e - s)) * 100))) : 0;
   }
-  // Gom OKR cấp khối theo ĐƠN VỊ (1 khối có thể có nhiều OKR) → 1 thanh/khối, tiến độ bình quân.
-  const byUnit = new Map<
-    string,
-    { name: string; code: string | null; sum: number; n: number }
-  >();
+  // "Tiến độ theo Khối" — liệt kê MỌI khối từ cây tổ chức (kể cả khối CHƯA có OKR = 0%), tiến độ =
+  // bình quân OKR cấp khối GẮN ĐÚNG đơn vị đó. KHÔNG bịa "khối" từ tiêu đề OKR (trước đây OKR khối chưa
+  // gán đơn vị bị hiện tên OKR như một khối). OKR khối thiếu đơn vị được cảnh báo riêng ở trang Toàn vẹn.
+  const allUnits = await listUnits();
+  const activeDivisions = allUnits
+    .filter((u) => u.type === 'division' && u.is_active)
+    .sort((a, b) => a.sort - b.sort || a.name.localeCompare(b.name));
+  const divProg = new Map<string, { sum: number; n: number }>();
   for (const o of divisions) {
-    const key = o.unit_code ?? o.unit_id ?? o.id;
-    const cur = byUnit.get(key) ?? { name: o.unit_name ?? o.title, code: o.unit_code, sum: 0, n: 0 };
+    if (!o.unit_id) continue; // OKR khối chưa gán đơn vị → không tạo "khối ảo"
+    const cur = divProg.get(o.unit_id) ?? { sum: 0, n: 0 };
     cur.sum += o.progress;
     cur.n += 1;
-    byUnit.set(key, cur);
+    divProg.set(o.unit_id, cur);
   }
-  const divBars = [...byUnit.values()]
-    .map((u) => ({ name: u.name, code: u.code, progress: u.sum / u.n, n: u.n }))
-    .sort((a, b) => b.progress - a.progress);
+  const divBars = activeDivisions
+    .map((u) => {
+      const p = divProg.get(u.id);
+      return { name: u.name, code: u.code, progress: p ? p.sum / p.n : 0, n: p?.n ?? 0 };
+    })
+    .sort((a, b) => b.progress - a.progress || a.name.localeCompare(b.name));
 
   // Tiến độ theo VIỄN CẢNH BSC — bình quân tiến độ OKR gắn mỗi viễn cảnh (chỉ hiện viễn cảnh có OKR).
   const bscBars = BSC_PERSPECTIVES.map((b) => {

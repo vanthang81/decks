@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-11.114';
+export const GUIDE_VERSION = '2026-08-11.115';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -597,6 +597,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '11/08/2026 (Sửa "Tiến độ theo Khối" ở Tổng quan)',
+    items: [
+      'Bảng "Tiến độ theo Khối" nay liệt kê ĐỦ mọi khối theo cây tổ chức (khối chưa có OKR hiện 0%), và LUÔN hiện tên khối — không còn hiện nhầm tên một OKR thành "khối" (do OKR cấp khối chưa gán đơn vị). OKR cấp khối thiếu đơn vị được nhắc riêng ở trang Toàn vẹn dữ liệu.',
+    ],
+  },
   {
     date: '11/08/2026 (Xem & xuất OKR theo kỳ con)',
     items: [
