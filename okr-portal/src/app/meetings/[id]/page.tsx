@@ -95,6 +95,8 @@ export default async function MeetingDetail({ params }: { params: { id: string }
   const cohostNames = participants.filter((p) => p.role === 'host' && p.email.toLowerCase() !== ownerLc).map((p) => p.name || p.email);
   const secretaryNames = participants.filter((p) => p.role === 'secretary').map((p) => p.name || p.email);
   const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url, unit_id: u.unit_id, title: personTitle(u) }));
+  // Tra chức danh (vai trò · đơn vị) theo email — kèm vào danh sách người tham gia để phân biệt người trùng tên.
+  const titleByEmail = new Map(personOpts.filter((p) => p.title).map((p) => [p.email.toLowerCase(), p.title as string]));
   const unitOpts = units.filter((u) => u.type !== 'company').map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort }));
   // OKR để gắn khi thêm việc: theo kỳ của cuộc họp (fallback kỳ hiện tại).
   const periodForObjs = m.period_id ?? (await getCurrentPeriod())?.id ?? null;
@@ -237,7 +239,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
             {participants.length === 0 ? <p className="muted" style={{ margin: 0 }}>Chưa thêm người tham gia.</p> : (
               <ul className="charter-ul" style={{ paddingLeft: 16 }}>
                 {participants.map((p) => (
-                  <li key={p.email}><b>{p.name || p.email}</b> <span className="muted" style={{ fontSize: 12 }}>· {PART_ROLE[p.role] ?? p.role}</span></li>
+                  <li key={p.email}><b>{p.name || p.email}</b> <span className="muted" style={{ fontSize: 12 }}>· {PART_ROLE[p.role] ?? p.role}{titleByEmail.get(p.email.toLowerCase()) ? ` · ${titleByEmail.get(p.email.toLowerCase())}` : ''}</span></li>
                 ))}
               </ul>
             )}

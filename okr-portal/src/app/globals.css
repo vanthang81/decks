@@ -1283,6 +1283,9 @@ details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 
   padding: 6px 9px; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: inherit; color: var(--ink);
 }
 .cmt-mentionmenu button:hover { background: #FBF7F2; }
+.cmt-mm-txt { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+.cmt-mm-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cmt-mm-sub { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cmt-mm-av {
   flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; background: var(--primary-tint); color: var(--primary);
   font-weight: 800; font-size: 11px; display: inline-flex; align-items: center; justify-content: center;

@@ -579,7 +579,7 @@ function EditModal({
                   </span>
                 </td></tr>
                 <tr><td className="muted">Phụ trách</td><td>
-                  {card.owner_email || card.owner_name ? <UserLink email={card.owner_email} name={card.owner_name} /> : <span className="muted">Chưa giao</span>}
+                  {card.owner_email || card.owner_name ? <UserLink email={card.owner_email} name={card.owner_name} title={users.find((u) => u.email.toLowerCase() === (card.owner_email ?? '').toLowerCase())?.title ?? undefined} /> : <span className="muted">Chưa giao</span>}
                 </td></tr>
                 <tr><td className="muted">Đơn vị</td><td>{card.unit_name || <span className="muted">—</span>}</td></tr>
                 <tr><td className="muted">Ưu tiên</td><td>{PRIO_LABEL[card.priority] ?? card.priority}</td></tr>

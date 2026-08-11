@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import ConfirmButton from './ConfirmButton';
 
 type EntityType = 'objective' | 'key_result' | 'initiative';
-type UserOpt = { email: string; name: string; avatar?: string | null };
+type UserOpt = { email: string; name: string; avatar?: string | null; title?: string | null };
 type Comment = {
   id: string;
   parent_id: string | null;
@@ -125,7 +125,7 @@ function Composer({
             {matches.map((u) => (
               <button key={u.email} type="button" onMouseDown={(e) => { e.preventDefault(); pick(u); }}>
                 <Avatar url={u.avatar} name={u.name} cls="cmt-mm-av" />
-                {u.name}
+                <span className="cmt-mm-txt"><span className="cmt-mm-name">{u.name}</span>{u.title ? <span className="cmt-mm-sub">{u.title}</span> : null}</span>
               </button>
             ))}
           </div>
