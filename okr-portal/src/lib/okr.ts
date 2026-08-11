@@ -374,6 +374,12 @@ export async function deleteObjective(id: string): Promise<void> {
   await query('DELETE FROM okr_objectives WHERE id=$1', [id]);
 }
 
+/** Đặt TRỌNG SỐ cho 1 OKR (báo cáo tổng theo trọng số). weight>0; ≤0 → ép về 1. */
+export async function setObjectiveWeight(id: string, weight: number): Promise<void> {
+  const w = Number.isFinite(weight) && weight > 0 ? weight : 1;
+  await query('UPDATE okr_objectives SET weight=$2, updated_at=now() WHERE id=$1', [id, w]);
+}
+
 export async function createKeyResult(input: {
   objective_id: string;
   title: string;

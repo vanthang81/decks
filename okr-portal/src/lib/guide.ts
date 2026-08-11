@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-11.124';
+export const GUIDE_VERSION = '2026-08-11.125';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -168,9 +168,9 @@ export const FEATURES: Feature[] = [
     key: 'report-levels',
     title: 'Báo cáo theo cấp (kết quả tổng có trọng số)',
     where: 'Menu "Tổng quan" → "Báo cáo theo cấp"',
-    help: 'Xem kết quả OKR theo Công ty → Khối → Phòng → Cá nhân; mỗi nhóm có tổng tính THEO TRỌNG SỐ từng OKR.',
+    help: 'Xem kết quả OKR theo Công ty → Khối → Phòng → Cá nhân; mỗi nhóm có tổng tính THEO TRỌNG SỐ từng OKR — chỉnh trọng số ngay tại đây.',
     detail: [
-      'Trang "Báo cáo theo cấp" tổng hợp OKR của một kỳ theo bốn cấp: Công ty, Khối, Phòng ban, Cá nhân. Mỗi nhóm hiện KẾT QUẢ TỔNG = bình quân CÓ TRỌNG SỐ tiến độ các OKR trong nhóm (Σ tiến độ×trọng số ÷ Σ trọng số). Đặt trọng số cho từng OKR ở ô "Trọng số" trong cửa sổ Sửa OKR (mặc định 1 = mọi OKR cân nhau). Mở từng nhóm để xem danh sách OKR cấu thành, bấm vào là tới chi tiết OKR (trace-back).',
+      'Trang "Báo cáo theo cấp" tổng hợp OKR của một kỳ theo bốn cấp: Công ty, Khối, Phòng ban, Cá nhân. Mỗi nhóm hiện KẾT QUẢ TỔNG = bình quân CÓ TRỌNG SỐ tiến độ các OKR trong nhóm (Σ tiến độ×trọng số ÷ Σ trọng số). Mặc định mọi OKR trọng số 1 (cân nhau); đặt trọng số cao hơn cho OKR quan trọng hơn để kết quả nhóm phản ánh đúng mức ưu tiên. CEO/CFO chỉnh trọng số NGAY tại báo cáo: mở một nhóm → bấm nút bút chì cạnh "trọng số" của OKR → nhập số (có mức gợi ý nhanh 0,5–3) → Lưu, kết quả nhóm cập nhật liền. Giám đốc khối/trưởng phòng đặt trọng số OKR của mình ở ô "Trọng số" trong cửa sổ Sửa OKR. Mở từng nhóm để xem danh sách OKR cấu thành, bấm vào là tới chi tiết OKR (trace-back).',
     ],
   },
   {
@@ -622,6 +622,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '11/08/2026 (Báo cáo theo cấp: chỉnh trọng số OKR ngay tại chỗ)',
+    items: [
+      'CEO/CFO đặt TRỌNG SỐ cho từng OKR ngay trên trang "Báo cáo theo cấp": mở một nhóm, bấm nút bút chì cạnh "trọng số", nhập số (có mức gợi ý nhanh 0,5–3) → Lưu. Kết quả tổng của Khối/Phòng/Công ty tính lại theo bình quân CÓ TRỌNG SỐ, phản ánh đúng mức quan trọng của mỗi OKR thay vì cào bằng.',
+    ],
+  },
   {
     date: '11/08/2026 (Xuất/Nhập Excel: đồng nhất Tiếng Việt)',
     items: [

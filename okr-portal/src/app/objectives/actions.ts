@@ -10,6 +10,7 @@ import { listUnits, subtreeIds } from '@/lib/org';
 import {
   createObjective,
   updateObjective,
+  setObjectiveWeight,
   setObjectiveParent,
   setObjectiveBsc,
   linkKrKpi,
@@ -562,6 +563,21 @@ export async function deleteCheckInAction(fd: FormData) {
   await deleteCheckIn(id);
   if (ci.key_result_id) await resyncKrFromCheckins(ci.key_result_id);
   if (objId) revalidatePath(`/objectives/${objId}`);
+}
+
+// Đặt TRỌNG SỐ 1 OKR ngay tại Báo cáo theo cấp (chỉ người quản lý OKR đó). Ảnh hưởng kết quả tổng nhóm.
+export async function setObjectiveWeightAction(fd: FormData) {
+  const user = await requireUser();
+  const id = str(fd, 'objective_id');
+  const obj = await getObjective(id);
+  if (!obj) throw new Error('Không tìm thấy OKR.');
+  const canManage = await canManageObjectiveId(user, id);
+  if (!canManage) throw new Error('Bạn không có quyền đổi trọng số OKR này.');
+  const weight = Math.max(0.1, parseNum(str(fd, 'weight'), obj.weight ?? 1) || 1);
+  await setObjectiveWeight(id, weight);
+  await logAudit({ actor: user.email, action: 'okr.weight', entity: 'objective', entityId: id, detail: { title: obj.title, weight } });
+  revalidatePath('/report');
+  revalidatePath(`/objectives/${id}`);
 }
 
 export async function deleteKeyResultAction(fd: FormData) {

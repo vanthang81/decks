@@ -13,6 +13,9 @@ import {
 } from '@/lib/periods';
 import { okrLevelReport, type ReportGroup } from '@/lib/okr-report';
 import { progressColor } from '@/lib/format';
+import { isExec } from '@/lib/rbac';
+import WeightEditor from '@/components/WeightEditor';
+import NavIcon from '@/components/NavIcon';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Báo cáo theo cấp · BTMH OKR' };
@@ -25,7 +28,7 @@ function Bar({ value }: { value: number }) {
   );
 }
 
-function GroupRow({ g }: { g: ReportGroup }) {
+function GroupRow({ g, canEdit }: { g: ReportGroup; canEdit: boolean }) {
   return (
     <details style={{ borderTop: '1px solid var(--line)', padding: '9px 0' }}>
       <summary style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -38,10 +41,13 @@ function GroupRow({ g }: { g: ReportGroup }) {
       </summary>
       <div style={{ marginTop: 8, paddingLeft: 4 }}>
         {g.items.map((it) => (
-          <div key={it.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0', fontSize: 13, flexWrap: 'wrap' }}>
+          <div key={it.id} className="rep-okr-row" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0', fontSize: 13, flexWrap: 'wrap' }}>
             {it.code && <span className="okr-code" style={{ fontSize: 11 }}>{it.code}</span>}
             <Link href={`/objectives/${it.id}`} style={{ flex: 1, minWidth: 120 }}>{it.title}</Link>
-            <span className="muted" style={{ fontSize: 12 }}>trọng số {it.weight}</span>
+            <span className="rep-wgt muted" style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              trọng số <b style={{ color: 'var(--ink)' }}>{it.weight}</b>
+              {canEdit && <WeightEditor objectiveId={it.id} weight={it.weight} title={it.title} />}
+            </span>
             <span style={{ width: 40, textAlign: 'right', fontWeight: 600 }}>{Math.round(it.progress)}%</span>
           </div>
         ))}
@@ -50,7 +56,7 @@ function GroupRow({ g }: { g: ReportGroup }) {
   );
 }
 
-function Section({ title, help, groups }: { title: string; help?: string; groups: ReportGroup[] }) {
+function Section({ title, help, groups, canEdit }: { title: string; help?: string; groups: ReportGroup[]; canEdit: boolean }) {
   const total = groups.reduce((a, g) => a + g.count, 0);
   return (
     <div className="card">
@@ -62,7 +68,7 @@ function Section({ title, help, groups }: { title: string; help?: string; groups
       {groups.length === 0 ? (
         <p className="muted" style={{ marginTop: 8 }}>Chưa có OKR ở cấp này trong kỳ.</p>
       ) : (
-        groups.map((g) => <GroupRow key={g.key} g={g} />)
+        groups.map((g) => <GroupRow key={g.key} g={g} canEdit={canEdit} />)
       )}
     </div>
   );
@@ -76,6 +82,9 @@ export default async function ReportPage({ searchParams }: { searchParams: { per
   const periods = await listPeriods();
   const period = searchParams.period ? await getPeriod(searchParams.period) : (await getCurrentPeriod()) ?? periods[0] ?? null;
   const rep = period ? await okrLevelReport(period.id) : null;
+  // Chỉnh trọng số ngay tại báo cáo: dành cho điều hành (CEO/CFO) — ưu tiên tổng thể công ty.
+  // Giám đốc khối / trưởng phòng vẫn đặt trọng số OKR của mình ở form Sửa OKR (trang chi tiết).
+  const canEditWeight = isExec(user.role);
 
   return (
     <>
@@ -110,10 +119,16 @@ export default async function ReportPage({ searchParams }: { searchParams: { per
               <div style={{ flex: 1, minWidth: 200 }}><Bar value={rep.companyTotal} /></div>
             </div>
 
-            {rep.company && <Section title="Cấp Công ty" groups={[rep.company]} />}
-            <Section title="Theo Khối" help="Mỗi khối = bình quân có trọng số các OKR cấp khối gắn đúng đơn vị." groups={rep.divisions} />
-            <Section title="Theo Phòng ban" groups={rep.departments} />
-            <Section title="Theo Cá nhân" groups={rep.individuals} />
+            {canEditWeight && (
+              <p className="subtitle" style={{ marginTop: -4 }}>
+                Mở một nhóm để xem từng OKR. Bấm nút <NavIcon name="pencil" className="wgt-hint-ic" /> cạnh “trọng số” để chỉnh mức quan trọng của OKR —
+                kết quả tổng của nhóm cập nhật theo <b>bình quân có trọng số</b>.
+              </p>
+            )}
+            {rep.company && <Section title="Cấp Công ty" groups={[rep.company]} canEdit={canEditWeight} />}
+            <Section title="Theo Khối" help="Mỗi khối = bình quân có trọng số các OKR cấp khối gắn đúng đơn vị." groups={rep.divisions} canEdit={canEditWeight} />
+            <Section title="Theo Phòng ban" groups={rep.departments} canEdit={canEditWeight} />
+            <Section title="Theo Cá nhân" groups={rep.individuals} canEdit={canEditWeight} />
           </>
         )}
       </div>

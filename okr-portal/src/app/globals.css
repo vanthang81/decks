@@ -119,6 +119,12 @@ a:hover { text-decoration: underline; }
 .icon-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-tint); }
 .icon-btn.danger:hover { border-color: #dc2626; color: #dc2626; background: #fee2e2; }
 .icon-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; }
+/* Nút chỉnh trọng số gọn ngay trong hàng OKR ở Báo cáo theo cấp */
+.wgt-btn { width: 22px; height: 22px; border-radius: 6px; }
+.wgt-btn svg { width: 13px; height: 13px; }
+.wgt-edit { display: inline-flex; }
+.wgt-hint-ic { width: 14px; height: 14px; color: var(--primary); vertical-align: -3px; display: inline-block; }
+.wgt-presets .btn.active { border-color: var(--primary); color: var(--primary); background: var(--primary-tint); font-weight: 700; }
 .spacer { flex: 1; }
 .userchip { font-size: 13px; color: rgba(255,255,255,.85); display: flex; align-items: center; gap: 8px; }
 .hdr-av { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(255,255,255,.5); flex: 0 0 auto; }
