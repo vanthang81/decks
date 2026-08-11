@@ -10,11 +10,8 @@ import { listUnits } from '@/lib/org';
 import { listPeriods, getCurrentPeriod } from '@/lib/periods';
 import { listKpiMetrics } from '@/lib/kpi';
 import { unresolvedErrorCount } from '@/lib/errlog';
-import { getSetting } from '@/lib/settings';
-import { isCalendarEnabled, CALENDAR_SYNC_KEY } from '@/lib/gcal';
-import { syncKpiAction, sendDigestAction, setCalendarSyncAction } from './actions';
+import { syncKpiAction, sendDigestAction } from './actions';
 import ImportOkr from '@/components/ImportOkr';
-import ToastForm from '@/components/ToastForm';
 
 // Thẻ điều hướng có icon (trong Quản trị).
 function NavCard({ href, icon, title, desc }: { href: string; icon: string; title: string; desc: string }) {
@@ -46,8 +43,6 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
   const metrics = listKpiMetrics();
   const kpiMsg = searchParams.kpi;
   const digestMsg = searchParams.digest;
-  const calEnvOn = isCalendarEnabled();
-  const calSyncOn = calEnvOn ? await getSetting<boolean>(CALENDAR_SYNC_KEY, true).catch(() => true) : false;
 
   return (
     <>
@@ -129,30 +124,6 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
                 ) : (
                   <span className="badge red">Lỗi: {digestMsg.replace(/^err:/, '')}</span>
                 )}
-              </p>
-            )}
-          </div>
-
-          <div className="card">
-            <h3 style={{ marginTop: 0 }}>Google Calendar</h3>
-            {calEnvOn ? (
-              <>
-                <p className="muted" style={{ marginTop: 0 }}>
-                  Bật/tắt <b>toàn hệ thống</b> việc tự thêm cuộc họp &amp; công việc-có-hạn vào Google
-                  Calendar của từng người (mỗi người vẫn có thể tự tắt ở Cài đặt cá nhân).
-                </p>
-                <ToastForm action={setCalendarSyncAction} done={calSyncOn ? 'Đã tắt đồng bộ lịch' : 'Đã bật đồng bộ lịch'}>
-                  <input type="hidden" name="calendar_sync" value={calSyncOn ? '0' : '1'} />
-                  <span className={`badge ${calSyncOn ? 'green' : 'gray'}`} style={{ marginRight: 10 }}>
-                    {calSyncOn ? 'Đang BẬT' : 'Đang TẮT'}
-                  </span>
-                  <button className="btn ghost sm" type="submit">{calSyncOn ? 'Tắt đồng bộ' : 'Bật đồng bộ'}</button>
-                </ToastForm>
-              </>
-            ) : (
-              <p className="muted" style={{ marginTop: 0 }}>
-                Tính năng chưa được bật ở máy chủ (biến <code>GOOGLE_CALENDAR_ENABLED</code>). Xem hướng dẫn
-                <b> docs/GOOGLE-CALENDAR-SETUP.md</b> để bật (Google Console + biến môi trường + đăng nhập lại).
               </p>
             )}
           </div>

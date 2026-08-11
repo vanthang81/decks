@@ -10,18 +10,6 @@ export const authConfig: NextAuthConfig = {
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      // Ghi thẳng Google Calendar (CFO 11/08): CHỈ xin thêm scope calendar.events + offline khi đã
-      // bật env GOOGLE_CALENDAR_ENABLED=1 (và cấu hình Console). Mặc định KHÔNG đổi luồng đăng nhập.
-      authorization:
-        process.env.GOOGLE_CALENDAR_ENABLED === '1'
-          ? {
-              params: {
-                scope: 'openid email profile https://www.googleapis.com/auth/calendar.events',
-                access_type: 'offline',
-                prompt: 'consent',
-              },
-            }
-          : undefined,
     }),
   ],
   pages: { signIn: '/login', error: '/login' },

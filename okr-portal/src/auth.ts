@@ -1,7 +1,6 @@
 import NextAuth from 'next-auth';
 import { authConfig } from '@/auth.config';
 import { getUser, setUserAvatar, recordLogin } from '@/lib/users';
-import { isCalendarEnabled, saveGoogleTokens } from '@/lib/gcal';
 import type { Role } from '@/lib/rbac';
 
 // Instance ĐẦY ĐỦ (Node runtime, chạm DB). Dùng ở server components + API.
@@ -24,16 +23,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return true;
     },
-    async jwt({ token, user, account }) {
-      // Lưu token Google Calendar (nếu đã bật) — account chỉ có ở lần đăng nhập/đồng ý đầu.
-      if (account && isCalendarEnabled() && token.email && (account.scope ?? '').includes('calendar')) {
-        await saveGoogleTokens(String(token.email).toLowerCase(), {
-          access_token: account.access_token as string | undefined,
-          refresh_token: account.refresh_token as string | undefined,
-          expiry: (account.expires_at as number | undefined) ?? null,
-          scope: account.scope as string | undefined,
-        }).catch(() => { /* best-effort */ });
-      }
+    async jwt({ token, user }) {
       // Ưu tiên ảnh từ profile Google lúc mới đăng nhập; nếu không có thì
       // dùng picture đã lưu trong JWT (các phiên cũ vẫn mang picture).
       const pic =

@@ -114,12 +114,6 @@ export async function setUserActive(email: string, active: boolean): Promise<voi
   invalidateUser(email);
 }
 
-/** Tuỳ chọn cá nhân: bật/tắt tự thêm cuộc họp & việc vào Google Calendar của mình. */
-export async function setUserCalendarPref(email: string, on: boolean): Promise<void> {
-  await query('UPDATE okr_users SET calendar_enabled=$2, updated_at=now() WHERE lower(email)=lower($1)', [email, on]);
-  invalidateUser(email);
-}
-
 export async function removeUser(email: string): Promise<void> {
   await query('DELETE FROM okr_users WHERE lower(email)=lower($1)', [email]);
   invalidateUser(email);
