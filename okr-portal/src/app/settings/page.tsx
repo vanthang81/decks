@@ -67,7 +67,7 @@ export default async function SettingsPage() {
         {/* Google Calendar — chỉ hiện khi tính năng đã được bật (máy chủ + quản trị) */}
         {calOn && (
           <div className="card">
-            <h3 style={{ marginTop: 0 }}>Google Calendar</h3>
+            <h3 style={{ marginTop: 0 }}>Google Calendar<HelpTip k="gcal" /></h3>
             <p className="subtitle" style={{ marginTop: 0 }}>
               Khi bật, cuộc họp bạn chủ trì và công việc có hạn được giao cho bạn sẽ tự thêm vào Google
               Calendar của bạn (theo email đăng nhập). Lần đầu cần đăng nhập lại để cấp quyền lịch.

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-11.121';
+export const GUIDE_VERSION = '2026-08-11.122';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -514,6 +514,14 @@ export const FEATURES: Feature[] = [
       'Tạo cuộc họp theo loại (Check-in dự án · Điều hành tuần/tháng · Cấp khối/phòng · IBP…), chọn chủ trì/thư ký, người tham gia và phạm vi xem. LIÊN QUAN NHIỀU KHỐI/PHÒNG & NHIỀU DỰ ÁN: ô "Khối/Phòng liên quan" và "Dự án liên quan" cho chọn NHIỀU mục (gõ để tìm, hiện dạng thẻ) — một cuộc họp có thể gắn nhiều bộ phận & nhiều dự án; quyền xem "Cả đơn vị" áp cho MỌI khối/phòng đã gắn. Sau họp: chủ trì/thư ký ghi Biên bản & Quyết định; các công việc gắn cuộc họp hiện ở mục "Hành động". GẮN VIỆC VÀO CUỘC HỌP: khi sửa một công việc (ở trang OKR hoặc Dự án), tick "🗓 Thuộc cuộc họp" rồi chọn cuộc họp → công việc đó trở thành một "hành động" của cuộc họp và hiện chip 🗓 để truy vết ngược. CHUỖI CUỘC HỌP: mỗi cuộc họp có thể chọn "Cuộc họp trước" để nối chuỗi (vd chuỗi check-in dự án hàng tuần) — trang chi tiết hiện link "← Trước" và "Tiếp →" để đi lại giữa các kỳ họp. BẢO MẬT: chỉ người tham gia / được thêm (hoặc CEO/CFO) mới xem được nội dung; người ngoài có thể gửi "yêu cầu xem" → chủ trì/thư ký duyệt (có thông báo hai chiều). GHI BIÊN BẢN: ô soạn Biên bản & Quyết định TỰ LƯU nháp liên tục khi bạn gõ (chỉ báo "Đã lưu nháp lúc…") — không lo mất nội dung; nút "Lưu & đóng" để chốt và đóng cửa sổ.',
   },
   {
+    key: 'gcal',
+    title: 'Đồng bộ Google Calendar',
+    where: 'Cài đặt cá nhân → Google Calendar · Quản trị → Google Calendar',
+    help: 'Tự thêm cuộc họp bạn chủ trì & việc-có-hạn được giao vào Google Calendar của bạn.',
+    detail:
+      'Khi tính năng được bật, hệ thống tự thêm/cập nhật sự kiện trên Google Calendar theo email đăng nhập: CUỘC HỌP → lịch của người chủ trì (tự mời người tham gia làm khách); CÔNG VIỆC có hạn → sự kiện cả-ngày trên lịch người được giao. Huỷ họp / việc xong / xoá → sự kiện tự gỡ. Ba tầng kiểm soát: (1) bật ở máy chủ, (2) công tắc TOÀN CỤC ở Quản trị (CEO/CFO bật/tắt tức thì), (3) mỗi người TỰ bật/tắt ở Cài đặt cá nhân (mặc định BẬT). Lần đầu mỗi người cần ĐĂNG NHẬP LẠI để cấp quyền lịch cho Google.',
+  },
+  {
     key: 'activity-log',
     title: 'Nhật ký thay đổi theo từng mục',
     where: 'Nút hình đồng hồ ở góc phải-trên OKR · Dự án · Cuộc họp',
@@ -622,6 +630,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '11/08/2026 (Google Calendar đã BẬT + công tắc & tuỳ chọn; Công việc: Xóa & gắn OKR)',
+    items: [
+      'Đã BẬT ghi thẳng Google Calendar: cuộc họp bạn chủ trì và công việc-có-hạn được giao cho bạn tự thêm vào Google Calendar của bạn. Lần đầu cần ĐĂNG NHẬP LẠI để cấp quyền lịch (màn hình đồng ý của Google).',
+      'Quản trị (CEO/CFO) có công tắc BẬT/TẮT toàn hệ thống ở "Quản trị → Google Calendar" (không cần khởi động lại). Mỗi người có thể tự TẮT ở "Cài đặt cá nhân → Google Calendar" (mặc định BẬT).',
+      'Màn Công việc: thêm nút "Xoá công việc" ngay ở khung xem chi tiết (trước phải mở Sửa mới thấy). Cửa sổ Sửa việc thêm ô "Thuộc OKR" (gắn/đổi/bỏ OKR) bên cạnh "Thuộc dự án".',
+    ],
+  },
   {
     date: '11/08/2026 (Ghi thẳng Google Calendar — đã code sẵn, chờ bật)',
     items: [
