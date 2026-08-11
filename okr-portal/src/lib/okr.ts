@@ -98,6 +98,7 @@ export type Objective = {
   okr_type: OkrType;
   bsc_perspective: BscPerspective | null;
   progress: number;
+  weight: number;
   sort: number;
   created_by: string | null;
 };
@@ -155,7 +156,7 @@ export function computeKrProgress(kr: {
 const OBJ_SELECT = `
   SELECT o.id, o.code, o.period_id, o.parent_id, o.level, o.unit_id, o.owner_email,
          o.title, o.description, o.status, o.okr_type, o.bsc_perspective,
-         o.progress::float8 AS progress, o.sort, o.created_by,
+         o.progress::float8 AS progress, o.weight::float8 AS weight, o.sort, o.created_by,
          n.name AS unit_name, n.code AS unit_code,
          u.display_name AS owner_name,
          (SELECT count(*)::int FROM okr_key_results k WHERE k.objective_id=o.id) AS kr_count
@@ -254,13 +255,14 @@ export async function createObjective(input: {
   status: ObjStatus;
   okr_type: OkrType;
   bsc_perspective: BscPerspective | null;
+  weight?: number;
   created_by: string;
 }): Promise<string> {
   const code = await nextObjectiveCode(input.unit_id);
   const row = await queryOne<{ id: string }>(
     `INSERT INTO okr_objectives (period_id, level, unit_id, owner_email, parent_id,
-                                 title, description, status, okr_type, bsc_perspective, created_by, code)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
+                                 title, description, status, okr_type, bsc_perspective, weight, created_by, code)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id`,
     [
       input.period_id,
       input.level,
@@ -272,6 +274,7 @@ export async function createObjective(input: {
       input.status,
       input.okr_type,
       input.bsc_perspective,
+      input.weight != null && input.weight > 0 ? input.weight : 1,
       input.created_by,
       code,
     ],
@@ -343,22 +346,27 @@ export async function updateObjective(
     owner_email: string | null;
     unit_id: string | null;
     level?: Level; // tuỳ chọn: đổi cấp OKR (company/division/department/individual)
+    weight?: number; // tuỳ chọn: trọng số OKR (>0). Không gửi = giữ nguyên.
   },
 ): Promise<void> {
+  // weight: chỉ đổi khi gửi số hợp lệ (>0); ngược lại COALESCE giữ giá trị cũ.
+  const w = input.weight != null && input.weight > 0 ? input.weight : null;
   if (input.level) {
     await query(
       `UPDATE okr_objectives
-          SET title=$2, description=$3, status=$4, okr_type=$5, owner_email=$6, unit_id=$7, level=$8, updated_at=now()
+          SET title=$2, description=$3, status=$4, okr_type=$5, owner_email=$6, unit_id=$7, level=$8,
+              weight=COALESCE($9, weight), updated_at=now()
          WHERE id=$1`,
-      [id, input.title, input.description, input.status, input.okr_type, input.owner_email, input.unit_id, input.level],
+      [id, input.title, input.description, input.status, input.okr_type, input.owner_email, input.unit_id, input.level, w],
     );
     return;
   }
   await query(
     `UPDATE okr_objectives
-        SET title=$2, description=$3, status=$4, okr_type=$5, owner_email=$6, unit_id=$7, updated_at=now()
+        SET title=$2, description=$3, status=$4, okr_type=$5, owner_email=$6, unit_id=$7,
+            weight=COALESCE($8, weight), updated_at=now()
        WHERE id=$1`,
-    [id, input.title, input.description, input.status, input.okr_type, input.owner_email, input.unit_id],
+    [id, input.title, input.description, input.status, input.okr_type, input.owner_email, input.unit_id, w],
   );
 }
 
