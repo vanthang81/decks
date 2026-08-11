@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-11.127';
+export const GUIDE_VERSION = '2026-08-11.128';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -622,6 +622,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '11/08/2026 (Công việc: thêm Link minh chứng khi cập nhật)',
+    items: [
+      'Cửa sổ cập nhật công việc (ở màn Công việc và trong chi tiết OKR) thêm ô "Link minh chứng" (tuỳ chọn) — đính URL tài liệu/hình ảnh chứng minh kết quả, giống phần cập nhật Key Result. Người được giao cũng đính được minh chứng. Xem chi tiết việc hiện nút "🔗 Mở minh chứng".',
+    ],
+  },
   {
     date: '11/08/2026 (TOÀN HỆ THỐNG: hiện Tên + Chức danh khi chọn/giao người)',
     items: [

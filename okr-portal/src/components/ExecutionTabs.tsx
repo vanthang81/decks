@@ -86,6 +86,7 @@ export type Card = {
   done_on?: string | null;
   budget_planned: number;
   budget_actual: number;
+  evidence_url?: string | null;
 };
 
 export type PersonOpt = { email: string; name: string; avatar?: string | null; unit_id?: string | null; title?: string | null };
@@ -587,6 +588,9 @@ function EditModal({
                 <tr><td className="muted">Hạn</td><td>{card.due_on ? fmtDate(card.due_on) : <span className="muted">—</span>}</td></tr>
                 <tr><td className="muted">NS kế hoạch</td><td className="mono">{fmtVnd(card.budget_planned)}</td></tr>
                 <tr><td className="muted">Đã chi</td><td className="mono">{fmtVnd(card.budget_actual)}</td></tr>
+                <tr><td className="muted">Minh chứng</td><td>{card.evidence_url
+                  ? <a className="ci-evi" href={card.evidence_url} target="_blank" rel="noopener noreferrer" title={card.evidence_url}>🔗 Mở minh chứng</a>
+                  : <span className="muted">—</span>}</td></tr>
               </tbody>
             </table>
             {!canEdit && <p className="muted" style={{ fontSize: 12.5, marginTop: 8 }}>Bạn chỉ có quyền xem việc này (chỉ người quản lý OKR hoặc người được giao mới sửa được).</p>}
@@ -894,16 +898,22 @@ function EditModal({
                     <NumberInput name="budget_actual" defaultValue={card.budget_actual} />
                   </div>
                 </div>
+                <label className="f">Link minh chứng <span className="muted" style={{ fontWeight: 400 }}>(tuỳ chọn) — tài liệu/hình ảnh chứng minh kết quả</span></label>
+                <input className="i" name="evidence_url" type="url" inputMode="url" defaultValue={card.evidence_url ?? ''} placeholder="https://…" />
                 <label className="f">Mô tả</label>
                 <textarea className="i" name="description" defaultValue={card.description ?? ''} rows={2} />
               </>
             )}
 
             {!canManage && (
-              <p className="muted" style={{ fontSize: 12.5, marginTop: 10 }}>
-                Bạn được giao việc này — chỉ cập nhật được trạng thái &amp; tiến độ. Các trường khác do
-                người quản lý OKR chỉnh.
-              </p>
+              <>
+                <label className="f">Link minh chứng <span className="muted" style={{ fontWeight: 400 }}>(tuỳ chọn) — tài liệu/hình ảnh chứng minh kết quả</span></label>
+                <input className="i" name="evidence_url" type="url" inputMode="url" defaultValue={card.evidence_url ?? ''} placeholder="https://…" />
+                <p className="muted" style={{ fontSize: 12.5, marginTop: 10 }}>
+                  Bạn được giao việc này — cập nhật trạng thái, tiến độ &amp; đính minh chứng. Các trường khác do
+                  người quản lý OKR chỉnh.
+                </p>
+              </>
             )}
 
             {err && (

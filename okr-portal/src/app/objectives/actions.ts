@@ -778,6 +778,11 @@ export async function editInitiativeAction(fd: FormData) {
   const manage = await canManageTaskLoose(user, init);
   const perm = canUpdateInitiative(user, init, manage);
   if (!perm.manage && !perm.assignee) throw new Error('Bạn không có quyền cập nhật việc này.');
+  // Link minh chứng (tuỳ chọn) — chỉ đụng khi form có gửi 'evidence_url'. Kiểm http/https.
+  const hasEvidence = fd.has('evidence_url');
+  const evidence = str(fd, 'evidence_url');
+  if (hasEvidence && evidence && !isValidUrl(evidence)) throw new Error('Link minh chứng không hợp lệ (phải là http/https).');
+  const evidenceVal = hasEvidence ? orNull(evidence) : undefined;
   if (perm.manage) {
     // Gắn/đổi OKR: nếu chọn OKR mới (khác hiện tại) → phải có quyền sửa OKR đó.
     let objectiveId = orNull(str(fd, 'objective_id'));
@@ -813,6 +818,7 @@ export async function editInitiativeAction(fd: FormData) {
       done_on: fd.has('done_on') ? orNull(str(fd, 'done_on')) : undefined,
       budget_planned: num(fd, 'budget_planned'),
       budget_actual: num(fd, 'budget_actual'),
+      evidence_url: evidenceVal,
     });
     // Phụ thuộc waterfall (chỉ khi form có gửi 'depends_on' — form khác không đụng tới).
     if (fd.has('depends_on')) {
@@ -829,6 +835,7 @@ export async function editInitiativeAction(fd: FormData) {
     await setInitiativeProgress(id, {
       status: (str(fd, 'status') || 'todo') as InitStatus,
       progress: num(fd, 'progress'),
+      evidence_url: evidenceVal,
     });
   }
   await auditTask(user.email, 'initiative.update', init, { title: str(fd, 'title') || init.title });  revalidateTask(init);

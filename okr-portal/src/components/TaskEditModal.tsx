@@ -172,6 +172,9 @@ export default function TaskEditModal({
                 </td></tr>
                 <tr><td className="muted">NS kế hoạch</td><td className="mono">{fmtVnd(task.budget_planned)}</td></tr>
                 <tr><td className="muted">Đã chi</td><td className="mono">{fmtVnd(task.budget_actual)}</td></tr>
+                <tr><td className="muted">Minh chứng</td><td>{task.evidence_url
+                  ? <a className="ci-evi" href={task.evidence_url} target="_blank" rel="noopener noreferrer" title={task.evidence_url}>🔗 Mở minh chứng</a>
+                  : <span className="muted">—</span>}</td></tr>
                 {depLabels.length > 0 && <tr><td className="muted">⏳ Phụ thuộc</td><td>{depLabels.join(' · ')}</td></tr>}
               </tbody>
             </table>
@@ -284,6 +287,8 @@ export default function TaskEditModal({
                   <NumberInput name="budget_actual" defaultValue={task.budget_actual} />
                 </div>
               </div>
+              <label className="f">Link minh chứng <span className="muted" style={{ fontWeight: 400 }}>(tuỳ chọn) — tài liệu/hình ảnh chứng minh kết quả</span></label>
+              <input className="i" name="evidence_url" type="url" inputMode="url" defaultValue={task.evidence_url ?? ''} placeholder="https://…" />
               {depOptions.length > 0 && (
                 <>
                   <label className="f">⏳ Phụ thuộc vào (việc phải xong trước) <span className="muted" style={{ fontWeight: 400 }}>— ràng buộc waterfall trong cùng OKR</span></label>
@@ -310,6 +315,8 @@ export default function TaskEditModal({
                   <input className="i" name="progress" type="number" min={0} max={100} defaultValue={task.progress} />
                 </div>
               </div>
+              <label className="f">Link minh chứng <span className="muted" style={{ fontWeight: 400 }}>(tuỳ chọn) — tài liệu/hình ảnh chứng minh kết quả</span></label>
+              <input className="i" name="evidence_url" type="url" inputMode="url" defaultValue={task.evidence_url ?? ''} placeholder="https://…" />
             </>
           ) : (
             <>
