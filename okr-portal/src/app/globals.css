@@ -828,6 +828,9 @@ input.i, select.i, textarea.i {
 textarea.i { min-height: 70px; resize: vertical; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; }
 .row > * { flex: 1; min-width: 120px; }
+/* MOBILE: mỗi ô trong .row full-width (xếp DỌC) — đặt SAU rule gốc để thắng cascade
+   (rule stack ở @media 760px phía trên bị rule gốc này ghi đè do source-order). */
+@media (max-width: 760px) { .row > * { min-width: 100%; } }
 
 .btn {
   display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 9px;

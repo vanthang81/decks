@@ -611,6 +611,7 @@ export const CHANGELOG: ChangeLog[] = [
     items: [
       'Form tạo/sửa cuộc họp: ô "Khối/Phòng liên quan" và "Dự án liên quan" nay CHỌN NHIỀU mục (gõ để tìm, hiện dạng thẻ) — một cuộc họp có thể liên quan nhiều bộ phận và nhiều dự án cùng lúc.',
       'Danh sách & chi tiết cuộc họp hiển thị đầy đủ các khối/phòng + dự án đã gắn. Quyền xem "Cả đơn vị (khối/phòng)" áp cho MỌI khối/phòng đã gắn (không chỉ 1).',
+      'Sửa lỗi mobile: các cặp ô nhập cạnh nhau (trên mọi form) nay TỰ xếp DỌC full-width ở màn hình hẹp (≤760px) — trước đây bị ép 2 cột chật khiến chữ chen chúc.',
     ],
   },
   {
