@@ -7,7 +7,7 @@ import PeriodPicker from '@/components/PeriodPicker';
 import { requireUser } from '@/lib/current-user';
 import { listUnits } from '@/lib/org';
 import { unitTreeOptions } from '@/lib/unit-options';
-import { listUsers } from '@/lib/users';
+import { listUsers, personTitle } from '@/lib/users';
 import {
   getCurrentPeriod,
   listPeriods,
@@ -31,7 +31,7 @@ function ProjectFields({
 }: {
   periodId: string;
   user: { email: string };
-  users: { email: string; display_name: string | null }[];
+  users: { email: string; display_name: string | null; role?: string | null; unit_name?: string | null; unit_type?: string | null }[];
   unitOptions: { value: string; label: string }[];
 }) {
   return (
@@ -43,7 +43,7 @@ function ProjectFields({
         <div>
           <label className="f">Chủ trì (cá nhân)</label>
           <SearchSelect name="owner_email" defaultValue={user.email}
-            options={users.map((u) => ({ value: u.email, label: u.display_name || u.email }))} />
+            options={users.map((u) => ({ value: u.email, label: u.display_name || u.email, sub: personTitle(u) ?? undefined }))} />
         </div>
         <div>
           <label className="f">Đơn vị chủ trì (Khối / Phòng)</label>

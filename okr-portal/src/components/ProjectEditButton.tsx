@@ -20,7 +20,7 @@ export type ProjData = {
   budget_planned: number;
   budget_actual: number;
 };
-type PersonOpt = { email: string; name: string };
+type PersonOpt = { email: string; name: string; title?: string | null };
 type UnitOpt = { id: string; name: string; type: 'company' | 'division' | 'department' };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -113,7 +113,7 @@ export default function ProjectEditButton({
                 <div>
                   <label className="f">Chủ trì (cá nhân)</label>
                   <SearchSelect name="owner_email" defaultValue={project.owner_email ?? ''} emptyLabel="— Chưa gán —"
-                    options={users.map((u) => ({ value: u.email, label: u.name }))} />
+                    options={users.map((u) => ({ value: u.email, label: u.name, sub: u.title ?? undefined }))} />
                 </div>
                 <div>
                   <label className="f">Đơn vị chủ trì (Khối / Phòng)</label>

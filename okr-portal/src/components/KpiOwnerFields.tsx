@@ -5,7 +5,7 @@ import SearchSelect from './SearchSelect';
 import { unitTreeOptions } from '@/lib/unit-options';
 
 type UnitOpt = { id: string; name: string; type: 'company' | 'division' | 'department'; parent_id?: string | null; sort?: number | null };
-type UserOpt = { email: string; name: string; role: string; unit_id: string | null };
+type UserOpt = { email: string; name: string; role: string; unit_id: string | null; title?: string | null };
 
 // Module (KRA) + Đơn vị chủ + Business/Measurement owner cho form KPI.
 // KHI chọn Đơn vị chủ → tự đặt Business owner = TRƯỞNG đơn vị đó (mặc định), nhưng vẫn sửa được.
@@ -39,7 +39,7 @@ export default function KpiOwnerFields({
   };
 
   const unitOptions = unitTreeOptions(units);
-  const userOptions = users.map((u) => ({ value: u.email, label: u.name }));
+  const userOptions = users.map((u) => ({ value: u.email, label: u.name, sub: u.title ?? undefined }));
   const isLeadDefault = !!unit && business === leadByUnit[unit];
 
   return (

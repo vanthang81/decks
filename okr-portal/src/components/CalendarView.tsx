@@ -10,7 +10,7 @@ export type CalView = 'day' | 'week' | 'month';
 
 type Kr = { id: string; code: string | null; title: string };
 type ObjOpt = { id: string; code: string | null; title: string; unit_name: string | null; krs: Kr[] };
-type PersonOpt = { email: string; name: string };
+type PersonOpt = { email: string; name: string; title?: string | null };
 type ProjOpt = { id: string; code: string | null; name: string };
 
 const WD = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
@@ -299,7 +299,7 @@ function QuickAdd({
             <div>
               <label className="f">Chủ trì</label>
               <SearchSelect name="owner_email" defaultValue={defaultOwner}
-                options={users.map((u) => ({ value: u.email, label: u.name }))} />
+                options={users.map((u) => ({ value: u.email, label: u.name, sub: u.title ?? undefined }))} />
             </div>
           </div>
           <label className="f">Địa điểm</label>
@@ -326,7 +326,7 @@ function QuickAdd({
             <div>
               <label className="f">Giao cho</label>
               <SearchSelect name="owner_email" defaultValue={defaultOwner} emptyLabel="— Chưa giao —"
-                options={users.map((u) => ({ value: u.email, label: u.name }))} />
+                options={users.map((u) => ({ value: u.email, label: u.name, sub: u.title ?? undefined }))} />
             </div>
             <div>
               <label className="f">Thuộc dự án (tuỳ chọn)</label>

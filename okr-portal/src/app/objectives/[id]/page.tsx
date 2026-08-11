@@ -19,7 +19,7 @@ import { Sparkline } from '@/components/charts';
 import { ProgressBar, LevelBadge, StatusBadge } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
 import { listUnits, objectiveViewScope, canViewObjectiveUnit, subtreeIds } from '@/lib/org';
-import { listUsers } from '@/lib/users';
+import { listUsers, personTitle } from '@/lib/users';
 import {
   getObjective,
   listObjectivesWithKrs,
@@ -106,7 +106,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
   const canDelete = canDeleteObjective(user, obj, units, access);
 
   // Options cho popup edit (client): người (cá nhân) + đơn vị (khối/phòng).
-  const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url }));
+  const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url, unit_id: u.unit_id, title: personTitle(u) }));
   const unitOpts = units
     .filter((u) => u.type !== 'company')
     .map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort }));
@@ -738,7 +738,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                   <div>
                     <label className="f">Giao cho (cá nhân)</label>
                     <SearchSelect name="owner_email" defaultValue="" emptyLabel="— Chưa giao —"
-                      options={users.map((u) => ({ value: u.email, label: u.display_name || u.email }))} />
+                      options={users.map((u) => ({ value: u.email, label: u.display_name || u.email, sub: personTitle(u) ?? undefined }))} />
                   </div>
                 </div>
                 <div className="row">

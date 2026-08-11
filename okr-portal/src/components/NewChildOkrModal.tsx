@@ -98,7 +98,7 @@ export default function NewChildOkrModal({
         <div>
           <label className="f">Chủ trì <span className="muted" style={{ fontWeight: 400 }}>— tuỳ chọn</span></label>
           <SearchSelect name="owner_email" emptyLabel="— Chưa gán —"
-            options={users.map((u) => ({ value: u.email, label: u.name }))} />
+            options={users.map((u) => ({ value: u.email, label: u.name, sub: u.title ?? undefined }))} />
         </div>
         <div>
           <label className="f">Loại OKR</label>

@@ -1,5 +1,14 @@
 import { query, queryOne } from './db';
-import type { Role } from './rbac';
+import { ROLE_LABEL, type Role } from './rbac';
+
+// Chức danh hiển thị KÈM TÊN ở mọi nơi chọn/hiện người (phân biệt người trùng tên): "Vai trò · Đơn vị".
+// Bỏ đơn vị cấp Công ty cho gọn (CEO/CFO chỉ hiện vai trò). Nguồn DUY NHẤT — dùng chung toàn hệ thống.
+export function personTitle(p: { role?: Role | string | null; unit_name?: string | null; unit_type?: string | null } | null | undefined): string | null {
+  if (!p) return null;
+  const roleLabel = p.role ? ROLE_LABEL[p.role as Role] ?? '' : '';
+  const unitName = p.unit_name && p.unit_type !== 'company' ? p.unit_name : null;
+  return [roleLabel, unitName].filter(Boolean).join(' · ') || null;
+}
 
 export type OkrUser = {
   email: string;
@@ -54,11 +63,11 @@ export async function getUser(email: string): Promise<OkrUser | null> {
 }
 
 export async function listUsers(): Promise<
-  (OkrUser & { unit_name: string | null; unit_code: string | null })[]
+  (OkrUser & { unit_name: string | null; unit_code: string | null; unit_type: string | null })[]
 > {
   return query(
     `SELECT u.email, u.display_name, u.title, u.role, u.unit_id, u.is_active, u.notify_email, u.avatar_url,
-            u.perm_group, u.calendar_enabled, n.name AS unit_name, n.code AS unit_code
+            u.perm_group, u.calendar_enabled, n.name AS unit_name, n.code AS unit_code, n.type AS unit_type
        FROM okr_users u
        LEFT JOIN okr_units n ON n.id = u.unit_id
       ORDER BY CASE u.role WHEN 'exec' THEN 0 WHEN 'ceo' THEN 0 WHEN 'cfo' THEN 0 WHEN 'division_lead' THEN 1

@@ -1,7 +1,7 @@
 // Gom dữ liệu cho form Tạo OKR (NewObjectiveForm) — DÙNG CHUNG cho trang /objectives/new
 // và popup "+ Tạo OKR" ở /objectives. Trả về đúng các prop mà NewObjectiveForm cần (trừ `create`).
 import { listUnits, manageScope } from './org';
-import { listUsers, type OkrUser } from './users';
+import { listUsers, personTitle, type OkrUser } from './users';
 import { isExec } from './rbac';
 import { loadAccess, hasCap, canCreateObjective } from './access';
 import {
@@ -42,7 +42,7 @@ export async function buildObjectiveFormProps(user: OkrUser, periodId: string) {
     defaultLevel,
     levelLabels: LEVEL_LABEL,
     units: allowedUnits.map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort })),
-    users: users.map((u) => ({ email: u.email, name: u.display_name || u.email, role: u.role, unit_id: u.unit_id, unit_name: u.unit_name })),
+    users: users.map((u) => ({ email: u.email, name: u.display_name || u.email, role: u.role, unit_id: u.unit_id, unit_name: u.unit_name, title: personTitle(u) })),
     periodObjectives: objectives.map((o) => ({ id: o.id, code: o.code, title: o.title, level: o.level, bsc: o.bsc_perspective })),
     pillars: pillars.map((p) => ({ id: p.id, code: p.code, title: p.title, bsc: p.bsc_perspective })),
     bscOptions: BSC_PERSPECTIVES.map((b) => ({ value: b, label: BSC_PERSPECTIVE_LABEL[b], icon: BSC_PERSPECTIVE_ICON[b] })),

@@ -13,7 +13,7 @@ import ActivityLogButton from '@/components/ActivityLogButton';
 import { loadEntityAuditAction } from '@/app/audit/actions';
 import { sanitizeRichHtml } from '@/lib/sanitizeHtml';
 import { requireUser } from '@/lib/current-user';
-import { listUsers } from '@/lib/users';
+import { listUsers, personTitle } from '@/lib/users';
 import { listUnits } from '@/lib/org';
 import { listAllProjectOptions } from '@/lib/projects';
 import { listObjectivesWithKrs } from '@/lib/okr';
@@ -94,7 +94,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
   const secretaryText = participants.filter((p) => p.role === 'secretary').map((p) => p.email).join(', ');
   const cohostNames = participants.filter((p) => p.role === 'host' && p.email.toLowerCase() !== ownerLc).map((p) => p.name || p.email);
   const secretaryNames = participants.filter((p) => p.role === 'secretary').map((p) => p.name || p.email);
-  const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url }));
+  const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url, unit_id: u.unit_id, title: personTitle(u) }));
   const unitOpts = units.filter((u) => u.type !== 'company').map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort }));
   // OKR để gắn khi thêm việc: theo kỳ của cuộc họp (fallback kỳ hiện tại).
   const periodForObjs = m.period_id ?? (await getCurrentPeriod())?.id ?? null;

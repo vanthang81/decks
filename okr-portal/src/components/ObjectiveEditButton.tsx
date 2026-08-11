@@ -19,7 +19,7 @@ export type ObjData = {
   weight: number;
   parent_id: string | null;
 };
-type PersonOpt = { email: string; name: string };
+type PersonOpt = { email: string; name: string; title?: string | null };
 type UnitOpt = { id: string; name: string; type: 'company' | 'division' | 'department' };
 type ParentCand = { id: string; code: string | null; title: string; level: string };
 type PillarCand = { id: string; code: string | null; title: string };
@@ -192,7 +192,7 @@ export default function ObjectiveEditButton({
                   <div>
                     <label className="f">Chủ trì (cá nhân)</label>
                     <SearchSelect name="owner_email" defaultValue={objective.owner_email ?? ''} emptyLabel="— Chưa gán —"
-                      options={users.map((u) => ({ value: u.email, label: u.name }))} />
+                      options={users.map((u) => ({ value: u.email, label: u.name, sub: u.title ?? undefined }))} />
                   </div>
                 )}
               </div>

@@ -7,7 +7,7 @@ import NumberInput from '@/components/NumberInput';
 import { useToast } from '@/components/ToastProvider';
 import type { Level } from '@/lib/okr';
 
-type UserOpt = { email: string; name: string; role: string; unit_id: string | null; unit_name: string | null };
+type UserOpt = { email: string; name: string; role: string; unit_id: string | null; unit_name: string | null; title?: string | null };
 type UnitOpt = { id: string; name: string; type: string };
 type ParentOpt = { id: string; code: string | null; title: string; level: Level; bsc: string | null };
 type PillarOpt = { id: string; code: string | null; title: string; bsc: string | null };
@@ -202,7 +202,7 @@ export default function NewObjectiveForm({
 
       <label className="f">Người chủ trì {level === 'company' ? '(mặc định CEO — có thể assign khác)' : level !== 'individual' ? '(mặc định người phụ trách đơn vị)' : ''}</label>
       <SearchSelect name="owner_pick" value={owner} onChange={setOwner} emptyLabel="— Chưa gán —"
-        options={users.map((u) => ({ value: u.email, label: `${u.name}${u.unit_name ? ` · ${u.unit_name}` : ''}` }))} />
+        options={users.map((u) => ({ value: u.email, label: u.name, sub: u.title ?? undefined }))} />
       {/* owner_email được gửi qua fd.set('owner_email', owner) trong submit */}
 
       {err && <p className="form-err">{err}</p>}

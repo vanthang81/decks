@@ -5,13 +5,14 @@ import ParticipantsPicker from '@/components/ParticipantsPicker';
 import SearchSelect from '@/components/SearchSelect';
 import MultiSelect from '@/components/MultiSelect';
 import { unitTreeOptions } from '@/lib/unit-options';
+import { personTitle } from '@/lib/users';
 
 // Bộ ô nhập cuộc họp — dùng chung cho popup Tạo & Sửa (server component).
 export default function MeetingFields({
   users, units, projects, meetings, defaultOwner, meeting, participantsText, cohostText, secretaryText,
   unitIds = [], projectIds = [],
 }: {
-  users: { email: string; display_name: string | null }[];
+  users: { email: string; display_name: string | null; role?: string | null; unit_name?: string | null; unit_type?: string | null }[];
   units: { id: string; name: string; type: 'company' | 'division' | 'department'; parent_id?: string | null; sort?: number | null }[];
   projects: { id: string; code: string | null; name: string }[];
   meetings?: { id: string; code: string | null; title: string }[];
@@ -26,6 +27,8 @@ export default function MeetingFields({
   const m = meeting ?? null;
   // datetime-local cần "YYYY-MM-DDTHH:MM"
   const dtLocal = m?.meeting_at ? new Date(m.meeting_at).toISOString().slice(0, 16) : '';
+  // Kèm CHỨC DANH (vai trò · đơn vị) vào mọi ô chọn người — phân biệt người trùng tên.
+  const usersT = users.map((u) => ({ ...u, title: personTitle(u) }));
   return (
     <>
       {m && <input type="hidden" name="id" value={m.id} />}
@@ -51,7 +54,7 @@ export default function MeetingFields({
         <div>
           <label className="f">Chủ trì (chính)</label>
           <SearchSelect name="owner_email" defaultValue={m?.owner_email ?? defaultOwner}
-            options={users.map((u) => ({ value: u.email, label: u.display_name || u.email }))} />
+            options={usersT.map((u) => ({ value: u.email, label: u.display_name || u.email, sub: u.title ?? undefined }))} />
         </div>
         <div>
           <label className="f">Trạng thái</label>
@@ -63,9 +66,9 @@ export default function MeetingFields({
         </div>
       </div>
       <label className="f">Đồng chủ trì <span className="muted" style={{ fontWeight: 400 }}>(có thể chọn nhiều người — cùng quyền sửa toàn bộ cuộc họp)</span></label>
-      <ParticipantsPicker users={users} initial={cohostText ?? ''} name="cohost_emails" />
+      <ParticipantsPicker users={usersT} initial={cohostText ?? ''} name="cohost_emails" />
       <label className="f">Thư ký <span className="muted" style={{ fontWeight: 400 }}>(một hoặc nhiều người — cùng quyền sửa toàn bộ cuộc họp)</span></label>
-      <ParticipantsPicker users={users} initial={secretaryText ?? ''} name="secretary_emails" />
+      <ParticipantsPicker users={usersT} initial={secretaryText ?? ''} name="secretary_emails" />
       <div className="row">
         <div>
           <label className="f">Khối / Phòng liên quan <span className="muted" style={{ fontWeight: 400 }}>(chọn nhiều)</span></label>
@@ -93,7 +96,7 @@ export default function MeetingFields({
         </>
       )}
       <label className="f">Người tham gia / theo dõi <span className="muted" style={{ fontWeight: 400 }}>(gõ tên để chọn nhanh, hoặc nhập email người ngoài)</span></label>
-      <ParticipantsPicker users={users} initial={participantsText ?? ''} />
+      <ParticipantsPicker users={usersT} initial={participantsText ?? ''} />
       <label className="f">Nội dung / Chương trình (agenda)</label>
       <textarea className="i" name="agenda" rows={3} defaultValue={m?.agenda ?? ''} placeholder="Các nội dung sẽ trao đổi…" />
     </>

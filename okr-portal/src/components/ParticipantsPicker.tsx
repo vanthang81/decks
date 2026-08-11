@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 
-type UserOpt = { email: string; display_name: string | null };
+type UserOpt = { email: string; display_name: string | null; title?: string | null };
 
 // Ô chọn người tham gia cuộc họp: gõ tên/email → gợi ý từ danh sách user; nếu người chưa có
 // trong hệ thống thì tự nhập, phần chưa có "@" sẽ được điền sẵn đuôi @<defaultDomain>.
@@ -64,7 +64,7 @@ export default function ParticipantsPicker({
   }, [q, selectedSet, users, defaultDomain]);
 
   const options: { email: string; label: string; sub?: string; isNew?: boolean }[] = [
-    ...matches.map((u) => ({ email: u.email, label: u.display_name || u.email, sub: u.display_name ? u.email : undefined })),
+    ...matches.map((u) => ({ email: u.email, label: u.display_name || u.email, sub: u.title || (u.display_name ? u.email : undefined) })),
     ...(freeEntry ? [{ email: freeEntry, label: freeEntry, sub: 'Thêm mới (ngoài danh sách)', isNew: true }] : []),
   ];
 

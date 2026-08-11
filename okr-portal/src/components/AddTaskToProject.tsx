@@ -8,7 +8,7 @@ import { unitTreeOptions } from '@/lib/unit-options';
 
 type Kr = { id: string; code: string | null; title: string };
 export type ObjOpt = { id: string; code: string | null; title: string; unit_name: string | null; krs: Kr[] };
-type PersonOpt = { email: string; name: string };
+type PersonOpt = { email: string; name: string; title?: string | null };
 type UnitOpt = { id: string; name: string; type: 'company' | 'division' | 'department' };
 
 // Thêm việc VÀO DỰ ÁN: chọn Objective (+ KR) của bộ phận → việc hiện cả ở action plan
@@ -116,7 +116,7 @@ export default function AddTaskToProject({
                     name="owner_email"
                     defaultValue=""
                     emptyLabel="— Chưa giao —"
-                    options={users.map((u) => ({ value: u.email, label: u.name }))}
+                    options={users.map((u) => ({ value: u.email, label: u.name, sub: u.title ?? undefined }))}
                   />
                 </div>
                 <div>

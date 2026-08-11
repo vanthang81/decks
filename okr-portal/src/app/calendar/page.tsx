@@ -4,7 +4,7 @@ import CalendarView, { type CalView } from '@/components/CalendarView';
 import { requireUser } from '@/lib/current-user';
 import { isExec } from '@/lib/rbac';
 import { calendarEvents, type CalEvent, type CalScope } from '@/lib/calendar';
-import { listUsers } from '@/lib/users';
+import { listUsers, personTitle } from '@/lib/users';
 import { listAllProjectOptions } from '@/lib/projects';
 import { listObjectivesWithKrs } from '@/lib/okr';
 import { getCurrentPeriod } from '@/lib/periods';
@@ -70,7 +70,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: { v
           events={events}
           scope={scope}
           canAll={canAll}
-          users={users.map((u) => ({ email: u.email, name: u.display_name || u.email }))}
+          users={users.map((u) => ({ email: u.email, name: u.display_name || u.email, title: personTitle(u) }))}
           objectives={objectives.map((o) => ({ id: o.id, code: o.code, title: o.title, unit_name: o.unit_name, krs: o.krs }))}
           projects={projects}
           defaultOwner={user.email}

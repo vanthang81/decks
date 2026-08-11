@@ -1071,6 +1071,9 @@ a.prof-row:hover { background: var(--primary-tint); border-radius: 6px; }
 /* Tên người → link hồ sơ 360°: giữ màu chữ, gạch chân mờ khi rê chuột để biết bấm được */
 .user-link { color: inherit; text-decoration: none; border-bottom: 1px dotted color-mix(in srgb, var(--primary) 45%, transparent); cursor: pointer; }
 .user-link:hover { color: var(--primary); border-bottom-color: var(--primary); }
+/* Tên người kèm CHỨC DANH (vai trò · đơn vị) — dòng phụ mờ dưới tên, phân biệt người trùng tên */
+.user-with-title { display: inline-flex; flex-direction: column; line-height: 1.25; min-width: 0; vertical-align: top; }
+.user-title-sub { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Tổng quan công việc cá nhân (trang "Của tôi") — ô số bấm được, mở trang Công việc đã lọc */
 .my-tiles { gap: 14px; }
 .my-tile { display: block; text-decoration: none; color: inherit; padding: 10px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); min-width: 120px; transition: border-color .12s, box-shadow .12s, transform .12s; }

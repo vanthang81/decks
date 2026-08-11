@@ -11,7 +11,7 @@ import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
 import { listObjectivesWithKrs } from '@/lib/okr';
 import { listUnits } from '@/lib/org';
-import { listUsers } from '@/lib/users';
+import { listUsers, personTitle } from '@/lib/users';
 import { isExec } from '@/lib/rbac';
 import {
   getProject,
@@ -74,7 +74,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
   const projectOpts = p.period_id ? await listProjectOptions(p.period_id) : [];
   const meetingOpts = await listMeetingOptions(user);
   const objectiveOpts = p.period_id ? await listObjectivesWithKrs(p.period_id) : [];
-  const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url }));
+  const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url, unit_id: u.unit_id, title: personTitle(u) }));
   const unitOpts = units.filter((u) => u.type !== 'company').map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort }));
 
   // Tổng quan trạng thái công việc của dự án.

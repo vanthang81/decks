@@ -614,7 +614,7 @@ function EditModal({
                 <div>
                   <label className="f">Giao cho (cá nhân)</label>
                   <SearchSelect name="owner_email" defaultValue={card.owner_email ?? ''} emptyLabel="— Chưa giao —"
-                    options={users.map((u) => ({ value: u.email, label: u.name }))} />
+                    options={users.map((u) => ({ value: u.email, label: u.name, sub: u.title ?? undefined }))} />
                 </div>
               </div>
             )}
@@ -953,7 +953,7 @@ function EditModal({
                           <option value="">— Chưa giao —</option>
                           {users.map((u) => (
                             <option key={u.email} value={u.email}>
-                              {u.name}
+                              {u.title ? `${u.name} · ${u.title}` : u.name}
                             </option>
                           ))}
                         </select>
