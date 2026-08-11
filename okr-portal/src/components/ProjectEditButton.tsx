@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import ConfirmButton from './ConfirmButton';
 import SearchSelect from '@/components/SearchSelect';
+import { useToast } from '@/components/ToastProvider';
 import { unitTreeOptions } from '@/lib/unit-options';
 import NumberInput from '@/components/NumberInput';
 
@@ -43,6 +44,7 @@ export default function ProjectEditButton({
   del: (fd: FormData) => Promise<void>;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [err, setErr] = useState<string | null>(null);
@@ -65,6 +67,7 @@ export default function ProjectEditButton({
     startTransition(async () => {
       try {
         await save(fd);
+        toast('Đã lưu dự án', 'success');
         router.refresh();
         setOpen(false);
       } catch (e2) {

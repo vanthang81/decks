@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
+import ToastForm from '@/components/ToastForm';
 import { requireUser } from '@/lib/current-user';
 import { loadAccess, canManageSystem } from '@/lib/access';
 import { listRecentErrors } from '@/lib/errlog';
@@ -60,11 +61,11 @@ export default async function AdminErrors() {
                       <td style={{ fontSize: 12 }}>{e.user_email || <span className="muted">—</span>}</td>
                       <td>{e.resolved ? <span className="badge green">Đã xử lý</span> : <span className="badge red">Mới</span>}</td>
                       <td className="right">
-                        <form action={resolveErrorAction}>
+                        <ToastForm action={resolveErrorAction} done={e.resolved ? 'Đã mở lại' : 'Đã đánh dấu xử lý'}>
                           <input type="hidden" name="id" value={e.id} />
                           <input type="hidden" name="resolved" value={e.resolved ? '0' : '1'} />
                           <button className="btn ghost sm" type="submit">{e.resolved ? 'Mở lại' : 'Đánh dấu đã xử lý'}</button>
-                        </form>
+                        </ToastForm>
                       </td>
                     </tr>
                   ))}

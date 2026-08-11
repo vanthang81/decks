@@ -2,6 +2,7 @@
 
 import { useState, useTransition, type FormEvent } from 'react';
 import ConfirmButton from './ConfirmButton';
+import { useToast } from '@/components/ToastProvider';
 
 export type CheckinRowData = {
   id: string;
@@ -33,6 +34,7 @@ export default function CheckinRow({
   editAction: (fd: FormData) => Promise<void>;
   deleteAction: (fd: FormData) => Promise<void>;
 }) {
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [saved, setSaved] = useState(false);
   const [pending, start] = useTransition();
@@ -42,6 +44,7 @@ export default function CheckinRow({
     const fd = new FormData(e.currentTarget);
     start(async () => {
       await editAction(fd);
+      toast('Đã lưu check-in', 'success');
       setOpen(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 2600);
@@ -53,6 +56,7 @@ export default function CheckinRow({
     fd.set('id', ci.id);
     start(async () => {
       await deleteAction(fd);
+      toast('Đã xoá check-in', 'success');
     });
   }
 

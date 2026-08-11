@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
+import ToastForm from '@/components/ToastForm';
 import HelpTip from '@/components/HelpTip';
 import ConfirmButton from '@/components/ConfirmButton';
 import { requireUser } from '@/lib/current-user';
@@ -236,14 +237,14 @@ export default async function KpiLibraryPage() {
                           <input type="hidden" name="id" value={k.id} />
                           <KpiFields kpi={k} units={units} users={users} />
                         </EditModal>
-                        <form action={toggleKpiActiveAction}>
+                        <ToastForm action={toggleKpiActiveAction} done="Đã cập nhật KPI">
                           <input type="hidden" name="id" value={k.id} />
                           <input type="hidden" name="active" value={k.is_active ? '0' : '1'} />
                           <button className="icon-btn" type="submit" title={k.is_active ? 'Đang hiển thị — bấm để ẩn' : 'Đang ẩn — bấm để bật lại'} aria-label={k.is_active ? 'Ẩn KPI' : 'Bật KPI'}>
                             <NavIcon name={k.is_active ? 'eye' : 'eyeOff'} />
                           </button>
-                        </form>
-                        <form action={deleteKpiAction}>
+                        </ToastForm>
+                        <ToastForm action={deleteKpiAction} done="Đã xoá KPI">
                           <input type="hidden" name="id" value={k.id} />
                           <ConfirmButton
                             label={<NavIcon name="trash" />}
@@ -251,7 +252,7 @@ export default async function KpiLibraryPage() {
                             title="Xoá KPI"
                             message={`Xoá KPI "${k.name}"? Không hoàn tác.`}
                           />
-                        </form>
+                        </ToastForm>
                       </div>
                     </td>
                   </tr>

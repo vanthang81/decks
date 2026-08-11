@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import SearchSelect from '@/components/SearchSelect';
+import { useToast } from '@/components/ToastProvider';
 import { unitTreeOptions } from '@/lib/unit-options';
 
 type Kr = { id: string; code: string | null; title: string };
@@ -26,6 +27,7 @@ export default function AddTaskToMeeting({
   create: (fd: FormData) => Promise<void>;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [err, setErr] = useState<string | null>(null);
@@ -51,6 +53,7 @@ export default function AddTaskToMeeting({
     startTransition(async () => {
       try {
         await create(fd);
+        toast('Đã thêm công việc', 'success');
         router.refresh();
         setOpen(false);
         setObjId('');

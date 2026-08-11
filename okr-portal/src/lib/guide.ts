@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-11.112';
+export const GUIDE_VERSION = '2026-08-11.113';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -597,6 +597,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '11/08/2026 (Xác nhận thao tác — toast "Đã lưu / Đã xoá")',
+    items: [
+      'Mỗi khi Lưu / Sửa / Xoá xong ở mọi màn hình, một thông báo nhỏ (toast) hiện ở góc trên bên phải — biết ngay hệ thống đã xử lý xong ("Đã lưu", "Đã xoá", "Đã cập nhật…"); nếu lỗi thì hiện thông báo đỏ nêu lý do. Tự tắt sau vài giây, bấm ✕ để đóng ngay.',
+    ],
+  },
   {
     date: '11/08/2026 (Thông báo khi được giao việc)',
     items: [

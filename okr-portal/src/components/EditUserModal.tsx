@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/ToastProvider';
 import SearchSelect from '@/components/SearchSelect';
 import { unitTreeOptions } from '@/lib/unit-options';
 
@@ -34,6 +35,7 @@ export default function EditUserModal({
   action: (fd: FormData) => Promise<void>;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [err, setErr] = useState('');
   const [pending, start] = useTransition();
@@ -47,6 +49,7 @@ export default function EditUserModal({
       try {
         await action(fd);
         setOpen(false);
+        toast('Đã lưu người dùng', 'success');
         router.refresh();
       } catch (e2) {
         setErr(e2 instanceof Error ? e2.message : 'Không lưu được. Thử lại.');

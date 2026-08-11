@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
+import ToastForm from '@/components/ToastForm';
 import { requireUser } from '@/lib/current-user';
 import { loadAccess, canManageSystem } from '@/lib/access';
 import { listPeriods, orderPeriodsHierarchically, PERIOD_KIND_LABEL } from '@/lib/periods';
@@ -61,14 +62,14 @@ export default async function AdminPeriods() {
                       <td className="right">
                         <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                           {!p.is_current && (
-                            <form action={setCurrentPeriodAction}>
+                            <ToastForm action={setCurrentPeriodAction} done="Đã đặt kỳ hiện tại">
                               <input type="hidden" name="id" value={p.id} />
                               <button className="btn ghost sm" type="submit">
                                 Đặt hiện tại
                               </button>
-                            </form>
+                            </ToastForm>
                           )}
-                          <form action={setPeriodStatusAction}>
+                          <ToastForm action={setPeriodStatusAction} done="Đã cập nhật trạng thái kỳ">
                             <input type="hidden" name="id" value={p.id} />
                             <input
                               type="hidden"
@@ -78,7 +79,7 @@ export default async function AdminPeriods() {
                             <button className="btn ghost sm" type="submit">
                               {p.status === 'closed' ? 'Mở lại' : 'Đóng kỳ'}
                             </button>
-                          </form>
+                          </ToastForm>
                         </div>
                       </td>
                     </tr>
@@ -90,7 +91,7 @@ export default async function AdminPeriods() {
 
           <div className="card">
             <h3 style={{ marginTop: 0 }}>Tạo kỳ mới</h3>
-            <form action={createPeriodAction}>
+            <ToastForm action={createPeriodAction} done="Đã tạo kỳ mới">
               <label className="f">Tên kỳ</label>
               <input className="i" name="name" placeholder="VD: Chiến lược 2026–2030 / 2026 / Q3-2026 / T8-2026" required />
               <div className="row">
@@ -131,7 +132,7 @@ export default async function AdminPeriods() {
                   Tạo kỳ
                 </button>
               </div>
-            </form>
+            </ToastForm>
           </div>
         </div>
       </div>

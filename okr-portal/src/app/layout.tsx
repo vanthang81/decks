@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { Suspense } from 'react';
 import './globals.css';
 import { BRAND } from '@/lib/brand';
 import SiteFooter from '@/components/SiteFooter';
@@ -6,6 +7,8 @@ import BackToTop from '@/components/BackToTop';
 import MobileGestures from '@/components/MobileGestures';
 import AutoHideHeader from '@/components/AutoHideHeader';
 import TopLoadingBar from '@/components/TopLoadingBar';
+import ToastProvider from '@/components/ToastProvider';
+import FlashToaster from '@/components/FlashToaster';
 
 export const metadata: Metadata = {
   title: `${BRAND.full}`,
@@ -33,12 +36,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="vi">
       <body>
-        <TopLoadingBar />
-        {children}
-        <SiteFooter />
-        <BackToTop />
-        <MobileGestures />
-        <AutoHideHeader />
+        <ToastProvider>
+          <TopLoadingBar />
+          <Suspense fallback={null}>
+            <FlashToaster />
+          </Suspense>
+          {children}
+          <SiteFooter />
+          <BackToTop />
+          <MobileGestures />
+          <AutoHideHeader />
+        </ToastProvider>
       </body>
     </html>
   );

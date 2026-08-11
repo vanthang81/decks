@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState, useTransition } from 'react';
+import { useToast } from '@/components/ToastProvider';
 
 // Form dùng SERVER ACTION nhưng TỰ XOÁ TRẮNG sau khi thêm thành công (về lại defaultValue) +
 // hiện xác nhận "đã thêm … — sẵn sàng cho mục tiếp theo". Tránh dữ liệu cũ còn nằm lại gây nhầm.
@@ -14,6 +15,7 @@ export default function ResettableForm({
   className?: string;
   style?: React.CSSProperties;
 }) {
+  const { toast } = useToast();
   const ref = useRef<HTMLFormElement>(null);
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
@@ -29,6 +31,7 @@ export default function ResettableForm({
     start(async () => {
       try {
         await action(fd);
+        toast('Đã lưu', 'success');
         form.reset();                 // về lại các giá trị mặc định (0, 1, 100…) — sạch cho mục mới
         setMsg(`${doneLabel}${title ? `: “${title}”` : ''} — form đã sẵn sàng cho mục tiếp theo.`);
         setTimeout(() => setMsg(null), 4500);

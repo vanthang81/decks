@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import SearchSelect from '@/components/SearchSelect';
 import NumberInput from '@/components/NumberInput';
+import { useToast } from '@/components/ToastProvider';
 import type { Level } from '@/lib/okr';
 
 type UserOpt = { email: string; name: string; role: string; unit_id: string | null; unit_name: string | null };
@@ -42,6 +43,7 @@ export default function NewObjectiveForm({
   onSuccess?: () => void;
   onCancel?: () => void;
 }) {
+  const { toast } = useToast();
   const [level, setLevel] = useState<Level>(defaultLevel);
   const [unitId, setUnitId] = useState('');
   const [bsc, setBsc] = useState('');
@@ -113,6 +115,7 @@ export default function NewObjectiveForm({
     startTransition(async () => {
       try {
         await create(fd);
+        toast('Đã tạo OKR', 'success');
         onSuccess?.(); // chỉ tới đây khi inline (không redirect) → đóng popup + refresh
       } catch (e2) {
         const msg = e2 instanceof Error ? e2.message : String(e2);

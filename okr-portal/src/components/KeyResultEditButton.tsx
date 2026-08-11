@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import ConfirmButton from './ConfirmButton';
 import NumberInput from '@/components/NumberInput';
+import { useToast } from '@/components/ToastProvider';
 
 export type KrData = {
   id: string;
@@ -31,6 +32,7 @@ export default function KeyResultEditButton({
   del: (fd: FormData) => Promise<void>;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [err, setErr] = useState<string | null>(null);
@@ -54,6 +56,7 @@ export default function KeyResultEditButton({
     startTransition(async () => {
       try {
         await save(fd);
+        toast('Đã lưu Key Result', 'success');
         router.refresh();
         setOpen(false);
       } catch (e2) {
@@ -69,6 +72,7 @@ export default function KeyResultEditButton({
     startTransition(async () => {
       try {
         await del(fd);
+        toast('Đã xoá Key Result', 'success');
         router.refresh();
       } catch (e2) {
         const msg = e2 instanceof Error ? e2.message : String(e2);

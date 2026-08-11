@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import ConfirmButton from './ConfirmButton';
 import SearchSelect from '@/components/SearchSelect';
+import { useToast } from '@/components/ToastProvider';
 import { unitTreeOptions } from '@/lib/unit-options';
 
 export type ObjData = {
@@ -66,6 +67,7 @@ export default function ObjectiveEditButton({
   del: (fd: FormData) => Promise<void>;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [err, setErr] = useState<string | null>(null);
@@ -117,6 +119,7 @@ export default function ObjectiveEditButton({
     startTransition(async () => {
       try {
         await save(fd);
+        toast('Đã lưu OKR', 'success');
         router.refresh();
         setOpen(false);
       } catch (e2) {

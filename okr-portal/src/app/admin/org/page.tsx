@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import ConfirmButton from '@/components/ConfirmButton';
+import ToastForm from '@/components/ToastForm';
 import EditUnitButton from '@/components/EditUnitButton';
 import { requireUser } from '@/lib/current-user';
 import { loadAccess, canManageSystem } from '@/lib/access';
@@ -43,7 +44,7 @@ export default async function AdminOrg({ searchParams }: { searchParams: { asof?
               action={updateUnitAction}
             />
             {n.type !== 'company' && (
-              <form action={deleteUnitAction}>
+              <ToastForm action={deleteUnitAction} done="Đã xoá đơn vị">
                 <input type="hidden" name="id" value={n.id} />
                 <ConfirmButton
                   className="btn ghost sm danger"
@@ -52,7 +53,7 @@ export default async function AdminOrg({ searchParams }: { searchParams: { asof?
                   message={`Xoá "${n.name}"? Mọi đơn vị con bên dưới cũng sẽ bị xoá theo.`}
                   confirmLabel="Xoá hẳn"
                 />
-              </form>
+              </ToastForm>
             )}
           </div>
         )}
@@ -90,7 +91,7 @@ export default async function AdminOrg({ searchParams }: { searchParams: { asof?
 
           <div className="card">
             <h3 style={{ marginTop: 0 }}>Thêm đơn vị</h3>
-            <form action={createUnitAction}>
+            <ToastForm action={createUnitAction} done="Đã thêm đơn vị">
               <label className="f">Tên đơn vị</label>
               <input className="i" name="name" placeholder="VD: Khối Kinh doanh / Phòng Bán lẻ" required />
               <div className="row">
@@ -133,7 +134,7 @@ export default async function AdminOrg({ searchParams }: { searchParams: { asof?
                   Thêm đơn vị
                 </button>
               </div>
-            </form>
+            </ToastForm>
           </div>
         </div>
       </div>

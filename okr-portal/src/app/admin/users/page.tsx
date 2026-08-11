@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import ConfirmButton from '@/components/ConfirmButton';
+import ToastForm from '@/components/ToastForm';
 import EditUserModal from '@/components/EditUserModal';
 import UserSearchBox from '@/components/UserSearchBox';
 import SearchSelect from '@/components/SearchSelect';
@@ -34,7 +35,7 @@ export default async function AdminUsers() {
 
         <div className="card">
           <h3 style={{ marginTop: 0 }}>Thêm / cập nhật người dùng</h3>
-          <form action={saveUserAction}>
+          <ToastForm action={saveUserAction} done="Đã lưu người dùng">
             <div className="row">
               <div>
                 <label className="f">Email Google</label>
@@ -85,7 +86,7 @@ export default async function AdminUsers() {
                 </button>
               </div>
             </div>
-          </form>
+          </ToastForm>
         </div>
 
         <div className="card">
@@ -155,14 +156,14 @@ export default async function AdminUsers() {
                           assignPerms={assignPerms}
                           action={saveUserAction}
                         />
-                        <form action={toggleUserAction}>
+                        <ToastForm action={toggleUserAction} done={u.is_active ? 'Đã khoá người dùng' : 'Đã mở khoá'}>
                           <input type="hidden" name="email" value={u.email} />
                           <input type="hidden" name="active" value={u.is_active ? '0' : '1'} />
                           <button className="btn ghost sm" type="submit">
                             {u.is_active ? 'Khoá' : 'Mở'}
                           </button>
-                        </form>
-                        <form action={removeUserAction}>
+                        </ToastForm>
+                        <ToastForm action={removeUserAction} done="Đã xoá người dùng">
                           <input type="hidden" name="email" value={u.email} />
                           <ConfirmButton
                             className="btn ghost sm danger"
@@ -171,7 +172,7 @@ export default async function AdminUsers() {
                             message={`Xoá "${u.email}" khỏi hệ thống? Người này sẽ không đăng nhập được nữa.`}
                             confirmLabel="Xoá hẳn"
                           />
-                        </form>
+                        </ToastForm>
                       </div>
                     </td>
                   </tr>

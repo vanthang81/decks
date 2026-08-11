@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/ToastProvider';
 
 export type PillarItem = {
   id: string; code: string | null; title: string;
@@ -20,6 +21,7 @@ export default function PillarList({
   reorder: (orderedIds: string[]) => Promise<void>;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [items, setItems] = useState(pillars);
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export default function PillarList({
   const persist = (next: PillarItem[]) => {
     setItems(next);
     startTransition(async () => {
-      try { await reorder(next.map((i) => i.id)); router.refresh(); } catch { /* giữ optimistic */ }
+      try { await reorder(next.map((i) => i.id)); toast('Đã cập nhật thứ tự', 'success'); router.refresh(); } catch { /* giữ optimistic */ }
     });
   };
 

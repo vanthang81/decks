@@ -1864,3 +1864,34 @@ a.strat-bsc-cell:hover { text-decoration: none; box-shadow: 0 6px 18px rgba(0,0,
   .road-year { flex-basis: 54px; font-size: 14px; }
   .road-m { white-space: normal; }
 }
+
+/* ===== TOAST (thông báo thao tác: Đã lưu / Đã xoá / Có lỗi…) — dùng chung toàn app ===== */
+.toast-wrap {
+  position: fixed; top: 16px; right: 16px; z-index: 1200;
+  display: flex; flex-direction: column; gap: 10px;
+  max-width: min(92vw, 380px); pointer-events: none;
+}
+.toast {
+  pointer-events: auto; display: flex; align-items: flex-start; gap: 10px;
+  background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--primary);
+  border-radius: 12px; padding: 12px 12px 12px 14px;
+  box-shadow: 0 12px 32px rgba(36, 28, 26, .18); font-size: 14px; color: var(--ink);
+  animation: toastIn .22s cubic-bezier(.2, .8, .2, 1);
+}
+.toast-ic { flex: 0 0 auto; display: flex; margin-top: 1px; }
+.toast-msg { flex: 1 1 auto; line-height: 1.4; font-weight: 600; word-break: break-word; }
+.toast-x {
+  flex: 0 0 auto; background: none; border: 0; color: var(--muted); cursor: pointer;
+  font-size: 13px; line-height: 1; padding: 2px 5px; border-radius: 6px; margin-top: -1px;
+}
+.toast-x:hover { background: var(--bg); color: var(--ink); }
+.toast-success { border-left-color: #1F9D55; }
+.toast-success .toast-ic { color: #1F9D55; }
+.toast-error { border-left-color: #C0341D; }
+.toast-error .toast-ic { color: #C0341D; }
+.toast-info { border-left-color: var(--accent); }
+.toast-info .toast-ic { color: var(--primary); }
+@keyframes toastIn { from { opacity: 0; transform: translateY(-8px) scale(.98); } to { opacity: 1; transform: none; } }
+@media (max-width: 640px) {
+  .toast-wrap { top: 10px; right: 10px; left: 10px; max-width: none; }
+}

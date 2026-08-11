@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/ToastProvider';
 
 type TypeMeta = { key: string; label: string; desc: string };
 
@@ -18,6 +19,7 @@ export default function NotifSettingsForm({
   action: (fd: FormData) => Promise<void>;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [prefs, setPrefs] = useState<Record<string, boolean>>(initial);
   const [email, setEmail] = useState(initialEmail);
   const [pending, start] = useTransition();
@@ -30,6 +32,7 @@ export default function NotifSettingsForm({
     setSaved(false);
     start(async () => {
       await action(fd);
+      toast('Đã lưu cài đặt thông báo', 'success');
       setSaved(true);
       router.refresh();
       setTimeout(() => setSaved(false), 2500);

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from './ToastProvider';
 
 // Nút SỬA gọn (đặt ở góc phải-trên của box liên quan) → mở popup chứa form.
 // Dùng CHUNG cho mọi chỗ khai báo/sửa nội dung 1 box. Chỉ render khi có quyền (gác ở nơi gọi).
@@ -18,6 +19,7 @@ export default function EditModal({
   children,
   triggerClass = 'btn ghost sm',
   wide = false,
+  toastMsg = 'Đã lưu',
 }: {
   title: string;
   label?: string;
@@ -27,8 +29,10 @@ export default function EditModal({
   children: React.ReactNode;
   triggerClass?: string;
   wide?: boolean;
+  toastMsg?: string;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [err, setErr] = useState('');
   const [pending, start] = useTransition();
@@ -42,10 +46,11 @@ export default function EditModal({
         const r = await action(fd);
         if (r && 'error' in r && r.error) { setErr(r.error); return; }
         setOpen(false);
+        toast(toastMsg, 'success');
         router.refresh();
       } catch (e2) {
         // Action điều hướng (redirect) ném NEXT_REDIRECT — không phải lỗi: đóng popup, để router chuyển trang.
-        if (e2 instanceof Error && /NEXT_REDIRECT/.test(e2.message)) { setOpen(false); return; }
+        if (e2 instanceof Error && /NEXT_REDIRECT/.test(e2.message)) { setOpen(false); toast(toastMsg, 'success'); return; }
         setErr(e2 instanceof Error ? e2.message : 'Không lưu được. Thử lại.');
       }
     });
