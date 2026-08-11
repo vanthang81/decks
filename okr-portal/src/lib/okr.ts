@@ -173,6 +173,14 @@ export async function getObjective(id: string): Promise<ObjectiveRow | null> {
   return queryOne<ObjectiveRow>(`${OBJ_SELECT} WHERE o.id=$1`, [id]);
 }
 
+/** OKR của NHIỀU kỳ (dùng cho xem kỳ Năm/Quý gồm cả kỳ con). Cùng thứ tự cấp như listObjectivesByPeriod. */
+export async function listObjectivesByPeriods(ids: string[]): Promise<ObjectiveRow[]> {
+  if (ids.length === 0) return [];
+  return query<ObjectiveRow>(`${OBJ_SELECT} WHERE o.period_id = ANY($1) ORDER BY
+      CASE o.level WHEN 'company' THEN 0 WHEN 'division' THEN 1 WHEN 'department' THEN 2 ELSE 3 END,
+      o.sort, o.created_at`, [ids]);
+}
+
 // Lấy nhiều OKR theo id (dùng để nạp OKR CHA khác kỳ = trụ cột chiến lược, làm node apex trên bản đồ).
 export async function listObjectivesByIds(ids: string[]): Promise<ObjectiveRow[]> {
   if (ids.length === 0) return [];

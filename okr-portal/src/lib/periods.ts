@@ -73,6 +73,26 @@ export async function setPeriodStatus(
  * Sắp xếp kỳ theo cây phân cấp (parent_id) + trả về depth để thụt lề.
  * Con sắp theo starts_on. Kỳ mồ côi (parent không thuộc tập) coi như gốc.
  */
+/** Toàn bộ kỳ HẬU DUỆ của `rootId` (quý/tháng dưới 1 năm; tháng dưới 1 quý…) theo thứ tự phân cấp. */
+export function descendantPeriods(periods: Period[], rootId: string): Period[] {
+  const byParent = new Map<string, Period[]>();
+  for (const p of periods) {
+    if (!p.parent_id) continue;
+    const arr = byParent.get(p.parent_id) ?? [];
+    arr.push(p);
+    byParent.set(p.parent_id, arr);
+  }
+  for (const arr of byParent.values()) {
+    arr.sort((a, b) => (a.starts_on < b.starts_on ? -1 : a.starts_on > b.starts_on ? 1 : 0));
+  }
+  const out: Period[] = [];
+  const walk = (id: string) => {
+    for (const c of byParent.get(id) ?? []) { out.push(c); walk(c.id); }
+  };
+  walk(rootId);
+  return out;
+}
+
 export function orderPeriodsHierarchically(periods: Period[]): { period: Period; depth: number }[] {
   const byParent = new Map<string | null, Period[]>();
   const ids = new Set(periods.map((p) => p.id));

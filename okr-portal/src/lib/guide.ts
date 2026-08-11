@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-11.113';
+export const GUIDE_VERSION = '2026-08-11.114';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -597,6 +597,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '11/08/2026 (Xem & xuất OKR theo kỳ con)',
+    items: [
+      'Khi chọn kỳ Năm hoặc Quý ở trang OKR, phần "OKR theo kỳ con" hiện thêm bên dưới: mỗi Quý/Tháng có OKR sẽ mở ra được để xem cây OKR + tiến độ riêng của kỳ đó.',
+      'Khi Xuất Excel một kỳ Năm/Quý, file tự gộp đầy đủ cả OKR của các kỳ con (Quý/Tháng) — cột "Kỳ" phân biệt từng kỳ, nên nhập lại (import) vẫn đúng kỳ theo đúng mẫu.',
+    ],
+  },
   {
     date: '11/08/2026 (Xác nhận thao tác — toast "Đã lưu / Đã xoá")',
     items: [

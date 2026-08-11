@@ -16,10 +16,12 @@ import {
   listPeriods,
   getPeriod,
   orderPeriodsHierarchically,
+  descendantPeriods,
   PERIOD_KIND_LABEL,
 } from '@/lib/periods';
 import {
   listObjectivesByPeriod,
+  listObjectivesByPeriods,
   ownersOverObjectiveLimit,
   MAX_OBJ_PER_OWNER,
 } from '@/lib/okr';
@@ -53,22 +55,38 @@ export default async function ObjectivesPage({
   const okrFormProps = period && user.role !== 'staff' ? await buildObjectiveFormProps(user, period.id) : null;
 
   // Chỉ truyền field cần cho cây (serializable) sang client component.
-  const treeData: TreeObjective[] = objectives.map((o) => ({
-    id: o.id,
-    code: o.code,
-    parent_id: o.parent_id,
-    level: o.level,
-    title: o.title,
-    unit_id: o.unit_id,
-    unit_name: o.unit_name,
-    unit_code: o.unit_code,
-    owner_name: o.owner_name,
-    owner_email: o.owner_email,
-    status: o.status,
-    okr_type: o.okr_type,
-    kr_count: o.kr_count,
-    progress: o.progress,
-  }));
+  const toTree = (rows: typeof objectives): TreeObjective[] =>
+    rows.map((o) => ({
+      id: o.id, code: o.code, parent_id: o.parent_id, level: o.level, title: o.title,
+      unit_id: o.unit_id, unit_name: o.unit_name, unit_code: o.unit_code,
+      owner_name: o.owner_name, owner_email: o.owner_email, status: o.status,
+      okr_type: o.okr_type, kr_count: o.kr_count, progress: o.progress,
+    }));
+  const treeData: TreeObjective[] = toTree(objectives);
+
+  // KỲ CON: khi xem kỳ NĂM/QUÝ → gom thêm OKR của các kỳ con (Quý/Tháng) ĐÃ ĐẶT, nhóm theo từng kỳ con.
+  // Vẫn tôn trọng phạm vi đọc (nhân viên chỉ thấy OKR đơn vị mình).
+  const showChildren = !!period && (period.kind === 'year' || period.kind === 'quarter');
+  const childList = showChildren ? descendantPeriods(periods, period!.id) : [];
+  const childObjsRaw = childList.length ? await listObjectivesByPeriods(childList.map((p) => p.id)) : [];
+  const childObjs = viewScope === null
+    ? childObjsRaw
+    : childObjsRaw.filter((o) => canViewObjectiveUnit(viewScope, o, user.email));
+  const childByPeriod = new Map<string, typeof childObjs>();
+  for (const o of childObjs) {
+    const arr = childByPeriod.get(o.period_id) ?? [];
+    arr.push(o);
+    childByPeriod.set(o.period_id, arr);
+  }
+  const childSections = childList
+    .map((p) => ({ period: p, objs: childByPeriod.get(p.id) ?? [] }))
+    .filter((sec) => sec.objs.length > 0)
+    .map((sec) => ({
+      period: sec.period,
+      count: sec.objs.length,
+      avg: Math.round(sec.objs.reduce((a, o) => a + (o.progress ?? 0), 0) / sec.objs.length),
+      tree: toTree(sec.objs),
+    }));
 
   return (
     <>
@@ -130,6 +148,37 @@ export default async function ObjectivesPage({
           )}
           {period && objectives.length > 0 && <ObjectiveTree objectives={treeData} unitOptions={unitOptions} />}
         </div>
+
+        {childSections.length > 0 && (
+          <div className="card">
+            <div className="flexbtw" style={{ alignItems: 'baseline', flexWrap: 'wrap', gap: 6 }}>
+              <h3 style={{ margin: '0 0 2px' }}>OKR theo kỳ con</h3>
+              <span className="muted" style={{ fontSize: 12.5 }}>
+                Kỳ {PERIOD_KIND_LABEL[period!.kind]} “{period!.name}” gồm {childSections.length} kỳ con có OKR
+              </span>
+            </div>
+            <p className="subtitle" style={{ marginTop: 0 }}>
+              Mở từng kỳ con (Quý/Tháng) để xem cây OKR riêng của kỳ đó.
+            </p>
+            {childSections.map((sec) => (
+              <details key={sec.period.id} style={{ borderTop: '1px solid var(--line)', padding: '10px 0' }}>
+                <summary style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <span className="badge gray">{PERIOD_KIND_LABEL[sec.period.kind]}</span>
+                  <b>{sec.period.name}</b>
+                  <span className="muted" style={{ fontSize: 12.5 }}>· {sec.count} OKR</span>
+                  <span style={{ flex: 1, minWidth: 8 }} />
+                  <span style={{ width: 120, height: 7, background: 'var(--line)', borderRadius: 999, overflow: 'hidden', flex: '0 0 auto' }}>
+                    <span style={{ display: 'block', height: '100%', width: `${sec.avg}%`, background: 'var(--primary)' }} />
+                  </span>
+                  <span style={{ fontWeight: 700, fontSize: 13, width: 36, textAlign: 'right' }}>{sec.avg}%</span>
+                </summary>
+                <div style={{ marginTop: 12 }}>
+                  <ObjectiveTree objectives={sec.tree} unitOptions={unitOptions} />
+                </div>
+              </details>
+            ))}
+          </div>
+        )}
 
         {canImport && (
           <div className="card">
