@@ -11,6 +11,7 @@ import { listObjectivesByPeriod } from '@/lib/okr';
 import { getCurrentPeriod } from '@/lib/periods';
 import { depsForTasks } from '@/lib/deps';
 import { loadAccess, buildTaskViewCtx, canViewInitiative, canEditObjective } from '@/lib/access';
+import { ROLE_LABEL } from '@/lib/rbac';
 import { editInitiativeAction, deleteInitiativeAction, moveInitiativeAction, createTaskAction } from '@/app/objectives/actions';
 
 export const dynamic = 'force-dynamic';
@@ -60,11 +61,21 @@ export default async function TasksPage({
   const taskUnitScope = objectiveViewScope(user, units);
   const scopedUnits = taskUnitScope === null ? units : units.filter((u) => taskUnitScope.has(u.id));
   const unitOpts = scopedUnits.map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort }));
+  // Chức danh hiển thị kèm tên (phân biệt người trùng tên khi chọn/giao việc): "Vai trò · Đơn vị".
+  // Đơn vị chỉ ghép khi là Khối/Phòng (bỏ cấp Công ty cho gọn).
+  const unitById = new Map(units.map((u) => [u.id, u]));
+  const personTitle = (u: (typeof users)[number]): string | null => {
+    const roleLabel = ROLE_LABEL[u.role] ?? '';
+    const un = u.unit_id ? unitById.get(u.unit_id) : null;
+    const unitName = un && un.type !== 'company' ? un.name : null;
+    return [roleLabel, unitName].filter(Boolean).join(' · ') || null;
+  };
   const userOpts = users.map((u) => ({
     email: u.email,
     name: u.display_name || u.email,
     avatar: u.avatar_url,
     unit_id: u.unit_id,
+    title: personTitle(u),
   }));
 
   // Tạo công việc mới ngay tại đây: MỌI người đều tạo được. Nhân viên (staff) chỉ tạo VIỆC CÁ NHÂN

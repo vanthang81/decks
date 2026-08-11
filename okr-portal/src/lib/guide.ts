@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-11.125';
+export const GUIDE_VERSION = '2026-08-11.126';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -622,6 +622,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '11/08/2026 (Công việc: hiện Tên + Chức danh khi giao/chọn người)',
+    items: [
+      'Ở màn Công việc, mọi chỗ chọn/giao người nay hiện TÊN kèm CHỨC DANH (vai trò · đơn vị) — tránh nhầm giữa những người trùng tên và chọn đúng người: ô "Giao cho" (danh sách 2 dòng: tên + chức danh, gõ tìm được cả theo vai trò/đơn vị), cột "Phụ trách" trong bảng (tên + chức danh mờ bên dưới), thẻ Kanban và bộ lọc "Phụ trách".',
+    ],
+  },
   {
     date: '11/08/2026 (Báo cáo theo cấp: chỉnh trọng số OKR ngay tại chỗ)',
     items: [

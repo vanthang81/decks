@@ -88,7 +88,7 @@ export type Card = {
   budget_actual: number;
 };
 
-export type PersonOpt = { email: string; name: string; avatar?: string | null; unit_id?: string | null };
+export type PersonOpt = { email: string; name: string; avatar?: string | null; unit_id?: string | null; title?: string | null };
 export type UnitOpt = { id: string; name: string; type: 'company' | 'division' | 'department'; parent_id?: string | null; sort?: number | null };
 export type ProjectOpt = { id: string; code: string | null; name: string };
 export type MeetingOpt = { id: string; code: string | null; title: string };

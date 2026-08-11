@@ -59,7 +59,7 @@ export default function NewTaskModal({
           <div>
             <label className="f">Giao cho</label>
             <SearchSelect name="owner_email" value={owner} onChange={onOwner} emptyLabel="— Chưa giao —"
-              options={users.map((u) => ({ value: u.email, label: u.name }))} />
+              options={users.map((u) => ({ value: u.email, label: u.name, sub: u.title ?? undefined }))} />
           </div>
           <div>
             <label className="f">Đơn vị phụ trách <span className="muted" style={{ fontWeight: 400 }}>— tự theo người giao</span></label>

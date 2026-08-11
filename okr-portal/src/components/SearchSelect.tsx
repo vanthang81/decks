@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-export type SSOption = { value: string; label: string; group?: string };
+export type SSOption = { value: string; label: string; group?: string; sub?: string };
 
 // Bỏ dấu tiếng Việt để tìm kiếm không phân biệt dấu ("khoi" khớp "Khối").
 const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
@@ -39,7 +39,8 @@ export default function SearchSelect({
   const filtered = useMemo(() => {
     const ql = norm(q.trim());
     if (!ql) return all;
-    return all.filter((o) => o.value === '' || norm(o.label).includes(ql));
+    // Tìm theo cả nhãn chính LẪN dòng phụ (chức danh/đơn vị) → gõ "trưởng phòng" hay "marketing" đều ra.
+    return all.filter((o) => o.value === '' || norm(o.label).includes(ql) || (o.sub ? norm(o.sub).includes(ql) : false));
   }, [all, q]);
 
   useEffect(() => {
@@ -70,7 +71,10 @@ export default function SearchSelect({
         aria-expanded={open}
         onClick={() => !disabled && setOpen((v) => !v)}
       >
-        <span className={selectedLabel ? 'ss-val' : 'ss-ph'}>{selectedLabel || placeholder}</span>
+        <span className={selectedLabel ? 'ss-val' : 'ss-ph'}>
+          {selectedLabel || placeholder}
+          {selected?.sub ? <span className="ss-sub-inline"> · {selected.sub}</span> : null}
+        </span>
         <span className="ss-caret" aria-hidden>▾</span>
       </button>
       {open && (
@@ -97,7 +101,10 @@ export default function SearchSelect({
                   onMouseDown={(e) => { e.preventDefault(); pick(o); }}
                 >
                   {o.value === value && <span className="ss-check">✓</span>}
-                  <span className={o.value ? '' : 'ss-ph'}>{o.label}</span>
+                  <span className={`ss-opt-txt${o.value ? '' : ' ss-ph'}`}>
+                    <span className="ss-opt-main">{o.label}</span>
+                    {o.sub ? <span className="ss-opt-sub">{o.sub}</span> : null}
+                  </span>
                 </button>
               ))
             )}

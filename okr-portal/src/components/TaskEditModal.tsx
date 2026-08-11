@@ -145,7 +145,12 @@ export default function TaskEditModal({
                   </span>
                 </td></tr>
                 <tr><td className="muted">Phụ trách</td><td>
-                  {task.owner_email || task.owner_name ? <UserLink email={task.owner_email} name={task.owner_name} /> : <span className="muted">Chưa giao</span>}
+                  {task.owner_email || task.owner_name ? (
+                    <>
+                      <UserLink email={task.owner_email} name={task.owner_name} />
+                      {(() => { const ti = users.find((u) => u.email.toLowerCase() === (task.owner_email ?? '').toLowerCase())?.title; return ti ? <span className="muted"> · {ti}</span> : null; })()}
+                    </>
+                  ) : <span className="muted">Chưa giao</span>}
                 </td></tr>
                 <tr><td className="muted">Đơn vị</td><td>{task.unit_name || <span className="muted">—</span>}</td></tr>
                 <tr><td className="muted">Ưu tiên</td><td>{PRIO_LABEL[task.priority] ?? task.priority}</td></tr>
@@ -202,7 +207,7 @@ export default function TaskEditModal({
                 <div>
                   <label className="f">Người phụ trách</label>
                   <SearchSelect name="owner_email" defaultValue={task.owner_email ?? ''} emptyLabel="— Chưa giao —"
-                    options={users.map((u) => ({ value: u.email, label: u.name }))} />
+                    options={users.map((u) => ({ value: u.email, label: u.name, sub: u.title ?? undefined }))} />
                 </div>
                 <div>
                   <label className="f">Đơn vị phụ trách</label>

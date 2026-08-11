@@ -201,11 +201,19 @@ export default function TaskExplorer({
 
   const emailLc = currentEmail.toLowerCase();
 
+  // Tra chức danh (vai trò · đơn vị) theo email — phân biệt người trùng tên ở cột Phụ trách & bộ lọc.
+  const titleByEmail = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const u of users) if (u.title) m.set(u.email.toLowerCase(), u.title);
+    return m;
+  }, [users]);
   const owners = useMemo(() => {
     const m = new Map<string, string>();
     for (const t of tasks) if (t.owner_email) m.set(t.owner_email, t.owner_name || t.owner_email);
-    return [...m.entries()].map(([email, name]) => ({ email, name })).sort((a, b) => a.name.localeCompare(b.name));
-  }, [tasks]);
+    return [...m.entries()]
+      .map(([email, name]) => ({ email, name, title: titleByEmail.get(email.toLowerCase()) || '' }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [tasks, titleByEmail]);
   // Lọc đơn vị theo CÂY tổ chức (thụt cấp) — chỉ hiện đơn vị có việc.
   const unitChoices = useMemo(() => {
     const present = new Set<string>();
@@ -463,7 +471,7 @@ export default function TaskExplorer({
         <input className="i fb-search" placeholder="🔍 Tìm việc / OKR / dự án…" value={q} onChange={(e) => setQ(e.target.value)} />
         <select className="i fb-sel" value={fOwner} onChange={(e) => setFOwner(e.target.value)}>
           <option value="">Phụ trách: tất cả</option>
-          {owners.map((o) => <option key={o.email} value={o.email}>{o.name}</option>)}
+          {owners.map((o) => <option key={o.email} value={o.email}>{o.title ? `${o.name} · ${o.title}` : o.name}</option>)}
         </select>
         <div className="fb-sel fb-ss">
           <SearchSelect name="_fUnit" value={fUnit} onChange={setFUnit} emptyLabel="Đơn vị: tất cả" placeholder="Đơn vị: tất cả" options={unitChoices} />
@@ -539,7 +547,7 @@ export default function TaskExplorer({
       </div>
 
       {view === 'kanban' && (
-        <TasksKanban tasks={sorted} canEditT={(t) => manageSet.has(t.id) || t.owner_email?.toLowerCase() === emailLc} move={move} onOpen={(t) => setEditing(t)} waiting={waitingTitles} />
+        <TasksKanban tasks={sorted} canEditT={(t) => manageSet.has(t.id) || t.owner_email?.toLowerCase() === emailLc} move={move} onOpen={(t) => setEditing(t)} waiting={waitingTitles} titleByEmail={titleByEmail} />
       )}
       {view === 'timeline' && (
         <TasksGantt tasks={sorted} onOpen={(t) => setEditing(t)} waiting={waitingTitles} />
@@ -593,9 +601,14 @@ export default function TaskExplorer({
                       {t.owner_avatar && (
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img src={t.owner_avatar} alt="" referrerPolicy="no-referrer"
-                          style={{ width: 20, height: 20, borderRadius: '50%' }} />
+                          style={{ width: 20, height: 20, borderRadius: '50%', flex: '0 0 auto' }} />
                       )}
-                      <UserLink email={t.owner_email} name={t.owner_name} stop />
+                      <span style={{ display: 'inline-flex', flexDirection: 'column', lineHeight: 1.25, minWidth: 0 }}>
+                        <UserLink email={t.owner_email} name={t.owner_name} stop />
+                        {titleByEmail.get(t.owner_email.toLowerCase()) && (
+                          <span className="muted" style={{ fontSize: 11 }}>{titleByEmail.get(t.owner_email.toLowerCase())}</span>
+                        )}
+                      </span>
                     </span>
                   ) : <span className="muted" style={{ fontSize: 12.5 }}>—</span>}
                 </td>
@@ -681,13 +694,14 @@ function effKindT(t: TaskRow): 'project' | 'subproject' | 'action' {
   return t.kind !== 'action' && !t.has_children ? 'action' : t.kind;
 }
 function TasksKanban({
-  tasks, canEditT, move, onOpen, waiting,
+  tasks, canEditT, move, onOpen, waiting, titleByEmail,
 }: {
   tasks: TaskRow[];
   canEditT: (t: TaskRow) => boolean;
   move: (id: string, status: Status) => Promise<void>;
   onOpen: (t: TaskRow) => void;
   waiting: (id: string) => string[];
+  titleByEmail: Map<string, string>;
 }) {
   const router = useRouter();
   const [cards, setCards] = useState<TaskRow[]>(tasks);
@@ -758,7 +772,12 @@ function TasksKanban({
                         {!c.objective_id && c.meeting_id && <span className="ctx-chip ctx-mtg">🗓 {c.meeting_code || c.meeting_title}</span>}
                       </div>
                       <div className="kb-card-foot">
-                        <span>{c.owner_name || 'Chưa giao'}</span>
+                        <span title={c.owner_email ? titleByEmail.get(c.owner_email.toLowerCase()) || undefined : undefined}>
+                          {c.owner_name || 'Chưa giao'}
+                          {c.owner_email && titleByEmail.get(c.owner_email.toLowerCase()) && (
+                            <span className="muted"> · {titleByEmail.get(c.owner_email.toLowerCase())}</span>
+                          )}
+                        </span>
                         {c.due_on && <span>· {fmtDate(c.due_on)}</span>}
                         <span className="kb-card-prog">{c.progress.toFixed(0)}%</span>
                       </div>
