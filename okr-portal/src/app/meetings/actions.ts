@@ -19,6 +19,10 @@ import { sanitizeRichHtml, isRichEmpty } from '@/lib/sanitizeHtml';
 
 function str(fd: FormData, k: string): string { return String(fd.get(k) ?? '').trim(); }
 function orNull(s: string): string | null { return s === '' ? null : s; }
+// Ô MultiSelect gửi 1 input ẩn = các id nối bằng dấu phẩy.
+function csvList(fd: FormData, k: string): string[] {
+  return str(fd, k).split(',').map((x) => x.trim()).filter(Boolean);
+}
 const ONE = <T extends string>(v: string, allowed: readonly T[], dflt: T): T =>
   (allowed as readonly string[]).includes(v) ? (v as T) : dflt;
 
@@ -27,8 +31,8 @@ function readInput(fd: FormData): MeetingInput {
     title: str(fd, 'title'),
     type: ONE<MeetingType>(str(fd, 'type'), MEETING_TYPES, 'other'),
     period_id: orNull(str(fd, 'period_id')),
-    unit_id: orNull(str(fd, 'unit_id')),
-    project_id: orNull(str(fd, 'project_id')),
+    unit_ids: csvList(fd, 'unit_ids'),
+    project_ids: csvList(fd, 'project_ids'),
     owner_email: orNull(str(fd, 'owner_email')),
     secretary_email: orNull(str(fd, 'secretary_email')),
     meeting_at: orNull(str(fd, 'meeting_at')),

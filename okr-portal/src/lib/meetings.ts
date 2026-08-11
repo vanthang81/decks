@@ -50,6 +50,7 @@ export type Meeting = {
 };
 export type MeetingRow = Meeting & {
   owner_name: string | null; unit_name: string | null; project_name: string | null;
+  related_units: string | null; related_projects: string | null;
   prev_code: string | null; prev_title: string | null;
   participant_count: number; action_count: number; pending_requests: number;
 };
@@ -61,6 +62,10 @@ const SELECT = `
          m.owner_email, m.secretary_email, m.meeting_at::text AS meeting_at, m.location,
          m.status, m.visibility, m.agenda, m.minutes, m.decisions, m.previous_meeting_id, m.created_by,
          ou.display_name AS owner_name, un.name AS unit_name, pr.name AS project_name,
+         (SELECT string_agg(un2.name, ', ' ORDER BY un2.name)
+            FROM okr_meeting_units mu JOIN okr_units un2 ON un2.id=mu.unit_id WHERE mu.meeting_id=m.id) AS related_units,
+         (SELECT string_agg(COALESCE(pr2.code||' · ','')||pr2.name, ', ' ORDER BY pr2.name)
+            FROM okr_meeting_projects mpr JOIN okr_projects pr2 ON pr2.id=mpr.project_id WHERE mpr.meeting_id=m.id) AS related_projects,
          pm.code AS prev_code, pm.title AS prev_title,
          (SELECT count(*) FROM okr_meeting_participants p WHERE p.meeting_id=m.id)::int AS participant_count,
          (SELECT count(*) FROM okr_initiatives i WHERE i.meeting_id=m.id)::int AS action_count,
@@ -80,7 +85,7 @@ function viewClause(user: OkrUser, startIdx: number): { sql: string; params: unk
   const e = `$${startIdx}`, u = `$${startIdx + 1}`;
   return {
     sql: `(lower(m.owner_email)=${e} OR lower(m.secretary_email)=${e} OR m.visibility='company'
-       OR (m.visibility='unit' AND m.unit_id=${u})
+       OR (m.visibility='unit' AND (m.unit_id=${u} OR EXISTS (SELECT 1 FROM okr_meeting_units mu2 WHERE mu2.meeting_id=m.id AND mu2.unit_id=${u})))
        OR EXISTS (SELECT 1 FROM okr_meeting_participants mp WHERE mp.meeting_id=m.id AND lower(mp.email)=${e})
        OR EXISTS (SELECT 1 FROM okr_meeting_access_requests mr WHERE mr.meeting_id=m.id AND lower(mr.requester_email)=${e} AND mr.status='approved'))`,
     params: p,
@@ -173,34 +178,64 @@ async function nextMeetingCode(): Promise<string> {
 }
 
 export type MeetingInput = {
-  title: string; type: MeetingType; period_id: string | null; unit_id: string | null; project_id: string | null;
+  title: string; type: MeetingType; period_id: string | null; unit_ids: string[]; project_ids: string[];
   owner_email: string | null; secretary_email: string | null; meeting_at: string | null; location: string | null;
   status: MeetingStatus; visibility: MeetingVisibility; agenda: string | null; previous_meeting_id: string | null;
 };
 
+/** Thay TOÀN BỘ khối/phòng liên quan của cuộc họp (bảng nối). */
+export async function setMeetingUnits(meetingId: string, unitIds: string[]): Promise<void> {
+  await query('DELETE FROM okr_meeting_units WHERE meeting_id=$1', [meetingId]);
+  const uniq = [...new Set(unitIds.filter(Boolean))];
+  for (const u of uniq) await query('INSERT INTO okr_meeting_units (meeting_id, unit_id) VALUES ($1,$2) ON CONFLICT DO NOTHING', [meetingId, u]);
+}
+/** Thay TOÀN BỘ dự án liên quan của cuộc họp (bảng nối). */
+export async function setMeetingProjects(meetingId: string, projectIds: string[]): Promise<void> {
+  await query('DELETE FROM okr_meeting_projects WHERE meeting_id=$1', [meetingId]);
+  const uniq = [...new Set(projectIds.filter(Boolean))];
+  for (const p of uniq) await query('INSERT INTO okr_meeting_projects (meeting_id, project_id) VALUES ($1,$2) ON CONFLICT DO NOTHING', [meetingId, p]);
+}
+export async function getMeetingUnitIds(meetingId: string): Promise<string[]> {
+  const r = await query<{ unit_id: string }>('SELECT unit_id FROM okr_meeting_units WHERE meeting_id=$1', [meetingId]);
+  return r.map((x) => x.unit_id);
+}
+export async function getMeetingProjectIds(meetingId: string): Promise<string[]> {
+  const r = await query<{ project_id: string }>('SELECT project_id FROM okr_meeting_projects WHERE meeting_id=$1', [meetingId]);
+  return r.map((x) => x.project_id);
+}
+
 export async function createMeeting(input: MeetingInput, createdBy: string): Promise<string> {
   const code = await nextMeetingCode();
+  // Cột đơn = "chính" = phần tử đầu (tương thích quyền xem 'unit' + hiển thị cũ); junction giữ tất cả.
+  const primaryUnit = input.unit_ids[0] ?? null;
+  const primaryProject = input.project_ids[0] ?? null;
   const row = await queryOne<{ id: string }>(
     `INSERT INTO okr_meetings (code, title, type, period_id, unit_id, project_id, owner_email, secretary_email,
         meeting_at, location, status, visibility, agenda, previous_meeting_id, created_by)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING id`,
-    [code, input.title, input.type, input.period_id, input.unit_id, input.project_id, input.owner_email,
+    [code, input.title, input.type, input.period_id, primaryUnit, primaryProject, input.owner_email,
      input.secretary_email, input.meeting_at || null, input.location, input.status, input.visibility, input.agenda,
      input.previous_meeting_id, createdBy],
   );
+  await setMeetingUnits(row!.id, input.unit_ids);
+  await setMeetingProjects(row!.id, input.project_ids);
   return row!.id;
 }
 
 export async function updateMeeting(id: string, input: MeetingInput): Promise<void> {
+  const primaryUnit = input.unit_ids[0] ?? null;
+  const primaryProject = input.project_ids[0] ?? null;
   await query(
     `UPDATE okr_meetings SET title=$2, type=$3, period_id=$4, unit_id=$5, project_id=$6, owner_email=$7,
         secretary_email=$8, meeting_at=$9, location=$10, status=$11, visibility=$12, agenda=$13,
         previous_meeting_id=$14, updated_at=now()
       WHERE id=$1`,
-    [id, input.title, input.type, input.period_id, input.unit_id, input.project_id, input.owner_email,
+    [id, input.title, input.type, input.period_id, primaryUnit, primaryProject, input.owner_email,
      input.secretary_email, input.meeting_at || null, input.location, input.status, input.visibility, input.agenda,
      input.previous_meeting_id],
   );
+  await setMeetingUnits(id, input.unit_ids);
+  await setMeetingProjects(id, input.project_ids);
 }
 
 /** Cuộc họp NỐI TIẾP (follow-up) = các cuộc họp có previous_meeting_id = id này (lọc quyền xem). */

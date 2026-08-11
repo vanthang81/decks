@@ -18,7 +18,7 @@ import { listObjectivesWithKrs } from '@/lib/okr';
 import { getCurrentPeriod } from '@/lib/periods';
 import {
   getMeeting, canViewMeeting, canManageMeetingWith, listParticipants, listMeetingOptions, listFollowUpMeetings,
-  listAccessRequests, myAccessRequest,
+  listAccessRequests, myAccessRequest, getMeetingUnitIds, getMeetingProjectIds,
   MEETING_TYPE_LABEL, meetingStatusView, VISIBILITY_LABEL,
 } from '@/lib/meetings';
 import { listInitiativesForMeeting } from '@/lib/initiatives';
@@ -79,10 +79,11 @@ export default async function MeetingDetail({ params }: { params: { id: string }
   const participants = await listParticipants(m.id);
   const canManage = canManageMeetingWith(user, m, participants);
 
-  const [tasks, pending, users, units, projectOpts, meetingOpts, followUps] = await Promise.all([
+  const [tasks, pending, users, units, projectOpts, meetingOpts, followUps, unitIds, projectIds] = await Promise.all([
     listInitiativesForMeeting(m.id),
     canManage ? listAccessRequests(m.id, 'pending') : Promise.resolve([]),
     listUsers(), listUnits(), listAllProjectOptions(), listMeetingOptions(user), listFollowUpMeetings(m.id, user),
+    getMeetingUnitIds(m.id), getMeetingProjectIds(m.id),
   ]);
   const ownerLc = m.owner_email?.toLowerCase() ?? '';
   const participantsText = participants.filter((p) => p.role === 'participant' || p.role === 'watcher').map((p) => p.email).join(', ');
@@ -119,8 +120,8 @@ export default async function MeetingDetail({ params }: { params: { id: string }
                 Chủ trì: <b>{m.owner_name ?? m.owner_email ?? '—'}</b>
                 {cohostNames.length > 0 ? `, ${cohostNames.join(', ')}` : ''}
                 {secretaryNames.length > 0 ? ` · Thư ký: ${secretaryNames.join(', ')}` : ''}
-                {m.unit_name ? ` · ${m.unit_name}` : ''}
-                {m.project_name ? ` · 🗂 ${m.project_name}` : ''}
+                {m.related_units ? ` · ${m.related_units}` : ''}
+                {m.related_projects ? ` · 🗂 ${m.related_projects}` : ''}
                 {` · 👁 ${VISIBILITY_LABEL[m.visibility]}`}
               </div>
               {(m.previous_meeting_id || followUps.length > 0) && (
@@ -141,7 +142,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
             {canManage && (
               <div className="row-actions">
                 <EditModal title="Sửa cuộc họp" label="Sửa" icon={<NavIcon name="pencil" />} submitLabel="Lưu cuộc họp" action={updateMeetingAction} wide>
-                  <MeetingFields users={users} units={units} projects={projectOpts} meetings={meetingOpts} defaultOwner={user.email} meeting={m} participantsText={participantsText} cohostText={cohostText} secretaryText={secretaryText} />
+                  <MeetingFields users={users} units={units} projects={projectOpts} meetings={meetingOpts} defaultOwner={user.email} meeting={m} participantsText={participantsText} cohostText={cohostText} secretaryText={secretaryText} unitIds={unitIds} projectIds={projectIds} />
                 </EditModal>
                 <form action={deleteMeetingAction}>
                   <input type="hidden" name="id" value={m.id} />

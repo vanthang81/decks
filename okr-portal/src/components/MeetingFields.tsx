@@ -3,11 +3,13 @@ import {
 } from '@/lib/meetings';
 import ParticipantsPicker from '@/components/ParticipantsPicker';
 import SearchSelect from '@/components/SearchSelect';
+import MultiSelect from '@/components/MultiSelect';
 import { unitTreeOptions } from '@/lib/unit-options';
 
 // Bộ ô nhập cuộc họp — dùng chung cho popup Tạo & Sửa (server component).
 export default function MeetingFields({
   users, units, projects, meetings, defaultOwner, meeting, participantsText, cohostText, secretaryText,
+  unitIds = [], projectIds = [],
 }: {
   users: { email: string; display_name: string | null }[];
   units: { id: string; name: string; type: 'company' | 'division' | 'department'; parent_id?: string | null; sort?: number | null }[];
@@ -18,6 +20,8 @@ export default function MeetingFields({
   participantsText?: string;   // người tham gia/theo dõi (role participant/watcher)
   cohostText?: string;         // đồng chủ trì (role host, trừ chủ trì chính)
   secretaryText?: string;      // thư ký (role secretary — có thể nhiều)
+  unitIds?: string[];          // khối/phòng liên quan (nhiều) — prefill khi sửa
+  projectIds?: string[];       // dự án liên quan (nhiều) — prefill khi sửa
 }) {
   const m = meeting ?? null;
   // datetime-local cần "YYYY-MM-DDTHH:MM"
@@ -64,24 +68,23 @@ export default function MeetingFields({
       <ParticipantsPicker users={users} initial={secretaryText ?? ''} name="secretary_emails" />
       <div className="row">
         <div>
-          <label className="f">Khối / Phòng liên quan</label>
-          <SearchSelect name="unit_id" defaultValue={m?.unit_id ?? ''} emptyLabel="— Không gắn —"
-            options={unitTreeOptions(units)} />
+          <label className="f">Khối / Phòng liên quan <span className="muted" style={{ fontWeight: 400 }}>(chọn nhiều)</span></label>
+          <MultiSelect name="unit_ids" initial={unitIds} options={unitTreeOptions(units)}
+            placeholder="Gõ tên khối/phòng để thêm…" emptyText="Chưa gắn khối/phòng nào." />
         </div>
         <div>
-          <label className="f">Dự án liên quan</label>
-          <SearchSelect name="project_id" defaultValue={m?.project_id ?? ''} emptyLabel="— Không gắn —"
-            options={projects.map((p) => ({ value: p.id, label: `${p.code ? p.code + ' · ' : ''}${p.name}` }))} />
-        </div>
-        <div>
-          <label className="f">Ai được xem</label>
-          <select className="i" name="visibility" defaultValue={m?.visibility ?? 'participants'}>
-            {(Object.keys(VISIBILITY_LABEL) as (keyof typeof VISIBILITY_LABEL)[]).map((v) => (
-              <option key={v} value={v}>{VISIBILITY_LABEL[v]}</option>
-            ))}
-          </select>
+          <label className="f">Dự án liên quan <span className="muted" style={{ fontWeight: 400 }}>(chọn nhiều)</span></label>
+          <MultiSelect name="project_ids" initial={projectIds}
+            options={projects.map((p) => ({ value: p.id, label: `${p.code ? p.code + ' · ' : ''}${p.name}` }))}
+            placeholder="Gõ tên/mã dự án để thêm…" emptyText="Chưa gắn dự án nào." />
         </div>
       </div>
+      <label className="f">Ai được xem</label>
+      <select className="i" name="visibility" defaultValue={m?.visibility ?? 'participants'}>
+        {(Object.keys(VISIBILITY_LABEL) as (keyof typeof VISIBILITY_LABEL)[]).map((v) => (
+          <option key={v} value={v}>{VISIBILITY_LABEL[v]}</option>
+        ))}
+      </select>
       {meetings && meetings.length > 0 && (
         <>
           <label className="f">Cuộc họp trước (nối chuỗi) <span className="muted" style={{ fontWeight: 400 }}>— vd chuỗi check-in dự án hàng tuần</span></label>

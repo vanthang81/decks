@@ -63,7 +63,7 @@ export default async function MeetingsPage() {
                         {m.pending_requests > 0 && (m.owner_email === user.email || m.secretary_email === user.email) && (
                           <span className="badge amber" style={{ marginLeft: 6, fontSize: 10.5 }}>{m.pending_requests} chờ duyệt</span>
                         )}
-                        {(m.unit_name || m.project_name) && <div className="muted" style={{ fontSize: 11 }}>{[m.unit_name, m.project_name].filter(Boolean).join(' · ')}</div>}
+                        {(m.related_units || m.related_projects) && <div className="muted" style={{ fontSize: 11 }}>{[m.related_units, m.related_projects].filter(Boolean).join(' · ')}</div>}
                       </td>
                       <td style={{ fontSize: 12.5 }}>{MEETING_TYPE_LABEL[m.type]}</td>
                       <td style={{ fontSize: 12.5 }}>{m.meeting_at ? fmtDateTime(m.meeting_at) : <span className="muted">—</span>}</td>
