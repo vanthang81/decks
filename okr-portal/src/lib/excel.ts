@@ -269,6 +269,11 @@ export async function importOkrWorkbook(buf: Buffer): Promise<ImportResult> {
     const r = await queryOne<{ id: string }>(`SELECT id FROM okr_units WHERE code=$1 LIMIT 1`, [code]);
     return r?.id ?? null;
   };
+  // Map email người dùng → đơn vị của họ — để công việc nhập từ Excel TỰ NHẢY "Đơn vị phụ trách" theo
+  // người được giao (giống khi tạo việc bằng tay). Tải 1 lần.
+  const ownerUnitRows = await query<{ email: string; unit_id: string | null }>(`SELECT lower(email) AS email, unit_id FROM okr_users`);
+  const unitByOwner = new Map(ownerUnitRows.map((u) => [u.email, u.unit_id]));
+  const ownerUnitId = (email: string): string | null => (email ? unitByOwner.get(email.toLowerCase()) ?? null : null);
 
   // 1) Objectives — Mã khớp OKR có sẵn → CẬP NHẬT; Mã trống/không khớp + có Cấp & Tiêu đề → TẠO MỚI.
   for (const r of rowsOfAny(wb, SHEET_OBJ_ALIASES)) {
@@ -371,14 +376,17 @@ export async function importOkrWorkbook(buf: Buffer): Promise<ImportResult> {
     if (code) {
       const i = await queryOne<{ id: string }>('SELECT id FROM okr_initiatives WHERE code=$1', [code]);
       if (!i) { res.skipped++; continue; }
+      const owner = s(r['Người phụ trách (email)']);
+      // Nếu việc CHƯA có đơn vị → tự điền đơn vị của người được giao (COALESCE giữ đơn vị đã đặt tay).
+      const unitId = ownerUnitId(owner);
       await query(
         `UPDATE okr_initiatives SET title=COALESCE(NULLIF($2,''),title), description=$3, owner_email=NULLIF($4,''),
             status=COALESCE(NULLIF($5,''),status), priority=COALESCE(NULLIF($6,''),priority), progress=$7,
-            start_on=$8, due_on=$9, budget_planned=$10, budget_actual=$11,
+            start_on=$8, due_on=$9, budget_planned=$10, budget_actual=$11, unit_id=COALESCE(unit_id, $12),
             done_on=CASE WHEN $5='done' AND done_on IS NULL THEN now()::date WHEN $5<>'done' THEN NULL ELSE done_on END,
             updated_at=now() WHERE id=$1`,
-        [i.id, s(r['Tiêu đề']), s(r['Mô tả']) || null, s(r['Người phụ trách (email)']), status, priority,
-         prog, normDate(r['Bắt đầu']), normDate(r['Kết thúc']), n(r['NS kế hoạch']), n(r['Thực chi'])],
+        [i.id, s(r['Tiêu đề']), s(r['Mô tả']) || null, owner, status, priority,
+         prog, normDate(r['Bắt đầu']), normDate(r['Kết thúc']), n(r['NS kế hoạch']), n(r['Thực chi']), unitId],
       );
       res.initUpdated++;
       await recomputeInitiativeUp(i.id);
@@ -391,10 +399,13 @@ export async function importOkrWorkbook(buf: Buffer): Promise<ImportResult> {
       if (!o) { res.errors.push(`Không tìm thấy Mục tiêu "${objCode}" cho công việc mới "${title}"`); res.skipped++; continue; }
       const parent = await initIdByCode(o.id, s(r['Mã cha']));
       const newCode = await nextInitCode(o.id);
+      const owner = s(r['Người phụ trách (email)']);
+      // Tự nhảy "Đơn vị phụ trách" = đơn vị của người được giao (giống tạo việc bằng tay).
+      const unitId = ownerUnitId(owner);
       await query(
-        `INSERT INTO okr_initiatives(objective_id,parent_id,kind,title,description,owner_email,status,priority,progress,start_on,due_on,budget_planned,budget_actual,created_by,code)
-         VALUES($1,$2,$3,$4,$5,NULLIF($6,''),$7,$8,$9,$10,$11,$12,$13,'import',$14)`,
-        [o.id, parent, E_KIND.parse(r['Loại']), title, s(r['Mô tả']) || null, s(r['Người phụ trách (email)']),
+        `INSERT INTO okr_initiatives(objective_id,parent_id,kind,title,description,owner_email,unit_id,status,priority,progress,start_on,due_on,budget_planned,budget_actual,created_by,code)
+         VALUES($1,$2,$3,$4,$5,NULLIF($6,''),$7,$8,$9,$10,$11,$12,$13,$14,'import',$15)`,
+        [o.id, parent, E_KIND.parse(r['Loại']), title, s(r['Mô tả']) || null, owner, unitId,
          status, priority, prog, normDate(r['Bắt đầu']), normDate(r['Kết thúc']), n(r['NS kế hoạch']), n(r['Thực chi']), newCode],
       );
       res.initCreated++;
