@@ -116,6 +116,7 @@ export default async function TasksPage({
           users={userOpts}
           units={unitOpts}
           projects={projects}
+          objectiveOpts={objOpts}
           editAction={editInitiativeAction}
           deleteAction={deleteInitiativeAction}
           move={moveInitiativeAction}

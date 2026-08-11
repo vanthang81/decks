@@ -31,6 +31,7 @@ export default function TaskEditModal({
   users,
   units,
   projects,
+  objectiveOpts = [],
   editAction,
   deleteAction,
   onClose,
@@ -43,6 +44,7 @@ export default function TaskEditModal({
   users: PersonOpt[];
   units: UnitOpt[];
   projects: ProjectOpt[];
+  objectiveOpts?: { id: string; label: string }[];  // OKR để gắn lại việc
   editAction: (fd: FormData) => Promise<void>;
   deleteAction: (fd: FormData) => Promise<void>;
   onClose: () => void;
@@ -63,10 +65,13 @@ export default function TaskEditModal({
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     fd.set('id', task.id);
-    // GIỮ nguyên các liên kết không có ô chọn trong form này (OKR/KR/cuộc họp) — nếu không set,
-    // editInitiativeAction sẽ đọc null và XOÁ liên kết. (project_id đã có select riêng.)
+    // GIỮ nguyên liên kết không có ô chọn trong form này (cuộc họp). project_id & objective_id đã có select.
     if (!fd.has('objective_id')) fd.set('objective_id', task.objective_id ?? '');
-    if (!fd.has('key_result_id')) fd.set('key_result_id', task.key_result_id ?? '');
+    // Key Result: đổi OKR → bỏ KR cũ (thuộc OKR cũ); giữ nguyên nếu OKR không đổi.
+    if (!fd.has('key_result_id')) {
+      const sameObj = (fd.get('objective_id') ?? '') === (task.objective_id ?? '');
+      fd.set('key_result_id', sameObj ? (task.key_result_id ?? '') : '');
+    }
     if (!fd.has('meeting_id')) fd.set('meeting_id', task.meeting_id ?? '');
     setErr('');
     start(async () => {
@@ -167,7 +172,18 @@ export default function TaskEditModal({
             </table>
             {!editable && <p className="muted" style={{ fontSize: 12.5, marginTop: 8 }}>Bạn chỉ có quyền xem việc này.</p>}
             <div className="te-actions">
-              <div></div>
+              <div>
+                {canManage && (
+                  <ConfirmButton
+                    label="🗑 Xoá công việc"
+                    className="btn ghost sm danger"
+                    title="Xoá công việc"
+                    message={`Xoá "${task.title}"? Thao tác này xoá cả việc con (nếu có) và không hoàn tác được.`}
+                    confirmLabel="Xoá hẳn"
+                    onConfirm={doDelete}
+                  />
+                )}
+              </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="button" className="btn ghost sm" onClick={onClose}>Đóng</button>
                 {editable && <button type="button" className="btn sm" onClick={() => { setErr(''); setMode('edit'); }}>✏️ Sửa công việc</button>}
@@ -243,10 +259,17 @@ export default function TaskEditModal({
               )}
               <div className="row">
                 <div>
-                  <label className="f">Thuộc dự án</label>
-                  <SearchSelect name="project_id" defaultValue={task.project_id ?? ''} emptyLabel="— Không —"
+                  <label className="f">Thuộc OKR <span className="muted" style={{ fontWeight: 400 }}>(tuỳ chọn)</span></label>
+                  <SearchSelect name="objective_id" defaultValue={task.objective_id ?? ''} emptyLabel="— Không gắn OKR —"
+                    options={objectiveOpts.map((o) => ({ value: o.id, label: o.label }))} />
+                </div>
+                <div>
+                  <label className="f">Thuộc dự án <span className="muted" style={{ fontWeight: 400 }}>(tuỳ chọn)</span></label>
+                  <SearchSelect name="project_id" defaultValue={task.project_id ?? ''} emptyLabel="— Không gắn dự án —"
                     options={projects.map((p) => ({ value: p.id, label: `${p.code ? p.code + ' · ' : ''}${p.name}` }))} />
                 </div>
+              </div>
+              <div className="row">
                 <div>
                   <label className="f">NS kế hoạch (VND)</label>
                   <NumberInput name="budget_planned" defaultValue={task.budget_planned} />

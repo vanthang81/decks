@@ -117,6 +117,7 @@ export default function TaskExplorer({
   users,
   units,
   projects,
+  objectiveOpts = [],
   editAction,
   deleteAction,
   move,
@@ -135,6 +136,7 @@ export default function TaskExplorer({
   users: PersonOpt[];
   units: UnitOpt[];
   projects: ProjectOpt[];
+  objectiveOpts?: { id: string; label: string }[];   // OKR để gắn lại việc (form Sửa)
   editAction: (fd: FormData) => Promise<void>;
   deleteAction: (fd: FormData) => Promise<void>;
   move: (id: string, status: Status) => Promise<void>;
@@ -660,6 +662,7 @@ export default function TaskExplorer({
           users={users}
           units={units}
           projects={projects}
+          objectiveOpts={objectiveOpts}
           editAction={editAction}
           deleteAction={deleteAction}
           onClose={() => setEditing(null)}
