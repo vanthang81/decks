@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-11.130';
+export const GUIDE_VERSION = '2026-08-12.140';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -622,6 +622,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '12/08/2026 (Nhập số rõ định dạng + trọng số 2 số lẻ)',
+    items: [
+      'Ô "Trọng số" khi tạo/sửa OKR nay cho phép nhập tới 2 chữ số sau dấu phẩy (VD 1,25) thay vì chỉ 1 — chấm điểm quan trọng OKR mịn hơn.',
+      'MỌI ô nhập số trong hệ thống nay ghi rõ định dạng ngay cạnh nhãn (VD: %, đồng, số, điểm, đơn vị đo của KPI) để điền đúng ngay từ đầu — kể cả ô Giá trị check-in Key Result hiển thị đúng đơn vị của KR đó.',
+    ],
+  },
   {
     date: '11/08/2026 (Form mẫu OKR: thêm cột Trọng số cho Mục tiêu)',
     items: [
