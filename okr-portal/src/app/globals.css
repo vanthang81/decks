@@ -427,6 +427,10 @@ table.t th.sortable.active { color: var(--primary); }
 .te-viewbody .te-title { font-size: 18px; font-weight: 700; line-height: 1.35; }
 .te-vbadges { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
 .te-desc { margin: 8px 0 0; color: var(--ink); font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; }
+/* Kết quả đầu ra (Definition of Done) — khối nổi bật nhẹ, viền vàng thương hiệu */
+.te-eo { margin: 8px 0 0; padding: 7px 11px; border-left: 3px solid var(--accent); background: #FBF7EC; border-radius: 0 8px 8px 0; }
+.te-eo-lbl { display: block; font-size: 11px; font-weight: 700; letter-spacing: .02em; color: #8A6D1F; margin-bottom: 2px; }
+.te-eo-txt { margin: 0; color: var(--ink); font-size: 13.5px; line-height: 1.5; white-space: pre-wrap; }
 table.te-detail td { padding: 7px 4px; vertical-align: middle; }
 table.te-detail td:first-child { width: 130px; white-space: nowrap; }
 .te-err { color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 8px 10px; margin-top: 10px; font-size: 13px; }

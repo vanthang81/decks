@@ -322,6 +322,8 @@ function QuickAdd({
             options={krs.map((k) => ({ value: k.id, label: `${k.code ? k.code + ' · ' : ''}${k.title}` }))} />
           <label className="f">Tên việc *</label>
           <input className="i" name="title" required placeholder="VD: Chuẩn bị tài liệu họp" />
+          <label className="f">Kết quả đầu ra <span className="muted" style={{ fontWeight: 400 }}>— tiêu chí hoàn thành (tuỳ chọn)</span></label>
+          <textarea className="i" name="expected_output" rows={2} placeholder="Xong là ra cái gì?" />
           <div className="row">
             <div>
               <label className="f">Giao cho</label>

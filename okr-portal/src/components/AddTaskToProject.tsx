@@ -109,6 +109,9 @@ export default function AddTaskToProject({
               <label className="f">Tên việc</label>
               <input className="i" name="title" required placeholder="VD: Tích hợp API thanh toán" />
 
+              <label className="f">Kết quả đầu ra <span className="muted" style={{ fontWeight: 400 }}>— tiêu chí hoàn thành (tuỳ chọn)</span></label>
+              <textarea className="i" name="expected_output" rows={2} placeholder="Xong là ra cái gì? VD: API thanh toán chạy thật, đối soát khớp" />
+
               <div className="row">
                 <div>
                   <label className="f">Giao cho (cá nhân)</label>

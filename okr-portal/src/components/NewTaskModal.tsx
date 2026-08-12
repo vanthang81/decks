@@ -54,6 +54,9 @@ export default function NewTaskModal({
       <label className="f">Mô tả</label>
       <textarea className="i" name="description" rows={2} placeholder="Nội dung cần làm (tuỳ chọn)" />
 
+      <label className="f">Kết quả đầu ra <span className="muted" style={{ fontWeight: 400 }}>— tiêu chí hoàn thành (tuỳ chọn)</span></label>
+      <textarea className="i" name="expected_output" rows={2} placeholder="Xong là ra cái gì? VD: Bảng checklist hoàn chỉnh + dashboard phê duyệt đã bật" />
+
       {!personal && (
         <div className="row">
           <div>

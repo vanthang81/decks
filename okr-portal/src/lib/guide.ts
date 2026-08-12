@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-12.140';
+export const GUIDE_VERSION = '2026-08-12.150';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -343,7 +343,7 @@ export const FEATURES: Feature[] = [
     where: 'Trang chi tiết OKR → "Dự án & Kế hoạch hành động"',
     help: 'Cây Dự án → Tiểu dự án → Công việc, gắn KR + Khối/Phòng/cá nhân phụ trách. Bấm thẻ Kanban để sửa nhanh (popup). Tiến độ tự cuộn lên.',
     detail:
-      'Một Objective/KR có thể được thực thi bằng công việc đơn HOẶC cả một dự án có cấu trúc. Cấu trúc 3 tầng: Dự án → Tiểu dự án → Công việc. Mỗi nút KHAI BÁO & LIÊN KẾT với Đơn vị phụ trách (Khối/Phòng ban) và người phụ trách (cá nhân), kèm hạn, ưu tiên, trạng thái (Chưa làm/Đang làm/Vướng/Xong/Huỷ), % hoàn thành và ngân sách. Tiến độ công việc TỰ CUỘN lên tiểu dự án → dự án. Phân quyền: người quản OKR (trưởng phòng trở lên trong phạm vi) tạo/giao/sửa/xoá; người ĐƯỢC GIAO tự cập nhật trạng thái + tiến độ việc của mình. Đây là tiến độ THỰC THI (output), tách khỏi tiến độ KẾT QUẢ đo bằng Key Result (outcome). Có 3 chế độ xem (nhớ lựa chọn): DANH SÁCH (cây phân cấp, thêm/sửa/giao), KANBAN (BẤM thẻ để mở popup sửa nhanh; kéo–thả thẻ giữa các cột trạng thái — chỉ sửa/kéo được việc bạn quản lý hoặc được giao), DÒNG THỜI GIAN (Gantt: thanh bắt đầu→hạn, vạch hôm nay, màu theo trạng thái; bấm để sửa).',
+      'Một Objective/KR có thể được thực thi bằng công việc đơn HOẶC cả một dự án có cấu trúc. Cấu trúc 3 tầng: Dự án → Tiểu dự án → Công việc. Mỗi nút KHAI BÁO & LIÊN KẾT với Đơn vị phụ trách (Khối/Phòng ban) và người phụ trách (cá nhân), kèm hạn, ưu tiên, trạng thái (Chưa làm/Đang làm/Vướng/Xong/Huỷ), % hoàn thành và ngân sách. Mỗi việc còn ghi được "Kết quả đầu ra" (Definition of Done — xong là ra cái gì) để nghiệm thu minh bạch, đi kèm Link minh chứng. Tiến độ công việc TỰ CUỘN lên tiểu dự án → dự án. Phân quyền: người quản OKR (trưởng phòng trở lên trong phạm vi) tạo/giao/sửa/xoá; người ĐƯỢC GIAO tự cập nhật trạng thái + tiến độ việc của mình. Đây là tiến độ THỰC THI (output), tách khỏi tiến độ KẾT QUẢ đo bằng Key Result (outcome). Có 3 chế độ xem (nhớ lựa chọn): DANH SÁCH (cây phân cấp, thêm/sửa/giao), KANBAN (BẤM thẻ để mở popup sửa nhanh; kéo–thả thẻ giữa các cột trạng thái — chỉ sửa/kéo được việc bạn quản lý hoặc được giao), DÒNG THỜI GIAN (Gantt: thanh bắt đầu→hạn, vạch hôm nay, màu theo trạng thái; bấm để sửa).',
   },
   {
     key: 'projects',
@@ -623,8 +623,9 @@ export const GLOSSARY: { term: string; def: string }[] = [
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
   {
-    date: '12/08/2026 (Nhập số rõ định dạng + trọng số 2 số lẻ)',
+    date: '12/08/2026 (Kết quả đầu ra cho công việc + nhập số rõ định dạng)',
     items: [
+      'Mỗi công việc nay có trường "Kết quả đầu ra" (Definition of Done) — ghi rõ "xong là ra cái gì" để nghiệm thu minh bạch, tránh làm cho có. Điền/sửa ở MỌI nơi tạo & cập nhật việc (trang Công việc, chi tiết OKR, dự án, cuộc họp, lịch); hiển thị nổi bật (khối viền vàng 🎯) ở phần xem chi tiết việc, cạnh Link minh chứng. File Excel OKR (sheet "Công việc") thêm cột "Kết quả đầu ra" để nhập/xuất hàng loạt.',
       'Ô "Trọng số" khi tạo/sửa OKR nay cho phép nhập tới 2 chữ số sau dấu phẩy (VD 1,25) thay vì chỉ 1 — chấm điểm quan trọng OKR mịn hơn.',
       'MỌI ô nhập số trong hệ thống nay ghi rõ định dạng ngay cạnh nhãn (VD: %, đồng, số, điểm, đơn vị đo của KPI) để điền đúng ngay từ đầu — kể cả ô Giá trị check-in Key Result hiển thị đúng đơn vị của KR đó.',
     ],

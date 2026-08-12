@@ -62,6 +62,7 @@ export type Initiative = {
   budget_source: string | null;
   created_by: string | null;
   evidence_url: string | null;
+  expected_output: string | null;
 };
 
 // Nút cây (có con) — dùng để render phân cấp.
@@ -76,7 +77,7 @@ const SELECT = `
          i.status, i.priority,
          i.progress::float8 AS progress, i.start_on::text, i.due_on::text, i.done_on::text,
          i.budget_planned::float8 AS budget_planned, i.budget_actual::float8 AS budget_actual,
-         i.budget_currency, i.budget_source, i.created_by, i.evidence_url
+         i.budget_currency, i.budget_source, i.created_by, i.evidence_url, i.expected_output
     FROM okr_initiatives i
     LEFT JOIN okr_users u ON u.email = i.owner_email
     LEFT JOIN okr_units un ON un.id = i.unit_id
@@ -159,6 +160,7 @@ export type TaskRow = {
   budget_planned: number;
   budget_actual: number;
   evidence_url: string | null;
+  expected_output: string | null;
   parent_id: string | null;
   has_children: boolean; // có nút con trong cây thực thi → mới thực sự là "nhóm/dự án"
   created_at: string | null; // thời điểm tạo việc (ISO) — để biết việc mới/cũ + sắp xếp
@@ -178,7 +180,7 @@ const TASK_SELECT = `
          i.key_result_id, kr.code AS key_result_code,
          eo.period_id, per.name AS period_name,
          i.budget_planned::float8 AS budget_planned, i.budget_actual::float8 AS budget_actual,
-         i.evidence_url, i.created_at::text AS created_at
+         i.evidence_url, i.expected_output, i.created_at::text AS created_at
     FROM okr_initiatives i
     LEFT JOIN okr_users u ON u.email = i.owner_email
     LEFT JOIN okr_units un ON un.id = i.unit_id
@@ -275,13 +277,14 @@ export async function createInitiative(input: {
   budget_planned: number;
   budget_actual: number;
   budget_source: string | null;
+  expected_output?: string | null;
   created_by: string;
 }): Promise<string> {
   const code = await nextInitCode(input.objective_id);
   const row = await queryOne<{ id: string }>(
     `INSERT INTO okr_initiatives (objective_id, key_result_id, parent_id, kind, title, description,
-        owner_email, unit_id, project_id, meeting_id, status, priority, start_on, due_on, budget_planned, budget_actual, budget_source, created_by, code)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING id`,
+        owner_email, unit_id, project_id, meeting_id, status, priority, start_on, due_on, budget_planned, budget_actual, budget_source, expected_output, created_by, code)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20) RETURNING id`,
     [
       input.objective_id,
       input.key_result_id,
@@ -300,6 +303,7 @@ export async function createInitiative(input: {
       input.budget_planned,
       input.budget_actual,
       input.budget_source,
+      input.expected_output ?? null,
       input.created_by,
       code,
     ],
@@ -404,19 +408,22 @@ export async function editInitiative(
     budget_planned: number;
     budget_actual: number;
     evidence_url?: string | null;
+    expected_output?: string | null; // Kết quả đầu ra (DoD) — bỏ trống (undefined) = giữ nguyên
   },
 ): Promise<void> {
   const prog = input.status === 'done' ? 100 : Math.max(0, Math.min(100, input.progress));
+  const setEo = input.expected_output !== undefined;
   await query(
     `UPDATE okr_initiatives SET title=$2, description=$3, unit_id=$4, owner_email=$5,
         status=$6, progress=$7, priority=$8, start_on=$9, due_on=$10,
         budget_planned=$11, budget_actual=$12, project_id=$13, meeting_id=$14,
-        objective_id=$15, key_result_id=$16, evidence_url=$18,
+        objective_id=$15, key_result_id=$16, evidence_url=$18,${setEo ? ' expected_output=$19,' : ''}
         done_on = CASE WHEN $6='done' THEN COALESCE($17::date, done_on, now()::date) ELSE NULL END,
         updated_at=now() WHERE id=$1`,
     [id, input.title, input.description, input.unit_id, input.owner_email, input.status, prog,
      input.priority, input.start_on, input.due_on, input.budget_planned, input.budget_actual,
-     input.project_id, input.meeting_id, input.objective_id, input.key_result_id, input.done_on ?? null, input.evidence_url ?? null],
+     input.project_id, input.meeting_id, input.objective_id, input.key_result_id, input.done_on ?? null, input.evidence_url ?? null,
+     ...(setEo ? [input.expected_output ?? null] : [])],
   );
   await recomputeInitiativeUp(id);
 }

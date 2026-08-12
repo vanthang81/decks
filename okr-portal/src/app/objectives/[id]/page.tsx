@@ -720,6 +720,8 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                     <input className="i" name="title" placeholder="VD: Dự án khai trương cửa hàng Q3" required />
                   </div>
                 </div>
+                <label className="f">Kết quả đầu ra <span className="muted" style={{ fontWeight: 400 }}>— tiêu chí hoàn thành (tuỳ chọn)</span></label>
+                <textarea className="i" name="expected_output" rows={2} placeholder="Xong là ra cái gì? VD: Bảng checklist hoàn chỉnh + dashboard phê duyệt đã bật" />
                 <label className="f">Gắn vào Key Result (tuỳ chọn)</label>
                 <SearchSelect name="key_result_id" defaultValue="" emptyLabel="— Gắn ở cấp Objective —"
                   options={krs.map((kr) => ({ value: kr.id, label: kr.title }))} />

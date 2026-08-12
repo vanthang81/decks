@@ -19,7 +19,7 @@ const SHEET_INIT_ALIASES = [SHEET_INIT, 'Initiatives'];
 // ---- Nhãn cột (tiếng Việt) cho 3 sheet ----
 const OBJ_HEAD = ['Mã', 'Kỳ', 'Cấp', 'Khối/Phòng', 'Người chủ trì (email)', 'Tiêu đề', 'Mô tả', 'Loại OKR', 'Trạng thái', 'Tiến độ %', 'Mã OKR cha', 'Viễn cảnh', 'Trọng số'];
 const KR_HEAD = ['Mã', 'Mã Mục tiêu', 'Tiêu đề', 'Loại đo', 'Hướng', 'Đơn vị', 'Bắt đầu', 'Hiện tại', 'Mục tiêu', 'Trọng số', 'Nguồn KPI', 'Chỉ số', 'Tiến độ %'];
-const INIT_HEAD = ['Mã', 'Mã Mục tiêu', 'Mã cha', 'Loại', 'Tiêu đề', 'Mô tả', 'Người phụ trách (email)', 'Trạng thái', 'Ưu tiên', 'Tiến độ %', 'Bắt đầu', 'Kết thúc', 'NS kế hoạch', 'Thực chi'];
+const INIT_HEAD = ['Mã', 'Mã Mục tiêu', 'Mã cha', 'Loại', 'Tiêu đề', 'Mô tả', 'Kết quả đầu ra', 'Người phụ trách (email)', 'Trạng thái', 'Ưu tiên', 'Tiến độ %', 'Bắt đầu', 'Kết thúc', 'NS kế hoạch', 'Thực chi'];
 
 // ============ MAP 2 CHIỀU nhãn Tiếng Việt ↔ mã (enum) — nguồn duy nhất cho xuất & nhập ============
 // Xuất Excel ghi NHÃN Tiếng Việt (đúng như hiển thị trên Portal). Nhập chấp nhận CẢ nhãn Tiếng Việt
@@ -100,8 +100,8 @@ export async function buildOkrWorkbook(
        ${wsql}
       ORDER BY k.code`, p);
 
-  const inits = await query<{ code: string; obj: string | null; parent_code: string | null; kind: string; title: string; description: string | null; owner: string | null; status: string; priority: string; progress: number; start_on: string | null; due_on: string | null; bp: number; ba: number }>(
-    `SELECT i.code, o.code AS obj, pi.code AS parent_code, i.kind, i.title, i.description,
+  const inits = await query<{ code: string; obj: string | null; parent_code: string | null; kind: string; title: string; description: string | null; expected_output: string | null; owner: string | null; status: string; priority: string; progress: number; start_on: string | null; due_on: string | null; bp: number; ba: number }>(
+    `SELECT i.code, o.code AS obj, pi.code AS parent_code, i.kind, i.title, i.description, i.expected_output,
             i.owner_email AS owner, i.status, i.priority, i.progress::float8 AS progress,
             i.start_on::text, i.due_on::text, i.budget_planned::float8 AS bp, i.budget_actual::float8 AS ba
        FROM okr_initiatives i
@@ -114,7 +114,7 @@ export async function buildOkrWorkbook(
   const wb = XLSX.utils.book_new();
   const objAoa = [OBJ_HEAD, ...objs.map((o) => [o.code, o.period, E_LEVEL.label(o.level), o.unit ?? '', o.owner ?? '', o.title, o.description ?? '', E_OKR_TYPE.label(o.okr_type), E_OBJ_STATUS.label(o.status), Math.round(o.progress), o.parent_code ?? '', o.bsc ? E_BSC.label(o.bsc) : '', o.weight ?? 1])];
   const krAoa = [KR_HEAD, ...krs.map((k) => [k.code, k.obj, k.title, E_METRIC.label(k.metric_type), E_DIR.label(k.direction), k.unit_label ?? '', k.start_value, k.current_value, k.target_value, k.weight, k.kpi_source ?? '', E_IND.label(k.indicator), Math.round(k.progress)])];
-  const initAoa = [INIT_HEAD, ...inits.map((i) => [i.code, i.obj ?? '', i.parent_code ?? '', E_KIND.label(i.kind), i.title, i.description ?? '', i.owner ?? '', E_INIT_STATUS.label(i.status), E_PRIORITY.label(i.priority), Math.round(i.progress), i.start_on ?? '', i.due_on ?? '', i.bp, i.ba])];
+  const initAoa = [INIT_HEAD, ...inits.map((i) => [i.code, i.obj ?? '', i.parent_code ?? '', E_KIND.label(i.kind), i.title, i.description ?? '', i.expected_output ?? '', i.owner ?? '', E_INIT_STATUS.label(i.status), E_PRIORITY.label(i.priority), Math.round(i.progress), i.start_on ?? '', i.due_on ?? '', i.bp, i.ba])];
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(objAoa), SHEET_OBJ);
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(krAoa), SHEET_KR);
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(initAoa), SHEET_INIT);
@@ -152,6 +152,7 @@ export async function buildOkrTemplateWorkbook(): Promise<Buffer> {
     ['Loại (Công việc)', 'Dự án · Tiểu dự án · Công việc'],
     ['Trạng thái (Công việc)', 'Chưa làm · Đang làm · Vướng · Xong · Huỷ'],
     ['Ưu tiên (Công việc)', 'Cao · Trung bình · Thấp'],
+    ['Kết quả đầu ra (Công việc)', 'Tuỳ chọn. Tiêu chí "hoàn thành" (Definition of Done) — xong là ra cái gì, để nghiệm thu rõ ràng. VD: "Bảng checklist hoàn chỉnh + dashboard phê duyệt đã bật".'],
   ];
   const objAoa = [
     OBJ_HEAD,
@@ -166,7 +167,7 @@ export async function buildOkrTemplateWorkbook(): Promise<Buffer> {
   ];
   const initAoa = [
     INIT_HEAD,
-    ['', 'T1', '', 'Công việc', '(VD) Triển khai chương trình khuyến mãi Q1', '', '', 'Chưa làm', 'Trung bình', 0, '', '', '', ''],
+    ['', 'T1', '', 'Công việc', '(VD) Triển khai chương trình khuyến mãi Q1', '', '(VD) Chương trình chạy đủ 3 tháng, báo cáo kết quả được duyệt', '', 'Chưa làm', 'Trung bình', 0, '', '', '', ''],
   ];
   // ---- masterdata_Tổ chức: mỗi đơn vị (kể cả đơn vị chưa có người) + người dùng thật ----
   const org = await query<{ unit_code: string; unit_name: string; display_name: string | null; role: string | null; email: string | null }>(
@@ -417,10 +418,12 @@ export async function importOkrWorkbook(buf: Buffer): Promise<ImportResult> {
         `UPDATE okr_initiatives SET title=COALESCE(NULLIF($2,''),title), description=$3, owner_email=NULLIF($4,''),
             status=COALESCE(NULLIF($5,''),status), priority=COALESCE(NULLIF($6,''),priority), progress=$7,
             start_on=$8, due_on=$9, budget_planned=$10, budget_actual=$11, unit_id=COALESCE(unit_id, $12),
+            expected_output=COALESCE(NULLIF($13,''), expected_output),
             done_on=CASE WHEN $5='done' AND done_on IS NULL THEN now()::date WHEN $5<>'done' THEN NULL ELSE done_on END,
             updated_at=now() WHERE id=$1`,
         [i.id, s(r['Tiêu đề']), s(r['Mô tả']) || null, owner, status, priority,
-         prog, normDate(r['Bắt đầu']), normDate(r['Kết thúc']), n(r['NS kế hoạch']), n(r['Thực chi']), unitId],
+         prog, normDate(r['Bắt đầu']), normDate(r['Kết thúc']), n(r['NS kế hoạch']), n(r['Thực chi']), unitId,
+         s(r['Kết quả đầu ra'])],
       );
       res.initUpdated++;
       await recomputeInitiativeUp(i.id);
@@ -437,10 +440,10 @@ export async function importOkrWorkbook(buf: Buffer): Promise<ImportResult> {
       // Tự nhảy "Đơn vị phụ trách" = đơn vị của người được giao (giống tạo việc bằng tay).
       const unitId = ownerUnitId(owner);
       await query(
-        `INSERT INTO okr_initiatives(objective_id,parent_id,kind,title,description,owner_email,unit_id,status,priority,progress,start_on,due_on,budget_planned,budget_actual,created_by,code)
-         VALUES($1,$2,$3,$4,$5,NULLIF($6,''),$7,$8,$9,$10,$11,$12,$13,$14,'import',$15)`,
+        `INSERT INTO okr_initiatives(objective_id,parent_id,kind,title,description,owner_email,unit_id,status,priority,progress,start_on,due_on,budget_planned,budget_actual,expected_output,created_by,code)
+         VALUES($1,$2,$3,$4,$5,NULLIF($6,''),$7,$8,$9,$10,$11,$12,$13,$14,$15,'import',$16)`,
         [o.id, parent, E_KIND.parse(r['Loại']), title, s(r['Mô tả']) || null, owner, unitId,
-         status, priority, prog, normDate(r['Bắt đầu']), normDate(r['Kết thúc']), n(r['NS kế hoạch']), n(r['Thực chi']), newCode],
+         status, priority, prog, normDate(r['Bắt đầu']), normDate(r['Kết thúc']), n(r['NS kế hoạch']), n(r['Thực chi']), s(r['Kết quả đầu ra']) || null, newCode],
       );
       res.initCreated++;
       if (parent) await recomputeInitiativeUp(parent);

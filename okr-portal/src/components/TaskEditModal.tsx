@@ -136,6 +136,12 @@ export default function TaskEditModal({
               {task.kind !== 'action' && task.has_children && <span className="badge blue">{KIND_LABEL[task.kind]}</span>}
             </div>
             {task.description && <p className="te-desc">{task.description}</p>}
+            {task.expected_output && (
+              <div className="te-eo">
+                <span className="te-eo-lbl">🎯 Kết quả đầu ra</span>
+                <p className="te-eo-txt">{task.expected_output}</p>
+              </div>
+            )}
             <table className="t te-detail" style={{ marginTop: 10 }}>
               <tbody>
                 <tr><td className="muted">Tiến độ</td><td>
@@ -206,6 +212,9 @@ export default function TaskEditModal({
               <input className="i" name="title" defaultValue={task.title} required />
               <label className="f">Mô tả</label>
               <textarea className="i" name="description" defaultValue={task.description ?? ''} rows={2} />
+              <label className="f">Kết quả đầu ra <span className="muted" style={{ fontWeight: 400 }}>— tiêu chí hoàn thành (tuỳ chọn)</span></label>
+              <textarea className="i" name="expected_output" defaultValue={task.expected_output ?? ''} rows={2}
+                placeholder="Xong là ra cái gì? VD: Bảng checklist hoàn chỉnh + dashboard phê duyệt đã bật" />
               <div className="row">
                 <div>
                   <label className="f">Người phụ trách</label>
@@ -303,6 +312,12 @@ export default function TaskEditModal({
               <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
                 Bạn được giao việc này — cập nhật trạng thái &amp; tiến độ.
               </p>
+              {task.expected_output && (
+                <div className="te-eo">
+                  <span className="te-eo-lbl">🎯 Kết quả đầu ra</span>
+                  <p className="te-eo-txt">{task.expected_output}</p>
+                </div>
+              )}
               <div className="row">
                 <div>
                   <label className="f">Trạng thái</label>

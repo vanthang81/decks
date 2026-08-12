@@ -180,6 +180,7 @@ export async function createMeetingTaskAction(fd: FormData) {
     budget_planned: parseNum(fd.get('budget_planned'), 0),
     budget_actual: 0,
     budget_source: null,
+    expected_output: orNull(str(fd, 'expected_output')),
     created_by: user.email,
   });
   revalidatePath(`/meetings/${m.id}`);

@@ -620,6 +620,7 @@ export async function createInitiativeAction(fd: FormData) {
     budget_planned: num(fd, 'budget_planned'),
     budget_actual: num(fd, 'budget_actual'),
     budget_source: orNull(str(fd, 'budget_source')),
+    expected_output: orNull(str(fd, 'expected_output')),
     created_by: user.email,
   });
   await logAudit({ actor: user.email, action: 'initiative.create', entity: 'objective', entityId: objectiveId, detail: { title: str(fd, 'title') } });
@@ -726,6 +727,7 @@ export async function createTaskAction(fd: FormData) {
     budget_planned: isStaff ? 0 : num(fd, 'budget_planned'),
     budget_actual: isStaff ? 0 : num(fd, 'budget_actual'),
     budget_source: null,
+    expected_output: orNull(str(fd, 'expected_output')),
     created_by: user.email,
   });
   await auditTask(user.email, 'initiative.create', { objective_id: objectiveId, project_id: projectId, meeting_id: null }, { title });
@@ -819,6 +821,7 @@ export async function editInitiativeAction(fd: FormData) {
       budget_planned: num(fd, 'budget_planned'),
       budget_actual: num(fd, 'budget_actual'),
       evidence_url: evidenceVal,
+      expected_output: fd.has('expected_output') ? orNull(str(fd, 'expected_output')) : undefined,
     });
     // Phụ thuộc waterfall (chỉ khi form có gửi 'depends_on' — form khác không đụng tới).
     if (fd.has('depends_on')) {

@@ -87,6 +87,7 @@ export type Card = {
   budget_planned: number;
   budget_actual: number;
   evidence_url?: string | null;
+  expected_output?: string | null;
 };
 
 export type PersonOpt = { email: string; name: string; avatar?: string | null; unit_id?: string | null; title?: string | null };
@@ -571,6 +572,12 @@ function EditModal({
               {mKind !== 'action' && <span className={`badge ${KIND_CLS[mKind]}`}>{KIND_LABEL[mKind]}</span>}
             </div>
             {card.description && <p className="te-desc">{card.description}</p>}
+            {card.expected_output && (
+              <div className="te-eo">
+                <span className="te-eo-lbl">🎯 Kết quả đầu ra</span>
+                <p className="te-eo-txt">{card.expected_output}</p>
+              </div>
+            )}
             <table className="t te-detail" style={{ marginTop: 10 }}>
               <tbody>
                 <tr><td className="muted">Tiến độ</td><td>
@@ -902,6 +909,9 @@ function EditModal({
                 <input className="i" name="evidence_url" type="url" inputMode="url" defaultValue={card.evidence_url ?? ''} placeholder="https://…" />
                 <label className="f">Mô tả</label>
                 <textarea className="i" name="description" defaultValue={card.description ?? ''} rows={2} />
+                <label className="f">Kết quả đầu ra <span className="muted" style={{ fontWeight: 400 }}>— tiêu chí hoàn thành (tuỳ chọn)</span></label>
+                <textarea className="i" name="expected_output" defaultValue={card.expected_output ?? ''} rows={2}
+                  placeholder="Xong là ra cái gì? VD: Bảng checklist hoàn chỉnh + dashboard phê duyệt đã bật" />
               </>
             )}
 
@@ -956,6 +966,8 @@ function EditModal({
                         <input className="i" name="title" required placeholder="Tên tiểu dự án / công việc" />
                       </div>
                     </div>
+                    <label className="f">Kết quả đầu ra <span className="muted" style={{ fontWeight: 400 }}>— tiêu chí hoàn thành (tuỳ chọn)</span></label>
+                    <textarea className="i" name="expected_output" rows={2} placeholder="Xong là ra cái gì? VD: Bảng checklist hoàn chỉnh" />
                     <div className="row">
                       <div>
                         <label className="f">Giao cho</label>
