@@ -17,7 +17,7 @@ const SHEET_KR_ALIASES = [SHEET_KR, 'KeyResults'];
 const SHEET_INIT_ALIASES = [SHEET_INIT, 'Initiatives'];
 
 // ---- Nhãn cột (tiếng Việt) cho 3 sheet ----
-const OBJ_HEAD = ['Mã', 'Kỳ', 'Cấp', 'Khối/Phòng', 'Người chủ trì (email)', 'Tiêu đề', 'Mô tả', 'Loại OKR', 'Trạng thái', 'Tiến độ %', 'Mã OKR cha', 'Viễn cảnh'];
+const OBJ_HEAD = ['Mã', 'Kỳ', 'Cấp', 'Khối/Phòng', 'Người chủ trì (email)', 'Tiêu đề', 'Mô tả', 'Loại OKR', 'Trạng thái', 'Tiến độ %', 'Mã OKR cha', 'Viễn cảnh', 'Trọng số'];
 const KR_HEAD = ['Mã', 'Mã Mục tiêu', 'Tiêu đề', 'Loại đo', 'Hướng', 'Đơn vị', 'Bắt đầu', 'Hiện tại', 'Mục tiêu', 'Trọng số', 'Nguồn KPI', 'Chỉ số', 'Tiến độ %'];
 const INIT_HEAD = ['Mã', 'Mã Mục tiêu', 'Mã cha', 'Loại', 'Tiêu đề', 'Mô tả', 'Người phụ trách (email)', 'Trạng thái', 'Ưu tiên', 'Tiến độ %', 'Bắt đầu', 'Kết thúc', 'NS kế hoạch', 'Thực chi'];
 
@@ -80,10 +80,10 @@ export async function buildOkrWorkbook(
   }
   const wsql = objWhere.length ? 'WHERE ' + objWhere.join(' AND ') : '';
 
-  const objs = await query<{ code: string; period: string; level: string; unit: string | null; owner: string | null; title: string; description: string | null; okr_type: string; status: string; progress: number; parent_code: string | null; bsc: string | null }>(
+  const objs = await query<{ code: string; period: string; level: string; unit: string | null; owner: string | null; title: string; description: string | null; okr_type: string; status: string; progress: number; parent_code: string | null; bsc: string | null; weight: number }>(
     `SELECT o.code, pe.name AS period, o.level, un.code AS unit, o.owner_email AS owner,
             o.title, o.description, o.okr_type, o.status, o.progress::float8 AS progress, po.code AS parent_code,
-            o.bsc_perspective AS bsc
+            o.bsc_perspective AS bsc, o.weight::float8 AS weight
        FROM okr_objectives o
        JOIN okr_periods pe ON pe.id=o.period_id
        LEFT JOIN okr_units un ON un.id=o.unit_id
@@ -112,7 +112,7 @@ export async function buildOkrWorkbook(
       ORDER BY i.code`, p);
 
   const wb = XLSX.utils.book_new();
-  const objAoa = [OBJ_HEAD, ...objs.map((o) => [o.code, o.period, E_LEVEL.label(o.level), o.unit ?? '', o.owner ?? '', o.title, o.description ?? '', E_OKR_TYPE.label(o.okr_type), E_OBJ_STATUS.label(o.status), Math.round(o.progress), o.parent_code ?? '', o.bsc ? E_BSC.label(o.bsc) : ''])];
+  const objAoa = [OBJ_HEAD, ...objs.map((o) => [o.code, o.period, E_LEVEL.label(o.level), o.unit ?? '', o.owner ?? '', o.title, o.description ?? '', E_OKR_TYPE.label(o.okr_type), E_OBJ_STATUS.label(o.status), Math.round(o.progress), o.parent_code ?? '', o.bsc ? E_BSC.label(o.bsc) : '', o.weight ?? 1])];
   const krAoa = [KR_HEAD, ...krs.map((k) => [k.code, k.obj, k.title, E_METRIC.label(k.metric_type), E_DIR.label(k.direction), k.unit_label ?? '', k.start_value, k.current_value, k.target_value, k.weight, k.kpi_source ?? '', E_IND.label(k.indicator), Math.round(k.progress)])];
   const initAoa = [INIT_HEAD, ...inits.map((i) => [i.code, i.obj ?? '', i.parent_code ?? '', E_KIND.label(i.kind), i.title, i.description ?? '', i.owner ?? '', E_INIT_STATUS.label(i.status), E_PRIORITY.label(i.priority), Math.round(i.progress), i.start_on ?? '', i.due_on ?? '', i.bp, i.ba])];
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(objAoa), SHEET_OBJ);
@@ -145,6 +145,7 @@ export async function buildOkrTemplateWorkbook(): Promise<Buffer> {
     ['Loại OKR', 'Cam kết · Khát vọng · Học hỏi'],
     ['Trạng thái (Mục tiêu)', 'Đang chạy · Nháp · Hoàn thành · Lưu trữ'],
     ['Viễn cảnh (BSC)', 'Tài chính · Khách hàng · Quy trình nội bộ · Học hỏi & Phát triển'],
+    ['Trọng số (Mục tiêu)', 'Số > 0 (mặc định 1). Mức quan trọng của OKR khi tính kết quả tổng của nhóm ở Báo cáo theo cấp — để trọng số cao hơn cho OKR quan trọng hơn.'],
     ['Loại đo (Thước đo)', 'Số · Phần trăm · Tiền (VND) · Có/Không'],
     ['Hướng (Thước đo)', 'Tăng · Giảm'],
     ['Chỉ số (Thước đo)', 'Dẫn dắt · Kết quả'],
@@ -154,8 +155,8 @@ export async function buildOkrTemplateWorkbook(): Promise<Buffer> {
   ];
   const objAoa = [
     OBJ_HEAD,
-    ['T1', '', 'Công ty', '', '', '(VD) Tăng trưởng doanh thu bán lẻ vượt kế hoạch', '', 'Cam kết', 'Đang chạy', '', '', 'Tài chính'],
-    ['T2', '', 'Khối', 'KD', '', '(VD) Dẫn đầu bán lẻ & mở rộng mạng lưới có kỷ luật', '', 'Cam kết', 'Đang chạy', '', 'T1', 'Khách hàng'],
+    ['T1', '', 'Công ty', '', '', '(VD) Tăng trưởng doanh thu bán lẻ vượt kế hoạch', '', 'Cam kết', 'Đang chạy', '', '', 'Tài chính', 2],
+    ['T2', '', 'Khối', 'KD', '', '(VD) Dẫn đầu bán lẻ & mở rộng mạng lưới có kỷ luật', '', 'Cam kết', 'Đang chạy', '', 'T1', 'Khách hàng', 1],
   ];
   const krAoa = [
     KR_HEAD,
@@ -313,11 +314,14 @@ export async function importOkrWorkbook(buf: Buffer): Promise<ImportResult> {
       // Nhãn Tiếng Việt/mã cũ → mã enum; ô trống → giữ nguyên (COALESCE NULLIF).
       const okrType = col(r, 'Loại OKR') ? E_OKR_TYPE.parse(r['Loại OKR']) : '';
       const objStatus = col(r, 'Trạng thái') ? E_OBJ_STATUS.parse(r['Trạng thái']) : '';
+      // Trọng số: chỉ đổi khi điền số > 0; trống/≤0 → giữ nguyên.
+      const weight = col(r, 'Trọng số') && n(r['Trọng số']) > 0 ? n(r['Trọng số']) : null;
       await query(
         `UPDATE okr_objectives SET title=COALESCE(NULLIF($2,''),title), description=$3,
-            okr_type=COALESCE(NULLIF($4,''),okr_type), status=COALESCE(NULLIF($5,''),status), updated_at=now()
+            okr_type=COALESCE(NULLIF($4,''),okr_type), status=COALESCE(NULLIF($5,''),status),
+            weight=COALESCE($6, weight), updated_at=now()
           WHERE id=$1`,
-        [o.id, title, s(r['Mô tả']) || null, okrType, objStatus],
+        [o.id, title, s(r['Mô tả']) || null, okrType, objStatus, weight],
       );
       res.objUpdated++;
       if (code) alias.set(code, o.id);
@@ -341,7 +345,8 @@ export async function importOkrWorkbook(buf: Buffer): Promise<ImportResult> {
         parent_id: parentId, title, description: s(r['Mô tả']) || null,
         status: col(r, 'Trạng thái') ? E_OBJ_STATUS.parse(r['Trạng thái']) : 'active',
         okr_type: col(r, 'Loại OKR') ? E_OKR_TYPE.parse(r['Loại OKR']) : 'committed',
-        bsc_perspective: E_BSC.parseOpt(r['Viễn cảnh']), created_by: 'import',
+        bsc_perspective: E_BSC.parseOpt(r['Viễn cảnh']),
+        weight: col(r, 'Trọng số') ? n(r['Trọng số']) : undefined, created_by: 'import',
       });
       res.objCreated++;
       alias.set(code || `#row${res.objCreated}`, newId);
