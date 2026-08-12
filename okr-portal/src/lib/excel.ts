@@ -3,6 +3,7 @@ import { query, queryOne } from './db';
 import { computeKrProgress, recomputeUp, createObjective, createKeyResult, type MetricType, type Direction, type Indicator, type OkrType, type ObjStatus, type Level, type BscPerspective } from './okr';
 import { recomputeInitiativeUp, initIdByCode, type Priority, type InitKind, type InitStatus } from './initiatives';
 import { nextInitCode } from './codes';
+import { ROLE_LABEL, type Role } from './rbac';
 import { parseNum } from './num';
 import { kpiStatus, attainment, STATUS_LABEL } from './kpi-values';
 import type { KpiDirection } from './kpis';
@@ -121,7 +122,9 @@ export async function buildOkrWorkbook(
 }
 
 // ============ FORM MẪU (TEMPLATE) để điền rồi import ============
-export function buildOkrTemplateWorkbook(): Buffer {
+// Async vì kèm sheet "masterdata_Tổ chức" (đơn vị + người dùng thật từ DB) để người điền tra
+// đúng Mã đơn vị / Email / Vai trò khi nhập OKR.
+export async function buildOkrTemplateWorkbook(): Promise<Buffer> {
   const guide = [
     ['HƯỚNG DẪN NHẬP OKR THEO MẪU'],
     [''],
@@ -131,13 +134,14 @@ export function buildOkrTemplateWorkbook(): Buffer {
     ['   (Nếu điền MÃ THẬT đã có — lấy từ nút "Xuất Excel" — hệ thống sẽ CẬP NHẬT mục đó thay vì tạo mới.)'],
     ['3) Xoá các dòng ví dụ "(VD)" trước khi nhập. Cột "Tiến độ %" để trống khi tạo mới.'],
     ['4) Điền theo đúng các NHÃN Tiếng Việt ở bảng bên dưới (không phân biệt hoa/thường/dấu).'],
+    ['5) Tra "Mã đơn vị" (cho cột Khối/Phòng) và "Email" (cho Người chủ trì/phụ trách) ở sheet "masterdata_Tổ chức".'],
     [''],
     ['GIÁ TRỊ HỢP LỆ (điền đúng một trong các nhãn, cách nhau bởi dấu ·)'],
     ['Cấp (Mục tiêu)', 'Công ty · Khối · Phòng · Cá nhân'],
-    ['Khối/Phòng', 'Mã đơn vị (vd KD, TC) — chỉ cần khi Cấp = Khối hoặc Phòng. Xem ở Quản trị → Cây tổ chức.'],
+    ['Khối/Phòng', 'Mã đơn vị (vd KD, TC) — chỉ cần khi Cấp = Khối hoặc Phòng. Tra ở sheet "masterdata_Tổ chức".'],
     ['Kỳ', 'Tên kỳ (vd "Năm 2026"). Để trống = kỳ hiện tại.'],
     ['Mã OKR cha', 'Mã (thật hoặc mã tạm) của Mục tiêu cấp trên để liên kết. Công ty → trụ cột chiến lược.'],
-    ['Người chủ trì (email)', 'Email người chủ trì Mục tiêu (vd ten@baotinmanhhai.vn). Để trống = tự gán theo cấp.'],
+    ['Người chủ trì (email)', 'Email người chủ trì Mục tiêu (tra ở sheet "masterdata_Tổ chức"). Để trống = tự gán theo cấp.'],
     ['Loại OKR', 'Cam kết · Khát vọng · Học hỏi'],
     ['Trạng thái (Mục tiêu)', 'Đang chạy · Nháp · Hoàn thành · Lưu trữ'],
     ['Viễn cảnh (BSC)', 'Tài chính · Khách hàng · Quy trình nội bộ · Học hỏi & Phát triển'],
@@ -163,11 +167,36 @@ export function buildOkrTemplateWorkbook(): Buffer {
     INIT_HEAD,
     ['', 'T1', '', 'Công việc', '(VD) Triển khai chương trình khuyến mãi Q1', '', '', 'Chưa làm', 'Trung bình', 0, '', '', '', ''],
   ];
+  // ---- masterdata_Tổ chức: mỗi đơn vị (kể cả đơn vị chưa có người) + người dùng thật ----
+  const org = await query<{ unit_code: string; unit_name: string; display_name: string | null; role: string | null; email: string | null }>(
+    `SELECT COALESCE(u.code,'') AS unit_code, COALESCE(u.name,'') AS unit_name,
+            us.display_name, us.role, us.email
+       FROM okr_units u
+       LEFT JOIN okr_users us ON us.unit_id = u.id
+      ORDER BY CASE u.type WHEN 'company' THEN 0 WHEN 'division' THEN 1 WHEN 'department' THEN 2 ELSE 3 END,
+               COALESCE(u.sort, 0), u.code,
+               CASE us.role WHEN 'exec' THEN 0 WHEN 'ceo' THEN 0 WHEN 'cfo' THEN 0
+                            WHEN 'division_lead' THEN 1 WHEN 'dept_lead' THEN 2 ELSE 3 END,
+               us.display_name NULLS LAST, us.email`,
+  );
+  // Người dùng KHÔNG gắn đơn vị (vd điều hành cấp công ty) — thêm ở cuối.
+  const noUnit = await query<{ display_name: string | null; role: string | null; email: string | null }>(
+    `SELECT display_name, role, email FROM okr_users WHERE unit_id IS NULL
+      ORDER BY CASE role WHEN 'exec' THEN 0 WHEN 'ceo' THEN 0 WHEN 'cfo' THEN 0
+                         WHEN 'division_lead' THEN 1 WHEN 'dept_lead' THEN 2 ELSE 3 END, display_name`,
+  );
+  const roleLabel = (r: string | null): string => (r ? ROLE_LABEL[r as Role] ?? r : '');
+  const MASTER_HEAD = ['Mã đơn vị', 'Tên đơn vị', 'Họ tên', 'Vai trò', 'Email'];
+  const masterAoa: (string)[][] = [MASTER_HEAD];
+  for (const r of org) masterAoa.push([r.unit_code, r.unit_name, r.display_name ?? '', roleLabel(r.role), r.email ?? '']);
+  for (const r of noUnit) masterAoa.push(['', '', r.display_name ?? '', roleLabel(r.role), r.email ?? '']);
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(guide), 'Hướng dẫn');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(objAoa), SHEET_OBJ);
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(krAoa), SHEET_KR);
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(initAoa), SHEET_INIT);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(masterAoa), 'masterdata_Tổ chức');
   return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
 }
 

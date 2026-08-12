@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const stamp = new Date().toISOString().slice(0, 10);
 
   if (req.nextUrl.searchParams.get('template')) {
-    const buf = buildOkrTemplateWorkbook();
+    const buf = await buildOkrTemplateWorkbook();
     return new NextResponse(new Uint8Array(buf), {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

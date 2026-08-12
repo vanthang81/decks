@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-11.128';
+export const GUIDE_VERSION = '2026-08-11.129';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -375,7 +375,7 @@ export const FEATURES: Feature[] = [
     where: 'Trang OKR (Xuất Excel) · Quản trị → Import/Export (CEO/CFO)',
     help: 'Mỗi Mục tiêu/Thước đo/Công việc có mã. Xuất/nhập Excel bằng nhãn Tiếng Việt theo mã.',
     detail:
-      'Mọi mục có mã unique gắn mã khối: Mục tiêu = <KHỐI>-O<n>, Thước đo = <mục tiêu>.KR<m>, Công việc = <mục tiêu>.H<kk>. Bấm "Xuất Excel" (trang OKR hoặc Quản trị) để tải file .xlsx gồm 3 sheet Tiếng Việt: "Mục tiêu" · "Thước đo" · "Công việc". Các cột danh mục (Cấp, Loại OKR, Trạng thái, Viễn cảnh, Loại đo, Hướng, Chỉ số, Loại, Ưu tiên) ghi bằng NHÃN Tiếng Việt đúng như trên Portal (vd Cấp = Công ty/Khối/Phòng/Cá nhân; Trạng thái = Đang chạy/Nháp/Hoàn thành/Lưu trữ) — form mẫu có sẵn sheet "Hướng dẫn" liệt kê các giá trị hợp lệ. Sửa trực tiếp trên Excel/Google Sheets rồi CEO/CFO "Nhập Excel" ở Quản trị: hệ thống khớp theo cột Mã để cập nhật (tiêu đề, trạng thái, tiến độ, giá trị Thước đo, ngày, ngân sách…); Công việc để trống Mã (kèm Mã Mục tiêu) sẽ được tạo mới. Nhập chấp nhận cả nhãn Tiếng Việt lẫn file cũ (mã tiếng Anh) — không phân biệt hoa/thường/dấu, không dòng nào bị xoá khi nhập.',
+      'Mọi mục có mã unique gắn mã khối: Mục tiêu = <KHỐI>-O<n>, Thước đo = <mục tiêu>.KR<m>, Công việc = <mục tiêu>.H<kk>. Bấm "Xuất Excel" (trang OKR hoặc Quản trị) để tải file .xlsx gồm 3 sheet Tiếng Việt: "Mục tiêu" · "Thước đo" · "Công việc". Các cột danh mục (Cấp, Loại OKR, Trạng thái, Viễn cảnh, Loại đo, Hướng, Chỉ số, Loại, Ưu tiên) ghi bằng NHÃN Tiếng Việt đúng như trên Portal (vd Cấp = Công ty/Khối/Phòng/Cá nhân; Trạng thái = Đang chạy/Nháp/Hoàn thành/Lưu trữ) — form mẫu có sẵn sheet "Hướng dẫn" liệt kê các giá trị hợp lệ. Sửa trực tiếp trên Excel/Google Sheets rồi CEO/CFO "Nhập Excel" ở Quản trị: hệ thống khớp theo cột Mã để cập nhật (tiêu đề, trạng thái, tiến độ, giá trị Thước đo, ngày, ngân sách…); Công việc để trống Mã (kèm Mã Mục tiêu) sẽ được tạo mới. Nhập chấp nhận cả nhãn Tiếng Việt lẫn file cũ (mã tiếng Anh) — không phân biệt hoa/thường/dấu, không dòng nào bị xoá khi nhập. Form mẫu còn có sheet "masterdata_Tổ chức" (Mã đơn vị · Tên đơn vị · Họ tên · Vai trò · Email) — tra nhanh mã đơn vị & email khi điền.',
   },
   {
     key: 'tasks',
@@ -622,6 +622,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '11/08/2026 (Form mẫu OKR: thêm sheet "masterdata_Tổ chức")',
+    items: [
+      'File form mẫu (nút "Xuất Excel" / tải form) nay có thêm sheet "masterdata_Tổ chức" liệt kê danh bạ tổ chức thật: Mã đơn vị · Tên đơn vị · Họ tên · Vai trò · Email (mỗi đơn vị đều hiện, kể cả đơn vị chưa có người). Người điền tra ngay mã đơn vị (cho cột Khối/Phòng) và email (cho Người chủ trì/phụ trách) — điền nhanh & đúng, khỏi nhớ.',
+    ],
+  },
   {
     date: '11/08/2026 (Công việc: thêm Link minh chứng khi cập nhật)',
     items: [
