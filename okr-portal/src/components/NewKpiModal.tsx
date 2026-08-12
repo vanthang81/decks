@@ -50,7 +50,7 @@ export default function NewKpiModal({
           </select>
         </div>
         <div>
-          <label className="f">Trọng số</label>
+          <label className="f">Trọng số <span className="muted" style={{ fontWeight: 400 }}>· điểm</span></label>
           <input className="i" name="weight" defaultValue="0" inputMode="numeric" title="0 = chỉ theo dõi, không tính điểm scorecard" />
         </div>
       </div>
@@ -58,6 +58,7 @@ export default function NewKpiModal({
       <label className="f">Cụm / mô-đun <span className="muted" style={{ fontWeight: 400 }}>— tuỳ chọn</span></label>
       <input className="i" name="module" placeholder="VD: Commercial / Retail / Store ops" />
 
+      <label className="f" style={{ marginBottom: 0 }}>3 ngưỡng cảnh báo <span className="muted" style={{ fontWeight: 400 }}>· nhập theo Đơn vị đo của KPI</span></label>
       <div className="row">
         <div>
           <label className="f">Ngưỡng Watch</label>

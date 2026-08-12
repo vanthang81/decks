@@ -27,12 +27,14 @@ export default function CheckinRow({
   canDelete,
   editAction,
   deleteAction,
+  valueHint,
 }: {
   ci: CheckinRowData;
   canEdit: boolean;
   canDelete: boolean;
   editAction: (fd: FormData) => Promise<void>;
   deleteAction: (fd: FormData) => Promise<void>;
+  valueHint?: string;
 }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -100,7 +102,7 @@ export default function CheckinRow({
           <form onSubmit={onSave} className="ci-editform">
             <div className="row">
               <div style={{ maxWidth: 150 }}>
-                <label className="f">Giá trị</label>
+                <label className="f">Giá trị{valueHint ? <span className="muted" style={{ fontWeight: 400 }}> · {valueHint}</span> : null}</label>
                 <input className="i" name="value" defaultValue={ci.value ?? ''} />
               </div>
               <div style={{ maxWidth: 170 }}>

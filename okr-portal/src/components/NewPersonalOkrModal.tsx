@@ -62,8 +62,8 @@ export default function NewPersonalOkrModal({
                 <option value="increase">Tăng ↑</option>
                 <option value="decrease">Giảm ↓</option>
               </select>
-              {k.metric_type !== 'boolean' && <NumberInput placeholder="Đầu kỳ" value={k.start_value} onValueChange={(f) => setKr(i, { start_value: f })} />}
-              {k.metric_type !== 'boolean' && <NumberInput placeholder="Mục tiêu" value={k.target_value} onValueChange={(f) => setKr(i, { target_value: f })} />}
+              {k.metric_type !== 'boolean' && <NumberInput placeholder={`Đầu kỳ${k.metric_type === 'percent' ? ' (%)' : k.metric_type === 'currency' ? ' (đồng)' : ''}`} value={k.start_value} onValueChange={(f) => setKr(i, { start_value: f })} />}
+              {k.metric_type !== 'boolean' && <NumberInput placeholder={`Mục tiêu${k.metric_type === 'percent' ? ' (%)' : k.metric_type === 'currency' ? ' (đồng)' : ''}`} value={k.target_value} onValueChange={(f) => setKr(i, { target_value: f })} />}
               {k.metric_type === 'number' && <input className="i" placeholder="Đơn vị (khoá, buổi…)" value={k.unit_label} onChange={(e) => setKr(i, { unit_label: e.target.value })} />}
               {krs.length > 1 && <button type="button" className="btn ghost sm danger" onClick={() => setKrs((c) => c.filter((_, j) => j !== i))} title="Bỏ KR">✕</button>}
             </div>

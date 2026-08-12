@@ -266,6 +266,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
               canDelete={canDeleteCi}
               editAction={editCheckInAction}
               deleteAction={deleteCheckInAction}
+              valueHint={metricType === 'percent' ? '%' : metricType === 'currency' ? 'đồng' : metricType === 'boolean' ? '1=xong / 0=chưa' : unitLabel || 'số'}
               ci={{
                 id: ci.id,
                 value: ci.value,
@@ -501,7 +502,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                   <form action={checkInAction} className="row" style={{ marginTop: 8 }}>
                     <input type="hidden" name="key_result_id" value={kr.id} />
                     <div style={{ maxWidth: 140 }}>
-                      <label className="f">Giá trị mới</label>
+                      <label className="f">Giá trị mới <span className="muted" style={{ fontWeight: 400 }}>· {kr.metric_type === 'percent' ? '%' : kr.metric_type === 'currency' ? 'đồng' : kr.metric_type === 'boolean' ? '1=xong / 0=chưa' : kr.unit_label ? kr.unit_label : 'số'}</span></label>
                       <input className="i" name="value" defaultValue={kr.current_value} />
                     </div>
                     <div style={{ maxWidth: 160 }}>

@@ -51,6 +51,7 @@ export default function NewObjectiveForm({
   const [parentId, setParentId] = useState('');
   const [title, setTitle] = useState('');
   const [okrType, setOkrType] = useState('committed');
+  const [weight, setWeight] = useState('1');
   const [description, setDescription] = useState('');
   const [owner, setOwner] = useState('');
   const [krs, setKrs] = useState<KrRow[]>([emptyKr()]);
@@ -107,6 +108,7 @@ export default function NewObjectiveForm({
     fd.set('owner_email', owner);
     fd.set('parent_id', parentId);
     fd.set('okr_type', okrType);
+    fd.set('weight', weight);
     fd.set('bsc_perspective', bsc);
     fd.set('title', title.trim());
     fd.set('description', description);
@@ -178,8 +180,8 @@ export default function NewObjectiveForm({
                 <option value="increase">Tăng ↑</option>
                 <option value="decrease">Giảm ↓</option>
               </select>
-              {k.metric_type !== 'boolean' && <NumberInput placeholder="Đầu kỳ" value={k.start_value} onValueChange={(f) => setKr(i, { start_value: f })} />}
-              {k.metric_type !== 'boolean' && <NumberInput placeholder="Mục tiêu" value={k.target_value} onValueChange={(f) => setKr(i, { target_value: f })} />}
+              {k.metric_type !== 'boolean' && <NumberInput placeholder={`Đầu kỳ${k.metric_type === 'percent' ? ' (%)' : k.metric_type === 'currency' ? ' (đồng)' : ''}`} value={k.start_value} onValueChange={(f) => setKr(i, { start_value: f })} />}
+              {k.metric_type !== 'boolean' && <NumberInput placeholder={`Mục tiêu${k.metric_type === 'percent' ? ' (%)' : k.metric_type === 'currency' ? ' (đồng)' : ''}`} value={k.target_value} onValueChange={(f) => setKr(i, { target_value: f })} />}
               {k.metric_type === 'number' && <input className="i" placeholder="Đơn vị (tỷ, chỉ…)" value={k.unit_label} onChange={(e) => setKr(i, { unit_label: e.target.value })} />}
               <select className="i" value={k.indicator} onChange={(e) => setKr(i, { indicator: e.target.value })} title="Loại chỉ số">
                 <option value="lagging">Kết quả (lagging)</option>
@@ -192,10 +194,19 @@ export default function NewObjectiveForm({
         <button type="button" className="btn ghost sm" onClick={() => setKrs((c) => [...c, emptyKr()])}>＋ Thêm Key Result</button>
       </div>
 
-      <label className="f">Loại OKR</label>
-      <select className="i" value={okrType} onChange={(e) => setOkrType(e.target.value)}>
-        {okrTypeOptions.map((t) => <option key={t.value} value={t.value}>{t.label} — {t.expect}</option>)}
-      </select>
+      <div className="row">
+        <div style={{ flex: 2 }}>
+          <label className="f">Loại OKR</label>
+          <select className="i" value={okrType} onChange={(e) => setOkrType(e.target.value)}>
+            {okrTypeOptions.map((t) => <option key={t.value} value={t.value}>{t.label} — {t.expect}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="f">Trọng số <span className="muted" style={{ fontWeight: 400 }}>· số ≥ 0, tối đa 2 số lẻ (mặc định 1)</span></label>
+          <input className="i" type="number" min="0" step="0.01" value={weight} onChange={(e) => setWeight(e.target.value)}
+            title="Trọng số của OKR khi tính kết quả tổng của nhóm (Công ty/Khối/Phòng/Cá nhân) ở Báo cáo theo cấp. Số ≥ 0, tối đa 2 chữ số thập phân. Mặc định 1." />
+        </div>
+      </div>
 
       <label className="f">Mô tả (tuỳ chọn)</label>
       <textarea className="i" value={description} onChange={(e) => setDescription(e.target.value)} />

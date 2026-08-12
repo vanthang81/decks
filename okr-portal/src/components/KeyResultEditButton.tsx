@@ -37,7 +37,11 @@ export default function KeyResultEditButton({
   const [pending, startTransition] = useTransition();
   const [err, setErr] = useState<string | null>(null);
   const [kpi, setKpi] = useState<string>(kr.kpi_source ?? '');
+  const [metric, setMetric] = useState<string>(kr.metric_type);
   const isAuto = kpi !== '';
+  // Gợi ý định dạng ô số theo loại đo (để người nhập biết nhập % hay số/đồng)
+  const valHint =
+    metric === 'percent' ? '% (0–100)' : metric === 'currency' ? 'đồng (VND)' : 'số';
 
   useEffect(() => {
     if (!open) return;
@@ -103,7 +107,7 @@ export default function KeyResultEditButton({
               <div className="row">
                 <div>
                   <label className="f">Loại đo</label>
-                  <select className="i" name="metric_type" defaultValue={kr.metric_type} disabled={isAuto}>
+                  <select className="i" name="metric_type" value={metric} onChange={(e) => setMetric(e.target.value)} disabled={isAuto}>
                     <option value="number">Số</option>
                     <option value="percent">Phần trăm</option>
                     <option value="currency">Tiền (VND)</option>
@@ -125,22 +129,22 @@ export default function KeyResultEditButton({
                   </select>
                 </div>
                 <div>
-                  <label className="f">Đơn vị</label>
+                  <label className="f">Đơn vị <span className="muted" style={{ fontWeight: 400 }}>· nhãn hiển thị</span></label>
                   <input className="i" name="unit_label" defaultValue={kr.unit_label ?? ''} placeholder="tỷ, chỉ, HĐ…" disabled={isAuto} />
                 </div>
               </div>
 
               <div className="row">
                 <div>
-                  <label className="f">Bắt đầu</label>
+                  <label className="f">Bắt đầu <span className="muted" style={{ fontWeight: 400 }}>· {valHint}</span></label>
                   <NumberInput name="start_value" defaultValue={kr.start_value} disabled={isAuto} />
                 </div>
                 <div>
-                  <label className="f">Mục tiêu</label>
+                  <label className="f">Mục tiêu <span className="muted" style={{ fontWeight: 400 }}>· {valHint}</span></label>
                   <NumberInput name="target_value" defaultValue={kr.target_value} disabled={isAuto} />
                 </div>
                 <div>
-                  <label className="f">Trọng số</label>
+                  <label className="f">Trọng số <span className="muted" style={{ fontWeight: 400 }}>· số ≥ 0</span></label>
                   <NumberInput name="weight" defaultValue={kr.weight} />
                 </div>
               </div>

@@ -27,13 +27,13 @@ export default function WeightEditor({ objectiveId, weight, title }: { objective
           Kết quả nhóm = bình quân <b>có trọng số</b> tiến độ các OKR. Mặc định <b>1</b> (mọi OKR cân nhau);
           để trọng số cao hơn cho OKR quan trọng hơn.
         </p>
-        <label className="f" style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Trọng số</label>
+        <label className="f" style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Trọng số <span className="muted" style={{ fontWeight: 400 }}>· số &gt; 0, tối đa 2 số lẻ</span></label>
         <input
           className="i"
           name="weight"
           type="number"
-          min="0.1"
-          step="0.1"
+          min="0.01"
+          step="0.01"
           value={w}
           onChange={(e) => setW(e.target.value)}
           style={{ width: 140 }}
