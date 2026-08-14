@@ -44,8 +44,10 @@ a:hover { text-decoration: underline; }
   position: sticky; top: 0; z-index: 30;
 }
 .site-header .inner {
-  max-width: var(--maxw); margin: 0 auto; padding: 9px 18px;
-  display: flex; align-items: center; gap: 14px; position: relative;
+  max-width: var(--maxw); margin: 0 auto;
+  /* Chừa lề an toàn "tai thỏ" khi xoay ngang (notch/safe-area) */
+  padding: 9px max(18px, env(safe-area-inset-right)) 9px max(18px, env(safe-area-inset-left));
+  display: flex; align-items: center; gap: 10px; position: relative;
 }
 .brand { display: flex; align-items: center; gap: 8px; text-decoration: none; }
 .brand:hover { text-decoration: none; }
@@ -57,18 +59,18 @@ a:hover { text-decoration: underline; }
   line-height: 1.12;
 }
 .brand-name {
-  color: var(--accent); font-weight: 800; font-size: 14px; letter-spacing: .3px;
+  color: var(--accent); font-weight: 800; font-size: 13.5px; letter-spacing: .3px;
   white-space: nowrap;
 }
 .brand-tag {
   color: rgba(255,255,255,.72); font-weight: 500; font-size: 10.5px; letter-spacing: .2px;
   white-space: nowrap;
 }
-.nav { display: flex; align-items: center; gap: 2px; margin-left: 10px; }
+.nav { display: flex; align-items: center; gap: 2px; margin-left: 6px; }
 /* Mục cấp 1: link thẳng HOẶC nút mở cụm dropdown */
 .nav-top {
   display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
-  padding: 7px 12px; border-radius: 9px; font-size: 13.5px; font-weight: 500;
+  padding: 7px 9px; border-radius: 9px; font-size: 13px; font-weight: 500;
   color: rgba(255,255,255,.82); background: transparent; border: 0; cursor: pointer; font-family: inherit;
 }
 .nav-top:hover { background: rgba(255,255,255,.14); color: #fff; text-decoration: none; }
@@ -127,6 +129,9 @@ a:hover { text-decoration: underline; }
 .wgt-presets .btn.active { border-color: var(--primary); color: var(--primary); background: var(--primary-tint); font-weight: 700; }
 .spacer { flex: 1; }
 .userchip { font-size: 13px; color: rgba(255,255,255,.85); display: flex; align-items: center; gap: 8px; }
+/* Nút Đăng xuất luôn 1 dòng, không co (để tên user ellipsize thay vì nút bị bẻ dòng) */
+.userchip-desktop .btn { white-space: nowrap; flex: 0 0 auto; }
+.userchip-name { flex: 0 1 auto; }
 .hdr-av { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(255,255,255,.5); flex: 0 0 auto; }
 img.cmt-avatar, img.cmt-mm-av, img.ntf-av { object-fit: cover; }
 .site-header .btn.ghost {
@@ -158,14 +163,49 @@ img.cmt-avatar, img.cmt-mm-av, img.ntf-av { object-fit: cover; }
 .mobile-nav a:active, .mobile-nav a.active { background: var(--primary-tint); color: var(--primary); }
 .mobile-logout { width: 100%; justify-content: center; margin-top: 8px; }
 
-@media (max-width: 760px) {
+/* ===== Header responsive 3 tầng (không bao giờ tràn/cắt ở BẤT KỲ bề rộng nào) =====
+   Thanh menu desktop (5 cụm dropdown + thương hiệu + userchip) cần ~1366px mới đủ 1 hàng.
+   Dưới đó, nếu vẫn hiện nav desktop thì bị CẮT (html/body overflow-x: clip). Chia 3 tầng:
+   • ≤1150px  → HAMBURGER: điện thoại (dọc ≤440 + NGANG ≤932), tablet dọc, cửa sổ hẹp. Gọn, đủ.
+   • 1151–1399px → nav desktop GỌN: ẩn phụ đề thương hiệu (chỉ logo) + rút gọn tên user → vừa
+     khít laptop 1280–1366. • ≥1366px → header đầy đủ (logo + "Performance Management" + tên user). */
+@media (max-width: 1150px) {
   .nav-desktop, .userchip-desktop { display: none; }
-  .mobile-menu { display: block; margin-left: auto; }
-  .site-header .inner { padding: 8px 14px; gap: 8px; }
-  .brand-logo { height: 24px; }
+  /* Ô "Mời người dùng" đã có trong panel hamburger → ẩn ở thanh header cho gọn */
+  .hdr-invite { display: none; }
+  .mobile-menu { display: block; margin-left: 0; }
+  /* Header 1 hàng KHÔNG bao giờ tràn: thương hiệu co được, chuông + menu luôn đủ ở mép phải */
+  .site-header .inner { flex-wrap: nowrap; }
+  .spacer { flex: 1 1 0; min-width: 0; }
+  .brand { min-width: 0; flex: 0 1 auto; }
+  .brand-sub { min-width: 0; overflow: hidden; }
+  .brand-name { overflow: hidden; text-overflow: ellipsis; }
+  .brand-tag { overflow: hidden; text-overflow: ellipsis; }
+  [data-tour="tour-bell"], .mobile-menu { flex: 0 0 auto; }
+}
+
+/* Tầng GIỮA (1151–1399px): nav desktop nhưng chưa đủ chỗ cho header đầy đủ → gọn lại vừa khít
+   (khung nội dung tối đa --maxw = 1400px, nên header đầy đủ chỉ bung khi ≥1400px). */
+@media (min-width: 1151px) and (max-width: 1399px) {
+  /* Chỉ giữ LOGO (bỏ phụ đề "Performance Management"/tagline) để nhường chỗ cho menu */
+  .brand-sub { display: none; }
+  /* Tên người dùng rút gọn (ellipsis) để không đẩy nút Đăng xuất ra ngoài */
+  .userchip-name { max-width: 130px; }
+}
+
+@media (max-width: 760px) {
+  /* Header thu gọn thêm trên điện thoại dọc */
+  .site-header .inner {
+    padding: 8px max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
+    gap: 8px;
+  }
+  .brand { gap: 7px; }
+  .brand-logo { height: 24px; flex: 0 0 auto; }
   .brand-sub { padding-left: 8px; margin-left: 0; }
-  .brand-name { font-size: 12px; letter-spacing: 0; }
-  .brand-tag { font-size: 9px; }
+  .brand-name { font-size: 12.5px; letter-spacing: 0; }
+  .brand-tag { font-size: 9.5px; }
+  /* Máy rất hẹp: bỏ dòng phụ đề để nhường chỗ, giữ tên chính */
+  @media (max-width: 380px) { .brand-tag { display: none; } }
 
   /* Bố cục chung gọn hơn trên mobile */
   .wrap { padding: 16px 14px 60px; }
@@ -1022,7 +1062,7 @@ i.cal-task, .cal-dot.cal-task { background: var(--primary); } i.cal-meeting, .ca
 .tour-skip:hover { color: var(--ink); text-decoration: underline; }
 
 /* Tên user ở header → link tới Cài đặt cá nhân */
-.userchip-name { color: rgba(255,255,255,.9); font-weight: 600; text-decoration: none; }
+.userchip-name { color: rgba(255,255,255,.9); font-weight: 600; text-decoration: none; max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .userchip-name:hover { color: #fff; text-decoration: underline; }
 .mobile-user-link { color: var(--primary); font-weight: 600; text-decoration: none; }
 

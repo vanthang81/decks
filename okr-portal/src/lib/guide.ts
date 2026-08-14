@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-14.180';
+export const GUIDE_VERSION = '2026-08-14.181';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -622,6 +622,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/08/2026 (Header trên mobile & tablet: gọn gàng, đầy đủ)',
+    items: [
+      'Thanh menu/tiêu đề trên đầu trang hiển thị đầy đủ & đẹp ở MỌI bề rộng — điện thoại (cả dọc lẫn NGANG) và tablet dùng nút menu ☰ gọn, không còn bị cắt mất nút menu ở mép phải.',
+      'Máy tính để bàn: header tự co theo cửa sổ (laptop 1280–1366 hiện logo + menu + tên gọn; màn rộng ≥1400 hiện thêm phụ đề thương hiệu) — tên người dùng & nút Đăng xuất luôn nằm gọn 1 hàng.',
+    ],
+  },
   {
     date: '14/08/2026 (Trang Hướng dẫn: thêm tài liệu BCQT & Nhịp điều hành)',
     items: [
