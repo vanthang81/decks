@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-12.150';
+export const GUIDE_VERSION = '2026-08-12.160';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -622,6 +622,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '12/08/2026 (Trang Hướng dẫn: thêm tài liệu Chiến lược → Thực thi)',
+    items: [
+      'Trang "Hướng dẫn sử dụng" thêm nút mở tài liệu slide "Quản trị Chiến lược tới Thực thi" (mở tab mới), bên cạnh "Tài liệu giới thiệu hệ thống".',
+    ],
+  },
   {
     date: '12/08/2026 (Kết quả đầu ra cho công việc + nhập số rõ định dạng)',
     items: [

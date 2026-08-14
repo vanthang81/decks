@@ -55,6 +55,9 @@ export default async function GuidePage() {
             <a className="btn sm" href="https://deck.consultx.vn/d/he-thong-quan-tri-hieu-suat-btmh" target="_blank" rel="noopener noreferrer">
               📖 Tài liệu giới thiệu hệ thống (slide)
             </a>
+            <a className="btn sm" href="https://deck.consultx.vn/d/btmh-strategy-to-execution" target="_blank" rel="noopener noreferrer">
+              🎯 Quản trị Chiến lược tới Thực thi (slide)
+            </a>
           </div>
         </div>
 
