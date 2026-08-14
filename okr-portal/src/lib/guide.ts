@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-12.160';
+export const GUIDE_VERSION = '2026-08-14.170';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -622,6 +622,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/08/2026 (Trang Hướng dẫn: thêm tài liệu Báo cáo Quản trị & Nhịp điều hành)',
+    items: [
+      'Trang "Hướng dẫn sử dụng" thêm nút mở tài liệu slide "Báo cáo Quản trị & Nhịp điều hành" (mở tab mới), cùng hàng với các tài liệu slide khác.',
+    ],
+  },
   {
     date: '12/08/2026 (Trang Hướng dẫn: thêm tài liệu Chiến lược → Thực thi)',
     items: [
