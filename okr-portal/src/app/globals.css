@@ -156,7 +156,17 @@ img.cmt-avatar, img.cmt-mm-av, img.ntf-av { object-fit: cover; }
   position: absolute; top: calc(100% + 8px); right: 0; left: 0;
   background: #fff; border: 1px solid var(--line); border-radius: 12px;
   box-shadow: 0 14px 34px rgba(0,0,0,.20); padding: 10px; z-index: 40;
+  /* Menu dài hơn màn hình → CUỘN NỘI BỘ (panel neo vào header sticky nên không cuộn
+     theo trang được). Giới hạn cao = chiều cao màn hình trừ header + lề, cuộn mượt cảm
+     ứng, chặn lan cuộn sang trang. Dùng dvh để trừ đúng thanh trình duyệt trên mobile. */
+  max-height: calc(100vh - 72px);
+  max-height: calc(100dvh - 72px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
+/* Khi menu mở: KHÔNG để header tự trượt ẩn (giữ neo cho panel) */
+html:has(.mobile-menu[open]) .site-header { transform: none !important; }
 .mobile-user { color: var(--muted); font-size: 13px; padding: 6px 10px 10px; border-bottom: 1px solid var(--line); }
 .mobile-nav { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
 .mobile-nav a { padding: 12px 12px; border-radius: 9px; color: var(--ink); font-weight: 600; text-decoration: none; }

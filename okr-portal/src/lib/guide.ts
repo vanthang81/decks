@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-14.181';
+export const GUIDE_VERSION = '2026-08-14.182';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -622,6 +622,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/08/2026 (Menu điện thoại: cuộn được toàn bộ)',
+    items: [
+      'Mở menu ☰ trên điện thoại (cả dọc lẫn ngang): danh sách dài nay CUỘN được trong khung menu → xem & bấm tới mọi mục (kể cả "Đăng xuất" ở cuối), không còn bị khuất phần dưới.',
+    ],
+  },
   {
     date: '14/08/2026 (Header trên mobile & tablet: gọn gàng, đầy đủ)',
     items: [
