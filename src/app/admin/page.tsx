@@ -71,8 +71,9 @@ export default async function AdminDecksPage({
         </div>
         <label htmlFor="tags">Thẻ (tags) — cách nhau bằng dấu phẩy</label>
         <input id="tags" name="tags" placeholder="vd: 2026, chiến lược" />
-        <label htmlFor="htmlfile">Nội dung deck — tải file .html <span className="muted">(hoặc dán HTML bên dưới)</span></label>
-        <input id="htmlfile" name="htmlfile" type="file" accept=".html,text/html" />
+        <label htmlFor="htmlfile">Nội dung deck — tải file <b>.pdf / .pptx</b> hoặc .html <span className="muted">(hoặc dán HTML bên dưới)</span></label>
+        <input id="htmlfile" name="htmlfile" type="file" accept=".html,text/html,.pdf,application/pdf,.pptx,.ppt,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint" />
+        <p className="muted" style={{ fontSize: 12, margin: '4px 0 0' }}>PDF/PPTX sẽ được tự chuyển thành deck ảnh xem trên web (giữ đầy đủ watermark, mật khẩu, cấp/thu link, log). Có thể mất vài giây với file nhiều trang.</p>
         <label htmlFor="content">…hoặc dán HTML self-contained</label>
         <textarea id="content" name="content" rows={5} placeholder="<!doctype html>…" style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12 }} />
         <p className="muted">Để trống cả hai nếu bạn đã đặt file <code>content/decks/&lt;slug&gt;.html</code> trong repo.</p>

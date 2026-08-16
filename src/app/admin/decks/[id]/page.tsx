@@ -20,7 +20,7 @@ export default async function DeckDetailPage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { link?: string; pw?: string; thumb?: string; del?: string };
+  searchParams: { link?: string; pw?: string; thumb?: string; del?: string; content?: string };
 }) {
   const deck = await getDeckById(params.id);
   if (!deck) notFound();
@@ -213,6 +213,14 @@ export default async function DeckDetailPage({
       </div>
 
       <h2 style={{ marginTop: 8 }}>Nội dung deck</h2>
+      {searchParams.content === 'convertfail' && (
+        <div className="notice" style={{ marginBottom: 12, color: 'var(--bad)' }}>
+          ✗ Không chuyển được file PDF/PPTX (dịch vụ convert lỗi hoặc file không hợp lệ). Thử lại, hoặc kiểm tra dịch vụ deck-converter.
+        </div>
+      )}
+      {searchParams.content === 'ok' && (
+        <div className="notice" style={{ marginBottom: 12, color: 'var(--ok)' }}>✓ Đã cập nhật nội dung deck.</div>
+      )}
       <p className="muted">
         Nguồn hiện tại:{' '}
         {hasContent ? (
@@ -224,9 +232,10 @@ export default async function DeckDetailPage({
       </p>
       <form action={updateContentAction} style={{ maxWidth: 560, marginBottom: 32 }}>
         <input type="hidden" name="deck_id" value={deck.id} />
-        <label htmlFor="htmlfile">Cập nhật nội dung — tải file .html</label>
-        <input id="htmlfile" name="htmlfile" type="file" accept=".html,text/html" />
-        <label htmlFor="content">…hoặc dán HTML</label>
+        <label htmlFor="htmlfile">Cập nhật nội dung — tải file <b>.pdf / .pptx</b> hoặc .html</label>
+        <input id="htmlfile" name="htmlfile" type="file" accept=".html,text/html,.pdf,application/pdf,.pptx,.ppt,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint" />
+        <p className="muted" style={{ fontSize: 12, margin: '4px 0 0' }}>PDF/PPTX → tự chuyển thành deck ảnh (giữ nguyên watermark/mật khẩu/cấp-thu link/log). File nhiều trang có thể mất vài giây.</p>
+        <label htmlFor="content" style={{ marginTop: 10 }}>…hoặc dán HTML</label>
         <textarea id="content" name="content" rows={4} placeholder="<!doctype html>…" style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12 }} />
         <div style={{ marginTop: 12 }}>
           <button className="btn" type="submit">Lưu nội dung</button>

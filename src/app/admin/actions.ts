@@ -8,6 +8,7 @@ import {
   setDeckPassword, generateDeckPassword, setDeckPublished, setDeckVisibility, setDeckSource, deleteDeck, type Visibility,
 } from '@/lib/decks';
 import { resolveCategory } from '@/lib/categorize';
+import { isConvertibleDoc, convertDocToDeckHtml } from '@/lib/convert';
 import { generateDeckThumbnail } from '@/lib/thumbnail';
 import { upsertViewer } from '@/lib/viewers';
 import { issueGrant, revokeGrant, revokeGroupOnDeck } from '@/lib/grants';
@@ -172,15 +173,23 @@ export async function generateThumbnailAction(formData: FormData) {
   redirect(`/admin/decks/${deckId}?thumb=${ok ? 'ok' : 'fail'}`);
 }
 
-// Lấy nội dung HTML từ form: ưu tiên file upload 'htmlfile', rồi textarea 'content'. null nếu không có.
-async function extractContent(formData: FormData): Promise<string | null> {
+// Lấy nội dung deck (HTML) từ form. Ưu tiên file upload 'htmlfile': nếu là PDF/PPTX → convert sang deck ảnh;
+// nếu là .html → đọc thẳng. Rồi tới textarea 'content'. convertError=true khi file tài liệu nhưng convert lỗi.
+async function extractDeckContent(formData: FormData, title: string): Promise<{ html: string | null; convertError?: boolean }> {
   const file = formData.get('htmlfile');
-  if (file && typeof file === 'object' && 'text' in file && (file as File).size > 0) {
-    const text = await (file as File).text();
-    if (text.trim().length > 0) return text;
+  if (file && typeof file === 'object' && 'arrayBuffer' in file && (file as File).size > 0) {
+    const f = file as File;
+    if (isConvertibleDoc(f.name, f.type)) {
+      const html = await convertDocToDeckHtml(await f.arrayBuffer(), f.name, title).catch(() => null);
+      return { html, convertError: html === null };
+    }
+    if ('text' in f) {
+      const text = await f.text();
+      if (text.trim().length > 0) return { html: text };
+    }
   }
   const pasted = String(formData.get('content') ?? '').trim();
-  return pasted.length > 0 ? pasted : null;
+  return { html: pasted.length > 0 ? pasted : null };
 }
 
 export async function createDeckAction(formData: FormData) {
@@ -188,7 +197,7 @@ export async function createDeckAction(formData: FormData) {
   const slug = String(formData.get('slug') ?? '').trim().toLowerCase();
   const title = String(formData.get('title') ?? '').trim();
   if (!/^[a-z0-9][a-z0-9-]{0,80}$/.test(slug) || !title) return;
-  const content = await extractContent(formData);
+  const { html: content, convertError } = await extractDeckContent(formData, title);
   const deck = await upsertDeck({
     slug,
     title,
@@ -209,6 +218,8 @@ export async function createDeckAction(formData: FormData) {
   if (content) await generateDeckThumbnail({ id: deck.id, slug: deck.slug }).catch(() => false);
   revalidatePath('/admin');
   revalidatePath('/');
+  // File PDF/PPTX convert lỗi → vào trang deck kèm cảnh báo để thử lại (deck đã tạo nhưng chưa có nội dung).
+  if (convertError) redirect(`/admin/decks/${deck.id}?content=convertfail`);
 }
 
 // ---- Nguồn / Chat gốc (link tuỳ chọn để mở lại chat đã tạo deck) ----
@@ -264,14 +275,15 @@ export async function updateContentAction(formData: FormData) {
   await requireAdminEmail();
   const deckId = String(formData.get('deck_id') ?? '');
   if (!deckId) return;
-  const content = await extractContent(formData);
+  const deck = await getDeckById(deckId);
+  const { html: content, convertError } = await extractDeckContent(formData, deck?.title ?? 'Deck');
   if (content) {
     await updateDeckContent(deckId, content);
-    const deck = await getDeckById(deckId);
     if (deck) await generateDeckThumbnail({ id: deck.id, slug: deck.slug }).catch(() => false);
   }
   revalidatePath(`/admin/decks/${deckId}`);
   revalidatePath('/');
+  redirect(`/admin/decks/${deckId}?content=${convertError ? 'convertfail' : content ? 'ok' : 'empty'}`);
 }
 
 export async function issueLinkAction(formData: FormData) {
