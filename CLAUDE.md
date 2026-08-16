@@ -166,9 +166,19 @@ phục vụ + chèn watermark/log.
 
 ## Thêm deck mới (2 cách)
 - **Tự phục vụ trên admin (KHÔNG cần rebuild)**: `/admin` → Thêm deck → nhập slug/tiêu đề → **tải file
-  `.html`** hoặc **dán HTML** → chọn public/protected. Nội dung lưu cột `deck_decks.content` (DB), phục
-  vụ ngay. Sửa nội dung sau ở trang chi tiết deck ("Nội dung deck"). Nguồn render = **DB content > file
-  `content/decks/<slug>.html`** (fallback).
+  `.html`** hoặc **`.pdf`/`.pptx`/`.ppt`/`.odp`/`.key`** hoặc **dán HTML** → chọn public/protected. Nội dung
+  lưu cột `deck_decks.content` (DB), phục vụ ngay. Sửa nội dung sau ở trang chi tiết deck ("Nội dung deck").
+  Nguồn render = **DB content > file `content/decks/<slug>.html`** (fallback).
+- **Host PDF/PPTX (chuyển thành deck ảnh self-contained — đầy đủ tính năng như deck HTML)**: khi tải file
+  tài liệu (`isConvertibleDoc`: pdf/pptx/ppt/odp/key trong `src/lib/convert.ts`), app POST file tới dịch vụ
+  **deck-converter** (`${CONVERTER_URL}/convert`, header `x-token: ${CONVERTER_TOKEN}`) → nhận về **ảnh JPEG
+  từng slide** → `buildImageDeckHtml` (`src/lib/slidesHtml.ts`) dựng **HTML deck self-contained** (mỗi slide 1
+  `<img data-URI>`, nav ←→/Space/PageUp-Down/Home/End/F, đếm trang, fullscreen, in PDF) lưu vào
+  `deck_decks.content` **y như deck HTML thường** ⇒ **thừa hưởng TOÀN BỘ tính năng**: watermark định danh, mật
+  khẩu chung, cấp/thu hồi link, nhật ký, chặn tải/in, phân loại, thumbnail. Áp ở cả **Thêm deck** (`createDeckAction`)
+  và **Sửa nội dung** (`updateContentAction`) qua `extractDeckContent` (`src/app/admin/actions.ts`); convert lỗi →
+  redirect `?content=convertfail`. **Giới hạn**: đây là ảnh slide (không phải PDF gốc nhúng) — text không chọn/copy
+  được, kích thước lớn hơn; đủ cho mục tiêu "xem có kiểm soát". File >80MB bị converter chặn (`MAX_CONTENT_LENGTH`).
 - **Qua repo (file)**: tạo `content/decks/<slug>.html` (copy `template.html`) → push `main` → deploy
   (rebuild) → `/admin` Thêm deck với slug trùng tên file.
 - **Chuẩn hoá text khi lưu**: `upsertDeck`/`updateDeckMeta` chạy `decodeEntities` cho title/description/
@@ -193,6 +203,35 @@ phục vụ + chèn watermark/log.
   `https://deck.consultx.vn/mcp/<MCP_TOKEN>`** (token nằm TRONG url — vì UI connector claude.ai hiện
   chỉ có ô URL + OAuth, KHÔNG có ô request header). Server nhận cả 2: `/mcp/<token>` (path-secret) và
   `/mcp` (header `Authorization: Bearer <token>`, gác ở tools/call). Rotate = đổi env MCP_TOKEN + restart.
+
+## Dịch vụ deck-converter (host PDF/PPTX → ảnh slide)
+- **Container RIÊNG `deck-converter`** (thư mục `converter/`: `Dockerfile` debian-slim + **libreoffice-impress**
+  (soffice) + **poppler-utils** (pdftoppm) + fonts Noto/CJK/Liberation; `server.py` Flask). Pipeline
+  `/convert`: pptx/ppt/odp/key → `soffice --headless --convert-to pdf` → (pdf) `pdftoppm -jpeg -scale-to-x 1600`
+  → trả JSON `{ok,count,pages:[base64 JPEG…]}`. Bảo vệ bằng header `x-token` == env `CONVERTER_TOKEN` (thiếu/sai
+  → 401). `/healthz` mở. Giới hạn upload 80MB.
+- **Chạy (one-off, NGOÀI `deploy.sh` — giống `decks-mcp`)**: build + run trên **network RIÊNG** (BẮT BUỘC):
+  ```
+  docker build -t deck-converter:latest converter/
+  docker network create deck-conv-net 2>/dev/null || true
+  docker rm -f deck-converter 2>/dev/null || true
+  docker run -d --name deck-converter --network deck-conv-net \
+    -e CONVERTER_TOKEN="$CONVERTER_TOKEN" -e PORT=8642 \
+    -p 0.0.0.0:8642:8642 --restart unless-stopped deck-converter:latest
+  ```
+  **VÌ SAO network riêng `deck-conv-net`** (bài học 16/08): nếu để chung `bridge` mặc định với 2 container portal
+  thì app **KHÔNG** gọi được qua `host.docker.internal:8642` (Docker hairpin-NAT lỗi khi container bridge gọi cổng
+  host publish trỏ về container khác cùng bridge, qua IP `10.0.0.1` không phải gateway) → fetch **timeout**. Đặt
+  converter sang network riêng (giống `browserless-shot` ở `shot-website_default`) là hết. `--restart unless-stopped`
+  ⇒ tự lên lại sau reboot; `deploy.sh` chỉ dựng lại 2 container portal, **KHÔNG đụng** deck-converter → converter
+  cứ chạy độc lập (chỉ chạy lại lệnh trên khi đổi code `converter/` hoặc lỡ xoá container).
+- **Env portal (cả `.env` + `.env.vanthang`, NGOÀI git)**: `CONVERTER_URL=http://host.docker.internal:8642` +
+  `CONVERTER_TOKEN=<secret>`. App đọc `process.env.CONVERTER_URL/CONVERTER_TOKEN` (`src/lib/convert.ts`); thiếu
+  `CONVERTER_URL` ⇒ convert trả null (upload tài liệu sẽ báo lỗi, deck HTML/dán vẫn chạy). Đổi env ⇒ chạy lại
+  `deploy.sh` để 2 container portal nạp env mới.
+- **QC nhanh** (đã pass 16/08): tạo PDF thật trong deck-converter → `docker cp` sang `decks-portal-staging` →
+  `node -e` POST `${CONVERTER_URL}/convert` (x-token) ⇒ `ok=true count=N pages=N`. Reach test:
+  `docker exec decks-portal-{staging,vanthang} node -e "fetch('http://host.docker.internal:8642/healthz')"` ⇒ `OK ok`.
 
 ## Nguyên tắc làm việc với CFO (áp cho MỌI session)
 Luôn **tự động làm hết**: tự tra mọi nguồn (memory/CLAUDE.md mọi project, Outline KB, n8n MCP,
