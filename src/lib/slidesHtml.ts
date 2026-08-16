@@ -51,12 +51,24 @@ export function buildImageDeckHtml(pagesB64: string[], title: string): string {
   function next(){show(i+1)} function prev(){show(i-1)}
   document.getElementById('next').onclick=next;document.getElementById('prev').onclick=prev;
   document.getElementById('bnext').onclick=next;document.getElementById('bprev').onclick=prev;
-  document.getElementById('bfull').onclick=function(){if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();};
+  // Toàn màn hình đa trình duyệt (Safari/macOS cần webkit; Firefox moz; IE/Edge cũ ms).
+  function fsEl(){return document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement;}
+  function toggleFull(){
+    var el=document.documentElement;
+    if(fsEl()){
+      var ex=document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen||document.msExitFullscreen;
+      if(ex){try{ex.call(document);}catch(_){}}
+    } else {
+      var rq=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
+      if(rq){try{var p=rq.call(el);if(p&&p.catch)p.catch(function(){});}catch(_){}}
+    }
+  }
+  document.getElementById('bfull').onclick=toggleFull;
   document.addEventListener('keydown',function(e){
     if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();next();}
     else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();prev();}
     else if(e.key==='Home'){show(0);} else if(e.key==='End'){show(n-1);}
-    else if(e.key.toLowerCase&&e.key.toLowerCase()==='f'){document.getElementById('bfull').click();}
+    else if(e.key.toLowerCase&&e.key.toLowerCase()==='f'){toggleFull();}
   });
   show(0);
 })();
