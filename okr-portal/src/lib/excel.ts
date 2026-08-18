@@ -51,7 +51,7 @@ function makeEnum<T extends string>(labels: Record<T, string>, def: T, aliases: 
 
 const E_LEVEL = makeEnum<Level>({ company: 'Công ty', division: 'Khối', department: 'Phòng', individual: 'Cá nhân' }, 'department', { 'phòng ban': 'department' });
 const E_OKR_TYPE = makeEnum<OkrType>({ committed: 'Cam kết', aspirational: 'Khát vọng', learning: 'Học hỏi' }, 'committed');
-const E_OBJ_STATUS = makeEnum<ObjStatus>({ draft: 'Nháp', active: 'Đang chạy', done: 'Hoàn thành', archived: 'Lưu trữ' }, 'active');
+const E_OBJ_STATUS = makeEnum<ObjStatus>({ draft: 'Nháp', not_started: 'Chưa thực hiện', active: 'Đang chạy', done: 'Hoàn thành', canceled: 'Hủy/Dừng', archived: 'Lưu trữ' }, 'active', { 'hủy': 'canceled', 'dừng': 'canceled', 'huỷ/dừng': 'canceled', 'chưa bắt đầu': 'not_started', 'chưa triển khai': 'not_started' });
 const E_METRIC = makeEnum<MetricType>({ number: 'Số', percent: 'Phần trăm', currency: 'Tiền (VND)', boolean: 'Có/Không' }, 'number', { '%': 'percent', 'tiền': 'currency', 'tiền tệ': 'currency', vnd: 'currency' });
 const E_DIR = makeEnum<Direction>({ increase: 'Tăng', decrease: 'Giảm' }, 'increase', { up: 'increase', down: 'decrease' });
 const E_IND = makeEnum<Indicator>({ leading: 'Dẫn dắt', lagging: 'Kết quả' }, 'lagging');

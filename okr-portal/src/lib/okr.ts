@@ -32,7 +32,9 @@ export async function listObjectivesWithKrs(periodId: string): Promise<Objective
     [periodId],
   );
 }
-export type ObjStatus = 'draft' | 'active' | 'done' | 'archived';
+import { OBJ_STATUS_LABEL, OBJ_STATUSES, OBJ_STATUS_BADGE, type ObjStatus } from './okr-status';
+export { OBJ_STATUS_LABEL, OBJ_STATUSES, OBJ_STATUS_BADGE };
+export type { ObjStatus };
 export type MetricType = 'number' | 'percent' | 'currency' | 'boolean';
 export type Direction = 'increase' | 'decrease';
 export type OkrType = 'committed' | 'aspirational' | 'learning';

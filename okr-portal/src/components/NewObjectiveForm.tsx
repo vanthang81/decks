@@ -6,6 +6,7 @@ import SearchSelect from '@/components/SearchSelect';
 import NumberInput from '@/components/NumberInput';
 import { useToast } from '@/components/ToastProvider';
 import type { Level } from '@/lib/okr';
+import { OBJ_STATUSES, OBJ_STATUS_LABEL } from '@/lib/okr-status';
 
 type UserOpt = { email: string; name: string; role: string; unit_id: string | null; unit_name: string | null; title?: string | null };
 type UnitOpt = { id: string; name: string; type: string };
@@ -51,6 +52,7 @@ export default function NewObjectiveForm({
   const [parentId, setParentId] = useState('');
   const [title, setTitle] = useState('');
   const [okrType, setOkrType] = useState('committed');
+  const [status, setStatus] = useState('active');
   const [weight, setWeight] = useState('1');
   const [description, setDescription] = useState('');
   const [owner, setOwner] = useState('');
@@ -108,6 +110,7 @@ export default function NewObjectiveForm({
     fd.set('owner_email', owner);
     fd.set('parent_id', parentId);
     fd.set('okr_type', okrType);
+    fd.set('status', status);
     fd.set('weight', weight);
     fd.set('bsc_perspective', bsc);
     fd.set('title', title.trim());
@@ -199,6 +202,12 @@ export default function NewObjectiveForm({
           <label className="f">Loại OKR</label>
           <select className="i" value={okrType} onChange={(e) => setOkrType(e.target.value)}>
             {okrTypeOptions.map((t) => <option key={t.value} value={t.value}>{t.label} — {t.expect}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="f">Trạng thái</label>
+          <select className="i" value={status} onChange={(e) => setStatus(e.target.value)}>
+            {OBJ_STATUSES.map((s) => <option key={s} value={s}>{OBJ_STATUS_LABEL[s]}</option>)}
           </select>
         </div>
         <div>

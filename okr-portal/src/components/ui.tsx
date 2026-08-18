@@ -1,4 +1,5 @@
 import { progressColor } from '@/lib/format';
+import { OBJ_STATUS_LABEL, OBJ_STATUS_BADGE } from '@/lib/okr-status';
 
 export function ProgressBar({ value, lg }: { value: number; lg?: boolean }) {
   const v = Math.max(0, Math.min(100, value));
@@ -10,14 +11,9 @@ export function ProgressBar({ value, lg }: { value: number; lg?: boolean }) {
 }
 
 export function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { cls: string; label: string }> = {
-    draft: { cls: 'gray', label: 'Nháp' },
-    active: { cls: 'blue', label: 'Đang chạy' },
-    done: { cls: 'green', label: 'Hoàn thành' },
-    archived: { cls: 'gray', label: 'Lưu trữ' },
-  };
-  const s = map[status] ?? { cls: 'gray', label: status };
-  return <span className={`badge ${s.cls}`}>{s.label}</span>;
+  const label = (OBJ_STATUS_LABEL as Record<string, string>)[status] ?? status;
+  const cls = (OBJ_STATUS_BADGE as Record<string, string>)[status] ?? 'gray';
+  return <span className={`badge ${cls}`}>{label}</span>;
 }
 
 export function LevelBadge({ level }: { level: string }) {

@@ -6,6 +6,7 @@ import ConfirmButton from './ConfirmButton';
 import SearchSelect from '@/components/SearchSelect';
 import { useToast } from '@/components/ToastProvider';
 import { unitTreeOptions } from '@/lib/unit-options';
+import { OBJ_STATUS_LABEL, OBJ_STATUSES } from '@/lib/okr-status';
 
 export type ObjData = {
   id: string;
@@ -24,12 +25,7 @@ type UnitOpt = { id: string; name: string; type: 'company' | 'division' | 'depar
 type ParentCand = { id: string; code: string | null; title: string; level: string };
 type PillarCand = { id: string; code: string | null; title: string };
 
-const STATUS_LABEL: Record<string, string> = {
-  draft: 'Nháp',
-  active: 'Đang chạy',
-  done: 'Hoàn thành',
-  archived: 'Lưu trữ',
-};
+const STATUS_LABEL: Record<string, string> = OBJ_STATUS_LABEL;
 const TYPE_LABEL: Record<string, string> = {
   committed: 'Cam kết',
   aspirational: 'Khát vọng',
@@ -183,8 +179,9 @@ export default function ObjectiveEditButton({
                 <div>
                   <label className="f">Trạng thái</label>
                   <select className="i" name="status" defaultValue={objective.status}>
-                    {Object.entries(STATUS_LABEL).map(([k, v]) => (
-                      <option key={k} value={k}>{v}</option>
+                    {/* 5 trạng thái vòng đời + giữ trạng thái legacy hiện tại (vd Lưu trữ) nếu đang dùng */}
+                    {[...OBJ_STATUSES, ...((OBJ_STATUSES as string[]).includes(objective.status) ? [] : [objective.status])].map((k) => (
+                      <option key={k} value={k}>{STATUS_LABEL[k] ?? k}</option>
                     ))}
                   </select>
                 </div>

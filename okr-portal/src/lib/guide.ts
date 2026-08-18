@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-14.185';
+export const GUIDE_VERSION = '2026-08-14.186';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -623,6 +623,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/08/2026 (OKR: đủ 5 trạng thái vòng đời + lọc được)',
+    items: [
+      'OKR nay có 5 trạng thái: Nháp · Chưa thực hiện · Đang chạy · Hoàn thành · Hủy/Dừng (badge màu riêng). Chọn khi Tạo/Sửa OKR.',
+      'Bộ lọc "Trạng thái" ở trang OKR luôn hiện đủ 5 trạng thái (kể cả khi chưa có OKR nào ở trạng thái đó) → lọc được OKR "Hoàn thành", "Hủy/Dừng"… bất cứ lúc nào.',
+    ],
+  },
   {
     date: '14/08/2026 (Báo cáo theo cấp: xuất Excel + In/Lưu PDF)',
     items: [

@@ -6,6 +6,7 @@ import { ProgressBar } from './ui';
 import SearchSelect from '@/components/SearchSelect';
 import UserLink from '@/components/UserLink';
 import { unitIcon } from '@/lib/unit-icons';
+import { OBJ_STATUS_LABEL, OBJ_STATUSES } from '@/lib/okr-status';
 
 // Kiểu dữ liệu phẳng truyền từ server (chỉ field cần cho cây — đều serializable).
 export type TreeObjective = {
@@ -31,12 +32,7 @@ const LEVEL_LABEL: Record<string, string> = {
   department: 'Phòng',
   individual: 'Cá nhân',
 };
-const STATUS_LABEL: Record<string, string> = {
-  draft: 'Nháp',
-  active: 'Đang chạy',
-  done: 'Hoàn thành',
-  archived: 'Lưu trữ',
-};
+const STATUS_LABEL: Record<string, string> = OBJ_STATUS_LABEL;
 const TYPE_LABEL: Record<string, string> = {
   committed: 'Cam kết',
   aspirational: 'Khát vọng',
@@ -129,7 +125,13 @@ export default function ObjectiveTree({ objectives, unitOptions }: { objectives:
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [objectives, unitOptions]);
   const levels = useMemo(() => [...new Set(objectives.map((o) => o.level))], [objectives]);
-  const statuses = useMemo(() => [...new Set(objectives.map((o) => o.status))], [objectives]);
+  // Luôn liệt kê ĐỦ 5 trạng thái vòng đời (kể cả khi chưa có OKR nào ở trạng thái đó) + trạng thái
+  // legacy còn sót trong dữ liệu (vd 'archived') → CFO lọc được "Hoàn thành"/"Hủy/Dừng" bất cứ lúc nào.
+  const statuses = useMemo(() => {
+    const present = new Set(objectives.map((o) => o.status));
+    const extra = [...present].filter((s) => !(OBJ_STATUSES as string[]).includes(s));
+    return [...OBJ_STATUSES, ...extra];
+  }, [objectives]);
   const types = useMemo(() => [...new Set(objectives.map((o) => o.okr_type))], [objectives]);
 
   const filterActive = !!(q.trim() || fUnit || fLevel || fStatus || fType);
