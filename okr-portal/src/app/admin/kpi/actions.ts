@@ -8,6 +8,7 @@ import {
   updateKpi,
   deleteKpi,
   setKpiActive,
+  kpiUsageCount,
   type KpiInput,
   type KpiTier,
   type KpiSource,
@@ -90,6 +91,11 @@ export async function toggleKpiActiveAction(fd: FormData) {
 
 export async function deleteKpiAction(fd: FormData) {
   await guard();
-  await deleteKpi(str(fd, 'id'));
+  const id = str(fd, 'id');
+  // Chặn xoá KPI còn được Thước đo (KR) sử dụng — tránh làm mồ côi liên kết (defense-in-depth,
+  // ngoài việc UI đã ẩn nút xoá). Gỡ liên kết ở KR trước rồi mới xoá được.
+  const used = await kpiUsageCount(id);
+  if (used > 0) throw new Error(`KPI đang được ${used} thước đo (KR) sử dụng — gỡ liên kết trước khi xoá.`);
+  await deleteKpi(id);
   revalidatePath('/admin/kpi');
 }

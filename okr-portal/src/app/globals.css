@@ -1166,6 +1166,25 @@ a.prof-row:hover { background: var(--primary-tint); border-radius: 6px; }
 /* Hàng tiêu đề có nút hành động ở GÓC PHẢI-TRÊN (nút canh đỉnh, không kéo giãn theo tiêu đề nhiều dòng) */
 .flexbtw-top { align-items: flex-start; }
 .okr-modal.okr-modal-wide { max-width: 760px; }
+/* Bấm TÊN KPI = nút phẳng như link (mở box chi tiết) */
+.kpi-name-btn {
+  background: none; border: 0; padding: 0; margin: 0; cursor: pointer; text-align: left;
+  font: inherit; font-weight: 700; color: var(--ink); text-decoration: underline; text-decoration-color: var(--line);
+  text-underline-offset: 2px;
+}
+.kpi-name-btn:hover { color: var(--primary); text-decoration-color: var(--primary); }
+/* Box chi tiết KPI — lưới nhãn/giá trị */
+.kpi-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 18px; margin-top: 4px; }
+.kpi-detail-row { display: grid; grid-template-columns: 150px 1fr; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+.kpi-detail-lbl { color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.kpi-detail-val { font-size: 13.5px; word-break: break-word; }
+.kpi-detail-links { margin-top: 12px; padding: 10px 12px; background: var(--primary-tint); border-radius: 10px; }
+.btn.danger-text { color: #dc2626; border-color: #f0b6b6; }
+.btn.danger-text:hover { background: #fee2e2; border-color: #dc2626; color: #991b1b; }
+@media (max-width: 640px) {
+  .kpi-detail-grid { grid-template-columns: 1fr; }
+  .kpi-detail-row { grid-template-columns: 130px 1fr; }
+}
 details.inline { margin-top: 10px; }
 details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 600; font-size: 14px; }
 

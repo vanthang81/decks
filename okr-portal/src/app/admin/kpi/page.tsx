@@ -15,12 +15,14 @@ import KpiOwnerFields from '@/components/KpiOwnerFields';
 import NumberInput from '@/components/NumberInput';
 import EditModal from '@/components/EditModal';
 import ImportKpi from '@/components/ImportKpi';
+import KpiDetailModal from '@/components/KpiDetailModal';
 import NavIcon from '@/components/NavIcon';
 import { BSC_PERSPECTIVES, BSC_PERSPECTIVE_LABEL, BSC_PERSPECTIVE_ICON } from '@/lib/okr';
 import type { Unit } from '@/lib/org';
 import type { OkrUser } from '@/lib/users';
 import {
   listKpis,
+  listKpiKrLinks,
   TIER_LABEL,
   TIER_HINT,
   TIERS,
@@ -147,9 +149,10 @@ function KpiFields({
 export default async function KpiLibraryPage() {
   const me = await requireUser();
   if (!canManageKpi(me, await loadAccess())) redirect('/');
-  const [units, users, kpis, period] = await Promise.all([
-    listUnits(), listUsers(), listKpis(), getCurrentPeriod(),
+  const [units, users, kpis, period, krLinks] = await Promise.all([
+    listUnits(), listUsers(), listKpis(), getCurrentPeriod(), listKpiKrLinks(),
   ]);
+  const fmtNum = (n: number | null) => (n == null ? '' : new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 }).format(n));
 
   const active = kpis.filter((k) => k.is_active);
   const totalWeight = active.reduce((a, k) => a + (k.weight || 0), 0);
@@ -206,7 +209,48 @@ export default async function KpiLibraryPage() {
                   <tr key={k.id} style={k.is_active ? undefined : { opacity: 0.55 }}>
                     <td>{k.code && <span className="okr-code">{k.code}</span>}</td>
                     <td>
-                      <b>{k.name}</b>
+                      <KpiDetailModal
+                        name={k.name}
+                        code={k.code}
+                        rows={[
+                          { label: 'Mô tả', value: k.description ?? '' },
+                          { label: 'Đơn vị đo', value: k.unit_label ?? '' },
+                          { label: 'Viễn cảnh BSC', value: k.bsc_perspective ? `${BSC_PERSPECTIVE_ICON[k.bsc_perspective]} ${BSC_PERSPECTIVE_LABEL[k.bsc_perspective]}` : '' },
+                          { label: 'Module (KRA)', value: k.module ?? '' },
+                          { label: 'Tầng scorecard', value: k.tier ? TIER_LABEL[k.tier] : '' },
+                          { label: 'Trọng số', value: String(k.weight ?? 0) },
+                          { label: 'Hướng tốt', value: DIRECTION_LABEL[k.direction] },
+                          { label: 'Cách gộp lên cấp trên', value: AGG_LABEL[k.agg] },
+                          { label: 'Nguồn dữ liệu', value: SOURCE_LABEL[k.source] },
+                          { label: 'Tham chiếu nguồn', value: k.source_ref ?? '' },
+                          { label: 'Đơn vị chủ', value: k.unit_name ?? '' },
+                          { label: 'Business owner', value: k.business_owner ?? '' },
+                          { label: 'Measurement owner', value: k.measurement_owner ?? '' },
+                          { label: 'Nhịp đo', value: k.cadence ? (CADENCE_LABEL[k.cadence] ?? k.cadence) : '' },
+                          { label: 'Ngưỡng Watch', value: fmtNum(k.threshold_watch) },
+                          { label: 'Ngưỡng Alert', value: fmtNum(k.threshold_alert) },
+                          { label: 'Ngưỡng Escalate', value: fmtNum(k.threshold_escalate) },
+                          { label: 'Trạng thái', value: k.is_active ? 'Đang hiển thị' : 'Đã ẩn' },
+                        ]}
+                        links={(krLinks.get(k.id) ?? []).map((l) => ({
+                          href: `/objectives/${l.objective_id}`,
+                          label: `${l.obj_code ? `${l.obj_code} · ` : ''}${l.obj_title} — ${l.kr_title}`,
+                        }))}
+                        actions={
+                          <>
+                            <EditModal title={`Sửa KPI · ${k.name}`} label="Sửa" icon={<NavIcon name="pencil" />} submitLabel="Lưu KPI" action={updateKpiAction} wide>
+                              <input type="hidden" name="id" value={k.id} />
+                              <KpiFields kpi={k} units={units} users={users} />
+                            </EditModal>
+                            {k.used_by_kr === 0 && (
+                              <ToastForm action={deleteKpiAction} done="Đã xoá KPI">
+                                <input type="hidden" name="id" value={k.id} />
+                                <ConfirmButton label="Xoá KPI" className="btn ghost danger-text" title="Xoá KPI" message={`Xoá KPI "${k.name}"? Không hoàn tác.`} />
+                              </ToastForm>
+                            )}
+                          </>
+                        }
+                      />
                       {k.module && <div className="muted" style={{ fontSize: 11.5 }}>{k.module}</div>}
                     </td>
                     <td>
@@ -249,15 +293,21 @@ export default async function KpiLibraryPage() {
                             <NavIcon name={k.is_active ? 'eye' : 'eyeOff'} />
                           </button>
                         </ToastForm>
-                        <ToastForm action={deleteKpiAction} done="Đã xoá KPI">
-                          <input type="hidden" name="id" value={k.id} />
-                          <ConfirmButton
-                            label={<NavIcon name="trash" />}
-                            className="icon-btn danger"
-                            title="Xoá KPI"
-                            message={`Xoá KPI "${k.name}"? Không hoàn tác.`}
-                          />
-                        </ToastForm>
+                        {k.used_by_kr === 0 ? (
+                          <ToastForm action={deleteKpiAction} done="Đã xoá KPI">
+                            <input type="hidden" name="id" value={k.id} />
+                            <ConfirmButton
+                              label={<NavIcon name="trash" />}
+                              className="icon-btn danger"
+                              title="Xoá KPI"
+                              message={`Xoá KPI "${k.name}"? Không hoàn tác.`}
+                            />
+                          </ToastForm>
+                        ) : (
+                          <span className="icon-btn" title={`Đang được ${k.used_by_kr} thước đo (KR) dùng — gỡ liên kết trước khi xoá`} style={{ opacity: 0.4, cursor: 'not-allowed' }} aria-disabled>
+                            <NavIcon name="trash" />
+                          </span>
+                        )}
                       </div>
                     </td>
                   </tr>

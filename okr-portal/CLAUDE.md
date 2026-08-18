@@ -51,6 +51,12 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   KHÔNG để khối form dài ở cuối trang / `<details>` bung trong bảng. Nhiều nút/hàng ⇒ gom `.row-actions`
   (nowrap, KHÔNG để nút rớt xuống dòng) bằng `.icon-btn` (Sửa/Ẩn/Xoá). MỌI nút Sửa/Thêm/Xoá/Update
   CHỈ render khi user CÓ QUYỀN (gác UI ở nơi gọi, ngoài guard server-side).
+- **BẤM TÊN THỰC THỂ = MỞ BOX CHI TIẾT ĐẦY ĐỦ (CFO 14/08 — áp cho MỌI thực thể, KHÔNG cần nhắc lại)**:
+  bấm vào TÊN một bản ghi (KPI/OKR/Dự án/Công việc/…) ⇒ mở box (modal) xem **ĐẦY ĐỦ mọi trường** (không
+  chỉ cột trọng yếu trên bảng), kèm **trace-back "đang dùng bởi"** (liên kết tới thực thể phụ thuộc). Trong
+  box có nút **Sửa/Xoá gọn**; nhưng **XOÁ chỉ cho phép khi CHƯA bị ràng buộc** (không có KR/việc/liên kết nào
+  trỏ tới — tránh làm mồ côi), CÓ ràng buộc thì ẩn nút Xoá + hiện danh sách "đang dùng bởi". Guard cả
+  server-side (đếm usage trước khi DELETE). Mẫu chuẩn = `KpiDetailModal` + `listKpiKrLinks`/`kpiUsageCount`.
 - **TỰ QC BẮT BUỘC TRƯỚC KHI BÁO (CFO nhắc nhiều lần 03/08)**: mỗi lần đụng UI ⇒ `npm run build` +
   chụp Chromium (globals.css thật) CẢ desktop (~1300px) LẪN mobile (~390px); rà: nút không xuống dòng,
   icon nổi bật đúng nền, canh lề/khoảng cách đều. Khi đổi cách render icon/nút ⇒ **grep hết các chỗ

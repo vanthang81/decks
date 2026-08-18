@@ -83,6 +83,7 @@ export type Kpi = {
   threshold_escalate: number | null;
   is_active: boolean;
   created_by: string | null;
+  used_by_kr: number; // số Thước đo (KR) đang gắn KPI này → khoá xoá khi > 0
 };
 
 const SELECT = `
@@ -90,7 +91,8 @@ const SELECT = `
          k.weight::int AS weight, k.direction, k.agg, k.source, k.source_ref, k.unit_id,
          un.name AS unit_name, k.business_owner, k.measurement_owner, k.cadence,
          k.threshold_watch::float8 AS threshold_watch, k.threshold_alert::float8 AS threshold_alert,
-         k.threshold_escalate::float8 AS threshold_escalate, k.is_active, k.created_by
+         k.threshold_escalate::float8 AS threshold_escalate, k.is_active, k.created_by,
+         (SELECT count(*)::int FROM okr_key_results kr WHERE kr.kpi_id = k.id) AS used_by_kr
     FROM okr_kpis k
     LEFT JOIN okr_units un ON un.id = k.unit_id`;
 
@@ -175,4 +177,28 @@ export async function setKpiActive(id: string, active: boolean): Promise<void> {
 
 export async function deleteKpi(id: string): Promise<void> {
   await query('DELETE FROM okr_kpis WHERE id=$1', [id]);
+}
+
+// Số Thước đo (KR) đang gắn 1 KPI — dùng để CHẶN xoá khi KPI còn được sử dụng.
+export async function kpiUsageCount(id: string): Promise<number> {
+  const r = await queryOne<{ n: number }>('SELECT count(*)::int AS n FROM okr_key_results WHERE kpi_id=$1', [id]);
+  return r?.n ?? 0;
+}
+
+// Trace-back: mỗi KPI → danh sách KR (kèm OKR gốc) đang gắn nó, để hiện "đang dùng bởi" + link.
+export type KpiKrLink = { kpi_id: string; kr_title: string; objective_id: string; obj_code: string | null; obj_title: string };
+export async function listKpiKrLinks(): Promise<Map<string, KpiKrLink[]>> {
+  const rows = await query<KpiKrLink>(
+    `SELECT kr.kpi_id, kr.title AS kr_title, o.id AS objective_id, o.code AS obj_code, o.title AS obj_title
+       FROM okr_key_results kr JOIN okr_objectives o ON o.id = kr.objective_id
+      WHERE kr.kpi_id IS NOT NULL
+      ORDER BY o.code`,
+  );
+  const map = new Map<string, KpiKrLink[]>();
+  for (const r of rows) {
+    const arr = map.get(r.kpi_id) ?? [];
+    arr.push(r);
+    map.set(r.kpi_id, arr);
+  }
+  return map;
 }

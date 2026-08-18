@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-14.186';
+export const GUIDE_VERSION = '2026-08-14.187';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -623,6 +623,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/08/2026 (Thư viện KPI: bấm tên xem chi tiết đầy đủ)',
+    items: [
+      'Bấm vào TÊN KPI ở Thư viện → mở box xem đầy đủ mọi thông tin KPI + danh sách "đang dùng bởi" thước đo (KR) nào (bấm mở OKR gốc).',
+      'KPI chưa gắn thước đo nào → Sửa/Xoá ngay trong box; KPI đang được KR dùng → khoá Xoá (gỡ liên kết ở KR trước), tránh làm mồ côi liên kết.',
+    ],
+  },
   {
     date: '14/08/2026 (OKR: đủ 5 trạng thái vòng đời + lọc được)',
     items: [
