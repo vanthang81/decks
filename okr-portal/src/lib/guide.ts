@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-14.183';
+export const GUIDE_VERSION = '2026-08-14.184';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -319,6 +319,7 @@ export const FEATURES: Feature[] = [
       '3 ngưỡng cảnh báo Watch / Alert / Escalate: khi actual vượt ngưỡng sẽ đổi màu & bật cảnh báo trên Scorecard (vd DIO Watch >35 · Alert >45 · Escalate >60).',
       'Mỗi KPI gắn 2 vai trò: business owner (người tạo kết quả) và measurement owner (người đo) + đơn vị chủ — bảo đảm mọi KPI luôn có người chịu trách nhiệm ở từng cấp.',
       'Phân quyền: năng lực "Quản lý Thư viện KPI" (kpi.manage) mới khai báo/sửa/xoá; "Nhập số KPI" (kpi.input) để nhập target/actual trong phạm vi đơn vị — chỉnh ở Phân quyền.',
+      'Nhập/xuất HÀNG LOẠT: nút "Tải mẫu Excel" (file mẫu có sheet Tham chiếu + Hướng dẫn) → điền → "Nhập Excel"; hoặc "Xuất Excel" (có sẵn số) → sửa → nhập lại. Khớp theo cột Mã: có Mã → cập nhật, để trống Mã → tạo mới KPI.',
     ],
   },
   {
@@ -622,6 +623,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/08/2026 (Thư viện KPI: nhập/xuất Excel hàng loạt)',
+    items: [
+      'Trang "Thư viện KPI" thêm 3 nút: "Tải mẫu Excel" (file mẫu có sheet Tham chiếu + Hướng dẫn), "Xuất Excel" (toàn bộ KPI kèm số), "Nhập Excel" (nhập/cập nhật hàng loạt). Khớp theo cột Mã: có Mã → cập nhật, để trống Mã → tạo mới. Không còn phải nhập tay từng KPI.',
+    ],
+  },
   {
     date: '14/08/2026 (Scorecard KPI: lọc theo Đơn vị)',
     items: [

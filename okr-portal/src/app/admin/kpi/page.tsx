@@ -14,6 +14,7 @@ import KpiResultCell from '@/components/KpiResultCell';
 import KpiOwnerFields from '@/components/KpiOwnerFields';
 import NumberInput from '@/components/NumberInput';
 import EditModal from '@/components/EditModal';
+import ImportKpi from '@/components/ImportKpi';
 import NavIcon from '@/components/NavIcon';
 import { BSC_PERSPECTIVES, BSC_PERSPECTIVE_LABEL, BSC_PERSPECTIVE_ICON } from '@/lib/okr';
 import type { Unit } from '@/lib/org';
@@ -177,9 +178,13 @@ export default async function KpiLibraryPage() {
               tổng trọng số đang hoạt động: <b>{totalWeight}</b>.
             </p>
           </div>
-          <EditModal title="Thêm KPI mới" label="Thêm KPI" icon={<NavIcon name="plus" />} submitLabel="Tạo KPI" action={createKpiAction} wide>
-            <KpiFields units={units} users={users} />
-          </EditModal>
+          <ImportKpi
+            trailing={
+              <EditModal title="Thêm KPI mới" label="Thêm KPI" icon={<NavIcon name="plus" />} submitLabel="Tạo KPI" action={createKpiAction} wide>
+                <KpiFields units={units} users={users} />
+              </EditModal>
+            }
+          />
         </div>
 
         <div className="card">

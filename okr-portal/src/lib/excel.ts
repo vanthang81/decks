@@ -6,7 +6,7 @@ import { nextInitCode } from './codes';
 import { ROLE_LABEL, type Role } from './rbac';
 import { parseNum } from './num';
 import { kpiStatus, attainment, STATUS_LABEL } from './kpi-values';
-import type { KpiDirection } from './kpis';
+import type { KpiDirection, KpiTier, KpiSource, KpiAgg } from './kpis';
 
 // ---- Tên 3 sheet dữ liệu (Tiếng Việt, đồng nhất với Portal). Import chấp nhận cả tên cũ tiếng Anh. ----
 const SHEET_OBJ = 'Mục tiêu';
@@ -59,6 +59,13 @@ const E_KIND = makeEnum<InitKind>({ project: 'Dự án', subproject: 'Tiểu d�
 const E_INIT_STATUS = makeEnum<InitStatus>({ todo: 'Chưa làm', in_progress: 'Đang làm', blocked: 'Vướng', done: 'Xong', canceled: 'Huỷ' }, 'todo');
 const E_PRIORITY = makeEnum<Priority>({ low: 'Thấp', medium: 'Trung bình', high: 'Cao' }, 'medium');
 const E_BSC = makeEnum<BscPerspective>({ financial: 'Tài chính', customer: 'Khách hàng', process: 'Quy trình nội bộ', learning: 'Học hỏi & Phát triển' }, 'financial', { 'học hỏi': 'learning', 'phát triển': 'learning' });
+// Codec cho THƯ VIỆN KPI (import/export hàng loạt).
+const E_KPI_TIER = makeEnum<KpiTier>({ result: 'Kết quả', driver: 'Động cơ', enabler: 'Bộ máy' }, 'result');
+const E_KPI_DIR = makeEnum<KpiDirection>({ up: 'Càng cao càng tốt', down: 'Càng thấp càng tốt' }, 'up', { tăng: 'up', 'giảm': 'down', cao: 'up', 'thấp': 'down', increase: 'up', decrease: 'down' });
+const E_AGG = makeEnum<KpiAgg>({ sum: 'Cộng', avg: 'Trung bình', last: 'Mốc cuối' }, 'last', { 'cộng dồn': 'sum', 'tổng': 'sum', 'bình quân': 'avg', 'cuối kỳ': 'last', 'mốc cuối': 'last' });
+const E_KPI_SOURCE = makeEnum<KpiSource>({ manual: 'Nhập tay', bigquery: 'Tự động · BigQuery', postgres: 'Tự động · Postgres' }, 'manual', { 'tự động': 'bigquery', auto: 'bigquery', tay: 'manual' });
+const E_CADENCE = makeEnum<'daily' | 'weekly' | 'monthly' | 'quarterly'>({ daily: 'Hằng ngày', weekly: 'Hằng tuần', monthly: 'Hằng tháng', quarterly: 'Hằng quý' }, 'monthly', { 'hàng ngày': 'daily', 'hàng tuần': 'weekly', 'hàng tháng': 'monthly', 'hàng quý': 'quarterly' });
+const E_ACTIVE = makeEnum<'yes' | 'no'>({ yes: 'Đang dùng', no: 'Đã ẩn' }, 'yes', { active: 'yes', on: 'yes', 'hiện': 'yes', 'true': 'yes', '1': 'yes', 'ẩn': 'no', 'khoá': 'no', 'khóa': 'no', off: 'no', 'false': 'no', '0': 'no' });
 
 // ============ EXPORT ============
 export async function buildOkrWorkbook(
@@ -252,6 +259,203 @@ export async function buildScorecardWorkbook(periodId: string | null, unitId: st
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), 'Scorecard');
   return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+}
+
+// ============ THƯ VIỆN KPI — Xuất / Mẫu / Nhập hàng loạt ============
+const KPI_SHEET = 'KPI';
+const KPI_SHEET_ALIASES = [KPI_SHEET, 'Thư viện KPI', 'KPIs'];
+const KPI_HEAD = [
+  'Mã', 'Tên KPI', 'Mô tả', 'Đơn vị đo', 'Viễn cảnh BSC', 'Module (KRA)', 'Tầng', 'Trọng số',
+  'Hướng tốt', 'Cách gộp', 'Nguồn', 'Tham chiếu nguồn', 'Đơn vị chủ (mã/tên)',
+  'Business owner (email)', 'Measurement owner (email)', 'Nhịp',
+  'Ngưỡng Watch', 'Ngưỡng Alert', 'Ngưỡng Escalate', 'Trạng thái',
+];
+
+// Sheet "Tham chiếu" liệt kê giá trị hợp lệ cho các cột enum + danh sách mã đơn vị (để điền cột Đơn vị chủ).
+function kpiRefSheet(units: { code: string | null; name: string; type: string }[]) {
+  const aoa: (string | number)[][] = [
+    ['Cột', 'Giá trị hợp lệ (nhập nhãn Tiếng Việt HOẶC mã tiếng Anh — không phân biệt hoa/thường/dấu)'],
+    ['Viễn cảnh BSC', Object.values({ financial: 'Tài chính', customer: 'Khách hàng', process: 'Quy trình nội bộ', learning: 'Học hỏi & Phát triển' }).join('  ·  ')],
+    ['Tầng', 'Kết quả  ·  Động cơ  ·  Bộ máy'],
+    ['Hướng tốt', 'Càng cao càng tốt  ·  Càng thấp càng tốt'],
+    ['Cách gộp', 'Cộng  ·  Trung bình  ·  Mốc cuối'],
+    ['Nguồn', 'Nhập tay  ·  Tự động · BigQuery  ·  Tự động · Postgres'],
+    ['Nhịp', 'Hằng ngày  ·  Hằng tuần  ·  Hằng tháng  ·  Hằng quý'],
+    ['Trạng thái', 'Đang dùng  ·  Đã ẩn'],
+    ['Trọng số / 3 ngưỡng', 'Nhập SỐ (ngưỡng theo Đơn vị đo của KPI). Bỏ trống nếu chưa có.'],
+    [],
+    ['Mã đơn vị', 'Tên đơn vị (điền MÃ hoặc TÊN vào cột "Đơn vị chủ"; bỏ trống = KPI dùng chung toàn công ty)'],
+    ...units.map((u) => [u.code ?? '', `${u.name} (${u.type === 'company' ? 'Công ty' : u.type === 'division' ? 'Khối' : 'Phòng'})`]),
+  ];
+  return XLSX.utils.aoa_to_sheet(aoa);
+}
+
+function kpiGuideSheet() {
+  return XLSX.utils.aoa_to_sheet([
+    ['HƯỚNG DẪN NHẬP KPI HÀNG LOẠT'],
+    [''],
+    ['1. Mỗi dòng = 1 KPI. Cột "Tên KPI" là bắt buộc.'],
+    ['2. Khớp theo cột "Mã": CÓ Mã (VD KPI-07) và tồn tại → CẬP NHẬT KPI đó; ĐỂ TRỐNG Mã → TẠO MỚI (tự sinh mã KPI-nn).'],
+    ['3. Các cột enum (Viễn cảnh/Tầng/Hướng/Cách gộp/Nguồn/Nhịp/Trạng thái): nhập theo sheet "Tham chiếu".'],
+    ['4. "Đơn vị chủ": điền MÃ hoặc TÊN đơn vị (xem sheet "Tham chiếu"). Bỏ trống = KPI dùng chung (hiện ở mọi đơn vị).'],
+    ['5. Trọng số & 3 ngưỡng Watch/Alert/Escalate: nhập SỐ; bỏ trống nếu chưa có.'],
+    ['6. Dòng ví dụ bắt đầu bằng "(VD)" sẽ được BỎ QUA khi nhập — có thể xoá hoặc để nguyên.'],
+    ['7. Cách dùng: "Tải mẫu Excel" → điền → "Nhập Excel". Hoặc "Xuất Excel" (có sẵn số) → sửa → nhập lại (round-trip khớp theo Mã).'],
+  ]);
+}
+
+/** Xuất toàn bộ Thư viện KPI (mode='data') hoặc file MẪU trống + 1 dòng ví dụ (mode='template'). */
+export async function buildKpiWorkbook(mode: 'data' | 'template'): Promise<Buffer> {
+  const units = await query<{ code: string | null; name: string; type: string }>(
+    `SELECT code, name, type FROM okr_units ORDER BY type, sort, name`,
+  );
+  const aoa: (string | number)[][] = [KPI_HEAD];
+
+  if (mode === 'data') {
+    const rows = await query<{
+      code: string | null; name: string; description: string | null; unit_label: string | null;
+      bsc: string | null; module: string | null; tier: string | null; weight: number;
+      direction: string; agg: string; source: string; source_ref: string | null;
+      unit_code: string | null; unit_name: string | null; business_owner: string | null;
+      measurement_owner: string | null; cadence: string | null;
+      tw: number | null; ta: number | null; te: number | null; is_active: boolean;
+    }>(
+      `SELECT k.code, k.name, k.description, k.unit_label, k.bsc_perspective AS bsc, k.module, k.tier,
+              k.weight::int AS weight, k.direction, k.agg, k.source, k.source_ref,
+              un.code AS unit_code, un.name AS unit_name, k.business_owner, k.measurement_owner, k.cadence,
+              k.threshold_watch::float8 AS tw, k.threshold_alert::float8 AS ta, k.threshold_escalate::float8 AS te,
+              k.is_active
+         FROM okr_kpis k LEFT JOIN okr_units un ON un.id=k.unit_id
+        ORDER BY k.is_active DESC,
+                 CASE k.tier WHEN 'result' THEN 0 WHEN 'driver' THEN 1 WHEN 'enabler' THEN 2 ELSE 3 END,
+                 k.weight DESC, k.name`,
+    );
+    for (const r of rows) {
+      aoa.push([
+        r.code ?? '', r.name, r.description ?? '', r.unit_label ?? '',
+        r.bsc ? E_BSC.label(r.bsc) : '', r.module ?? '', r.tier ? E_KPI_TIER.label(r.tier) : '',
+        r.weight ?? 0, E_KPI_DIR.label(r.direction), E_AGG.label(r.agg), E_KPI_SOURCE.label(r.source),
+        r.source_ref ?? '', r.unit_code ?? r.unit_name ?? '', r.business_owner ?? '', r.measurement_owner ?? '',
+        r.cadence ? E_CADENCE.label(r.cadence) : '', r.tw ?? '', r.ta ?? '', r.te ?? '',
+        E_ACTIVE.label(r.is_active ? 'yes' : 'no'),
+      ]);
+    }
+  } else {
+    // 1 dòng ví dụ (bắt đầu "(VD)" → tự bỏ qua khi nhập).
+    aoa.push([
+      '', '(VD) Tỷ lệ đơn giao đúng hẹn', 'Số đơn giao đúng hẹn / tổng đơn trong kỳ', '%',
+      E_BSC.label('customer'), 'Customer / CRM / brand', E_KPI_TIER.label('driver'), 10,
+      E_KPI_DIR.label('up'), E_AGG.label('last'), E_KPI_SOURCE.label('manual'), '', '',
+      '', '', E_CADENCE.label('monthly'), 95, 90, 85, E_ACTIVE.label('yes'),
+    ]);
+  }
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), KPI_SHEET);
+  XLSX.utils.book_append_sheet(wb, kpiRefSheet(units), 'Tham chiếu');
+  XLSX.utils.book_append_sheet(wb, kpiGuideSheet(), 'Hướng dẫn');
+  return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+}
+
+export type KpiImportResult = { created: number; updated: number; skipped: number; errors: string[] };
+
+/** Nhập Thư viện KPI từ Excel. Khớp theo Mã: có Mã tồn tại → cập nhật; Mã trống/không thấy → tạo mới. */
+export async function importKpiWorkbook(buf: Buffer, createdBy: string): Promise<KpiImportResult> {
+  const wb = XLSX.read(buf, { type: 'buffer' });
+  const wsName = wb.SheetNames.find((nm) => KPI_SHEET_ALIASES.some((a) => norm(a) === norm(nm))) ?? wb.SheetNames[0];
+  const ws = wsName ? wb.Sheets[wsName] : null;
+  if (!ws) throw new Error('Không tìm thấy sheet "KPI" trong file.');
+  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: '' });
+
+  const numOrNull = (v: unknown): number | null => {
+    const t = s(v);
+    if (t === '') return null;
+    const x = parseNum(t, NaN);
+    return Number.isFinite(x) ? x : null;
+  };
+
+  // Bản đồ đơn vị (khớp theo mã HOẶC tên) + danh sách mã KPI hiện có.
+  const units = await query<{ id: string; code: string | null; name: string }>('SELECT id, code, name FROM okr_units');
+  const unitByKey = new Map<string, string>();
+  for (const u of units) {
+    if (u.code) unitByKey.set(norm(u.code), u.id);
+    unitByKey.set(norm(u.name), u.id);
+  }
+  const existing = await query<{ id: string; code: string | null }>("SELECT id, code FROM okr_kpis WHERE code IS NOT NULL");
+  const idByCode = new Map<string, string>();
+  for (const e of existing) if (e.code) idByCode.set(e.code, e.id);
+  const maxRow = await queryOne<{ n: number }>(
+    `SELECT COALESCE(MAX((substring(code from 'KPI-([0-9]+)'))::int), 0) AS n FROM okr_kpis WHERE code ~ '^KPI-[0-9]+$'`,
+  );
+  let nextN = (maxRow?.n ?? 0) + 1;
+
+  const res: KpiImportResult = { created: 0, updated: 0, skipped: 0, errors: [] };
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const name = col(r, 'Tên KPI', 'Tên', 'name', 'KPI');
+    if (!name || isExample(name)) { res.skipped++; continue; }
+    const unitRaw = col(r, 'Đơn vị chủ (mã/tên)', 'Đơn vị chủ', 'unit');
+    const unit_id = unitRaw ? unitByKey.get(norm(unitRaw)) ?? null : null;
+    if (unitRaw && !unit_id) { res.errors.push(`Dòng ${i + 2} (${name}): không tìm thấy đơn vị "${unitRaw}".`); res.skipped++; continue; }
+
+    const vals = {
+      name,
+      description: col(r, 'Mô tả', 'description') || null,
+      unit_label: col(r, 'Đơn vị đo', 'unit_label') || null,
+      bsc_perspective: E_BSC.parseOpt(col(r, 'Viễn cảnh BSC', 'bsc_perspective', 'bsc')),
+      module: col(r, 'Module (KRA)', 'Module', 'module') || null,
+      tier: E_KPI_TIER.parseOpt(col(r, 'Tầng', 'tier')),
+      weight: Math.round(parseNum(col(r, 'Trọng số', 'weight'), 0)),
+      direction: E_KPI_DIR.parse(col(r, 'Hướng tốt', 'direction')),
+      agg: E_AGG.parse(col(r, 'Cách gộp', 'agg')),
+      source: E_KPI_SOURCE.parse(col(r, 'Nguồn', 'source')),
+      source_ref: col(r, 'Tham chiếu nguồn', 'source_ref') || null,
+      unit_id,
+      business_owner: col(r, 'Business owner (email)', 'business_owner') || null,
+      measurement_owner: col(r, 'Measurement owner (email)', 'measurement_owner') || null,
+      cadence: E_CADENCE.parseOpt(col(r, 'Nhịp', 'cadence')),
+      tw: numOrNull(col(r, 'Ngưỡng Watch', 'threshold_watch')),
+      ta: numOrNull(col(r, 'Ngưỡng Alert', 'threshold_alert')),
+      te: numOrNull(col(r, 'Ngưỡng Escalate', 'threshold_escalate')),
+    };
+    const activeRaw = col(r, 'Trạng thái', 'is_active');
+    const activeParsed = activeRaw ? E_ACTIVE.parseOpt(activeRaw) : null; // null = không đổi (cập nhật) / mặc định true (tạo mới)
+    const code = col(r, 'Mã', 'code');
+
+    try {
+      const existId = code ? idByCode.get(code) : undefined;
+      if (existId) {
+        await query(
+          `UPDATE okr_kpis SET name=$2, description=$3, unit_label=$4, bsc_perspective=$5, module=$6, tier=$7,
+              weight=$8, direction=$9, agg=$10, source=$11, source_ref=$12, unit_id=$13, business_owner=$14,
+              measurement_owner=$15, cadence=$16, threshold_watch=$17, threshold_alert=$18, threshold_escalate=$19,
+              is_active=COALESCE($20, is_active), updated_at=now()
+            WHERE id=$1`,
+          [existId, vals.name, vals.description, vals.unit_label, vals.bsc_perspective, vals.module, vals.tier,
+            vals.weight, vals.direction, vals.agg, vals.source, vals.source_ref, vals.unit_id, vals.business_owner,
+            vals.measurement_owner, vals.cadence, vals.tw, vals.ta, vals.te,
+            activeParsed == null ? null : activeParsed === 'yes'],
+        );
+        res.updated++;
+      } else {
+        const newCode = `KPI-${String(nextN++).padStart(2, '0')}`;
+        await query(
+          `INSERT INTO okr_kpis (code, name, description, unit_label, bsc_perspective, module, tier, weight,
+              direction, agg, source, source_ref, unit_id, business_owner, measurement_owner, cadence,
+              threshold_watch, threshold_alert, threshold_escalate, is_active, created_by)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)`,
+          [newCode, vals.name, vals.description, vals.unit_label, vals.bsc_perspective, vals.module, vals.tier,
+            vals.weight, vals.direction, vals.agg, vals.source, vals.source_ref, vals.unit_id, vals.business_owner,
+            vals.measurement_owner, vals.cadence, vals.tw, vals.ta, vals.te,
+            activeParsed == null ? true : activeParsed === 'yes', createdBy],
+        );
+        res.created++;
+      }
+    } catch (e) {
+      res.errors.push(`Dòng ${i + 2} (${name}): ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  return res;
 }
 
 // ============ IMPORT ============
