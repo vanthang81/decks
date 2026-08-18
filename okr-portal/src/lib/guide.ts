@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-14.187';
+export const GUIDE_VERSION = '2026-08-14.188';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -623,6 +623,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/08/2026 (Phân quyền: thêm nhóm "Quản trị KPI")',
+    items: [
+      'Thêm Nhóm quyền "📊 Quản trị KPI": quản lý Thư viện KPI + nhập số KPI + đồng bộ KPI cho TOÀN CÔNG TY, nhưng KHÔNG tạo/sửa/xoá OKR — hợp cho bộ phận Nhân sự / đầu mối KPI. Gán ở Quản trị → Người dùng; chỉnh chi tiết ở Quản trị → Phân quyền.',
+      'Người thuộc nhóm này có thêm menu "Thư viện KPI" (nhóm Chiến lược & Đo lường) để vào khai báo KPI mà không cần quyền quản trị hệ thống.',
+    ],
+  },
   {
     date: '14/08/2026 (Thư viện KPI: bấm tên xem chi tiết đầy đủ)',
     items: [

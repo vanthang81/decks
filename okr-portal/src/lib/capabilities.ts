@@ -51,7 +51,7 @@ export const CAP_LABEL: Record<string, string> = Object.fromEntries(
 // ---- Nhóm quyền mặc định (sửa được ở trang Phân quyền, lưu okr_settings) ----
 export type PermGroup = { key: string; label: string; icon: string; desc: string; caps: CapKey[] };
 
-export const GROUP_KEYS = ['system_admin', 'okr_admin', 'manager', 'contributor', 'viewer'] as const;
+export const GROUP_KEYS = ['system_admin', 'okr_admin', 'kpi_admin', 'manager', 'contributor', 'viewer'] as const;
 export type GroupKey = (typeof GROUP_KEYS)[number];
 
 export const DEFAULT_GROUPS: PermGroup[] = [
@@ -68,6 +68,13 @@ export const DEFAULT_GROUPS: PermGroup[] = [
     icon: '⭐',
     desc: 'Sửa/Xoá/Tạo MỌI OKR (toàn phạm vi) + quản dự án, KPI. Không quản trị hệ thống.',
     caps: ['user.approve', 'scope.all', 'okr.create', 'okr.edit', 'okr.delete', 'project.manage', 'kpi.sync', 'kpi.manage', 'kpi.input'],
+  },
+  {
+    key: 'kpi_admin',
+    label: 'Quản trị KPI',
+    icon: '📊',
+    desc: 'Quản lý Thư viện KPI + nhập số KPI + đồng bộ KPI cho TOÀN CÔNG TY (mọi đơn vị). KHÔNG tạo/sửa/xoá OKR — hợp cho bộ phận Nhân sự/đầu mối KPI.',
+    caps: ['scope.all', 'kpi.manage', 'kpi.input', 'kpi.sync'],
   },
   {
     key: 'manager',

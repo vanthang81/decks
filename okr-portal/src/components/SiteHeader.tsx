@@ -8,7 +8,7 @@ import NotifBell from '@/components/NotifBell';
 import InviteUserButton from '@/components/InviteUserButton';
 import { unreadCount } from '@/lib/notifications';
 import { getUser } from '@/lib/users';
-import { loadAccess, canManageSystem, canApproveUsers } from '@/lib/access';
+import { loadAccess, canManageSystem, canApproveUsers, canManageKpi } from '@/lib/access';
 import { countPendingInvites } from '@/lib/invites';
 import { listUnits } from '@/lib/org';
 
@@ -22,6 +22,9 @@ export default async function SiteHeader({ active }: { active?: string }) {
   const me = email ? await getUser(email).catch(() => null) : null;
   const access = await loadAccess();
   const showAdmin = me ? canManageSystem(me, access) : false;
+  // Quản Thư viện KPI (kpi.manage) mà KHÔNG phải admin hệ thống (vd nhóm "Quản trị KPI" của HR) →
+  // vẫn cần đường vào /admin/kpi. Nếu đã có menu Quản trị (admin hệ thống) thì khỏi hiện link riêng.
+  const showKpiLib = me ? canManageKpi(me, access) && !showAdmin : false;
   const showBudget = me ? isExec(me.role) : false;
   const showInvites = me ? canApproveUsers(me, access) : false;
   const pendingInvites = showInvites ? await countPendingInvites().catch(() => 0) : 0;
@@ -42,6 +45,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
     { href: '/map', label: 'Bản đồ', key: 'map', group: 'strategy', icon: 'map', show: true },
     { href: '/objectives', label: 'OKR', key: 'okr', group: 'strategy', icon: 'target', show: true },
     { href: '/kpi', label: 'KPI', key: 'kpi', group: 'strategy', icon: 'chart', show: true },
+    { href: '/admin/kpi', label: 'Thư viện KPI', key: 'kpi-library', group: 'strategy', icon: 'sliders', show: showKpiLib },
     { href: '/projects', label: 'Dự án', key: 'projects', group: 'exec', icon: 'folder', show: true },
     { href: '/tasks', label: 'Công việc', key: 'tasks', group: 'exec', icon: 'check', show: true },
     { href: '/budget', label: 'Ngân sách', key: 'budget', group: 'exec', icon: 'wallet', show: showBudget },
