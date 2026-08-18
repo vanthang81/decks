@@ -458,6 +458,46 @@ export async function importKpiWorkbook(buf: Buffer, createdBy: string): Promise
   return res;
 }
 
+// ============ BÁO CÁO ĐÁNH GIÁ OKR THEO CẤP (theo kỳ/tháng) → Excel ============
+import type { OkrLevelReport, ReportGroup } from './okr-report';
+
+const REP_LEVELS: { label: string; pick: (r: OkrLevelReport) => ReportGroup[] }[] = [
+  { label: 'Công ty', pick: (r) => (r.company ? [r.company] : []) },
+  { label: 'Khối', pick: (r) => r.divisions },
+  { label: 'Phòng', pick: (r) => r.departments },
+  { label: 'Cá nhân', pick: (r) => r.individuals },
+];
+
+/** Dựng workbook "Báo cáo đánh giá OKR theo cấp" của 1 kỳ: sheet Tổng hợp + Chi tiết OKR. */
+export function buildOkrReportWorkbook(periodLabel: string, rep: OkrLevelReport): Buffer {
+  // Sheet 1 — Tổng hợp: kết quả tổng công ty + kết quả từng nhóm theo cấp.
+  const sum: (string | number)[][] = [
+    ['BÁO CÁO ĐÁNH GIÁ OKR THEO CẤP'],
+    ['Kỳ', periodLabel],
+    ['Kết quả tổng công ty (%)', rep.companyTotal],
+    [],
+    ['Cấp', 'Mã', 'Nhóm / Đơn vị / Người phụ trách', 'Số OKR', 'Kết quả có trọng số (%)'],
+  ];
+  for (const lv of REP_LEVELS) {
+    for (const g of lv.pick(rep)) sum.push([lv.label, g.code ?? '', g.name, g.count, g.weighted]);
+  }
+
+  // Sheet 2 — Chi tiết: mọi OKR (phẳng) kèm trọng số & tiến độ.
+  const detail: (string | number)[][] = [['Cấp', 'Nhóm', 'Mã OKR', 'Tên OKR', 'Trọng số', 'Tiến độ (%)']];
+  for (const lv of REP_LEVELS) {
+    for (const g of lv.pick(rep)) {
+      for (const it of g.items) {
+        detail.push([lv.label, g.name, it.code ?? '', it.title, it.weight, Math.round(it.progress)]);
+      }
+    }
+  }
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sum), 'Tổng hợp');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(detail), 'Chi tiết OKR');
+  return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+}
+
 // ============ IMPORT ============
 export type ImportResult = { objUpdated: number; objCreated: number; krUpdated: number; krCreated: number; initUpdated: number; initCreated: number; skipped: number; errors: string[] };
 

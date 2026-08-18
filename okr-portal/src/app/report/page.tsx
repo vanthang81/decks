@@ -15,6 +15,7 @@ import { okrLevelReport, type ReportGroup } from '@/lib/okr-report';
 import { progressColor } from '@/lib/format';
 import { isExec } from '@/lib/rbac';
 import WeightEditor from '@/components/WeightEditor';
+import PrintButton from '@/components/PrintButton';
 import NavIcon from '@/components/NavIcon';
 
 export const dynamic = 'force-dynamic';
@@ -95,16 +96,24 @@ export default async function ReportPage({ searchParams }: { searchParams: { per
             <div className="pagetitle">Báo cáo theo cấp<HelpTip k="report-levels" /></div>
             <p className="subtitle">Kết quả OKR theo Công ty → Khối → Phòng → Cá nhân, tổng mỗi nhóm tính <b>có trọng số</b>.</p>
           </div>
-          <PeriodPicker
-            periods={orderPeriodsHierarchically(periods).map(({ period: p, depth }) => ({
-              id: p.id,
-              label: `${PERIOD_KIND_LABEL[p.kind]}: ${p.name}`,
-              depth,
-              isCurrent: p.is_current,
-            }))}
-            currentId={period?.id ?? null}
-            basePath="/report"
-          />
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <PeriodPicker
+              periods={orderPeriodsHierarchically(periods).map(({ period: p, depth }) => ({
+                id: p.id,
+                label: `${PERIOD_KIND_LABEL[p.kind]}: ${p.name}`,
+                depth,
+                isCurrent: p.is_current,
+              }))}
+              currentId={period?.id ?? null}
+              basePath="/report"
+            />
+            {period && (
+              <>
+                <a className="btn ghost" href={`/api/report/export?period=${period.id}`}>⬇ Xuất Excel</a>
+                <PrintButton />
+              </>
+            )}
+          </div>
         </div>
 
         {!period && <div className="card"><p className="muted">Chưa có kỳ OKR.</p></div>}

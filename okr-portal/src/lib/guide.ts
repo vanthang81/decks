@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-14.184';
+export const GUIDE_VERSION = '2026-08-14.185';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -623,6 +623,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/08/2026 (Báo cáo theo cấp: xuất Excel + In/Lưu PDF)',
+    items: [
+      'Trang "Báo cáo theo cấp" thêm nút "Xuất Excel" (báo cáo đánh giá OKR theo kỳ/tháng: sheet Tổng hợp theo cấp + sheet Chi tiết từng OKR) và "In / Lưu PDF" (mở hết nhóm rồi in — lưu thành PDF).',
+    ],
+  },
   {
     date: '14/08/2026 (Thư viện KPI: nhập/xuất Excel hàng loạt)',
     items: [
