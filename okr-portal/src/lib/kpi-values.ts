@@ -102,13 +102,28 @@ const SELECT = `
     LEFT JOIN okr_kpi_values v ON v.kpi_id = k.id AND v.period_id = $1 AND v.unit_id = $2
    WHERE k.is_active`;
 
-/** Scorecard cho 1 kỳ × 1 đơn vị: mọi KPI đang hoạt động + giá trị (nếu có). */
-export async function listScorecard(periodId: string, unitId: string): Promise<ScorecardRow[]> {
+/**
+ * Scorecard cho 1 kỳ × 1 đơn vị: KPI đang hoạt động + giá trị (nếu có).
+ * `scopeUnitIds` (tùy chọn) = tập đơn vị được phép hiện (thường là subtree của đơn vị đang chọn):
+ *   lọc KPI theo ĐƠN VỊ CHỦ (`k.unit_id`) — KPI của đơn vị trong scope HOẶC KPI dùng chung
+ *   (`unit_id IS NULL`, áp cho mọi đơn vị). Không truyền → hiện MỌI KPI (như cũ).
+ */
+export async function listScorecard(
+  periodId: string,
+  unitId: string,
+  scopeUnitIds?: string[] | null,
+): Promise<ScorecardRow[]> {
+  const params: (string | string[])[] = [periodId, unitId];
+  let scopeSql = '';
+  if (scopeUnitIds && scopeUnitIds.length) {
+    params.push(scopeUnitIds);
+    scopeSql = ` AND (k.unit_id = ANY($${params.length}::uuid[]) OR k.unit_id IS NULL)`;
+  }
   return query<ScorecardRow>(
-    `${SELECT}
+    `${SELECT}${scopeSql}
      ORDER BY CASE k.tier WHEN 'result' THEN 0 WHEN 'driver' THEN 1 WHEN 'enabler' THEN 2 ELSE 3 END,
               k.weight DESC, k.name`,
-    [periodId, unitId],
+    params,
   );
 }
 

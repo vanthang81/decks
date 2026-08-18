@@ -207,12 +207,14 @@ const SC_HEAD = ['Kỳ', 'Đơn vị', 'Mã KPI', 'KPI', 'Viễn cảnh', 'Tần
 const BSC_VN: Record<string, string> = { financial: 'Tài chính', customer: 'Khách hàng', process: 'Quy trình nội bộ', learning: 'Học hỏi & Phát triển' };
 const TIER_VN: Record<string, string> = { result: 'Kết quả', driver: 'Động cơ', enabler: 'Bộ máy' };
 
-export async function buildScorecardWorkbook(periodId: string | null, unitId: string | null, bsc?: string | null): Promise<Buffer> {
+export async function buildScorecardWorkbook(periodId: string | null, unitId: string | null, bsc?: string | null, scopeUnitIds?: string[] | null): Promise<Buffer> {
   // Xuất MỌI KPI đang hoạt động trong phạm vi lọc (kỳ×đơn vị[×viễn cảnh]) — KHÔNG chỉ KPI đã có số.
   // Bắt đầu từ okr_kpis + LEFT JOIN giá trị (giống listScorecard trên màn hình) để không rớt KPI trống.
   const where: string[] = ['k.is_active'];
   const p: unknown[] = [periodId, unitId]; // $1=period, $2=unit (dùng trong điều kiện LEFT JOIN)
   if (bsc) { p.push(bsc); where.push(`k.bsc_perspective=$${p.length}`); }
+  // Lọc theo ĐƠN VỊ CHỦ = subtree đơn vị đang chọn + KPI dùng chung (giống màn hình Scorecard).
+  if (scopeUnitIds && scopeUnitIds.length) { p.push(scopeUnitIds); where.push(`(k.unit_id = ANY($${p.length}::uuid[]) OR k.unit_id IS NULL)`); }
 
   const rows = await query<{
     period: string | null; unit: string | null; code: string | null; name: string;

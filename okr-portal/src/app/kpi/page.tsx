@@ -3,7 +3,7 @@ import HelpTip from '@/components/HelpTip';
 import SearchSelect from '@/components/SearchSelect';
 import { ProgressBar } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
-import { listUnits, manageScope, buildTree, type UnitNode } from '@/lib/org';
+import { listUnits, manageScope, buildTree, subtreeIds, type UnitNode } from '@/lib/org';
 import { getCurrentPeriod, listPeriods, getPeriod, orderPeriodsHierarchically, PERIOD_KIND_LABEL } from '@/lib/periods';
 import { loadAccess, canInputKpi, canManageKpi, hasCap } from '@/lib/access';
 import { BSC_PERSPECTIVES, BSC_PERSPECTIVE_LABEL, BSC_PERSPECTIVE_ICON } from '@/lib/okr';
@@ -45,7 +45,11 @@ export default async function KpiScorecardPage({
   const canInput = !!unit && canInputKpi(user, access) && (hasCap(user, 'scope.all', access) || scope === null || scope.has(unitId));
   const canMakeKpi = canManageKpi(user, access);
 
-  let rows: ScorecardRow[] = period && unit ? await listScorecard(period.id, unit.id) : [];
+  // Lọc KPI theo ĐƠN VỊ: hiện KPI có đơn vị chủ ∈ subtree(đơn vị đang chọn) + KPI dùng chung.
+  // Chọn Công ty (gốc) → subtree = toàn bộ đơn vị → hiện MỌI KPI (không đổi mặc định cũ);
+  // chọn Khối/Phòng → chỉ KPI của khối/phòng đó (và cấp dưới) + KPI dùng chung.
+  const scopeIds = unit ? Array.from(subtreeIds(units, unit.id)) : null;
+  let rows: ScorecardRow[] = period && unit ? await listScorecard(period.id, unit.id, scopeIds) : [];
   const fbsc = searchParams.bsc || '';
   if (fbsc) rows = rows.filter((r) => r.bsc_perspective === fbsc);
 

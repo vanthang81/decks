@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-14.182';
+export const GUIDE_VERSION = '2026-08-14.183';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -622,6 +622,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/08/2026 (Scorecard KPI: lọc theo Đơn vị)',
+    items: [
+      'Trang "KPI" (Scorecard) nay LỌC được theo Đơn vị: chọn 1 Khối/Phòng chỉ hiện KPI do đơn vị đó (và cấp dưới) phụ trách + các KPI dùng chung; chọn Công ty vẫn hiện toàn bộ. Điểm scorecard & Xuất Excel cũng theo đúng phạm vi đơn vị đang lọc.',
+    ],
+  },
   {
     date: '14/08/2026 (Menu điện thoại: cuộn được toàn bộ)',
     items: [
