@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-14.189';
+export const GUIDE_VERSION = '2026-08-14.190';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -623,6 +623,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/08/2026 (Người dùng: lọc theo Vai trò/Khối-Phòng/Nhóm quyền + Mã đơn vị)',
+    items: [
+      'Màn "Người dùng & phân quyền" thêm bộ LỌC: Vai trò · Khối/Phòng · Nhóm quyền (kết hợp cả ô tìm tên/email/chức danh). Lọc theo một Khối cũng hiện luôn người ở các Phòng thuộc khối đó.',
+      'Bảng thêm cột "Mã đơn vị" (badge, cạnh cột Đơn vị) để nhìn nhanh mã Khối/Phòng.',
+    ],
+  },
   {
     date: '14/08/2026 (Sửa lỗi nhập Excel trọng số + menu Thư viện KPI)',
     items: [

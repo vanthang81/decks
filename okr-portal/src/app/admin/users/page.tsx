@@ -4,7 +4,7 @@ import SiteHeader from '@/components/SiteHeader';
 import ConfirmButton from '@/components/ConfirmButton';
 import ToastForm from '@/components/ToastForm';
 import EditUserModal from '@/components/EditUserModal';
-import UserSearchBox from '@/components/UserSearchBox';
+import UserFilterBar from '@/components/UserFilterBar';
 import SearchSelect from '@/components/SearchSelect';
 import { unitTreeOptions } from '@/lib/unit-options';
 import { requireUser } from '@/lib/current-user';
@@ -12,7 +12,7 @@ import { ROLE_LABEL, ROLES, isExec } from '@/lib/rbac';
 import { loadAccess, canManageSystem, canAssignPerms } from '@/lib/access';
 import { DEFAULT_GROUPS, defaultGroupForRole } from '@/lib/capabilities';
 import { listUsers } from '@/lib/users';
-import { listUnits } from '@/lib/org';
+import { listUnits, ancestorIds } from '@/lib/org';
 import { saveUserAction, toggleUserAction, removeUserAction } from '../actions';
 
 export const dynamic = 'force-dynamic';
@@ -23,6 +23,16 @@ export default async function AdminUsers() {
   if (!canManageSystem(me, access)) redirect('/');
   const assignPerms = canAssignPerms(me, access);
   const [users, units] = await Promise.all([listUsers(), listUnits()]);
+
+  // Bộ lọc: danh sách vai trò (đang dùng) + đơn vị (cây thụt cấp) + nhóm quyền.
+  const usedRoles = ROLES.filter((r) => users.some((u) => u.role === r));
+  const roleOpts = usedRoles.map((r) => ({ value: r, label: ROLE_LABEL[r] }));
+  const unitOpts = unitTreeOptions(units);
+  const groupOpts = DEFAULT_GROUPS.map((g) => ({ value: g.key, label: `${g.icon} ${g.label}` }));
+  // Chuỗi đơn vị (đơn vị của user + mọi cấp trên) → lọc theo Khối cũng bắt được người ở Phòng con.
+  const unitChain = (unitId: string | null): string => (unitId ? [...ancestorIds(units, unitId)].join(' ') : '');
+  const groupOf = (u: (typeof users)[number]): string =>
+    isExec(u.role) ? 'system_admin' : u.perm_group || defaultGroupForRole(u.role);
 
   return (
     <>
@@ -90,7 +100,7 @@ export default async function AdminUsers() {
         </div>
 
         <div className="card">
-          <UserSearchBox targetId="users-tbody" total={users.length} />
+          <UserFilterBar targetId="users-tbody" total={users.length} roles={roleOpts} units={unitOpts} groups={groupOpts} />
           <div className="table-scroll">
             <table className="t">
               <thead>
@@ -99,6 +109,7 @@ export default async function AdminUsers() {
                   <th>Họ tên</th>
                   <th>Vai trò</th>
                   <th>Nhóm quyền</th>
+                  <th>Mã đơn vị</th>
                   <th>Đơn vị</th>
                   <th>Trạng thái</th>
                   <th></th>
@@ -106,7 +117,13 @@ export default async function AdminUsers() {
               </thead>
               <tbody id="users-tbody">
                 {users.map((u) => (
-                  <tr key={u.email} data-s={`${u.display_name ?? ''} ${u.email} ${u.title ?? ''}`.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase()}>
+                  <tr
+                    key={u.email}
+                    data-s={`${u.display_name ?? ''} ${u.email} ${u.title ?? ''}`.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase()}
+                    data-role={u.role}
+                    data-units={unitChain(u.unit_id)}
+                    data-group={groupOf(u)}
+                  >
                     <td className="mono">{u.email}</td>
                     <td>
                       <Link href={`/users/${encodeURIComponent(u.email)}`} className="tbl-link" title="Xem hồ sơ 360°">
@@ -131,6 +148,7 @@ export default async function AdminUsers() {
                         );
                       })()}
                     </td>
+                    <td>{u.unit_code ? <span className="okr-code">{u.unit_code}</span> : <span className="muted">—</span>}</td>
                     <td>{u.unit_name || <span className="muted">—</span>}</td>
                     <td>
                       {u.is_active ? (
