@@ -172,9 +172,9 @@ export default function ObjectiveEditButton({
                 </div>
                 <div>
                   <label className="f">Trọng số <span className="muted" style={{ fontWeight: 400 }}>· số ≥ 0, tối đa 2 số lẻ (mặc định 1)</span></label>
-                  <input className="i" name="weight" type="number" min="0" step="0.01"
+                  <input className="i" name="weight" type="number" min="0" step="any"
                     defaultValue={String(objective.weight ?? 1)}
-                    title="Trọng số của OKR khi tính kết quả tổng của nhóm (Công ty/Khối/Phòng/Cá nhân) ở Báo cáo theo cấp. Số ≥ 0, tối đa 2 chữ số thập phân. Mặc định 1." />
+                    title="Trọng số của OKR khi tính kết quả tổng của nhóm (Công ty/Khối/Phòng/Cá nhân) ở Báo cáo theo cấp. Số ≥ 0, nhiều số lẻ (tối đa 4). Mặc định 1." />
                 </div>
                 <div>
                   <label className="f">Trạng thái</label>

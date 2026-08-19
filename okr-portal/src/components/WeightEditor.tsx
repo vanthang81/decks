@@ -33,7 +33,7 @@ export default function WeightEditor({ objectiveId, weight, title }: { objective
           name="weight"
           type="number"
           min="0.01"
-          step="0.01"
+          step="any"
           value={w}
           onChange={(e) => setW(e.target.value)}
           style={{ width: 140 }}

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-14.188';
+export const GUIDE_VERSION = '2026-08-14.189';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -623,6 +623,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/08/2026 (Sửa lỗi nhập Excel trọng số + menu Thư viện KPI)',
+    items: [
+      'Nhập Excel: sửa lỗi trọng số KR nhập HÀNG LOẠT bị về 1 — nay đọc đúng cột "Trọng số" kể cả header dính khoảng trắng, ô trọng số trống thì GIỮ NGUYÊN trọng số cũ (không ép về 1).',
+      'Trọng số OKR giữ được NHIỀU số lẻ (tối đa 4, vd 0,3118) khi nhập Excel & khi sửa tay — không còn tự làm tròn/về số nguyên.',
+      '"Thư viện KPI" hiện trong menu cho MỌI người có quyền quản KPI (kể cả Quản trị hệ thống) — không phải vào hub Quản trị mới thấy.',
+    ],
+  },
   {
     date: '14/08/2026 (Phân quyền: thêm nhóm "Quản trị KPI")',
     items: [

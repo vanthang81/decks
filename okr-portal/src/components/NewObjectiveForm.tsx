@@ -211,9 +211,9 @@ export default function NewObjectiveForm({
           </select>
         </div>
         <div>
-          <label className="f">Trọng số <span className="muted" style={{ fontWeight: 400 }}>· số ≥ 0, tối đa 2 số lẻ (mặc định 1)</span></label>
-          <input className="i" type="number" min="0" step="0.01" value={weight} onChange={(e) => setWeight(e.target.value)}
-            title="Trọng số của OKR khi tính kết quả tổng của nhóm (Công ty/Khối/Phòng/Cá nhân) ở Báo cáo theo cấp. Số ≥ 0, tối đa 2 chữ số thập phân. Mặc định 1." />
+          <label className="f">Trọng số <span className="muted" style={{ fontWeight: 400 }}>· số ≥ 0, nhiều số lẻ (mặc định 1)</span></label>
+          <input className="i" type="number" min="0" step="any" value={weight} onChange={(e) => setWeight(e.target.value)}
+            title="Trọng số của OKR khi tính kết quả tổng của nhóm (Công ty/Khối/Phòng/Cá nhân) ở Báo cáo theo cấp. Số ≥ 0, nhiều số lẻ (tối đa 4). Mặc định 1." />
         </div>
       </div>
 

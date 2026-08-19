@@ -521,10 +521,17 @@ function normDate(v: unknown): string | null {
   return null;
 }
 // Đọc sheet theo DANH SÁCH tên chấp nhận được (tên Tiếng Việt mới HOẶC tên tiếng Anh cũ) — lấy sheet đầu tiên tồn tại.
+// Chuẩn hoá KHOÁ cột (header) khi đọc: bỏ khoảng trắng thừa/đầu-cuối để tránh lệch cột do file có
+// header dính dấu cách (vd 'Trọng số ') → tra `r['Trọng số']` không ra → mất trọng số khi nhập.
+function normRowKeys(r: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const k of Object.keys(r)) out[String(k).replace(/\s+/g, ' ').trim()] = r[k];
+  return out;
+}
 function rowsOfAny(wb: XLSX.WorkBook, names: string[]): Record<string, unknown>[] {
   for (const name of names) {
     const ws = wb.Sheets[name];
-    if (ws) return XLSX.utils.sheet_to_json(ws, { defval: '' });
+    if (ws) return (XLSX.utils.sheet_to_json(ws, { defval: '' }) as Record<string, unknown>[]).map(normRowKeys);
   }
   return [];
 }
@@ -561,8 +568,9 @@ export async function importOkrWorkbook(buf: Buffer): Promise<ImportResult> {
       // Nhãn Tiếng Việt/mã cũ → mã enum; ô trống → giữ nguyên (COALESCE NULLIF).
       const okrType = col(r, 'Loại OKR') ? E_OKR_TYPE.parse(r['Loại OKR']) : '';
       const objStatus = col(r, 'Trạng thái') ? E_OBJ_STATUS.parse(r['Trạng thái']) : '';
-      // Trọng số: chỉ đổi khi điền số > 0; trống/≤0 → giữ nguyên.
-      const weight = col(r, 'Trọng số') && n(r['Trọng số']) > 0 ? n(r['Trọng số']) : null;
+      // Trọng số: chỉ đổi khi điền số > 0; trống/≤0 → giữ nguyên. GIỮ NGUYÊN mọi số lẻ (cột numeric).
+      const wRaw = col(r, 'Trọng số', 'Weight');
+      const weight = wRaw && n(wRaw) > 0 ? n(wRaw) : null;
       await query(
         `UPDATE okr_objectives SET title=COALESCE(NULLIF($2,''),title), description=$3,
             okr_type=COALESCE(NULLIF($4,''),okr_type), status=COALESCE(NULLIF($5,''),status),
@@ -593,7 +601,7 @@ export async function importOkrWorkbook(buf: Buffer): Promise<ImportResult> {
         status: col(r, 'Trạng thái') ? E_OBJ_STATUS.parse(r['Trạng thái']) : 'active',
         okr_type: col(r, 'Loại OKR') ? E_OKR_TYPE.parse(r['Loại OKR']) : 'committed',
         bsc_perspective: E_BSC.parseOpt(r['Viễn cảnh']),
-        weight: col(r, 'Trọng số') ? n(r['Trọng số']) : undefined, created_by: 'import',
+        weight: col(r, 'Trọng số', 'Weight') ? n(col(r, 'Trọng số', 'Weight')) : undefined, created_by: 'import',
       });
       res.objCreated++;
       alias.set(code || `#row${res.objCreated}`, newId);
@@ -613,11 +621,15 @@ export async function importOkrWorkbook(buf: Buffer): Promise<ImportResult> {
       const start = n(r['Bắt đầu']); const cur = n(r['Hiện tại']); const tgt = n(r['Mục tiêu']);
       const prog = computeKrProgress({ metric_type: k.metric_type, direction: k.direction, start_value: start, target_value: tgt, current_value: cur });
       const ind = col(r, 'Chỉ số') ? E_IND.parse(r['Chỉ số']) : '';
+      // Trọng số: chỉ ĐỔI khi ô có số > 0; trống/≤0 → GIỮ NGUYÊN (COALESCE) — tránh nhập hàng loạt
+      // (ô trọng số trống/lệch header) reset hết KR về 1.
+      const krW = col(r, 'Trọng số', 'Trọng số KR', 'Weight') && n(col(r, 'Trọng số', 'Trọng số KR', 'Weight')) > 0
+        ? n(col(r, 'Trọng số', 'Trọng số KR', 'Weight')) : null;
       await query(
         `UPDATE okr_key_results SET title=COALESCE(NULLIF($2,''),title), unit_label=$3,
-            start_value=$4, current_value=$5, target_value=$6, weight=$7,
+            start_value=$4, current_value=$5, target_value=$6, weight=COALESCE($7, weight),
             indicator=COALESCE(NULLIF($8,''),indicator), progress=$9, updated_at=now() WHERE id=$1`,
-        [k.id, s(r['Tiêu đề']), s(r['Đơn vị']) || null, start, cur, tgt, n(r['Trọng số']) || 1, ind, prog],
+        [k.id, s(r['Tiêu đề']), s(r['Đơn vị']) || null, start, cur, tgt, krW, ind, prog],
       );
       res.krUpdated++;
       touchedObjs.add(k.objective_id);
@@ -636,7 +648,8 @@ export async function importOkrWorkbook(buf: Buffer): Promise<ImportResult> {
       await createKeyResult({
         objective_id: objId, title, metric_type: metric, direction: E_DIR.parse(r['Hướng']),
         unit_label: s(r['Đơn vị']) || null, start_value: start, current_value: n(r['Hiện tại']) || start,
-        target_value: n(r['Mục tiêu']) || (metric === 'boolean' ? 1 : 100), weight: n(r['Trọng số']) || 1,
+        target_value: n(r['Mục tiêu']) || (metric === 'boolean' ? 1 : 100),
+        weight: n(col(r, 'Trọng số', 'Trọng số KR', 'Weight')) || 1,
         kpi_source: s(r['Nguồn KPI']) || null, indicator: E_IND.parse(r['Chỉ số']),
       });
       res.krCreated++;

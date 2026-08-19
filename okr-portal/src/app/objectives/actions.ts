@@ -122,7 +122,7 @@ export async function createObjectiveAction(fd: FormData) {
     okr_type: (str(fd, 'okr_type') || 'committed') as OkrType,
     bsc_perspective: (orNull(str(fd, 'bsc_perspective')) as BscPerspective | null),
     // Trọng số OKR (Báo cáo theo cấp) — nhập ở form tạo; làm tròn tối đa 2 số lẻ, mặc định 1.
-    weight: str(fd, 'weight') === '' ? 1 : Math.round(Math.max(0, parseNum(str(fd, 'weight'), 1)) * 100) / 100,
+    weight: str(fd, 'weight') === '' ? 1 : Math.round(Math.max(0, parseNum(str(fd, 'weight'), 1)) * 10000) / 10000,
     created_by: user.email,
   });
 
@@ -298,7 +298,7 @@ export async function editObjectiveAction(fd: FormData) {
   // Trọng số OKR (báo cáo tổng theo trọng số). Gửi rỗng/≤0 → giữ nguyên (updateObjective COALESCE).
   const wRaw = str(fd, 'weight');
   // Cho phép tối đa 2 chữ số thập phân (làm tròn) — khớp step=0.01 ở form.
-  const weight = wRaw === '' ? undefined : Math.round(Math.max(0, parseNum(wRaw, obj.weight ?? 1)) * 100) / 100;
+  const weight = wRaw === '' ? undefined : Math.round(Math.max(0, parseNum(wRaw, obj.weight ?? 1)) * 10000) / 10000;
   await updateObjective(id, {
     title,
     description: orNull(str(fd, 'description')),
@@ -576,7 +576,7 @@ export async function setObjectiveWeightAction(fd: FormData) {
   if (!obj) throw new Error('Không tìm thấy OKR.');
   const canManage = await canManageObjectiveId(user, id);
   if (!canManage) throw new Error('Bạn không có quyền đổi trọng số OKR này.');
-  const weight = Math.round(Math.max(0.01, parseNum(str(fd, 'weight'), obj.weight ?? 1) || 1) * 100) / 100;
+  const weight = Math.round(Math.max(0.01, parseNum(str(fd, 'weight'), obj.weight ?? 1) || 1) * 10000) / 10000;
   await setObjectiveWeight(id, weight);
   await logAudit({ actor: user.email, action: 'okr.weight', entity: 'objective', entityId: id, detail: { title: obj.title, weight } });
   revalidatePath('/report');

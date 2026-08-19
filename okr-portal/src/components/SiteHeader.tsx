@@ -22,9 +22,10 @@ export default async function SiteHeader({ active }: { active?: string }) {
   const me = email ? await getUser(email).catch(() => null) : null;
   const access = await loadAccess();
   const showAdmin = me ? canManageSystem(me, access) : false;
-  // Quản Thư viện KPI (kpi.manage) mà KHÔNG phải admin hệ thống (vd nhóm "Quản trị KPI" của HR) →
-  // vẫn cần đường vào /admin/kpi. Nếu đã có menu Quản trị (admin hệ thống) thì khỏi hiện link riêng.
-  const showKpiLib = me ? canManageKpi(me, access) && !showAdmin : false;
+  // Ai có quyền quản Thư viện KPI (kpi.manage) → LUÔN có menu "Thư viện KPI" trực tiếp (kể cả Quản trị
+  // hệ thống — họ hay tìm link thẳng thay vì vào hub Quản trị). Gồm: Quản trị hệ thống · Quản trị OKR ·
+  // Quản trị KPI (HR). Không có kpi.manage (Quản lý/Cộng tác/Người xem) → không thấy.
+  const showKpiLib = me ? canManageKpi(me, access) : false;
   const showBudget = me ? isExec(me.role) : false;
   const showInvites = me ? canApproveUsers(me, access) : false;
   const pendingInvites = showInvites ? await countPendingInvites().catch(() => 0) : 0;
