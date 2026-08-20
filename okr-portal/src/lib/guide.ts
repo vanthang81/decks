@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-14.190';
+export const GUIDE_VERSION = '2026-08-20.191';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -623,6 +623,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '20/08/2026 (Sửa lỗi trọng số số thập phân >2 chữ số biến thành số nguyên)',
+    items: [
+      'Sửa lỗi nhập/đặt trọng số có phần thập phân bắt đầu bằng 0 (vd 0.006, 0.06) bị hiểu nhầm là "nhóm nghìn" và biến thành số nguyên (0.006 → 6). Nay trọng số 0.006 giữ đúng 0.006 cả khi NHẬP EXCEL lẫn SỬA TRỰC TIẾP trên portal.',
+      'Lưu ý: trọng số OKR nhận tối đa 4 chữ số thập phân; trọng số KR giới hạn 2 chữ số thập phân (theo kiểu cột dữ liệu).',
+    ],
+  },
   {
     date: '14/08/2026 (Người dùng: lọc theo Vai trò/Khối-Phòng/Nhóm quyền + Mã đơn vị)',
     items: [
