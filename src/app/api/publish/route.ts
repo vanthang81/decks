@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
-import { upsertDeck, setDeckPassword, generateDeckPassword, getDeckBySlug, updateDeckMeta, setDeckSource } from '@/lib/decks';
+import { upsertDeck, upsertDeckGuarded, getDeckContentState, setDeckPassword, generateDeckPassword, getDeckBySlug, updateDeckMeta, setDeckSource, type Deck } from '@/lib/decks';
 import { resolveCategory } from '@/lib/categorize';
 import { generateDeckThumbnail } from '@/lib/thumbnail';
 import { isValidSlug } from '@/lib/content';
@@ -26,6 +26,9 @@ const Body = z.object({
   tags: z.array(z.string()).optional(),
   company: z.string().optional(),
   source_url: z.string().nullish(),
+  // Optimistic lock chống ghi đè khi nhiều phiên cùng sửa 1 deck:
+  //   bỏ trống = không khoá (y như cũ) · "new" = chỉ tạo mới · <md5 32 hex> = chỉ ghi khi content hiện tại khớp.
+  if_match: z.string().nullish(),
 });
 
 export async function POST(req: NextRequest) {
@@ -52,16 +55,57 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'invalid slug (a-z 0-9 -)' }, { status: 400 });
   }
 
-  const deck = await upsertDeck({
-    slug,
-    title: d.title,
-    description: d.description ?? null,
-    visibility: d.visibility,
-    require_otp: d.require_otp,
-    is_published: d.is_published,
-    content: d.html,
-    createdBy: 'api',
-  });
+  // Optimistic lock (tuỳ chọn). Kiểm tra + ghi atomic trong upsertDeckGuarded → không có khe TOCTOU.
+  let guard: { mode: 'new' } | { mode: 'md5'; md5: string } | null = null;
+  const im = d.if_match?.trim();
+  if (im) {
+    if (im === 'new') guard = { mode: 'new' };
+    else if (/^[0-9a-f]{32}$/i.test(im)) guard = { mode: 'md5', md5: im.toLowerCase() };
+    else return NextResponse.json({ ok: false, error: 'if_match phải là "new" hoặc md5 32 hex' }, { status: 400 });
+  }
+
+  let deck: Deck | null;
+  if (guard) {
+    deck = await upsertDeckGuarded(
+      {
+        slug,
+        title: d.title,
+        description: d.description ?? null,
+        visibility: d.visibility,
+        require_otp: d.require_otp,
+        is_published: d.is_published,
+        content: d.html,
+        createdBy: 'api',
+      },
+      guard,
+    );
+    if (!deck) {
+      // Lệch phiên bản: KHÔNG ghi gì. Trả trạng thái hiện tại để người gọi đọc lại + rebase + gọi lại.
+      const st = await getDeckContentState(slug);
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'conflict',
+          reason: guard.mode === 'new' ? 'slug_exists' : 'md5_mismatch',
+          current_md5: st?.md5 ?? null,
+          current_len: st?.len ?? null,
+          current_updated_at: st?.updated_at ?? null,
+        },
+        { status: 409 },
+      );
+    }
+  } else {
+    deck = await upsertDeck({
+      slug,
+      title: d.title,
+      description: d.description ?? null,
+      visibility: d.visibility,
+      require_otp: d.require_otp,
+      is_published: d.is_published,
+      content: d.html,
+      createdBy: 'api',
+    });
+  }
 
   // Xử lý mật khẩu. newPw = plaintext vừa đặt/sinh (trả về 1 lần cho người gọi); null = không đổi/gỡ.
   let newPw: string | null = null;
@@ -97,9 +141,13 @@ export async function POST(req: NextRequest) {
   // Ảnh preview: tự chụp slide đầu (best-effort, không chặn kết quả nếu lỗi).
   await generateDeckThumbnail({ id: deck.id, slug }).catch(() => false);
 
+  // md5/len nội dung vừa ghi (đọc lại từ DB cho đúng giá trị Postgres tính) → dùng làm if_match lần sau.
+  const state = await getDeckContentState(slug);
   const url = `${process.env.APP_URL ?? ''}/d/${slug}`;
   return NextResponse.json({
     ok: true, slug, id: deck.id, url, has_password: hasPassword,
+    content_md5: state?.md5 ?? null,
+    content_len: state?.len ?? null,
     ...(newPw ? { password: newPw } : {}),
   });
 }

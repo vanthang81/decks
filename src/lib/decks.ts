@@ -221,3 +221,55 @@ export async function upsertDeck(d: {
   );
   return row!;
 }
+
+// Trạng thái nội dung hiện tại của deck (để làm optimistic lock khi publish song song).
+// md5 = md5(content) do Postgres tính (chữ thường, 32 hex); dùng làm `if_match` cho lần publish sau.
+// Trả null nếu slug chưa tồn tại; md5/len = null nếu deck tồn tại nhưng content rỗng.
+export async function getDeckContentState(
+  slug: string,
+): Promise<{ md5: string | null; len: number | null; updated_at: string } | null> {
+  return queryOne<{ md5: string | null; len: number | null; updated_at: string }>(
+    'SELECT md5(content) AS md5, length(content) AS len, updated_at FROM deck_decks WHERE slug=$1',
+    [slug],
+  );
+}
+
+// upsert deck CÓ KHOÁ LẠC QUAN (optimistic lock) — chống ghi đè khi nhiều phiên cùng sửa 1 deck.
+//  - ifMatch.mode='new' : chỉ TẠO MỚI; slug đã có -> trả null (route trả 409).
+//  - ifMatch.mode='md5' : chỉ GHI khi md5(content) HIỆN TẠI khớp; lệch/không có deck -> trả null.
+// Kiểm tra + ghi gói trong 1 câu SQL (row-lock của UPDATE/ON CONFLICT) => KHÔNG có khe TOCTOU.
+// content BẮT BUỘC (publish luôn có html) nên không cần COALESCE giữ nội dung cũ.
+export async function upsertDeckGuarded(
+  d: {
+    slug: string;
+    title: string;
+    description?: string | null;
+    visibility: Visibility;
+    require_otp: boolean;
+    is_published: boolean;
+    content: string;
+    createdBy?: string | null;
+  },
+  ifMatch: { mode: 'new' } | { mode: 'md5'; md5: string },
+): Promise<Deck | null> {
+  const title = decodeEntities(d.title);
+  const desc = d.description != null ? decodeEntities(d.description) : null;
+  if (ifMatch.mode === 'new') {
+    return queryOne<Deck>(
+      `INSERT INTO deck_decks (slug, title, description, visibility, require_otp, is_published, content, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+       ON CONFLICT (slug) DO NOTHING
+       RETURNING ${DECK_COLS}`,
+      [d.slug, title, desc, d.visibility, d.require_otp, d.is_published, d.content, d.createdBy ?? null],
+    );
+  }
+  // mode='md5': deck phải tồn tại và md5(content) hiện tại phải khớp
+  return queryOne<Deck>(
+    `UPDATE deck_decks SET
+       title=$2, description=$3, visibility=$4, require_otp=$5, is_published=$6,
+       content=$7, updated_at=now()
+     WHERE slug=$1 AND md5(content)=$8
+     RETURNING ${DECK_COLS}`,
+    [d.slug, title, desc, d.visibility, d.require_otp, d.is_published, d.content, ifMatch.md5],
+  );
+}

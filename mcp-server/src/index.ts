@@ -47,10 +47,12 @@ Args:
   - category (string, tùy chọn): danh mục deck (vd 'Nhà đầu tư', 'Đối tác', 'Nội bộ')
   - tags (string[], tùy chọn): danh sách thẻ để lọc/tìm ở thư viện
   - source_url (string, tùy chọn): link "Nguồn / Chat gốc" (vd URL cuộc chat claude.ai này) để admin mở lại chat mà chỉnh sửa deck sau
+  - if_match (string, tùy chọn): KHOÁ CHỐNG GHI ĐÈ khi nhiều phiên cùng sửa 1 deck. Bỏ trống = không khoá (như cũ). "new" = chỉ tạo mới, slug đã có sẽ báo lỗi. <md5> = md5 nội dung bạn nghĩ đang có trên server (lấy từ 'content_md5' của lần publish/đọc trước); nếu server đã đổi thì publish bị TỪ CHỐI (không ghi gì) và trả về md5 mới để bạn đọc lại rồi rebase.
 
 Ảnh preview (chụp slide đầu) được TỰ ĐỘNG tạo sau khi publish.
 
-Returns JSON: { "ok": true, "slug": string, "url": string, "has_password": boolean, "password"?: string }
+Returns JSON: { "ok": true, "slug": string, "url": string, "has_password": boolean, "content_md5": string, "content_len": number, "password"?: string }
+Nếu if_match không khớp: HTTP 409, body { "error": "conflict", "reason": "md5_mismatch"|"slug_exists", "current_md5", "current_len", "current_updated_at" } — KHÔNG ghi gì.
 
 Lưu ý: gọi lại cùng slug = cập nhật (ghi đè nội dung) deck đó. Mật khẩu chỉ trả về 1 lần khi vừa đặt/sinh.`,
       inputSchema: {
@@ -78,6 +80,10 @@ Lưu ý: gọi lại cùng slug = cập nhật (ghi đè nội dung) deck đó. 
           .string()
           .optional()
           .describe('Link "Nguồn / Chat gốc" (vd URL cuộc chat claude.ai này) để admin mở lại chat mà chỉnh sửa deck sau'),
+        if_match: z
+          .string()
+          .optional()
+          .describe('Khoá chống ghi đè: bỏ trống = không khoá; "new" = chỉ tạo mới; <md5 nội dung server> = chỉ ghi nếu khớp (lệch → 409, không ghi)'),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     },
@@ -91,22 +97,38 @@ Lưu ý: gọi lại cùng slug = cập nhật (ghi đè nội dung) deck đó. 
         const data: unknown = await res.json().catch(() => ({}));
         const ok = res.ok && typeof data === 'object' && data !== null && (data as { ok?: boolean }).ok === true;
         if (!ok) {
+          // 409 = lệch phiên bản (if_match không khớp): báo rõ để người gọi đọc lại + rebase + gọi lại.
+          if (res.status === 409) {
+            const c = data as { reason?: string; current_md5?: string; current_len?: number; current_updated_at?: string };
+            return {
+              content: [{
+                type: 'text',
+                text: `Bị từ chối do lệch phiên bản (${c.reason ?? 'conflict'}) — KHÔNG ghi gì. `
+                  + `Nội dung trên server hiện tại: md5=${c.current_md5 ?? '?'}, len=${c.current_len ?? '?'}, updated_at=${c.current_updated_at ?? '?'}. `
+                  + `Hãy đọc lại bản mới, rebase sửa đổi rồi publish lại với if_match=${c.current_md5 ?? '<md5 mới>'}.`,
+              }],
+              isError: true,
+            };
+          }
           return {
             content: [{ type: 'text', text: `Lỗi publish (HTTP ${res.status}): ${JSON.stringify(data)}` }],
             isError: true,
           };
         }
-        const d = data as { slug: string; url: string; has_password?: boolean; password?: string };
+        const d = data as { slug: string; url: string; has_password?: boolean; password?: string; content_md5?: string; content_len?: number };
         const out = {
           ok: true as const,
           slug: d.slug,
           url: d.url,
           has_password: !!d.has_password,
+          ...(d.content_md5 ? { content_md5: d.content_md5 } : {}),
+          ...(typeof d.content_len === 'number' ? { content_len: d.content_len } : {}),
           ...(d.password ? { password: d.password } : {}),
         };
+        const md5note = d.content_md5 ? `\n(content_md5=${d.content_md5} — dùng làm if_match cho lần publish sau)` : '';
         const text = d.password
-          ? `Đã publish deck: ${d.url}\nMật khẩu deck (gửi kèm link cho người xem): ${d.password}`
-          : `Đã publish deck: ${d.url}${d.has_password ? ' (deck có mật khẩu)' : ''}`;
+          ? `Đã publish deck: ${d.url}\nMật khẩu deck (gửi kèm link cho người xem): ${d.password}${md5note}`
+          : `Đã publish deck: ${d.url}${d.has_password ? ' (deck có mật khẩu)' : ''}${md5note}`;
         return { content: [{ type: 'text', text }], structuredContent: out };
       } catch (e) {
         return {

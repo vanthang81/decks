@@ -189,6 +189,17 @@ phục vụ + chèn watermark/log.
   `{slug,title,html,visibility('public'|'protected'),require_otp?,description?}` → upsert vào DB, trả
   `{ok,url}`. Dùng cách này khi CFO nhờ "tạo deck ở Claude chat, publish luôn": sinh HTML self-contained
   → gọi API → trả link. (Proxy sandbox chặn deck.consultx.vn → gọi qua relay curl trên VPS.)
+  - **Optimistic lock chống ghi đè khi nhiều phiên cùng sửa 1 deck** (`if_match`, tuỳ chọn — mặc định KHÔNG
+    khoá nên tương thích ngược): body thêm `if_match`. **Bỏ trống** = y như cũ. **`"new"`** = chỉ tạo mới, slug đã
+    có → **409**. **`<md5 32 hex>`** = md5 nội dung bạn nghĩ đang có trên server; server đã đổi → **409, KHÔNG ghi
+    gì**. Response 409 kèm `{reason:'md5_mismatch'|'slug_exists', current_md5, current_len, current_updated_at}`
+    để người gọi đọc lại → rebase → gọi lại với `if_match=current_md5`. Response 200 trả thêm `content_md5` +
+    `content_len` (dùng làm `if_match` cho lần sau). Kiểm tra + ghi **atomic 1 câu SQL** (`upsertDeckGuarded` +
+    `getDeckContentState` trong `src/lib/decks.ts`): mode new = `INSERT … ON CONFLICT DO NOTHING`, mode md5 =
+    `UPDATE … WHERE slug=$ AND md5(content)=$` → **không có khe TOCTOU**. `md5` do Postgres tính (chữ thường).
+    Tool MCP `deck_publish` cũng nhận `if_match` + báo 409 rõ (đổi schema MCP → rebuild `decks-mcp` + reconnect
+    connector claude.ai). **Khuyến nghị mọi phiên khi SỬA deck có sẵn: publish với `if_match=<md5 vừa đọc>`** để
+    không đè mất thay đổi của phiên khác (deck đang bị sửa song song từ nhiều chat).
 - Nếu protected: thêm viewer → **Cấp link** → gửi (email tự động qua "Deck Mail" hoặc copy link).
 
 ## MCP connector cho claude.ai (publish deck từ chat claude.ai)
