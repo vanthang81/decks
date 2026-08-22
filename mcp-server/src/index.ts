@@ -38,8 +38,9 @@ Args:
   - slug (string): định danh URL, chỉ a-z 0-9 và gạch nối, vd 'btmh-investor-2026'
   - title (string): tiêu đề deck
   - html (string): TOÀN BỘ HTML self-contained của deck
-  - visibility ('public' | 'protected'): mặc định 'protected'
-  - require_otp (boolean): bắt OTP email khi xem (chỉ áp dụng deck protected), mặc định false
+  - visibility ('public' | 'protected'): khi TẠO MỚI mặc định 'protected'. Khi CẬP NHẬT deck có sẵn mà BỎ TRỐNG = GIỮ NGUYÊN chế độ hiện tại (không đổi phân quyền).
+  - require_otp (boolean): bắt OTP email khi xem (chỉ áp dụng deck protected). Khi CẬP NHẬT mà bỏ trống = GIỮ NGUYÊN.
+  - is_published (boolean, tùy chọn): xuất bản/ẩn deck. Khi CẬP NHẬT mà bỏ trống = GIỮ NGUYÊN (không tự bỏ ẩn deck đang ẩn).
   - description (string, tùy chọn): mô tả ngắn
   - password (string, tùy chọn): đặt mật khẩu chung cho deck (>=4 ký tự). '' = gỡ mật khẩu. Bỏ trống = giữ nguyên.
   - generate_password (boolean, tùy chọn): TỰ SINH mật khẩu ngẫu nhiên dễ đọc (dùng thay 'password'). Mật khẩu sinh ra được trả về trong kết quả để gửi cho người xem.
@@ -54,7 +55,9 @@ Args:
 Returns JSON: { "ok": true, "slug": string, "url": string, "has_password": boolean, "content_md5": string, "content_len": number, "password"?: string }
 Nếu if_match không khớp: HTTP 409, body { "error": "conflict", "reason": "md5_mismatch"|"slug_exists", "current_md5", "current_len", "current_updated_at" } — KHÔNG ghi gì.
 
-Lưu ý: gọi lại cùng slug = cập nhật (ghi đè nội dung) deck đó. Mật khẩu chỉ trả về 1 lần khi vừa đặt/sinh.`,
+Lưu ý: gọi lại cùng slug = cập nhật (ghi đè nội dung) deck đó. Khi cập nhật, những thứ KHÔNG truyền lại được
+GIỮ NGUYÊN: mật khẩu chung, link "Nguồn / Chat gốc" (source_url), phân quyền (visibility/require_otp/is_published),
+danh mục/thẻ, và MỌI link cá nhân đã cấp (grants) + nhóm. Mật khẩu chỉ trả về 1 lần khi vừa đặt/sinh.`,
       inputSchema: {
         slug: z
           .string()
@@ -62,8 +65,18 @@ Lưu ý: gọi lại cùng slug = cập nhật (ghi đè nội dung) deck đó. 
           .describe("Định danh URL, vd 'btmh-investor-2026'"),
         title: z.string().min(1).describe('Tiêu đề deck'),
         html: z.string().min(20).describe('Toàn bộ HTML self-contained của deck'),
-        visibility: z.enum(['public', 'protected']).default('protected').describe("'public' hoặc 'protected'"),
-        require_otp: z.boolean().default(false).describe('Bắt OTP email (chỉ deck protected)'),
+        visibility: z
+          .enum(['public', 'protected'])
+          .optional()
+          .describe("'public' hoặc 'protected'. TẠO MỚI: mặc định 'protected'. CẬP NHẬT: bỏ trống = giữ nguyên"),
+        require_otp: z
+          .boolean()
+          .optional()
+          .describe('Bắt OTP email (chỉ deck protected). CẬP NHẬT: bỏ trống = giữ nguyên'),
+        is_published: z
+          .boolean()
+          .optional()
+          .describe('Xuất bản/ẩn deck. CẬP NHẬT: bỏ trống = giữ nguyên (không tự bỏ ẩn)'),
         description: z.string().optional().describe('Mô tả ngắn (tùy chọn)'),
         password: z
           .string()

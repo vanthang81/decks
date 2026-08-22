@@ -17,9 +17,11 @@ const Body = z.object({
   title: z.string().min(1),
   html: z.string().min(20),
   description: z.string().nullish(),
-  visibility: z.enum(['public', 'protected']).optional().default('protected'),
-  require_otp: z.boolean().optional().default(false),
-  is_published: z.boolean().optional().default(true),
+  // Bỏ trống khi CẬP NHẬT deck có sẵn = GIỮ NGUYÊN giá trị hiện tại (không reset). Chỉ dùng mặc định
+  // (protected / false / true) khi TẠO MỚI deck chưa tồn tại. → republish nội dung không đổi phân quyền.
+  visibility: z.enum(['public', 'protected']).optional(),
+  require_otp: z.boolean().optional(),
+  is_published: z.boolean().optional(),
   password: z.string().nullish(),
   generate_password: z.boolean().optional(),
   category: z.string().nullish(),
@@ -55,6 +57,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'invalid slug (a-z 0-9 -)' }, { status: 400 });
   }
 
+  // Deck hiện tại (nếu có) — dùng để GIỮ NGUYÊN phân quyền/mật khẩu khi caller không truyền lại.
+  // upsert KHÔNG đụng password_hash/password_plain/source_url ⇒ mật khẩu + link chat gốc tự bảo toàn;
+  // grants (link cá nhân) + entitlement nhóm gắn theo deck_id ⇒ giữ nguyên vì upsert giữ cùng 1 dòng deck.
+  const existing = await getDeckBySlug(slug);
+  const visibility = d.visibility ?? existing?.visibility ?? 'protected';
+  const require_otp = d.require_otp ?? existing?.require_otp ?? false;
+  const is_published = d.is_published ?? existing?.is_published ?? true;
+
   // Optimistic lock (tuỳ chọn). Kiểm tra + ghi atomic trong upsertDeckGuarded → không có khe TOCTOU.
   let guard: { mode: 'new' } | { mode: 'md5'; md5: string } | null = null;
   const im = d.if_match?.trim();
@@ -71,9 +81,9 @@ export async function POST(req: NextRequest) {
         slug,
         title: d.title,
         description: d.description ?? null,
-        visibility: d.visibility,
-        require_otp: d.require_otp,
-        is_published: d.is_published,
+        visibility,
+        require_otp,
+        is_published,
         content: d.html,
         createdBy: 'api',
       },
@@ -99,9 +109,9 @@ export async function POST(req: NextRequest) {
       slug,
       title: d.title,
       description: d.description ?? null,
-      visibility: d.visibility,
-      require_otp: d.require_otp,
-      is_published: d.is_published,
+      visibility,
+      require_otp,
+      is_published,
       content: d.html,
       createdBy: 'api',
     });
@@ -119,7 +129,7 @@ export async function POST(req: NextRequest) {
     await setDeckPassword(deck.id, newPw);
     hasPassword = true;
   } else {
-    hasPassword = (await getDeckBySlug(slug))?.has_password ?? false; // giữ nguyên
+    hasPassword = existing?.has_password ?? false; // giữ nguyên (upsert không đụng mật khẩu)
   }
 
   // Metadata phân loại. LUÔN đảm bảo deck có danh mục: ưu tiên category truyền vào > danh mục hiện có >

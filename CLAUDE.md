@@ -216,6 +216,15 @@ phục vụ + chèn watermark/log.
   `{slug,title,html,visibility('public'|'protected'),require_otp?,description?}` → upsert vào DB, trả
   `{ok,url}`. Dùng cách này khi CFO nhờ "tạo deck ở Claude chat, publish luôn": sinh HTML self-contained
   → gọi API → trả link. (Proxy sandbox chặn deck.consultx.vn → gọi qua relay curl trên VPS.)
+  - **CẬP NHẬT deck có sẵn = GIỮ NGUYÊN mọi thứ không truyền lại** (CFO chốt 22/08): republish cùng slug chỉ
+    đổi nội dung (`html`) + những trường có truyền. **Bảo toàn**: mật khẩu chung (`password_hash/plain`), link
+    "Nguồn / Chat gốc" (`source_url`), **phân quyền** (`visibility`/`require_otp`/`is_published` — bỏ trống khi
+    update = giữ giá trị hiện tại, KHÔNG reset về mặc định), danh mục/thẻ/công ty, và **MỌI link cá nhân đã cấp
+    (`deck_grants`) + entitlement nhóm** (gắn theo `deck_id`, upsert giữ cùng 1 dòng deck). Cơ chế: `visibility`/
+    `require_otp`/`is_published` ở Body API + tool MCP `deck_publish` là **optional KHÔNG default** → route resolve
+    `d.x ?? existing.x ?? mặc-định` (mặc định chỉ áp khi TẠO MỚI). upsert KHÔNG đụng password/source_url. (Đổi
+    schema MCP → **rebuild `decks-mcp` + reconnect connector claude.ai**.) Trang admin "Sửa nội dung"
+    (`updateContentAction`→`updateDeckContent`) vốn chỉ ghi cột `content` nên luôn giữ nguyên tất cả.
   - **Optimistic lock chống ghi đè khi nhiều phiên cùng sửa 1 deck** (`if_match`, tuỳ chọn — mặc định KHÔNG
     khoá nên tương thích ngược): body thêm `if_match`. **Bỏ trống** = y như cũ. **`"new"`** = chỉ tạo mới, slug đã
     có → **409**. **`<md5 32 hex>`** = md5 nội dung bạn nghĩ đang có trên server; server đã đổi → **409, KHÔNG ghi
