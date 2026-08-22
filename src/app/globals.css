@@ -108,7 +108,10 @@ label { font-size: 13px; color: var(--neutral); display: block; margin: 12px 0 5
 /* ---------- Tables ---------- */
 table { border-collapse: collapse; width: 100%; font-size: 14px; }
 th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
-th { color: var(--neutral); font-weight: 700; font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; }
+th { color: var(--neutral); font-weight: 700; font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em;
+  position: sticky; top: 62px; background: var(--paper); z-index: 5; }
+/* Header bảng dính dưới header trang khi cuộn danh sách dài. Bọc trong .table-plain để bỏ dính nếu cần. */
+.table-plain th { position: static; }
 tbody tr:hover { background: color-mix(in srgb, var(--brand-soft) 55%, transparent); }
 
 /* ---------- Utilities ---------- */

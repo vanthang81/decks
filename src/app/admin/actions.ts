@@ -220,6 +220,8 @@ export async function createDeckAction(formData: FormData) {
   revalidatePath('/');
   // File PDF/PPTX convert lỗi → vào trang deck kèm cảnh báo để thử lại (deck đã tạo nhưng chưa có nội dung).
   if (convertError) redirect(`/admin/decks/${deck.id}?content=convertfail`);
+  // Thành công → về trang quản lý deck vừa tạo (form nằm ở trang /admin/new riêng).
+  redirect(`/admin/decks/${deck.id}`);
 }
 
 // ---- Nguồn / Chat gốc (link tuỳ chọn để mở lại chat đã tạo deck) ----
