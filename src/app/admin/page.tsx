@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { listDecks } from '@/lib/decks';
 import { createDeckAction } from './actions';
+import SubmitBar from '@/components/SubmitBar';
 
 export const dynamic = 'force-dynamic';
 
@@ -86,9 +87,8 @@ export default async function AdminDecksPage({
           <label style={{ margin: 0 }}><input type="checkbox" name="require_otp" style={{ width: 'auto' }} /> Bắt OTP email</label>
           <label style={{ margin: 0 }}><input type="checkbox" name="is_published" defaultChecked style={{ width: 'auto' }} /> Xuất bản</label>
         </div>
-        <div style={{ marginTop: 16 }}>
-          <button className="btn primary" type="submit">Lưu deck</button>
-        </div>
+        <SubmitBar label="Lưu deck" pendingLabel="Đang tạo deck & xử lý…" className="btn primary" />
+
       </form>
     </div>
   );

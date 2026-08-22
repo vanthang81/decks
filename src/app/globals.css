@@ -196,3 +196,8 @@ tbody tr:hover { background: color-mix(in srgb, var(--brand-soft) 55%, transpare
   .site-brand-sub { display: none; }
   .site-header-inner { padding: 10px 16px; }
 }
+
+/* Thanh tiến trình dạng chưa-xác-định (indeterminate) cho nút Lưu nội dung khi đang upload/xử lý. */
+.upbar { height: 100%; width: 38%; border-radius: 4px; background: var(--brand);
+  animation: upbar-move 1.05s ease-in-out infinite; }
+@keyframes upbar-move { 0% { margin-left: -38%; } 100% { margin-left: 100%; } }

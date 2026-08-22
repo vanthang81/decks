@@ -7,6 +7,7 @@ import { parseUA } from '@/lib/ua';
 import { listDeckLog } from '@/lib/log';
 import { issueLinkAction, revokeLinkAction, updateContentAction, grantDeckToGroupAction, revokeGroupOnDeckAction, setDeckPasswordAction, generateDeckPasswordAction, clearDeckPasswordAction, updateDeckMetaAction, generateThumbnailAction, setDeckPublishedAction, setDeckVisibilityAction, setDeckSourceAction, deleteDeckAction, approveRequestAction, denyRequestAction } from '../../actions';
 import CopyField from '@/components/CopyField';
+import SubmitBar from '@/components/SubmitBar';
 
 export const dynamic = 'force-dynamic';
 
@@ -237,9 +238,7 @@ export default async function DeckDetailPage({
         <p className="muted" style={{ fontSize: 12, margin: '4px 0 0' }}>PDF/PPTX → tự chuyển thành deck ảnh (giữ nguyên watermark/mật khẩu/cấp-thu link/log). File <b>.html</b> self-contained lưu thẳng làm nội dung deck. Tối đa 20MB/file.</p>
         <label htmlFor="content" style={{ marginTop: 10 }}>…hoặc dán HTML</label>
         <textarea id="content" name="content" rows={4} placeholder="<!doctype html>…" style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12 }} />
-        <div style={{ marginTop: 12 }}>
-          <button className="btn" type="submit">Lưu nội dung</button>
-        </div>
+        <SubmitBar />
       </form>
 
       <h2 style={{ marginTop: 8 }}>
