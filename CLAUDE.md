@@ -135,8 +135,11 @@ phục vụ + chèn watermark/log.
   👥 tên nhóm) — `groupNamesByDeck()` trong `groups.ts` trả map deck_id→tên nhóm, truyền vào DeckLite. **Ảnh preview TỰ CHỤP slide đầu qua browserless**: `src/lib/thumbnail.ts`
   `generateDeckThumbnail` POST `${BROWSERLESS_URL}/chrome/screenshot?token=…` (env VPS
   `BROWSERLESS_URL=http://host.docker.internal:8090` + `BROWSERLESS_TOKEN`, đọc từ container `browserless-shot`)
-  → JPEG 1000×563 → lưu data-URI vào `deck_decks.thumbnail`. Tự chạy sau khi publish/sửa nội dung (API + action),
-  best-effort (lỗi không chặn publish). Ảnh phục vụ qua route **`/api/thumb/[id]`** (gác admin `auth()`+`getAdmin`,
+  → JPEG **1200×675 @ deviceScaleFactor 2, quality 90** (chữ SẮC NÉT trên retina) → lưu data-URI vào
+  `deck_decks.thumbnail`. **Chống ảnh mờ (22/08)**: `freezeForShot()` chèn CSS tắt MỌI animation/transition +
+  `html{zoom:1}` TRƯỚC khi chụp ⇒ không bao giờ chụp trúng khung mờ giữa hiệu ứng vào slide (nguyên nhân "thỉnh
+  thoảng mờ"), và chụp ở khổ desktop (≥1120 ⇒ zoom deck = 1.0, không bị breakpoint tablet 1.20 phóng méo);
+  `waitUntil:'networkidle0'`. Tự chạy sau khi publish/sửa nội dung (API + action), best-effort (lỗi không chặn publish). Ảnh phục vụ qua route **`/api/thumb/[id]`** (gác admin `auth()`+`getAdmin`,
   trả bytes, `cache-control: private`). Đặt/sửa phân loại ở trang chi tiết deck (mục "Phân loại") + form Thêm deck.
   `src/lib/decks.ts`: `updateDeckMeta`/`setDeckThumbnail`/`getDeckThumbnail`/`listCategories`/`listCompanies`.
   API publish + tool MCP `deck_publish` nhận thêm `company`/`category`/`tags` (đổi schema MCP → rebuild `decks-mcp`
