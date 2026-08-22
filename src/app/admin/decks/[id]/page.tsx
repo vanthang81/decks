@@ -232,9 +232,9 @@ export default async function DeckDetailPage({
       </p>
       <form action={updateContentAction} style={{ maxWidth: 560, marginBottom: 32 }}>
         <input type="hidden" name="deck_id" value={deck.id} />
-        <label htmlFor="htmlfile">Cập nhật nội dung — tải file <b>.pdf / .pptx</b> hoặc .html</label>
+        <label htmlFor="htmlfile">Cập nhật nội dung — tải file <b>.pdf / .pptx / .html</b></label>
         <input id="htmlfile" name="htmlfile" type="file" accept=".html,text/html,.pdf,application/pdf,.pptx,.ppt,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint" />
-        <p className="muted" style={{ fontSize: 12, margin: '4px 0 0' }}>PDF/PPTX → tự chuyển thành deck ảnh (giữ nguyên watermark/mật khẩu/cấp-thu link/log). File nhiều trang có thể mất vài giây.</p>
+        <p className="muted" style={{ fontSize: 12, margin: '4px 0 0' }}>PDF/PPTX → tự chuyển thành deck ảnh (giữ nguyên watermark/mật khẩu/cấp-thu link/log). File <b>.html</b> self-contained lưu thẳng làm nội dung deck. Tối đa 20MB/file.</p>
         <label htmlFor="content" style={{ marginTop: 10 }}>…hoặc dán HTML</label>
         <textarea id="content" name="content" rows={4} placeholder="<!doctype html>…" style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12 }} />
         <div style={{ marginTop: 12 }}>

@@ -179,6 +179,13 @@ phục vụ + chèn watermark/log.
   và **Sửa nội dung** (`updateContentAction`) qua `extractDeckContent` (`src/app/admin/actions.ts`); convert lỗi →
   redirect `?content=convertfail`. **Giới hạn**: đây là ảnh slide (không phải PDF gốc nhúng) — text không chọn/copy
   được, kích thước lớn hơn; đủ cho mục tiêu "xem có kiểm soát". File >80MB bị converter chặn (`MAX_CONTENT_LENGTH`).
+- **Giới hạn dung lượng UPLOAD QUA FORM (2 tầng, phải khớp nhau)**: upload nội dung deck đi qua **Server Action**
+  (`createDeckAction`/`updateContentAction`), mà Next mặc định **chặn body 1MB** → deck `.html` self-contained
+  (ảnh/font nhúng) hay `.pdf/.pptx` >1MB **bị chặn im lặng** (nhìn như "không upload được"). Đã nâng
+  `experimental.serverActions.bodySizeLimit='20mb'` (`next.config.mjs`) khớp nginx `client_max_body_size 20m`
+  ở `location /` (`deck.consultx.vn.conf`/`deck.vanthang.io.conf`). ⇒ hiện cho tải tối đa **20MB/file**. Muốn to
+  hơn phải nâng **CẢ HAI** (next.config + nginx reload) cho khớp. File `.html` upload = đọc thẳng text làm nội dung
+  (giống ô "dán HTML", tiện cho file lớn); `.pdf/.pptx` = qua converter.
 - **Qua repo (file)**: tạo `content/decks/<slug>.html` (copy `template.html`) → push `main` → deploy
   (rebuild) → `/admin` Thêm deck với slug trùng tên file.
 - **Chuẩn hoá text khi lưu**: `upsertDeck`/`updateDeckMeta` chạy `decodeEntities` cho title/description/
