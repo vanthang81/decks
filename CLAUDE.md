@@ -38,6 +38,10 @@ phục vụ + chèn watermark/log.
 ## Phân quyền & luồng (xem `docs/ACCESS-CONTROL.md`)
 - **Admin** `/admin`: Google login, allowlist `deck_admins` (seed `vanthang81@gmail.com`). Quản deck
   (public/protected, OTP), cấp/thu hồi link theo người xem, xem nhật ký. Middleware gác `/admin`.
+  - **Danh sách deck** (`src/app/admin/page.tsx` → client `src/components/AdminDeckBrowser.tsx`): ô **tìm kiếm**
+    (tên/slug/danh mục/thẻ/công ty) + **chip lọc danh mục** + **2 chế độ xem "Chi tiết" (bảng có cột Tạo/Cập nhật,
+    header dính) ↔ "Thumbnail" (card ảnh preview)**, nhớ lựa chọn ở `localStorage.adminDeckView`. Form thêm deck ở
+    trang riêng `/admin/new` (nút "+ Thêm deck mới" đầu trang). Cột thời gian format giờ VN (`fmtVN`) ở server → không lệch hydrate.
   - **Quản trị viên** `/admin/admins` (chỉ role `admin`): thêm/khoá/xoá admin + đổi vai trò
     `admin`↔`editor` (editor quản deck/người xem/link, KHÔNG đụng mục này). Guard: không tự hạ/xoá
     mình, không xoá admin cuối. `src/lib/admins.ts` + actions `requireOwnerAdmin`.
