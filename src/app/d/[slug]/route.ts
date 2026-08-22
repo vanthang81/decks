@@ -6,7 +6,7 @@ import {
   verifyViewerSession, VIEWER_COOKIE,
   deckPwCookieName, verifyDeckPwSession, signDeckPwSession, deckPwCookieOptions,
 } from '@/lib/session';
-import { wrapProtectedDeck } from '@/lib/watermark';
+import { wrapProtectedDeck, injectDeckChrome } from '@/lib/watermark';
 import { reqBaseUrl } from '@/lib/http';
 import { logEvent } from '@/lib/log';
 import { sendMail } from '@/lib/mail';
@@ -28,6 +28,12 @@ function htmlResponse(body: string, status = 200): Response {
       'x-robots-tag': 'noindex, nofollow',
     },
   });
+}
+
+// Trả nội dung deck (đã chèn "chrome": cải thiện iPad + nút chỉnh cỡ chữ). Dùng cho MỌI đường phục vụ deck
+// (public raw hoặc bảo mật bọc watermark) — KHÔNG dùng cho 404/trang gate.
+function deckHtmlResponse(body: string): Response {
+  return htmlResponse(injectDeckChrome(body));
 }
 
 // Trang "gate" hợp nhất: hiện MỌI cách vào deck theo phân quyền hiện có.
@@ -139,7 +145,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
       const admin = await getAdmin(gEmail);
       if (admin?.is_active) {
         await logEvent({ event: 'view', deckId: deck.id, ip, userAgent: ua }).catch(() => {});
-        return htmlResponse(
+        return deckHtmlResponse(
           deck.visibility === 'public'
             ? html
             : wrapProtectedDeck(html, {
@@ -154,7 +160,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
       const grant = await findActiveGrantByDeckEmail(deck.id, gEmail);
       if (grant) {
         await logEvent({ event: 'view', deckId: deck.id, viewerId: grant.viewer_id, grantId: grant.id, ip, userAgent: ua }).catch(() => {});
-        return htmlResponse(
+        return deckHtmlResponse(
           deck.visibility === 'public'
             ? html
             : wrapProtectedDeck(html, { email: grant.viewer_email, name: grant.viewer_name, deckSlug: deck.slug }),
@@ -174,7 +180,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
     const grant = await getActiveGrant(sess.grantId);
     if (grant && grant.deck_id === deck.id) {
       await logEvent({ event: 'view', deckId: deck.id, viewerId: sess.viewerId, grantId: sess.grantId, ip, userAgent: ua }).catch(() => {});
-      return htmlResponse(wrapProtectedDeck(html, { email: sess.email, name: sess.name, deckSlug: deck.slug }));
+      return deckHtmlResponse(wrapProtectedDeck(html, { email: sess.email, name: sess.name, deckSlug: deck.slug }));
     }
     // Có phiên nhưng grant đã thu hồi/hết hạn → ghi nhận, vẫn cho thử đường mật khẩu bên dưới.
     await logEvent({ event: 'revoked_hit', deckId: deck.id, viewerId: sess.viewerId, grantId: sess.grantId, ip, userAgent: ua }).catch(() => {});
@@ -185,7 +191,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
     const unlocked = await verifyDeckPwSession(req.cookies.get(deckPwCookieName(deck.id))?.value, deck.id);
     if (unlocked) {
       await logEvent({ event: 'view', deckId: deck.id, ip, userAgent: ua }).catch(() => {});
-      return htmlResponse(
+      return deckHtmlResponse(
         deck.visibility === 'public'
           ? html
           : wrapProtectedDeck(html, { email: 'mật khẩu chung', name: null, deckSlug: deck.slug }),
@@ -196,7 +202,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
   // (3) Public không mật khẩu → mở tự do.
   if (deck.visibility === 'public' && !deck.has_password) {
     await logEvent({ event: 'view', deckId: deck.id, ip, userAgent: ua }).catch(() => {});
-    return htmlResponse(html);
+    return deckHtmlResponse(html);
   }
 
   // Chưa vào được: hiện trang gate hợp nhất (mật khẩu chung và/hoặc đăng nhập bằng email được cấp).

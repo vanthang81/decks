@@ -142,6 +142,16 @@ phục vụ + chèn watermark/log.
   API publish + tool MCP `deck_publish` nhận thêm `company`/`category`/`tags` (đổi schema MCP → rebuild `decks-mcp`
   + reconnect connector claude.ai để nạp schema mới).
 - Chặn tải/in: render qua route (không URL file rời) + chặn menu/in + watermark. KHÔNG chặn được chụp màn hình.
+- **Cải thiện xem trên iPad + nút chỉnh cỡ chữ** (`injectDeckChrome` trong `src/lib/watermark.ts`, chèn vào
+  MỌI deck phục vụ qua `/d/<slug>` — cả public raw lẫn bảo mật bọc watermark, qua `deckHtmlResponse` trong
+  route; KHÔNG áp cho 404/gate): (1) **iPad/máy tính bảng cảm ứng** (`@media (pointer:coarse) and (min-width:821px)`):
+  nút menu nổi `#navdock` lùi sát mép phải hơn (`right:18px` thay vì `24mm` mặc định desktop) + **cỡ chữ to hơn**
+  (`html{zoom}` bơm lên ~1.32 thay vì 1.20 của khoảng tablet) → KHÔNG đụng desktop chuột (`pointer:fine`) và điện
+  thoại (<821px vốn đã ổn với zoom 1.30). (2) **Nút chỉnh cỡ chữ nổi A−/⟲/A+** góc dưới-trái, nhớ theo trình duyệt
+  (`localStorage.deckUserZoom`), ghi đè bằng inline `zoom !important`. **An toàn**: toàn bộ JS thoát sớm nếu deck
+  KHÔNG có `#navdock` ⇒ deck ảnh (`slidesHtml`) / deck HTML thường KHÔNG bị đụng zoom. Deck generator (MBB) dùng
+  `html{zoom}` theo breakpoint desktop≥1120 / tablet 821-1119 (zoom 1.20) / mobile≤820 (zoom 1.30) + `#navdock`
+  `position:fixed`. Sửa 1 chỗ ở portal ⇒ áp cho TẤT CẢ deck hiện có + tương lai (KHÔNG cần sửa/republish từng deck).
 
 ## Hạ tầng & deploy (ĐÃ LIVE 26/07/2026)
 - VPS `45.77.247.185`. Biên là **host nginx** (`nginx/1.18.0`) + **certbot** (KHÔNG phải Traefik).
