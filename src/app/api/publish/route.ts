@@ -125,6 +125,7 @@ export async function POST(req: NextRequest) {
   // Metadata phân loại. LUÔN đảm bảo deck có danh mục: ưu tiên category truyền vào > danh mục hiện có >
   // tự suy từ tiêu đề/mô tả/thẻ (có thể sinh danh mục mới). deck.category = danh mục hiện tại (upsert không đổi nó).
   const category = resolveCategory(d.category, deck.category, {
+    content: d.html,
     title: d.title, description: d.description, tags: d.tags,
   });
   await updateDeckMeta(deck.id, {

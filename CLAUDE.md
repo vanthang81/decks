@@ -110,14 +110,19 @@ phục vụ + chèn watermark/log.
   slug để xác nhận (details "Vùng nguy hiểm"); FK cascade tự dọn `deck_grants` + `deck_group_decks`,
   `deck_access_log` giữ lại (deck_id→NULL). Actions `setDeckPublishedAction`/`deleteDeckAction` (redirect
   `/admin?deleted=<slug>`; gõ sai slug → `?del=mismatch`).
-- **MỌI deck LUÔN có danh mục (BẮT BUỘC, tự động — CFO chốt 10/08/2026)**: khi thêm/tạo/publish deck mà
-  KHÔNG nhập danh mục thì hệ **tự suy danh mục phù hợp** từ tiêu đề/mô tả/thẻ (`src/lib/categorize.ts`
-  `inferCategory`) và **tự tạo danh mục MỚI nếu cần** (danh mục là free-text). `resolveCategory` quyết định:
-  **admin nhập tay > danh mục hiện có của deck (KHÔNG ghi đè) > tự suy > "Tài liệu chung"**. Áp ở `/api/publish`
-  (⇒ cả tool MCP `deck_publish`), `createDeckAction`, `updateDeckMetaAction` → deck do CFO/Claude publish từ chat
-  cũng luôn được phân loại. Taxonomy hiện có: Nhà đầu tư · Đối tác · Chiến lược · Nghiên cứu thị trường · Sản phẩm
-  & Nguồn cung · Báo cáo & Quản trị · Nội bộ · Hướng dẫn (+ sinh thêm khi phù hợp). **Đừng bỏ bước này** khi
-  publish deck mới. (Deck cũ đã backfill xong 10/08 — 0 deck thiếu danh mục.)
+- **MỌI deck LUÔN có danh mục + BỘ DANH MỤC GIỚI HẠN < 10 (BẮT BUỘC, tự động — CFO chốt 10/08 & 22/08/2026)**:
+  khi thêm/tạo/publish deck mà KHÔNG nhập danh mục thì hệ **tự suy danh mục** — **review NỘI DUNG deck**
+  (`src/lib/categorize.ts` `inferCategory`: vòng 1 quét tiêu đề/mô tả/thẻ, vòng 2 quét TEXT nội dung khi chưa rõ).
+  Auto-phân loại CHỈ trả về **8 danh mục chuẩn** (`CANONICAL_CATEGORIES`) + fallback `Tài liệu chung` = 9 < 10 →
+  **không bao giờ nở quá 10**. `resolveCategory`: **admin nhập tay > danh mục hiện có (KHÔNG ghi đè) > tự suy nội
+  dung > fallback**. Áp ở `/api/publish` (⇒ tool MCP `deck_publish`, có truyền `content`) + `createDeckAction`
+  (upload, có `content`) + `updateDeckMetaAction` → mọi deck upload/publish đều được phân loại theo nội dung.
+  **8 danh mục chuẩn**: Nhà đầu tư · Đối tác · Chiến lược · Nghiên cứu thị trường · Sản phẩm & Nguồn cung ·
+  Báo cáo & Quản trị · Hướng dẫn · Nội bộ. Admin vẫn có thể nhập tay danh mục khác (chủ động) nhưng auto giữ
+  trong bộ chuẩn để library gọn. **Đừng bỏ bước này**. (Backfill toàn bộ deck theo nội dung: 10/08 lần đầu;
+  22/08 phân lại 35 deck theo nội dung, dồn "Nội bộ" 31→ phân bổ đúng 8 danh mục, 0 deck lệch bộ chuẩn.)
+  **Ghi chú**: auto dùng từ khoá (nhanh, xác định) — gần đúng, không thay được review của người; muốn AI đọc-hiểu
+  từng deck để phân loại thì thêm bước gọi LLM ở pipeline publish (chưa làm).
 - **Thư viện phân loại (nhiều deck)**: mỗi deck có **category** (danh mục), **tags** (`text[]`), **company**
   (mặc định BTMH) + **thumbnail** (ảnh preview slide đầu). Trang chủ dùng `src/components/DeckGallery.tsx`
   ('use client'): ô tìm kiếm + chip lọc theo danh mục + **nút đổi kiểu hiển thị Lưới/Danh sách** (giống

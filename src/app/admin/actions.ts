@@ -211,7 +211,7 @@ export async function createDeckAction(formData: FormData) {
   const tags = parseTags(String(formData.get('tags') ?? ''));
   await updateDeckMeta(deck.id, {
     // Luôn đảm bảo có danh mục: admin nhập > danh mục hiện có (nếu upsert trúng deck cũ) > tự suy.
-    category: resolveCategory(String(formData.get('category') ?? ''), deck.category, { title, description: deck.description, tags }),
+    category: resolveCategory(String(formData.get('category') ?? ''), deck.category, { title, description: deck.description, tags, content }),
     tags,
     company: String(formData.get('company') ?? '').trim() || 'BTMH',
   });
