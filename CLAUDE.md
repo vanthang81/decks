@@ -16,7 +16,9 @@ phục vụ + chèn watermark/log.
   (card shadow, header sticky). Logo + favicon ConsultX nhúng **data-URI** trong `src/lib/brand.ts`
   (logo lấy từ consultx.vn, resize+tối ưu ~2.4KB — KHÔNG để asset rời trong repo public). Header dùng
   chung `src/components/SiteHeader.tsx` (logo→Home + nút "Trang chủ" + slot actions) đặt ở TRÊN `.wrap`
-  của trang chủ/admin/login → **mọi trang portal luôn có đường về Home**.
+  của trang chủ/admin/login → **mọi trang portal luôn có đường về Home**. Nút nav dùng `src/components/NavLink.tsx`
+  ('use client', `usePathname`) → **tô nền thương hiệu nút của trang ĐANG mở** (`.site-nav .btn.active`); khớp
+  theo `href` + `prefixes` (trang con vẫn sáng đúng mục, vd `/admin/decks/[id]`,`/admin/new` sáng "Decks").
 - Nội dung deck: `content/decks/<slug>.html` (self-contained; palette paper `#FBFAF8`/ink `#161A21`/
   accent `#B07B32`/data `#2E6F72`; serif hệ thống + system-ui; nav ←→/Space, sáng/tối; in PDF).
 - DB Postgres `btmh_data`, bảng prefix `deck_` (admins/decks/viewers/grants/access_log/otp).

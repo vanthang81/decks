@@ -56,6 +56,9 @@ a:hover { text-decoration: underline; }
 .site-brand-sub { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--brand); font-weight: 600; }
 .site-nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .site-nav .muted { margin: 0 2px; }
+/* Nút nav của trang ĐANG mở: tô nền thương hiệu để biết đang ở mục nào. */
+.site-nav .btn.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+.site-nav .btn.active:hover { background: var(--brand-strong); border-color: var(--brand-strong); color: #fff; }
 
 /* ---------- Layout ---------- */
 .wrap { max-width: 1120px; margin: 0 auto; padding: clamp(24px,4vw,44px) clamp(16px,4vw,40px) 72px; }

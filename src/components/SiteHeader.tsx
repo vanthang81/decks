@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import NavLink from '@/components/NavLink';
 import { CONSULTX_LOGO, PORTAL_NAME } from '@/lib/brand';
 
 // Header thương hiệu ConsultX, dùng chung mọi trang portal.
@@ -27,9 +28,9 @@ export default function SiteHeader({
         </Link>
         <nav className="site-nav">
           {showHome && (
-            <Link className="btn" href="/">
+            <NavLink className="btn" href="/">
               <span aria-hidden>⌂</span> Trang chủ
-            </Link>
+            </NavLink>
           )}
           {actions}
         </nav>

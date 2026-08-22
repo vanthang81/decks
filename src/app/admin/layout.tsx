@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import NavLink from '@/components/NavLink';
 import { redirect } from 'next/navigation';
 import { auth, signOut } from '@/auth';
 import { getAdmin } from '@/lib/admins';
@@ -21,9 +21,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         subtitle="Quản trị"
         actions={
           <>
-            <Link className="btn" href="/admin">Decks</Link>
-            <Link className="btn" href="/admin/groups">Nhóm người xem</Link>
-            {isOwner && <Link className="btn" href="/admin/admins">Quản trị viên</Link>}
+            <NavLink className="btn" href="/admin" prefixes={['/admin/decks', '/admin/new']}>Decks</NavLink>
+            <NavLink className="btn" href="/admin/groups" prefixes={['/admin/groups']}>Nhóm người xem</NavLink>
+            {isOwner && <NavLink className="btn" href="/admin/admins" prefixes={['/admin/admins']}>Quản trị viên</NavLink>}
             <span className="muted">{session.user.email}{me ? ` · ${me.role}` : ''}</span>
             <form
               action={async () => {
