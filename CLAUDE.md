@@ -142,17 +142,21 @@ phục vụ + chèn watermark/log.
   API publish + tool MCP `deck_publish` nhận thêm `company`/`category`/`tags` (đổi schema MCP → rebuild `decks-mcp`
   + reconnect connector claude.ai để nạp schema mới).
 - Chặn tải/in: render qua route (không URL file rời) + chặn menu/in + watermark. KHÔNG chặn được chụp màn hình.
-- **Cải thiện xem trên iPad** (`injectDeckChrome` trong `src/lib/watermark.ts`, chèn vào MỌI deck phục vụ qua
-  `/d/<slug>` — cả public raw lẫn bảo mật bọc watermark, qua `deckHtmlResponse` trong route; KHÔNG áp cho 404/gate):
-  **iPad/máy tính bảng cảm ứng** (`@media (pointer:coarse) and (min-width:821px)`): nút menu nổi `#navdock` lùi sát
-  mép phải hơn (`right:18px` thay vì `24mm` mặc định desktop, bằng CSS) + **cỡ chữ to hơn** (JS đặt inline
-  `html{zoom:1.32 !important}` thay vì 1.20 của khoảng tablet) → KHÔNG đụng desktop chuột (`pointer:fine`) và điện
-  thoại (<821px vốn đã ổn với zoom 1.30). **An toàn**: phần bơm cỡ chữ (JS) thoát sớm nếu deck KHÔNG có `#navdock`
-  ⇒ deck ảnh (`slidesHtml`) / deck HTML thường KHÔNG bị đụng zoom. Deck generator (MBB) dùng `html{zoom}` theo
-  breakpoint desktop≥1120 / tablet 821-1119 (zoom 1.20) / mobile≤820 (zoom 1.30) + `#navdock` `position:fixed`.
-  Sửa 1 chỗ ở portal ⇒ áp cho TẤT CẢ deck hiện có + tương lai (KHÔNG cần sửa/republish từng deck).
-  (**Nút chỉnh cỡ chữ thủ công A−/⟲/A+ đã BỎ theo yêu cầu CFO 22/08** — thấy phức tạp/không cần vì cỡ chữ mặc định
-  iPad đã đủ to; nếu cần lại thì thêm control nổi ghi đè `zoom` qua `localStorage`.)
+- **Cải thiện deck viewer qua portal** (`injectDeckChrome` trong `src/lib/watermark.ts`, chèn vào MỌI deck phục vụ
+  qua `/d/<slug>` — cả public raw lẫn bảo mật bọc watermark, qua `deckHtmlResponse` trong route; KHÔNG áp cho
+  404/gate). **TẤT CẢ gated theo `#navdock`** (deck generator MBB) ⇒ deck ảnh (`slidesHtml`)/deck HTML thường KHÔNG
+  bị đụng. **Sửa 1 chỗ ⇒ áp cho TẤT CẢ deck hiện có + tương lai** (KHÔNG cần sửa/republish từng deck). Gồm:
+  (1) **iPad/máy tính bảng cảm ứng** (`@media (pointer:coarse) and (min-width:821px)`): `#navdock` lùi sát mép phải
+  (`right:18px` thay `24mm`, CSS) + **cỡ chữ to hơn** (JS inline `html{zoom:1.32 !important}` thay 1.20 tablet) →
+  KHÔNG đụng desktop chuột (`pointer:fine`)/điện thoại (<821px, zoom 1.30 của deck).
+  (2) **Nút TOÀN MÀN HÌNH `#nb-fs`** (⛶, `requestFullscreen`/`webkit`, phím **F**) + **nút HƯỚNG DẪN `#nb-help`** (?,
+  mở overlay `#dhelp` liệt kê phím tắt T/J/K/G/↑/F/Esc) — chèn vào `#navsub`, **kế thừa style `#navsub button`** của deck.
+  (3) **TOC `#toc` + bảng thuật ngữ `#gs`**: `overscroll-behavior:contain` + momentum iOS + thanh cuộn maroon rõ +
+  `padding-bottom` safe-area; **bù chiều cao** trên iPad (`height:calc(100dvh/1.32)`) vì `html{zoom}` phóng cả phần tử
+  `position:fixed` → nếu để `height:100%` thì drawer tràn quá đáy, cuộn không tới cuối. Deck generator dùng `#navdock`
+  (`#navsub`: nb-toc ☰ · nb-top ↑ · nb-prev ‹ · nb-next › · nb-gs Aa) + `html{zoom}` theo breakpoint
+  desktop≥1120 / tablet 821-1119 (1.20) / mobile≤820 (1.30).
+  (**Nút chỉnh cỡ chữ thủ công A−/⟲/A+ đã BỎ theo yêu cầu CFO 22/08.**)
 
 ## Hạ tầng & deploy (ĐÃ LIVE 26/07/2026)
 - VPS `45.77.247.185`. Biên là **host nginx** (`nginx/1.18.0`) + **certbot** (KHÔNG phải Traefik).
