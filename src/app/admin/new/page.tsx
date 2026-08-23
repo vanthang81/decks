@@ -41,9 +41,11 @@ export default function NewDeckPage() {
           <option value="protected">Bảo mật (cần link cá nhân)</option>
           <option value="public">Công khai</option>
         </select>
-        <div className="row" style={{ marginTop: 12 }}>
+        <input type="hidden" name="wm_present" value="1" />
+        <div className="row" style={{ marginTop: 12, flexWrap: 'wrap', gap: 16 }}>
           <label style={{ margin: 0 }}><input type="checkbox" name="require_otp" style={{ width: 'auto' }} /> Bắt OTP email</label>
           <label style={{ margin: 0 }}><input type="checkbox" name="is_published" defaultChecked style={{ width: 'auto' }} /> Xuất bản</label>
+          <label style={{ margin: 0 }}><input type="checkbox" name="watermark" defaultChecked style={{ width: 'auto' }} /> 💧 Chèn watermark</label>
         </div>
         <SubmitBar label="Lưu deck" pendingLabel="Đang tạo deck & xử lý…" className="btn primary" />
       </form>

@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import {
-  upsertDeck, getDeckById, updateDeckContent, updateDeckMeta,
+  upsertDeck, getDeckById, getDeckBySlug, updateDeckContent, updateDeckMeta,
   setDeckPassword, generateDeckPassword, setDeckPublished, setDeckVisibility, setDeckSource, setDeckWatermark, deleteDeck, type Visibility,
 } from '@/lib/decks';
 import { resolveCategory } from '@/lib/categorize';
@@ -197,6 +197,7 @@ export async function createDeckAction(formData: FormData) {
   const slug = String(formData.get('slug') ?? '').trim().toLowerCase();
   const title = String(formData.get('title') ?? '').trim();
   if (!/^[a-z0-9][a-z0-9-]{0,80}$/.test(slug) || !title) return;
+  const existed = await getDeckBySlug(slug); // để biết deck MỚI hay đang cập nhật (giữ nguyên watermark khi update)
   const { html: content, convertError } = await extractDeckContent(formData, title);
   const deck = await upsertDeck({
     slug,
@@ -215,6 +216,11 @@ export async function createDeckAction(formData: FormData) {
     tags,
     company: String(formData.get('company') ?? '').trim() || 'BTMH',
   });
+  // Watermark: chỉ đặt cho deck MỚI (mặc định BẬT; admin có thể bỏ tick để tạo không watermark).
+  // Deck đang cập nhật (trùng slug) → KHÔNG đụng, giữ nguyên thiết lập watermark hiện có.
+  if (!existed && formData.get('wm_present')) {
+    await setDeckWatermark(deck.id, formData.get('watermark') === 'on');
+  }
   if (content) await generateDeckThumbnail({ id: deck.id, slug: deck.slug }).catch(() => false);
   revalidatePath('/admin');
   revalidatePath('/');

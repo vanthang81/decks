@@ -48,6 +48,7 @@ Args:
   - category (string, tùy chọn): danh mục deck (vd 'Nhà đầu tư', 'Đối tác', 'Nội bộ')
   - tags (string[], tùy chọn): danh sách thẻ để lọc/tìm ở thư viện
   - source_url (string, tùy chọn): link "Nguồn / Chat gốc" (vd URL cuộc chat claude.ai này) để admin mở lại chat mà chỉnh sửa deck sau
+  - watermark (boolean, tùy chọn): watermark mặc định của deck. TẠO MỚI mà bỏ trống = BẬT. CẬP NHẬT mà bỏ trống = GIỮ NGUYÊN.
   - if_match (string, tùy chọn): KHOÁ CHỐNG GHI ĐÈ khi nhiều phiên cùng sửa 1 deck. Bỏ trống = không khoá (như cũ). "new" = chỉ tạo mới, slug đã có sẽ báo lỗi. <md5> = md5 nội dung bạn nghĩ đang có trên server (lấy từ 'content_md5' của lần publish/đọc trước); nếu server đã đổi thì publish bị TỪ CHỐI (không ghi gì) và trả về md5 mới để bạn đọc lại rồi rebase.
 
 Ảnh preview (chụp slide đầu) được TỰ ĐỘNG tạo sau khi publish.
@@ -57,7 +58,8 @@ Nếu if_match không khớp: HTTP 409, body { "error": "conflict", "reason": "m
 
 Lưu ý: gọi lại cùng slug = cập nhật (ghi đè nội dung) deck đó. Khi cập nhật, những thứ KHÔNG truyền lại được
 GIỮ NGUYÊN: mật khẩu chung, link "Nguồn / Chat gốc" (source_url), phân quyền (visibility/require_otp/is_published),
-danh mục/thẻ, và MỌI link cá nhân đã cấp (grants) + nhóm. Mật khẩu chỉ trả về 1 lần khi vừa đặt/sinh.`,
+watermark, danh mục/thẻ, và MỌI link cá nhân đã cấp (grants) + nhóm. Mật khẩu chỉ trả về 1 lần khi vừa đặt/sinh.
+Deck TẠO MỚI mặc định BẬT watermark (trừ khi truyền watermark:false).`,
       inputSchema: {
         slug: z
           .string()
@@ -93,6 +95,10 @@ danh mục/thẻ, và MỌI link cá nhân đã cấp (grants) + nhóm. Mật kh
           .string()
           .optional()
           .describe('Link "Nguồn / Chat gốc" (vd URL cuộc chat claude.ai này) để admin mở lại chat mà chỉnh sửa deck sau'),
+        watermark: z
+          .boolean()
+          .optional()
+          .describe('Watermark mặc định của deck. TẠO MỚI: bỏ trống = BẬT (true). CẬP NHẬT: bỏ trống = giữ nguyên'),
         if_match: z
           .string()
           .optional()

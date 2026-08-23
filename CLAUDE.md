@@ -69,7 +69,10 @@ phục vụ + chèn watermark/log.
   chặn menu/copy/Ctrl-P/S/U) và beacon log. UI: trang chi tiết deck có nút **💧 Watermark BẬT/TẮT** (mặc định deck) +
   cột **Watermark** (Kế thừa/Bật/Tắt) mỗi người trong "Người đã được cấp"; trang chi tiết nhóm có ô **Watermark cho
   nhóm**. Actions `setDeckWatermarkAction`/`setGrantWatermarkAction`/`setGroupWatermarkAction`; control tri-state
-  `src/components/WmSelect.tsx` (tự submit). upsert/publish KHÔNG đụng cột watermark → giữ nguyên khi republish.
+  `src/components/WmSelect.tsx` (tự submit). **Deck TẠO MỚI mặc định BẬT watermark** (cột default `true`; form
+  `/admin/new` có ô "💧 Chèn watermark" tick sẵn; API/MCP `deck_publish` nhận `watermark` optional — TẠO MỚI bỏ
+  trống = BẬT, CẬP NHẬT bỏ trống = giữ nguyên; `createDeckAction`/route chỉ đặt watermark khi deck MỚI, update giữ
+  nguyên). (Đổi schema MCP → rebuild `decks-mcp` + reconnect connector.)
 - **Mật khẩu deck** (tùy chọn, `deck_decks.password_hash` sha256): 1 mật khẩu chung — ai có link
   `/d/<slug>` + mật khẩu là xem được NGAY (không cần link cá nhân). Truy cập là **HOẶC**: link cá nhân
   (grant active, watermark định danh) **HOẶC** mật khẩu đúng (watermark "mật khẩu chung") **HOẶC** public

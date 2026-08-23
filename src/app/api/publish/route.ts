@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
-import { upsertDeck, upsertDeckGuarded, getDeckContentState, setDeckPassword, generateDeckPassword, getDeckBySlug, updateDeckMeta, setDeckSource, type Deck } from '@/lib/decks';
+import { upsertDeck, upsertDeckGuarded, getDeckContentState, setDeckPassword, generateDeckPassword, getDeckBySlug, updateDeckMeta, setDeckSource, setDeckWatermark, type Deck } from '@/lib/decks';
 import { resolveCategory } from '@/lib/categorize';
 import { generateDeckThumbnail } from '@/lib/thumbnail';
 import { isValidSlug } from '@/lib/content';
@@ -28,6 +28,8 @@ const Body = z.object({
   tags: z.array(z.string()).optional(),
   company: z.string().optional(),
   source_url: z.string().nullish(),
+  // Watermark mặc định của deck. Bỏ trống: TẠO MỚI = BẬT (true); CẬP NHẬT = giữ nguyên.
+  watermark: z.boolean().optional(),
   // Optimistic lock chống ghi đè khi nhiều phiên cùng sửa 1 deck:
   //   bỏ trống = không khoá (y như cũ) · "new" = chỉ tạo mới · <md5 32 hex> = chỉ ghi khi content hiện tại khớp.
   if_match: z.string().nullish(),
@@ -147,6 +149,12 @@ export async function POST(req: NextRequest) {
   // Link nguồn / chat gốc (tuỳ chọn). Chỉ đặt khi truyền vào (không truyền = giữ nguyên).
   if (d.source_url !== undefined) {
     await setDeckSource(deck.id, d.source_url ?? null);
+  }
+
+  // Watermark: TẠO MỚI (deck chưa tồn tại) = mặc định BẬT; caller truyền watermark thì theo caller.
+  // CẬP NHẬT mà không truyền = KHÔNG đụng (giữ nguyên). upsert không đụng cột watermark.
+  if (d.watermark !== undefined || !existing) {
+    await setDeckWatermark(deck.id, d.watermark ?? existing?.watermark ?? true);
   }
 
   // Ảnh preview: tự chụp slide đầu (best-effort, không chặn kết quả nếu lỗi).
