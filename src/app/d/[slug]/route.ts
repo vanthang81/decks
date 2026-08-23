@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { getDeckBySlug, verifyDeckPassword, type Deck } from '@/lib/decks';
+import { getDeckBySlug, verifyDeckPassword, resolveWatermark, type Deck } from '@/lib/decks';
 import { readDeckHtml } from '@/lib/content';
 import { getActiveGrant, findActiveGrantByDeckEmail, rotateGrantToken } from '@/lib/grants';
 import {
@@ -152,6 +152,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
                 email: gEmail,
                 name: admin.display_name ?? 'Quản trị viên',
                 deckSlug: deck.slug,
+                watermark: deck.watermark, // admin: theo mặc định của deck
               }),
         );
       }
@@ -163,7 +164,12 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
         return deckHtmlResponse(
           deck.visibility === 'public'
             ? html
-            : wrapProtectedDeck(html, { email: grant.viewer_email, name: grant.viewer_name, deckSlug: deck.slug }),
+            : wrapProtectedDeck(html, {
+                email: grant.viewer_email,
+                name: grant.viewer_name,
+                deckSlug: deck.slug,
+                watermark: resolveWatermark(deck.watermark, grant.group_watermark, grant.grant_watermark),
+              }),
         );
       }
     }
@@ -180,7 +186,12 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
     const grant = await getActiveGrant(sess.grantId);
     if (grant && grant.deck_id === deck.id) {
       await logEvent({ event: 'view', deckId: deck.id, viewerId: sess.viewerId, grantId: sess.grantId, ip, userAgent: ua }).catch(() => {});
-      return deckHtmlResponse(wrapProtectedDeck(html, { email: sess.email, name: sess.name, deckSlug: deck.slug }));
+      return deckHtmlResponse(wrapProtectedDeck(html, {
+        email: sess.email,
+        name: sess.name,
+        deckSlug: deck.slug,
+        watermark: resolveWatermark(deck.watermark, grant.group_watermark, grant.grant_watermark),
+      }));
     }
     // Có phiên nhưng grant đã thu hồi/hết hạn → ghi nhận, vẫn cho thử đường mật khẩu bên dưới.
     await logEvent({ event: 'revoked_hit', deckId: deck.id, viewerId: sess.viewerId, grantId: sess.grantId, ip, userAgent: ua }).catch(() => {});
@@ -194,7 +205,12 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
       return deckHtmlResponse(
         deck.visibility === 'public'
           ? html
-          : wrapProtectedDeck(html, { email: 'mật khẩu chung', name: null, deckSlug: deck.slug }),
+          : wrapProtectedDeck(html, {
+              email: 'mật khẩu chung',
+              name: null,
+              deckSlug: deck.slug,
+              watermark: deck.watermark, // mật khẩu chung (ẩn danh): theo mặc định của deck
+            }),
       );
     }
   }

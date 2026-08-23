@@ -5,9 +5,10 @@ import { listGroups, grantedGroupsForDeck } from '@/lib/groups';
 import { listRequestsForDeck } from '@/lib/accessRequests';
 import { parseUA } from '@/lib/ua';
 import { listDeckLog } from '@/lib/log';
-import { issueLinkAction, revokeLinkAction, updateContentAction, grantDeckToGroupAction, revokeGroupOnDeckAction, setDeckPasswordAction, generateDeckPasswordAction, clearDeckPasswordAction, updateDeckMetaAction, generateThumbnailAction, setDeckPublishedAction, setDeckVisibilityAction, setDeckSourceAction, deleteDeckAction, approveRequestAction, denyRequestAction } from '../../actions';
+import { issueLinkAction, revokeLinkAction, updateContentAction, grantDeckToGroupAction, revokeGroupOnDeckAction, setDeckPasswordAction, generateDeckPasswordAction, clearDeckPasswordAction, updateDeckMetaAction, generateThumbnailAction, setDeckPublishedAction, setDeckVisibilityAction, setDeckSourceAction, setDeckWatermarkAction, setGrantWatermarkAction, deleteDeckAction, approveRequestAction, denyRequestAction } from '../../actions';
 import CopyField from '@/components/CopyField';
 import SubmitBar from '@/components/SubmitBar';
+import WmSelect from '@/components/WmSelect';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,6 +71,13 @@ export default async function DeckDetailPage({
           <input type="hidden" name="visibility" value={deck.visibility === 'public' ? 'protected' : 'public'} />
           <button className="btn" type="submit">
             {deck.visibility === 'public' ? '🔒 Chuyển sang Bảo mật' : '🌐 Chuyển sang Công khai'}
+          </button>
+        </form>
+        <form action={setDeckWatermarkAction}>
+          <input type="hidden" name="deck_id" value={deck.id} />
+          <input type="hidden" name="on" value={deck.watermark ? 'false' : 'true'} />
+          <button className="btn" type="submit" title="Watermark mặc định của deck (nhóm/người xem có thể override)">
+            {deck.watermark ? '💧 Watermark: BẬT — bấm để tắt' : '🚫 Watermark: TẮT — bấm để bật'}
           </button>
         </form>
       </div>
@@ -350,8 +358,13 @@ export default async function DeckDetailPage({
       </form>
 
       <h2>Người đã được cấp</h2>
+      <p className="muted" style={{ marginTop: 0, fontSize: 13, maxWidth: 680 }}>
+        Cột <b>Watermark</b>: override cho riêng người này (ưu tiên cao nhất). <b>Kế thừa</b> = theo nhóm rồi tới
+        mặc định của deck (đang {deck.watermark ? <b>BẬT</b> : <b>TẮT</b>}). "Tắt" chỉ ẩn dấu định danh — vẫn kiểm
+        soát truy cập, chặn tải/in và ghi log.
+      </p>
       <table style={{ marginBottom: 32 }}>
-        <thead><tr><th>Người xem</th><th>Trạng thái</th><th>Lượt xem</th><th>Xem gần nhất</th><th></th></tr></thead>
+        <thead><tr><th>Người xem</th><th>Trạng thái</th><th>Watermark</th><th>Lượt xem</th><th>Xem gần nhất</th><th></th></tr></thead>
         <tbody>
           {grants.map((g) => (
             <tr key={g.id}>
@@ -360,6 +373,13 @@ export default async function DeckDetailPage({
                 <span className={`pill ${g.status === 'active' ? 'ok' : 'bad'}`}>
                   {g.status === 'active' ? 'Hiệu lực' : 'Đã thu hồi'}
                 </span>
+              </td>
+              <td>
+                <WmSelect
+                  action={setGrantWatermarkAction}
+                  hidden={{ grant_id: g.id, deck_id: deck.id }}
+                  value={g.watermark === true ? 'on' : g.watermark === false ? 'off' : 'inherit'}
+                />
               </td>
               <td>{g.views}</td>
               <td className="muted">{fmt(g.last_view)}</td>
@@ -374,7 +394,7 @@ export default async function DeckDetailPage({
               </td>
             </tr>
           ))}
-          {grants.length === 0 && <tr><td colSpan={5} className="muted">Chưa cấp cho ai.</td></tr>}
+          {grants.length === 0 && <tr><td colSpan={6} className="muted">Chưa cấp cho ai.</td></tr>}
         </tbody>
       </table>
 

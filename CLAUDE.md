@@ -60,6 +60,16 @@ phục vụ + chèn watermark/log.
 - **Viewer**: mỗi người 1 **magic link** `/v/<token>` (lưu sha256, KHÔNG lưu token thô) → phiên jose
   (cookie `deck_session`, 8h) → `/d/<slug>` render **có watermark tên+email+giờ** + log `view`.
   Kiểm grant **mỗi request** → thu hồi tức thì. OTP email tùy chọn per-deck.
+- **Bật/tắt watermark 3 cấp (deck / nhóm / từng người), most-specific-wins** (`db/011`): cột `deck_decks.watermark`
+  (default true = mặc định của deck), `deck_groups.watermark` (NULL=kế thừa deck), `deck_grants.watermark`
+  (NULL=kế thừa nhóm/deck). Hiệu lực mỗi lượt xem = `resolveWatermark(deck, group, grant)` = **grant ?? group ??
+  deck** (`src/lib/decks.ts`). Route `/d/<slug>` truyền `watermark` xuống `wrapProtectedDeck` (admin/ẩn-danh mật
+  khẩu = theo deck; viewer qua grant = resolve theo grant/nhóm). **"Tắt watermark" = chỉ bỏ lớp HIỂN THỊ** (ô chéo
+  `#dw-mark` + thanh định danh `#dw-bar`) — **VẪN** kiểm soát truy cập, chặn tải/in (`@media print{display:none}` +
+  chặn menu/copy/Ctrl-P/S/U) và beacon log. UI: trang chi tiết deck có nút **💧 Watermark BẬT/TẮT** (mặc định deck) +
+  cột **Watermark** (Kế thừa/Bật/Tắt) mỗi người trong "Người đã được cấp"; trang chi tiết nhóm có ô **Watermark cho
+  nhóm**. Actions `setDeckWatermarkAction`/`setGrantWatermarkAction`/`setGroupWatermarkAction`; control tri-state
+  `src/components/WmSelect.tsx` (tự submit). upsert/publish KHÔNG đụng cột watermark → giữ nguyên khi republish.
 - **Mật khẩu deck** (tùy chọn, `deck_decks.password_hash` sha256): 1 mật khẩu chung — ai có link
   `/d/<slug>` + mật khẩu là xem được NGAY (không cần link cá nhân). Truy cập là **HOẶC**: link cá nhân
   (grant active, watermark định danh) **HOẶC** mật khẩu đúng (watermark "mật khẩu chung") **HOẶC** public

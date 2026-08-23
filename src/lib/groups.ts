@@ -5,6 +5,7 @@ export type Group = {
   id: string;
   name: string;
   description: string | null;
+  watermark?: boolean | null; // override watermark cho nhóm; NULL = kế thừa deck
   created_at?: string;
   member_count?: number;
 };
@@ -26,7 +27,12 @@ export async function listGroups(): Promise<Group[]> {
 }
 
 export async function getGroup(id: string): Promise<Group | null> {
-  return queryOne<Group>('SELECT id, name, description, created_at FROM deck_groups WHERE id=$1', [id]);
+  return queryOne<Group>('SELECT id, name, description, watermark, created_at FROM deck_groups WHERE id=$1', [id]);
+}
+
+// Override watermark cho cả nhóm. val: true/false = ép; null = kế thừa deck.
+export async function setGroupWatermark(groupId: string, val: boolean | null): Promise<void> {
+  await query('UPDATE deck_groups SET watermark=$2 WHERE id=$1', [groupId, val]);
 }
 
 export async function createGroup(name: string, description: string | null, by: string | null): Promise<Group> {

@@ -5,15 +5,15 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import {
   upsertDeck, getDeckById, updateDeckContent, updateDeckMeta,
-  setDeckPassword, generateDeckPassword, setDeckPublished, setDeckVisibility, setDeckSource, deleteDeck, type Visibility,
+  setDeckPassword, generateDeckPassword, setDeckPublished, setDeckVisibility, setDeckSource, setDeckWatermark, deleteDeck, type Visibility,
 } from '@/lib/decks';
 import { resolveCategory } from '@/lib/categorize';
 import { isConvertibleDoc, convertDocToDeckHtml } from '@/lib/convert';
 import { generateDeckThumbnail } from '@/lib/thumbnail';
 import { upsertViewer } from '@/lib/viewers';
-import { issueGrant, revokeGrant, revokeGroupOnDeck } from '@/lib/grants';
+import { issueGrant, revokeGrant, revokeGroupOnDeck, setGrantWatermark } from '@/lib/grants';
 import { getAdmin, addAdmin, setAdminActive, setAdminRole, removeAdmin, countActiveAdmins, type AdminRole } from '@/lib/admins';
-import { createGroup, deleteGroup, addMember, removeMember, grantDeckToGroup } from '@/lib/groups';
+import { createGroup, deleteGroup, addMember, removeMember, grantDeckToGroup, setGroupWatermark } from '@/lib/groups';
 import { getRequest, setRequestStatus, approveAndGrant, denyRequest } from '@/lib/accessRequests';
 import { sendMail } from '@/lib/mail';
 
@@ -243,6 +243,39 @@ export async function setDeckVisibilityAction(formData: FormData) {
   revalidatePath(`/admin/decks/${deckId}`);
   revalidatePath('/admin');
   revalidatePath('/');
+}
+
+// Tri-state helper: 'on' -> true, 'off' -> false, còn lại (inherit) -> null.
+function parseTri(v: string): boolean | null {
+  return v === 'on' ? true : v === 'off' ? false : null;
+}
+
+// Bật/tắt watermark MẶC ĐỊNH của deck (nhóm/người xem có thể override).
+export async function setDeckWatermarkAction(formData: FormData) {
+  await requireAdminEmail();
+  const deckId = String(formData.get('deck_id') ?? '');
+  if (!deckId) return;
+  await setDeckWatermark(deckId, String(formData.get('on') ?? '') === 'true');
+  revalidatePath(`/admin/decks/${deckId}`);
+}
+
+// Override watermark cho 1 (deck, người xem) — tri-state: on/off/inherit.
+export async function setGrantWatermarkAction(formData: FormData) {
+  await requireAdminEmail();
+  const grantId = String(formData.get('grant_id') ?? '');
+  const deckId = String(formData.get('deck_id') ?? '');
+  if (!grantId) return;
+  await setGrantWatermark(grantId, parseTri(String(formData.get('value') ?? '')));
+  if (deckId) revalidatePath(`/admin/decks/${deckId}`);
+}
+
+// Override watermark cho cả nhóm — tri-state: on/off/inherit.
+export async function setGroupWatermarkAction(formData: FormData) {
+  await requireAdminEmail();
+  const groupId = String(formData.get('group_id') ?? '');
+  if (!groupId) return;
+  await setGroupWatermark(groupId, parseTri(String(formData.get('value') ?? '')));
+  revalidatePath(`/admin/groups/${groupId}`);
 }
 
 // ---- Lưu trữ (ẩn/hiện) & xoá deck ----

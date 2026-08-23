@@ -11,14 +11,16 @@ function escapeHtml(s: string): string {
 
 export function wrapProtectedDeck(
   html: string,
-  opts: { email: string; name: string | null; deckSlug: string },
+  opts: { email: string; name: string | null; deckSlug: string; watermark?: boolean },
 ): string {
+  const showWm = opts.watermark !== false; // mặc định có watermark; false = tắt lớp HIỂN THỊ định danh
   const who = escapeHtml(opts.name ? `${opts.name} · ${opts.email}` : opts.email);
   const stamp = escapeHtml(new Date().toISOString());
 
-  const inject = `
+  // Lớp watermark HIỂN THỊ (ô chéo + thanh định danh) — chỉ chèn khi bật.
+  const wmVisual = showWm
+    ? `
 <style>
-  @media print { html, body { display: none !important; } }
   #dw-mark { position: fixed; inset: 0; z-index: 2147483000; pointer-events: none;
     background-repeat: repeat; opacity: .10;
     background-image: repeating-linear-gradient(-30deg, transparent 0 220px,
@@ -31,15 +33,20 @@ export function wrapProtectedDeck(
   @media (prefers-color-scheme: dark) { #dw-bar { background: rgba(0,0,0,.35); } }
 </style>
 <div id="dw-mark" aria-hidden="true"></div>
-<div id="dw-bar">Tài liệu bảo mật — cấp riêng cho <b>${who}</b> · ${stamp} · deck.consultx.vn</div>
+<div id="dw-bar">Tài liệu bảo mật — cấp riêng cho <b>${who}</b> · ${stamp} · deck.consultx.vn</div>`
+    : '';
+
+  // Chặn tải/in + beacon log LUÔN áp cho deck bảo mật (kể cả khi tắt watermark hiển thị).
+  const inject = `
+<style>@media print { html, body { display: none !important; } }</style>
+${wmVisual}
 <script>
 (function(){
-  var who=${JSON.stringify(who)};
-  // rải watermark
+  ${showWm ? `var who=${JSON.stringify(who)};
   var wrap=document.getElementById('dw-mark');
   if(wrap){ for(var y=-100;y<window.innerHeight+400;y+=180){ for(var x=-100;x<window.innerWidth+600;x+=520){
     var r=document.createElement('div'); r.className='r'; r.textContent=who; r.style.left=x+'px'; r.style.top=y+'px'; wrap.appendChild(r);
-  }}}
+  }}}` : ''}
   // giảm tải/in
   document.addEventListener('contextmenu',function(e){e.preventDefault();});
   document.addEventListener('selectstart',function(e){e.preventDefault();});

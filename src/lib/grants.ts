@@ -18,6 +18,10 @@ export type GrantWithCtx = Grant & {
   deck_require_otp: boolean;
   viewer_email: string;
   viewer_name: string | null;
+  group_id: string | null;
+  deck_watermark: boolean;
+  group_watermark: boolean | null; // NULL = kế thừa deck (hoặc grant không theo nhóm)
+  grant_watermark: boolean | null; // NULL = kế thừa nhóm/deck
 };
 
 export function hashToken(token: string): string {
@@ -67,16 +71,21 @@ export async function activeDeckIdsForGroup(groupId: string): Promise<string[]> 
   return rows.map((r) => r.deck_id);
 }
 
+const GRANT_CTX_COLS =
+  `g.id, g.deck_id, g.viewer_id, g.status, g.expires_at, g.group_id,
+   d.slug AS deck_slug, d.title AS deck_title, d.visibility AS deck_visibility,
+   d.require_otp AS deck_require_otp, d.watermark AS deck_watermark,
+   v.email AS viewer_email, v.name AS viewer_name,
+   g.watermark AS grant_watermark, gr.watermark AS group_watermark`;
+const GRANT_CTX_FROM =
+  `FROM deck_grants g
+   JOIN deck_decks d   ON d.id = g.deck_id
+   JOIN deck_viewers v ON v.id = g.viewer_id
+   LEFT JOIN deck_groups gr ON gr.id = g.group_id`;
+
 export async function findGrantByToken(token: string): Promise<GrantWithCtx | null> {
   return queryOne<GrantWithCtx>(
-    `SELECT g.id, g.deck_id, g.viewer_id, g.status, g.expires_at,
-            d.slug AS deck_slug, d.title AS deck_title, d.visibility AS deck_visibility,
-            d.require_otp AS deck_require_otp,
-            v.email AS viewer_email, v.name AS viewer_name
-     FROM deck_grants g
-     JOIN deck_decks d   ON d.id = g.deck_id
-     JOIN deck_viewers v ON v.id = g.viewer_id
-     WHERE g.token_hash = $1`,
+    `SELECT ${GRANT_CTX_COLS} ${GRANT_CTX_FROM} WHERE g.token_hash = $1`,
     [hashToken(token)],
   );
 }
@@ -84,14 +93,7 @@ export async function findGrantByToken(token: string): Promise<GrantWithCtx | nu
 // Kiểm tra grant còn dùng được: active + chưa hết hạn + deck published.
 export async function getActiveGrant(grantId: string): Promise<GrantWithCtx | null> {
   const g = await queryOne<GrantWithCtx>(
-    `SELECT g.id, g.deck_id, g.viewer_id, g.status, g.expires_at,
-            d.slug AS deck_slug, d.title AS deck_title, d.visibility AS deck_visibility,
-            d.require_otp AS deck_require_otp,
-            v.email AS viewer_email, v.name AS viewer_name
-     FROM deck_grants g
-     JOIN deck_decks d   ON d.id = g.deck_id
-     JOIN deck_viewers v ON v.id = g.viewer_id
-     WHERE g.id = $1`,
+    `SELECT ${GRANT_CTX_COLS} ${GRANT_CTX_FROM} WHERE g.id = $1`,
     [grantId],
   );
   if (!g) return null;
@@ -105,10 +107,20 @@ export async function getActiveGrant(grantId: string): Promise<GrantWithCtx | nu
 export async function findActiveGrantByDeckEmail(
   deckId: string,
   email: string,
-): Promise<{ id: string; viewer_id: string; viewer_email: string; viewer_name: string | null } | null> {
+): Promise<{
+  id: string;
+  viewer_id: string;
+  viewer_email: string;
+  viewer_name: string | null;
+  group_watermark: boolean | null;
+  grant_watermark: boolean | null;
+} | null> {
   return queryOne(
-    `SELECT g.id, g.viewer_id, v.email AS viewer_email, v.name AS viewer_name
-     FROM deck_grants g JOIN deck_viewers v ON v.id = g.viewer_id
+    `SELECT g.id, g.viewer_id, v.email AS viewer_email, v.name AS viewer_name,
+            g.watermark AS grant_watermark, gr.watermark AS group_watermark
+     FROM deck_grants g
+     JOIN deck_viewers v ON v.id = g.viewer_id
+     LEFT JOIN deck_groups gr ON gr.id = g.group_id
      WHERE g.deck_id = $1 AND lower(v.email) = lower($2) AND g.status = 'active'
        AND (g.expires_at IS NULL OR g.expires_at > now())`,
     [deckId, email],
@@ -166,12 +178,13 @@ export type GrantRow = {
   created_at: string;
   last_view: string | null;
   views: number;
+  watermark: boolean | null; // override watermark cho (deck, người xem); NULL = kế thừa nhóm/deck
 };
 
 export async function listGrantsForDeck(deckId: string): Promise<GrantRow[]> {
   return query<GrantRow>(
     `SELECT g.id, g.viewer_id, v.email AS viewer_email, v.name AS viewer_name,
-            g.status, g.expires_at, g.created_at,
+            g.status, g.expires_at, g.created_at, g.watermark,
             (SELECT max(created_at) FROM deck_access_log l WHERE l.grant_id=g.id AND l.event='view') AS last_view,
             (SELECT count(*)::int FROM deck_access_log l WHERE l.grant_id=g.id AND l.event='view') AS views
      FROM deck_grants g
@@ -180,4 +193,9 @@ export async function listGrantsForDeck(deckId: string): Promise<GrantRow[]> {
      ORDER BY g.created_at DESC`,
     [deckId],
   );
+}
+
+// Override watermark cho 1 grant (deck, người xem). val: true/false = ép; null = kế thừa nhóm/deck.
+export async function setGrantWatermark(grantId: string, val: boolean | null): Promise<void> {
+  await query('UPDATE deck_grants SET watermark=$2 WHERE id=$1', [grantId, val]);
 }
