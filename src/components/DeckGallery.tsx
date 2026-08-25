@@ -112,10 +112,14 @@ function Groups({ d }: { d: DeckLite }) {
   );
 }
 
+const isOpenPublic = (d: DeckLite) => d.visibility === 'public' && !d.has_password;
+
 export default function DeckGallery({ decks, baseUrl = '' }: { decks: DeckLite[]; baseUrl?: string }) {
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [q, setQ] = useState('');
   const [cat, setCat] = useState<string>('');
+  const [src, setSrc] = useState<'all' | 'has' | 'none'>('all'); // lọc theo có/chưa có link nguồn
+  const [sec, setSec] = useState<'all' | 'public' | 'protected'>('all'); // lọc theo chế độ bảo mật
 
   useEffect(() => {
     const v = localStorage.getItem('deckView');
@@ -135,13 +139,19 @@ export default function DeckGallery({ decks, baseUrl = '' }: { decks: DeckLite[]
     const needle = q.trim().toLowerCase();
     return decks.filter((d) => {
       if (cat && d.category !== cat) return false;
+      if (src === 'has' && !d.has_source) return false;
+      if (src === 'none' && d.has_source) return false;
+      if (sec === 'public' && !isOpenPublic(d)) return false;
+      if (sec === 'protected' && isOpenPublic(d)) return false;
       if (!needle) return true;
       const hay = [d.title, d.description ?? '', d.company, d.category ?? '', d.tags.join(' ')]
         .join(' ')
         .toLowerCase();
       return hay.includes(needle);
     });
-  }, [decks, q, cat]);
+  }, [decks, q, cat, src, sec]);
+
+  const noSrcCount = useMemo(() => decks.filter((d) => !d.has_source).length, [decks]);
 
   return (
     <div>
@@ -152,6 +162,16 @@ export default function DeckGallery({ decks, baseUrl = '' }: { decks: DeckLite[]
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
+        <select className="filter-select" value={sec} onChange={(e) => setSec(e.target.value as typeof sec)} aria-label="Lọc theo chế độ">
+          <option value="all">Chế độ: tất cả</option>
+          <option value="public">Công khai</option>
+          <option value="protected">Bảo mật</option>
+        </select>
+        <select className="filter-select" value={src} onChange={(e) => setSrc(e.target.value as typeof src)} aria-label="Lọc theo nguồn">
+          <option value="all">Nguồn: tất cả</option>
+          <option value="has">✓ Có nguồn</option>
+          <option value="none">⚠ Chưa có nguồn{noSrcCount ? ` (${noSrcCount})` : ''}</option>
+        </select>
         <div className="view-toggle" role="group" aria-label="Kiểu hiển thị">
           <button className={view === 'grid' ? 'active' : ''} onClick={() => pick('grid')} title="Lưới" type="button">▦ Lưới</button>
           <button className={view === 'list' ? 'active' : ''} onClick={() => pick('list')} title="Danh sách" type="button">☰ Danh sách</button>
