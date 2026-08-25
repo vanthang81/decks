@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-20.192';
+export const GUIDE_VERSION = '2026-08-25.193';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -623,6 +623,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '25/08/2026 (Sửa lỗi MẤT CHỮ khi ghi/dán biên bản cuộc họp)',
+    items: [
+      'Sửa lỗi ô soạn Biên bản / Quyết định cuộc họp: nội dung đang gõ (hoặc vừa dán) bị XOÁ/xáo trộn khi trình tự tự lưu nháp chạy — do vùng soạn bị vẽ lại đè lên chữ. Nay giữ nguyên chữ khi gõ và khi dán.',
+      'Dán nội dung nay chèn dạng VĂN BẢN THUẦN (giữ xuống dòng) — sạch, không kéo theo định dạng rác từ Word/web.',
+    ],
+  },
   {
     date: '20/08/2026 (Công việc: chọn nhiều & xoá / đổi trạng thái hàng loạt)',
     items: [
