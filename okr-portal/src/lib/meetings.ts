@@ -47,12 +47,14 @@ export type Meeting = {
   agenda: string | null; minutes: string | null; decisions: string | null;
   previous_meeting_id: string | null;
   created_by: string | null;
+  minutes_updated_by: string | null; minutes_updated_at: string | null;
 };
 export type MeetingRow = Meeting & {
   owner_name: string | null; unit_name: string | null; project_name: string | null;
   related_units: string | null; related_projects: string | null;
   prev_code: string | null; prev_title: string | null;
   participant_count: number; action_count: number; pending_requests: number;
+  minutes_updated_by_name: string | null;
 };
 export type Participant = { email: string; role: string; name: string | null };
 export type AccessRequest = { id: string; requester_email: string; requester_name: string | null; reason: string | null; status: string; created_at: string };
@@ -61,6 +63,8 @@ const SELECT = `
   SELECT m.id, m.code, m.title, m.type, m.period_id, m.unit_id, m.project_id,
          m.owner_email, m.secretary_email, m.meeting_at::text AS meeting_at, m.location,
          m.status, m.visibility, m.agenda, m.minutes, m.decisions, m.previous_meeting_id, m.created_by,
+         m.minutes_updated_by, m.minutes_updated_at::text AS minutes_updated_at,
+         mub.display_name AS minutes_updated_by_name,
          ou.display_name AS owner_name, un.name AS unit_name, pr.name AS project_name,
          (SELECT string_agg(un2.name, ', ' ORDER BY un2.name)
             FROM okr_meeting_units mu JOIN okr_units un2 ON un2.id=mu.unit_id WHERE mu.meeting_id=m.id) AS related_units,
@@ -72,6 +76,7 @@ const SELECT = `
          (SELECT count(*) FROM okr_meeting_access_requests r WHERE r.meeting_id=m.id AND r.status='pending')::int AS pending_requests
     FROM okr_meetings m
     LEFT JOIN okr_users ou ON ou.email=m.owner_email
+    LEFT JOIN okr_users mub ON mub.email=m.minutes_updated_by
     LEFT JOIN okr_units un ON un.id=m.unit_id
     LEFT JOIN okr_projects pr ON pr.id=m.project_id
     LEFT JOIN okr_meetings pm ON pm.id=m.previous_meeting_id`;
@@ -252,8 +257,13 @@ export async function listFollowUpMeetings(
 }
 
 /** Cập nhật biên bản + quyết định (thường sau khi họp). */
-export async function updateMinutes(id: string, minutes: string | null, decisions: string | null): Promise<void> {
-  await query('UPDATE okr_meetings SET minutes=$2, decisions=$3, updated_at=now() WHERE id=$1', [id, minutes, decisions]);
+export async function updateMinutes(id: string, minutes: string | null, decisions: string | null, actor?: string): Promise<void> {
+  await query(
+    `UPDATE okr_meetings SET minutes=$2, decisions=$3,
+        minutes_updated_by=COALESCE($4, minutes_updated_by), minutes_updated_at=now(), updated_at=now()
+      WHERE id=$1`,
+    [id, minutes, decisions, actor ?? null],
+  );
 }
 
 export async function deleteMeeting(id: string): Promise<void> {

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-25.194';
+export const GUIDE_VERSION = '2026-08-25.195';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -623,6 +623,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '25/08/2026 (Biên bản họp: hiển thị AI lưu & thời điểm lưu lần cuối)',
+    items: [
+      'Ô ghi biên bản + khối "Biên bản & Quyết định" nay hiển thị "Lưu lần cuối bởi <tên> · <thời gian>" (tính cả các lần tự lưu nháp) để biết ai cập nhật và khi nào.',
+    ],
+  },
   {
     date: '25/08/2026 (Sửa lỗi MẤT CHỮ + giữ NHÁP biên bản cuộc họp khi đóng/mở lại)',
     items: [

@@ -12,11 +12,15 @@ type SaveState = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
 
 export default function MinutesEditor({
   meetingId, initialMinutes, initialDecisions, action,
+  savedByName = '', savedAtLabel = '', currentUserName = '',
 }: {
   meetingId: string;
   initialMinutes: string;
   initialDecisions: string;
   action: (fd: FormData) => Promise<void>;
+  savedByName?: string;       // ai lưu lần cuối (từ server) — hiện khi mở lại
+  savedAtLabel?: string;      // thời gian lưu lần cuối (đã format ở server)
+  currentUserName?: string;   // tên người đang đăng nhập — gán khi tự lưu lần này
 }) {
   const minutesRef = useRef(initialMinutes);
   const decisionsRef = useRef(initialDecisions);
@@ -24,6 +28,9 @@ export default function MinutesEditor({
   const dirty = useRef(false);
   const [state, setState] = useState<SaveState>('idle');
   const [at, setAt] = useState('');
+  // Nhật ký "lưu lần cuối" — khởi từ server, cập nhật ngay khi tự lưu ở phiên này.
+  const [byName, setByName] = useState(savedByName);
+  const [atLabel, setAtLabel] = useState(savedAtLabel);
 
   const doSave = useCallback(async () => {
     if (!dirty.current) return;
@@ -37,11 +44,14 @@ export default function MinutesEditor({
       await action(fd);
       setState('saved');
       setAt(new Date().toLocaleTimeString('vi-VN'));
+      // Người đang gõ CHÍNH là người lưu lần cuối → cập nhật nhật ký hiển thị ngay.
+      if (currentUserName) setByName(currentUserName);
+      setAtLabel(new Date().toLocaleString('vi-VN'));
     } catch {
       dirty.current = true; // để lần sau thử lưu lại
       setState('error');
     }
-  }, [meetingId, action]);
+  }, [meetingId, action, currentUserName]);
 
   const schedule = useCallback(() => {
     dirty.current = true;
@@ -71,9 +81,16 @@ export default function MinutesEditor({
 
   return (
     <div>
-      <div className={`autosave autosave-${state}`} aria-live="polite">
-        <span className="autosave-dot" aria-hidden />
-        <span>{label}</span>
+      <div className="autosave-row">
+        <div className={`autosave autosave-${state}`} aria-live="polite">
+          <span className="autosave-dot" aria-hidden />
+          <span>{label}</span>
+        </div>
+        {(byName || atLabel) && (
+          <span className="autosave-by" title="Người & thời điểm lưu gần nhất">
+            Lưu lần cuối{byName ? ` bởi ${byName}` : ''}{atLabel ? ` · ${atLabel}` : ''}
+          </span>
+        )}
       </div>
       <label className="f">Biên bản (minutes)</label>
       <RichEditor name="minutes" defaultValue={initialMinutes} minHeight={180}

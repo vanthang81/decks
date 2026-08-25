@@ -961,6 +961,9 @@ textarea.i { min-height: 70px; resize: vertical; }
 .autosave-saved .autosave-dot { background: #22a34a; }
 .autosave-error { color: #b42318; border-color: #f3c0bb; background: #fdeeec; }
 .autosave-error .autosave-dot { background: #d64535; }
+.autosave-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.autosave-by { font-size: 12px; color: var(--muted); }
+@media (max-width: 640px) { .autosave-by { flex: 1 1 100%; } }
 @keyframes autosave-pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
 /* MOBILE: mỗi ô trong .row full-width (xếp DỌC) — đặt SAU rule gốc để thắng cascade
    (rule stack ở @media 760px phía trên bị rule gốc này ghi đè do source-order). */

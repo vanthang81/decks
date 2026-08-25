@@ -114,7 +114,7 @@ export async function saveMinutesAction(fd: FormData) {
   // LÀM SẠCH HTML rich-text trước khi lưu (chống XSS); rỗng → NULL.
   const minutes = sanitizeRichHtml(str(fd, 'minutes'));
   const decisions = sanitizeRichHtml(str(fd, 'decisions'));
-  await updateMinutes(id, isRichEmpty(minutes) ? null : minutes, isRichEmpty(decisions) ? null : decisions);
+  await updateMinutes(id, isRichEmpty(minutes) ? null : minutes, isRichEmpty(decisions) ? null : decisions, user.email);
   await logAudit({ actor: user.email, action: 'meeting.minutes', entity: 'meeting', entityId: id });
   revalidatePath(`/meetings/${id}`);
 }
@@ -128,10 +128,10 @@ export async function saveMinutesAction(fd: FormData) {
  */
 export async function autosaveMinutesAction(fd: FormData) {
   const id = str(fd, 'id');
-  await guardManage(id);
+  const { user } = await guardManage(id);
   const minutes = sanitizeRichHtml(str(fd, 'minutes'));
   const decisions = sanitizeRichHtml(str(fd, 'decisions'));
-  await updateMinutes(id, isRichEmpty(minutes) ? null : minutes, isRichEmpty(decisions) ? null : decisions);
+  await updateMinutes(id, isRichEmpty(minutes) ? null : minutes, isRichEmpty(decisions) ? null : decisions, user.email);
   revalidatePath(`/meetings/${id}`);
 }
 

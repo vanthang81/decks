@@ -175,10 +175,23 @@ export default async function MeetingDetail({ params }: { params: { id: string }
             {canManage && (
               <EditModal title="Ghi biên bản cuộc họp" label={m.minutes || m.decisions ? 'Sửa biên bản' : 'Ghi biên bản'} icon={<NavIcon name="pencil" />} submitLabel="Lưu &amp; đóng" action={saveMinutesAction} wide>
                 <input type="hidden" name="id" value={m.id} />
-                <MinutesEditor meetingId={m.id} initialMinutes={m.minutes ?? ''} initialDecisions={m.decisions ?? ''} action={autosaveMinutesAction} />
+                <MinutesEditor
+                  meetingId={m.id}
+                  initialMinutes={m.minutes ?? ''}
+                  initialDecisions={m.decisions ?? ''}
+                  action={autosaveMinutesAction}
+                  savedByName={m.minutes_updated_by_name || m.minutes_updated_by || ''}
+                  savedAtLabel={m.minutes_updated_at ? fmtDateTime(m.minutes_updated_at) : ''}
+                  currentUserName={user.display_name || user.email}
+                />
               </EditModal>
             )}
           </div>
+          {(m.minutes || m.decisions) && m.minutes_updated_at && (
+            <p className="muted" style={{ margin: '2px 0 0', fontSize: 12.5 }}>
+              Lưu lần cuối{(m.minutes_updated_by_name || m.minutes_updated_by) ? ` bởi ${m.minutes_updated_by_name || m.minutes_updated_by}` : ''} · {fmtDateTime(m.minutes_updated_at)}
+            </p>
+          )}
           {m.minutes || m.decisions ? (
             <>
               {m.minutes && (
