@@ -160,7 +160,8 @@ tbody tr:hover { background: color-mix(in srgb, var(--brand-soft) 55%, transpare
 .deck-cat { font-size: 11px; color: var(--neutral); background: var(--paper); border: 1px solid var(--line); padding: 1px 8px; border-radius: 100px; }
 .deck-desc { margin: 0; color: var(--neutral); font-size: 13.5px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .deck-tags { display: flex; gap: 6px; flex-wrap: wrap; }
-.deck-tag { font-size: 11px; color: var(--data); }
+/* Thẻ (tags): màu xanh thương hiệu + đậm hơn để KHÁC rõ màu chữ mô tả (xám) — dễ phân biệt. */
+.deck-tag { font-size: 11px; color: var(--brand); font-weight: 600; }
 .deck-groups { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
 .deck-group { font-size: 10.5px; font-weight: 600; color: var(--brand); background: var(--brand-soft);
   border: 1px solid transparent; border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
