@@ -12,7 +12,7 @@ type SaveState = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
 
 export default function MinutesEditor({
   meetingId, initialMinutes, initialDecisions, action,
-  savedByName = '', savedAtLabel = '', currentUserName = '',
+  savedByName = '', savedAtLabel = '', currentUserName = '', people = [],
 }: {
   meetingId: string;
   initialMinutes: string;
@@ -21,6 +21,7 @@ export default function MinutesEditor({
   savedByName?: string;       // ai lưu lần cuối (từ server) — hiện khi mở lại
   savedAtLabel?: string;      // thời gian lưu lần cuối (đã format ở server)
   currentUserName?: string;   // tên người đang đăng nhập — gán khi tự lưu lần này
+  people?: { email: string; name: string }[];   // chọn khi gõ "@" trong công việc
 }) {
   const minutesRef = useRef(initialMinutes);
   const decisionsRef = useRef(initialDecisions);
@@ -94,11 +95,11 @@ export default function MinutesEditor({
       </div>
       <label className="f">Biên bản (minutes)</label>
       <p className="muted minutes-hint">
-        Mẹo tạo việc nhanh: gõ <code>[]</code> đầu dòng để tạo <b>công việc</b> · <code>@Tên người</code> giao
-        phụ trách (người đầu tiên) · <code>25/08</code> đặt hạn. Bấm <b>Lưu &amp; đóng</b> → việc tự hiện ở
-        mục <b>Hành động</b> bên dưới. Đánh <code>[x]</code> = đã xong (đồng bộ 2 chiều).
+        Mẹo tạo việc nhanh: gõ <code>[]</code> đầu dòng → thành <b>ô tick</b> công việc · <code>@</code> để
+        <b> chọn người</b> phụ trách · nút <b>📅</b> (hoặc gõ ngày <code>25/08</code>) đặt <b>hạn</b>. Bấm ô
+        tick = xong. Bấm <b>Lưu &amp; đóng</b> → việc tự hiện ở mục <b>Hành động</b> bên dưới (đồng bộ 2 chiều).
       </p>
-      <RichEditor name="minutes" defaultValue={initialMinutes} minHeight={180}
+      <RichEditor name="minutes" defaultValue={initialMinutes} minHeight={180} taskMode people={people}
         placeholder="Nội dung… Vd: [] Soạn hợp đồng @Nguyễn Văn A 25/08"
         onChange={(html) => { minutesRef.current = html; schedule(); }} />
       <label className="f" style={{ marginTop: 10 }}>Quyết định (decisions)</label>

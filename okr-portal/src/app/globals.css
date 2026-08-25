@@ -966,6 +966,22 @@ textarea.i { min-height: 70px; resize: vertical; }
 @media (max-width: 640px) { .autosave-by { flex: 1 1 100%; } }
 .minutes-hint { font-size: 12px; line-height: 1.5; margin: 6px 0 8px; }
 .minutes-hint code { background: #f1f0ee; border: 1px solid #e2e0dc; border-radius: 4px; padding: 0 5px; font-size: 11.5px; color: var(--ink); }
+
+/* Công việc "[]" kiểu Lark trong biên bản họp (widget lúc soạn) */
+.mt-cb { display: inline-block; width: 16px; height: 16px; border: 1.5px solid #9aa2ad; border-radius: 4px;
+  vertical-align: -3px; margin-right: 6px; cursor: pointer; position: relative; user-select: none; }
+.mt-cb[data-done="1"] { background: var(--primary, #7C0312); border-color: var(--primary, #7C0312); }
+.mt-cb[data-done="1"]::after { content: "✓"; color: #fff; font-size: 12px; line-height: 1; position: absolute; left: 2px; top: 1px; }
+.mt-done { text-decoration: line-through; color: #9aa2ad; }
+.mt-at { color: #1d4ed8; background: #eef3fe; border-radius: 4px; padding: 0 4px; white-space: nowrap; }
+.mt-due { color: #92600a; background: #fdf6e6; border-radius: 4px; padding: 0 5px; white-space: nowrap; font-size: 12.5px; }
+.mt-key { color: #9aa2ad; font-size: 11px; }
+.rte-task-btn { font-size: 15px; line-height: 1; }
+.mt-menu { position: absolute; z-index: 60; background: var(--card, #fff); border: 1px solid var(--line, #ddd);
+  border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.16); min-width: 200px; max-width: 300px;
+  max-height: 240px; overflow: auto; padding: 4px; }
+.mt-menu .mt-item { padding: 7px 9px; border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--ink); }
+.mt-menu .mt-item.active, .mt-menu .mt-item:hover { background: #eef2ff; }
 @keyframes autosave-pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
 /* MOBILE: mỗi ô trong .row full-width (xếp DỌC) — đặt SAU rule gốc để thắng cascade
    (rule stack ở @media 760px phía trên bị rule gốc này ghi đè do source-order). */

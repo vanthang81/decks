@@ -188,6 +188,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
                   savedByName={m.minutes_updated_by_name || m.minutes_updated_by || ''}
                   savedAtLabel={m.minutes_updated_at ? fmtDateTime(m.minutes_updated_at) : ''}
                   currentUserName={user.display_name || user.email}
+                  people={personOpts.map((p) => ({ email: p.email, name: p.name }))}
                 />
               </EditModal>
             )}

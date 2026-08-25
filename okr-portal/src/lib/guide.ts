@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-25.196';
+export const GUIDE_VERSION = '2026-08-25.197';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -623,6 +623,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '25/08/2026 (Biên bản họp: ô soạn tương tác kiểu Lark)',
+    items: [
+      'Gõ "[]" trong biên bản → tự thành Ô TICK công việc (bấm để đánh dấu hoàn thành, gạch ngang khi xong). Gõ "@" → hiện DANH SÁCH NGƯỜI để chọn phụ trách (chip xanh). Nút 📅 trên thanh công cụ (hoặc gõ ngày 25/08) → chip HẠN màu vàng. Trực quan như Lark.',
+    ],
+  },
   {
     date: '25/08/2026 (Biên bản họp: tạo việc nhanh kiểu "[]" + đồng bộ Hành động)',
     items: [
