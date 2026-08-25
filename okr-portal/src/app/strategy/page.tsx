@@ -3,7 +3,7 @@ import SiteHeader from '@/components/SiteHeader';
 import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
 import { getUser } from '@/lib/users';
-import { loadAccess, canManageSystem } from '@/lib/access';
+import { loadAccess, canManageStrategy } from '@/lib/access';
 import { getCompanyStrategy, listStrategicPillars, strategicPeriod } from '@/lib/strategy';
 import { BSC_PERSPECTIVE_LABEL, BSC_PERSPECTIVE_ICON, BSC_PERSPECTIVES } from '@/lib/okr';
 import { progressColor } from '@/lib/format';
@@ -36,7 +36,7 @@ export const metadata = { title: 'Chiến lược công ty · BTMH OKR' };
 export default async function StrategyPage() {
   const user = await requireUser();
   const me = await getUser(user.email).catch(() => null);
-  const isExec = me ? canManageSystem(me, await loadAccess()) : false;
+  const canEdit = me ? canManageStrategy(me, await loadAccess()) : false;
 
   const [strat, pillars, speriod] = await Promise.all([
     getCompanyStrategy(),
@@ -57,7 +57,7 @@ export default async function StrategyPage() {
               {strat.horizon ? <> · chân trời <b>{strat.horizon}</b></> : null} — rồi rải xuống OKR.
             </p>
           </div>
-          {isExec && (
+          {canEdit && (
             <EditModal title="Khai báo / sửa chiến lược công ty" label={has ? 'Sửa chiến lược' : 'Khai báo chiến lược'} icon={<NavIcon name="pencil" />} submitLabel="Lưu chiến lược" action={saveStrategyAction}>
               <StrategyFields strat={strat} />
             </EditModal>
@@ -78,7 +78,7 @@ export default async function StrategyPage() {
         {!has && (
           <div className="card" style={{ borderLeft: '4px solid var(--accent)' }}>
             <p style={{ margin: 0 }}>
-              <b>Chưa khai báo chiến lược.</b> {isExec ? 'Bấm "Khai báo chiến lược" ở góc phải-trên để nhập Tầm nhìn · Sứ mệnh · Giá trị cốt lõi.' : 'CEO/CFO sẽ khai báo Tầm nhìn · Sứ mệnh · Giá trị cốt lõi tại đây.'}
+              <b>Chưa khai báo chiến lược.</b> {canEdit ? 'Bấm "Khai báo chiến lược" ở góc phải-trên để nhập Tầm nhìn · Sứ mệnh · Giá trị cốt lõi.' : 'CEO/CFO sẽ khai báo Tầm nhìn · Sứ mệnh · Giá trị cốt lõi tại đây.'}
             </p>
           </div>
         )}
@@ -130,7 +130,7 @@ export default async function StrategyPage() {
         <div className="card" id="pillars" style={{ scrollMarginTop: 84 }}>
           <div className="flexbtw">
             <h3 style={{ margin: 0 }}>Trụ cột chiến lược {speriod ? <span className="muted" style={{ fontSize: 13, fontWeight: 400 }}>· {speriod.name}</span> : null}</h3>
-            {isExec && speriod && (
+            {canEdit && speriod && (
               <Link className="btn ghost sm" href={`/objectives/new?period=${speriod.id}`}>+ Thêm trụ cột</Link>
             )}
           </div>
@@ -138,12 +138,12 @@ export default async function StrategyPage() {
             Là các Mục tiêu cấp Công ty thuộc kỳ chiến lược nhiều năm — mỗi OKR Công ty hằng năm sẽ "Liên kết lên" một trụ cột.
           </p>
           <hr className="sep" />
-          {pillars.length === 0 && <p className="muted">Chưa có trụ cột chiến lược nào. {isExec ? 'Tạo kỳ "Chiến lược nhiều năm" ở Quản trị → Kỳ, rồi thêm OKR cấp Công ty.' : ''}</p>}
+          {pillars.length === 0 && <p className="muted">Chưa có trụ cột chiến lược nào. {canEdit ? 'Tạo kỳ "Chiến lược nhiều năm" ở Quản trị → Kỳ, rồi thêm OKR cấp Công ty.' : ''}</p>}
           {pillars.length > 0 && (
             <>
-              {isExec && <p className="muted" style={{ margin: '0 0 8px', fontSize: 12.5 }}>Kéo tay cầm ⠿ (máy tính) hoặc bấm ▲/▼ để sắp xếp lại trụ cột theo logic — thứ tự được lưu tự động.</p>}
+              {canEdit && <p className="muted" style={{ margin: '0 0 8px', fontSize: 12.5 }}>Kéo tay cầm ⠿ (máy tính) hoặc bấm ▲/▼ để sắp xếp lại trụ cột theo logic — thứ tự được lưu tự động.</p>}
               <PillarList
-                canEdit={isExec}
+                canEdit={canEdit}
                 reorder={reorderPillarsAction}
                 pillars={pillars.map((p) => ({
                   id: p.id, code: p.code, title: p.title,

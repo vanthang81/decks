@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
-import { isExec } from '@/lib/rbac';
+import { getUser } from '@/lib/users';
+import { loadAccess, canManageBudget } from '@/lib/access';
 import { getCurrentPeriod, listPeriods, getPeriod, orderPeriodsHierarchically, PERIOD_KIND_LABEL } from '@/lib/periods';
 import { budgetOverview } from '@/lib/budget';
 import { PROJECT_STATUS_LABEL, PROJECT_STATUS_CLS, type ProjectStatus } from '@/lib/projects';
@@ -26,7 +27,9 @@ const STATUS_FILTERS: { key: ProjectStatus | 'all'; label: string }[] = [
 
 export default async function BudgetPage({ searchParams }: { searchParams: { period?: string; status?: string } }) {
   const user = await requireUser();
-  if (!isExec(user.role)) redirect('/'); // ngân sách: CEO/CFO xem toàn cảnh
+  // Ngân sách: CEO/CFO + người có năng lực "Quản lý Ngân sách" (mặc định gồm Quản trị OKR).
+  const me = await getUser(user.email).catch(() => null);
+  if (!me || !canManageBudget(me, await loadAccess())) redirect('/');
 
   const periods = await listPeriods();
   const period = searchParams.period ? await getPeriod(searchParams.period) : (await getCurrentPeriod()) ?? periods[0] ?? null;

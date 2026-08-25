@@ -19,6 +19,7 @@ import { listUsers, personTitle } from '@/lib/users';
 import { listUnits } from '@/lib/org';
 import { listAllProjectOptions } from '@/lib/projects';
 import { listObjectivesWithKrs } from '@/lib/okr';
+import { loadAccess } from '@/lib/access';
 import { getCurrentPeriod } from '@/lib/periods';
 import {
   getMeeting, canViewMeeting, canManageMeetingWith, listParticipants, listMeetingOptions, listFollowUpMeetings,
@@ -81,7 +82,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
 
   // Nạp participants trước để tính quyền sửa (gồm đồng chủ trì & nhiều thư ký).
   const participants = await listParticipants(m.id);
-  const canManage = canManageMeetingWith(user, m, participants);
+  const canManage = canManageMeetingWith(user, m, participants, await loadAccess());
 
   const [tasks, pending, users, units, projectOpts, meetingOpts, followUps, unitIds, projectIds] = await Promise.all([
     listInitiativesForMeeting(m.id),

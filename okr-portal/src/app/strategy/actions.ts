@@ -2,18 +2,18 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/current-user';
-import { loadAccess, canManageSystem } from '@/lib/access';
+import { loadAccess, canManageStrategy } from '@/lib/access';
 import { setCompanyStrategy, reorderPillars } from '@/lib/strategy';
 
-// Chỉ CEO/CFO (quản trị hệ thống) mới khai báo/sửa chiến lược công ty.
-async function requireExec() {
+// Người có năng lực "Quản lý Chiến lược công ty" (mặc định CEO/CFO + Quản trị OKR) mới khai báo/sửa.
+async function requireStrategy() {
   const user = await requireUser();
-  if (!canManageSystem(user, await loadAccess())) throw new Error('Bạn không có quyền khai báo chiến lược.');
+  if (!canManageStrategy(user, await loadAccess())) throw new Error('Bạn không có quyền khai báo chiến lược.');
   return user;
 }
 
 export async function saveStrategyAction(fd: FormData) {
-  await requireExec();
+  await requireStrategy();
   const s = (k: string) => String(fd.get(k) ?? '').trim();
   const values = s('values')
     .split('\n')
@@ -32,7 +32,7 @@ export async function saveStrategyAction(fd: FormData) {
 
 // Sắp xếp lại thứ tự trụ cột chiến lược (kéo–thả / nút lên–xuống). Chỉ CEO/CFO.
 export async function reorderPillarsAction(orderedIds: string[]) {
-  await requireExec();
+  await requireStrategy();
   await reorderPillars(orderedIds);
   revalidatePath('/strategy');
 }

@@ -376,7 +376,7 @@ async function canManageTaskLoose(user: OkrUser, init: Initiative): Promise<bool
   }
   if (init.meeting_id) {
     const mt = await getMeeting(init.meeting_id);
-    if (mt && canManageMeeting(user, mt)) return true;
+    if (mt && canManageMeeting(user, mt, access)) return true;
   }
   if (init.project_id) {
     const pr = await getProject(init.project_id);

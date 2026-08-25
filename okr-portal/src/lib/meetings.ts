@@ -1,6 +1,7 @@
 import { query, queryOne } from './db';
 import { isExec } from './rbac';
 import type { OkrUser } from './users';
+import { loadAccess, canManageAnyMeeting, type Access } from './access';
 
 // Module CUỘC HỌP — biên bản + phân quyền xem theo người tham gia/watcher + yêu cầu xem.
 
@@ -130,6 +131,7 @@ export async function listParticipants(meetingId: string): Promise<Participant[]
 /** User có được XEM nội dung cuộc họp này không (owner/thư ký/tham gia/được duyệt/visibility). */
 export async function canViewMeeting(user: OkrUser, m: Meeting): Promise<boolean> {
   if (isExec(user.role)) return true;
+  if (canManageAnyMeeting(user, await loadAccess())) return true; // quản trị họp toàn công ty
   const email = user.email.toLowerCase();
   if (m.owner_email?.toLowerCase() === email || m.secretary_email?.toLowerCase() === email) return true;
   if (m.visibility === 'company') return true;
@@ -144,19 +146,20 @@ export async function canViewMeeting(user: OkrUser, m: Meeting): Promise<boolean
   return (r?.n ?? 0) > 0;
 }
 
-/** Được sửa cuộc họp (chủ trì / thư ký / điều hành). */
-export function canManageMeeting(user: OkrUser, m: Meeting): boolean {
+/** Được sửa cuộc họp (chủ trì / thư ký / điều hành / quản trị họp). `access` tuỳ chọn = bật cap meeting.manage. */
+export function canManageMeeting(user: OkrUser, m: Meeting, access?: Access): boolean {
   if (isExec(user.role)) return true;
+  if (access && canManageAnyMeeting(user, access)) return true; // quản trị họp toàn công ty
   const email = user.email.toLowerCase();
   return m.owner_email?.toLowerCase() === email || m.secretary_email?.toLowerCase() === email;
 }
 
 /**
  * Được sửa cuộc họp — TÍNH CẢ đồng chủ trì & nhiều thư ký (participants role host/secretary).
- * Bản đồng bộ (dùng ở trang đã nạp sẵn participants).
+ * Bản đồng bộ (dùng ở trang đã nạp sẵn participants). `access` tuỳ chọn = bật cap meeting.manage.
  */
-export function canManageMeetingWith(user: OkrUser, m: Meeting, participants: Participant[]): boolean {
-  if (canManageMeeting(user, m)) return true;
+export function canManageMeetingWith(user: OkrUser, m: Meeting, participants: Participant[], access?: Access): boolean {
+  if (canManageMeeting(user, m, access)) return true;
   const email = user.email.toLowerCase();
   return participants.some((p) => (p.role === 'host' || p.role === 'secretary') && p.email.toLowerCase() === email);
 }
@@ -164,6 +167,7 @@ export function canManageMeetingWith(user: OkrUser, m: Meeting, participants: Pa
 /** Bản ASYNC để gác Server Action (tự nạp participants). */
 export async function isMeetingEditor(user: OkrUser, meetingId: string, m?: Meeting | null): Promise<boolean> {
   if (isExec(user.role)) return true;
+  if (canManageAnyMeeting(user, await loadAccess())) return true; // quản trị họp toàn công ty
   const email = user.email.toLowerCase();
   const mm = m ?? (await getMeeting(meetingId));
   if (mm && (mm.owner_email?.toLowerCase() === email || mm.secretary_email?.toLowerCase() === email)) return true;

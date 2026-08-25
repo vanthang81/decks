@@ -2,13 +2,13 @@ import { Fragment } from 'react';
 import Link from 'next/link';
 import { auth, signOut } from '@/auth';
 import { LOGO_WORDMARK } from '@/lib/brand';
-import { ROLE_LABEL, isExec, type Role } from '@/lib/rbac';
+import { ROLE_LABEL, type Role } from '@/lib/rbac';
 import NavIcon from '@/components/NavIcon';
 import NotifBell from '@/components/NotifBell';
 import InviteUserButton from '@/components/InviteUserButton';
 import { unreadCount } from '@/lib/notifications';
 import { getUser } from '@/lib/users';
-import { loadAccess, canManageSystem, canApproveUsers, canManageKpi } from '@/lib/access';
+import { loadAccess, canManageSystem, canApproveUsers, canManageKpi, canManageBudget } from '@/lib/access';
 import { countPendingInvites } from '@/lib/invites';
 import { listUnits } from '@/lib/org';
 
@@ -26,7 +26,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
   // hệ thống — họ hay tìm link thẳng thay vì vào hub Quản trị). Gồm: Quản trị hệ thống · Quản trị OKR ·
   // Quản trị KPI (HR). Không có kpi.manage (Quản lý/Cộng tác/Người xem) → không thấy.
   const showKpiLib = me ? canManageKpi(me, access) : false;
-  const showBudget = me ? isExec(me.role) : false;
+  const showBudget = me ? canManageBudget(me, access) : false;
   const showInvites = me ? canApproveUsers(me, access) : false;
   const pendingInvites = showInvites ? await countPendingInvites().catch(() => 0) : 0;
   // Đơn vị cho ô "Mời người dùng" (hiện ở mọi trang). Chỉ nạp khi đã đăng nhập.

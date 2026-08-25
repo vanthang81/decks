@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-25.201';
+export const GUIDE_VERSION = '2026-08-25.202';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -576,7 +576,7 @@ export const FEATURES: Feature[] = [
     where: 'Quản trị → "Phân quyền"; gán nhóm cho user ở "Người dùng"',
     help: 'Mỗi Nhóm quyền gồm một bộ Năng lực; gán nhóm cho từng người. Danh sách năng lực tự mở rộng khi thêm tính năng.',
     detail:
-      'Hai tầng: (A) VAI TRÒ tổ chức (CEO/CFO · GĐ khối · Trưởng phòng · Nhân viên) quyết định PHẠM VI (đụng OKR đơn vị nào). (B) NHÓM QUYỀN quyết định NĂNG LỰC (được làm gì). 5 nhóm mặc định: 🛡️ Quản trị hệ thống (toàn quyền) · ⭐ Quản trị OKR (mọi OKR, toàn phạm vi) · 👔 Quản lý (tạo/sửa OKR trong phạm vi) · ✍️ Cộng tác (check-in/bình luận của mình, sửa trong 3h; tự quản OKR cá nhân) · 👁️ Người xem. CEO/CFO LUÔN toàn quyền. Năng lực OKR (Tạo/Sửa/Xoá) áp trong phạm vi tổ chức, trừ khi có năng lực "Toàn phạm vi". "Sổ năng lực" là nguồn duy nhất — thêm tính năng cần phân quyền chỉ cần thêm 1 năng lực, trang Phân quyền TỰ hiện toggle cho mọi nhóm. Chỉ người có năng lực "Phân quyền người dùng" (CEO/CFO + Quản trị hệ thống) mới gán được nhóm cho người khác. Phân quyền áp cả ở giao diện lẫn máy chủ.',
+      'Hai tầng: (A) VAI TRÒ tổ chức (CEO/CFO · GĐ khối · Trưởng phòng · Nhân viên) quyết định PHẠM VI (đụng OKR đơn vị nào). (B) NHÓM QUYỀN quyết định NĂNG LỰC (được làm gì). 5 nhóm mặc định: 🛡️ Quản trị hệ thống (toàn quyền) · ⭐ Quản trị OKR (mọi OKR, toàn phạm vi) · 👔 Quản lý (tạo/sửa OKR trong phạm vi) · ✍️ Cộng tác (check-in/bình luận của mình, sửa trong 3h; tự quản OKR cá nhân) · 👁️ Người xem. CEO/CFO LUÔN toàn quyền. Năng lực OKR (Tạo/Sửa/Xoá) áp trong phạm vi tổ chức, trừ khi có năng lực "Toàn phạm vi". "Sổ năng lực" là nguồn duy nhất — thêm tính năng cần phân quyền chỉ cần thêm 1 năng lực, trang Phân quyền TỰ hiện toggle cho mọi nhóm. Nhóm năng lực gồm: Hệ thống · Chiến lược công ty · OKR & Key Result · Thực thi, Dự án & Họp · Ngân sách & Tài chính · KPI & Chỉ số · Dữ liệu. Ngoài OKR/KPI/Dự án, nay phân quyền được cả "Quản lý Chiến lược công ty", "Quản lý mọi cuộc họp" và "Quản lý Ngân sách" (trước khoá cứng cho CEO/CFO); ai cũng vẫn tự tạo cuộc họp của mình, "Quản lý mọi cuộc họp" chỉ là quyền quản trị họp toàn công ty. Chỉ người có năng lực "Phân quyền người dùng" (CEO/CFO + Quản trị hệ thống) mới gán được nhóm cho người khác. Phân quyền áp cả ở giao diện lẫn máy chủ.',
   },
 ];
 
@@ -623,6 +623,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '25/08/2026 (Phân quyền: bổ sung Chiến lược · Họp · Ngân sách vào ma trận quyền)',
+    items: [
+      'Rà soát & bổ sung 3 hạng mục quyền còn thiếu ở trang Phân quyền: "Quản lý Chiến lược công ty", "Quản lý mọi cuộc họp", "Quản lý Ngân sách" — trước đây bị khoá cứng cho CEO/CFO, nay giao/thu quyền được cho từng Nhóm.',
+      'Thêm 2 nhóm hạng mục quyền: "Chiến lược công ty" và "Ngân sách & Tài chính".',
+      'Mặc định: Quản trị hệ thống & Quản trị OKR có đủ 3 quyền mới; các nhóm khác không (Quản lý/Cộng tác/Người xem giữ nguyên). Ai cũng vẫn tự tạo được cuộc họp của mình — "Quản lý mọi cuộc họp" chỉ là quyền quản trị họp toàn công ty.',
+    ],
+  },
   {
     date: '25/08/2026 (Biên bản họp ↔ Hành động: đồng bộ tick/bỏ tick/xoá đầy đủ)',
     items: [

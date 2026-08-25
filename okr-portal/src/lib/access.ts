@@ -85,6 +85,16 @@ export function canManageKpi(user: OkrUser, access: Access): boolean {
 export function canInputKpi(user: OkrUser, access: Access): boolean {
   return hasCap(user, 'kpi.input', access);
 }
+export function canManageStrategy(user: OkrUser, access: Access): boolean {
+  return hasCap(user, 'strategy.manage', access);
+}
+/** Quyền quản trị MỌI cuộc họp (không cần là chủ trì/thư ký). Người tạo/host/thư ký vẫn quản họp của mình. */
+export function canManageAnyMeeting(user: OkrUser, access: Access): boolean {
+  return hasCap(user, 'meeting.manage', access);
+}
+export function canManageBudget(user: OkrUser, access: Access): boolean {
+  return hasCap(user, 'budget.manage', access);
+}
 
 // ---- Kiểm quyền theo OKR (năng lực × phạm vi) ----
 // level tuỳ chọn: có → bật ngoại lệ "chủ nhân OKR cá nhân tự cập nhật"; thiếu → giữ hành vi cũ.
