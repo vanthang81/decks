@@ -57,6 +57,15 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   box có nút **Sửa/Xoá gọn**; nhưng **XOÁ chỉ cho phép khi CHƯA bị ràng buộc** (không có KR/việc/liên kết nào
   trỏ tới — tránh làm mồ côi), CÓ ràng buộc thì ẩn nút Xoá + hiện danh sách "đang dùng bởi". Guard cả
   server-side (đếm usage trước khi DELETE). Mẫu chuẩn = `KpiDetailModal` + `listKpiKrLinks`/`kpiUsageCount`.
+- **TÊN NGƯỜI = LUÔN LÀ LINK HỒ SƠ (CFO 25/08 — nhắc nhiều lần, áp cho MỌI chỗ, KHÔNG cần nhắc lại)**:
+  bất kỳ chỗ nào hiển thị TÊN user (người tham gia họp, chủ trì/thư ký, người lưu biên bản, phụ trách
+  OKR/việc/dự án, actor nhật ký…) ⇒ BỌC bằng `src/components/UserLink.tsx` (`<UserLink email={..} name={..} />`)
+  → bấm mở `/users/<email>` (hồ sơ 360°). ĐỪNG để tên trơn `<b>{name}</b>`. Có email mới link được; thiếu email
+  thì chỉ hiện text. Thêm render tên mới ⇒ dùng UserLink ngay.
+- **THỜI GIAN = LUÔN GIỜ HÀ NỘI (CFO 25/08, áp cho MỌI app/màn hình)**: mọi format ngày/giờ PHẢI gắn
+  `timeZone: 'Asia/Ho_Chi_Minh'` (server chạy UTC → nếu thiếu sẽ lệch 7h). Dùng `fmtDate`/`fmtDateTime`
+  (`src/lib/format.ts`, đã gắn `VN_TZ`) cho server-render; client `toLocaleString('vi-VN', { timeZone:'Asia/Ho_Chi_Minh' })`.
+  Thêm chỗ hiển thị thời gian mới ⇒ nhớ gắn timeZone.
 - **TỰ QC BẮT BUỘC TRƯỚC KHI BÁO (CFO nhắc nhiều lần 03/08)**: mỗi lần đụng UI ⇒ `npm run build` +
   chụp Chromium (globals.css thật) CẢ desktop (~1300px) LẪN mobile (~390px); rà: nút không xuống dòng,
   icon nổi bật đúng nền, canh lề/khoảng cách đều. Khi đổi cách render icon/nút ⇒ **grep hết các chỗ
