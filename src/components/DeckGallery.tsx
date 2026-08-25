@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState, type MouseEvent } from 'react';
+import FilterChips from '@/components/FilterChips';
 
 export type DeckLite = {
   id: string;
@@ -162,20 +163,25 @@ export default function DeckGallery({ decks, baseUrl = '' }: { decks: DeckLite[]
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
-        <select className="filter-select" value={sec} onChange={(e) => setSec(e.target.value as typeof sec)} aria-label="Lọc theo chế độ">
-          <option value="all">Chế độ: tất cả</option>
-          <option value="public">Công khai</option>
-          <option value="protected">Bảo mật</option>
-        </select>
-        <select className="filter-select" value={src} onChange={(e) => setSrc(e.target.value as typeof src)} aria-label="Lọc theo nguồn">
-          <option value="all">Nguồn: tất cả</option>
-          <option value="has">✓ Có nguồn</option>
-          <option value="none">⚠ Chưa có nguồn{noSrcCount ? ` (${noSrcCount})` : ''}</option>
-        </select>
         <div className="view-toggle" role="group" aria-label="Kiểu hiển thị">
           <button className={view === 'grid' ? 'active' : ''} onClick={() => pick('grid')} title="Lưới" type="button">▦ Lưới</button>
           <button className={view === 'list' ? 'active' : ''} onClick={() => pick('list')} title="Danh sách" type="button">☰ Danh sách</button>
         </div>
+      </div>
+
+      <div className="filter-row">
+        <FilterChips
+          label="Chế độ"
+          value={sec}
+          onChange={(v) => setSec(v)}
+          options={[{ v: 'all', label: 'Tất cả' }, { v: 'public', label: 'Công khai' }, { v: 'protected', label: 'Bảo mật' }]}
+        />
+        <FilterChips
+          label="Nguồn"
+          value={src}
+          onChange={(v) => setSrc(v)}
+          options={[{ v: 'all', label: 'Tất cả' }, { v: 'has', label: '✓ Có nguồn' }, { v: 'none', label: `⚠ Chưa có nguồn${noSrcCount ? ` (${noSrcCount})` : ''}` }]}
+        />
       </div>
 
       {categories.length > 0 && (

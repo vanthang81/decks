@@ -138,9 +138,10 @@ tbody tr:hover { background: color-mix(in srgb, var(--brand-soft) 55%, transpare
 /* ---------- Thư viện deck (home) ---------- */
 .gallery-toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
 .gallery-search { flex: 1; min-width: 220px; max-width: 460px; }
-.filter-select { border: 1px solid var(--line-strong); border-radius: 9px; background: var(--card); color: var(--ink);
-  font: inherit; font-weight: 600; font-size: 13px; padding: 8px 10px; cursor: pointer; }
-.filter-select:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+/* Bộ lọc dạng chip có nhãn (Chế độ / Nguồn) — dùng lại .chip cho đồng nhất với chip danh mục. */
+.filter-row { display: flex; gap: 8px 20px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+.filter-group { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.filter-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); margin-right: 2px; }
 .view-toggle { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 9px; overflow: hidden; }
 .view-toggle button { border: 0; background: var(--card); color: var(--neutral); font: inherit; font-weight: 600;
   font-size: 13px; padding: 8px 13px; cursor: pointer; }
