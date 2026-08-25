@@ -7,7 +7,7 @@
 // script/style/on*=…/javascript: KHÔNG thể tồn tại sau khi làm sạch.
 
 const ALLOWED = new Set([
-  'p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'strike',
+  'p', 'div', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'strike',
   'h3', 'h4', 'ul', 'ol', 'li', 'blockquote', 'a',
 ]);
 const VOID_TAGS = new Set(['br']);

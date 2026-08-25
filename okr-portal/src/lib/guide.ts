@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-25.199';
+export const GUIDE_VERSION = '2026-08-25.200';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -623,6 +623,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '25/08/2026 (Biên bản họp: giữ đúng xuống dòng/dòng trống — WYSIWYG)',
+    items: [
+      'Sửa lỗi mất dòng trống/xuống dòng: nội dung soạn thế nào thì lưu & hiển thị bên ngoài GIỐNG HỆT như vậy (giữ đúng các dòng trống, không dồn dòng).',
+    ],
+  },
   {
     date: '25/08/2026 (Biên bản họp: việc hiện ngay + hiển thị đẹp + icon trên dòng)',
     items: [
