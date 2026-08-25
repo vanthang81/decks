@@ -144,7 +144,12 @@ export async function autosaveMinutesAction(fd: FormData) {
   const minutes = sanitizeRichHtml(str(fd, 'minutes'));
   const decisions = sanitizeRichHtml(str(fd, 'decisions'));
   await updateMinutes(id, isRichEmpty(minutes) ? null : minutes, isRichEmpty(decisions) ? null : decisions, user.email);
+  // Đồng bộ việc "[]" NGAY khi tự lưu (idempotent theo tiêu đề → không tạo trùng) để việc hiện
+  // xuống "Hành động" mà không cần bấm "Lưu & đóng".
+  const users = await listUsers();
+  await syncMeetingMinutesTasks({ meetingId: id, minutesHtml: minutes, users, actor: user.email, todayYear: new Date().getFullYear() });
   revalidatePath(`/meetings/${id}`);
+  revalidatePath('/tasks');
 }
 
 export async function deleteMeetingAction(fd: FormData) {

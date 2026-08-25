@@ -982,6 +982,16 @@ textarea.i { min-height: 70px; resize: vertical; }
   max-height: 240px; overflow: auto; padding: 4px; }
 .mt-menu .mt-item { padding: 7px 9px; border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--ink); }
 .mt-menu .mt-item.active, .mt-menu .mt-item:hover { background: #eef2ff; }
+
+/* Hiển thị (read-only) dòng việc trong khối "Biên bản & Quyết định" */
+.rte-view .mv-cb { display: inline-block; width: 15px; height: 15px; border: 1.5px solid #9aa2ad; border-radius: 4px;
+  vertical-align: -2px; margin-right: 6px; position: relative; }
+.rte-view .mv-cb.on { background: var(--primary, #7C0312); border-color: var(--primary, #7C0312); }
+.rte-view .mv-cb.on::after { content: "✓"; color: #fff; font-size: 11px; line-height: 1; position: absolute; left: 2px; top: 0; }
+.rte-view .mv-at { color: #1d4ed8; background: #eef3fe; border-radius: 4px; padding: 0 4px; white-space: nowrap; }
+.rte-view .mv-due { color: #92600a; background: #fdf6e6; border-radius: 4px; padding: 0 5px; white-space: nowrap; font-size: 12.5px; }
+.rte-view .mv-done { text-decoration: line-through; color: #9aa2ad; }
+.rte-view .mv-done .mv-at, .rte-view .mv-done .mv-due { opacity: .6; }
 @keyframes autosave-pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
 /* MOBILE: mỗi ô trong .row full-width (xếp DỌC) — đặt SAU rule gốc để thắng cascade
    (rule stack ở @media 760px phía trên bị rule gốc này ghi đè do source-order). */
@@ -1142,7 +1152,14 @@ i.cal-task, .cal-dot.cal-task { background: var(--primary); } i.cal-meeting, .ca
 .charter-p { margin: 0; font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; }
 
 /* ===== Rich text editor (WYSIWYG) + hiển thị nội dung ===== */
-.rte { border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--card); }
+.rte { position: relative; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--card); }
+/* Thanh icon nổi trên DÒNG VIỆC đang soạn (kiểu Lark): 👤 giao người · 📅 đặt hạn */
+.mt-linebar { position: absolute; z-index: 5; display: flex; gap: 2px; padding: 2px;
+  background: var(--card, #fff); border: 1px solid var(--line, #e2e0dc); border-radius: 7px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+.mt-lb-btn { border: 0; background: transparent; cursor: pointer; font-size: 13px; line-height: 1;
+  padding: 3px 5px; border-radius: 5px; }
+.mt-lb-btn:hover { background: #eef2ff; }
 .rte-tb { display: flex; flex-wrap: wrap; gap: 2px; padding: 5px 6px; border-bottom: 1px solid var(--line); background: var(--panel, #faf7f2); }
 .rte-btn {
   min-width: 30px; height: 28px; padding: 0 7px; border: 1px solid transparent; border-radius: 6px;

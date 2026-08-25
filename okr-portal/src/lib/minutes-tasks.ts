@@ -15,7 +15,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { query } from './db';
-import { nextInitCode } from './codes';
+import { sanitizeRichHtml } from './sanitizeHtml';
 import type { OkrUser } from './users';
 
 export type ParsedMinuteTask = {
@@ -136,11 +136,6 @@ export function parseMinutesTasks(
   return { segments, tasks };
 }
 
-/** Chèn thẻ "#Tn" vào CUỐI nội dung của segment (trước delimiter block kế tiếp). */
-function injectKey(seg: string, key: string): string {
-  return `${seg.replace(/\s+$/, '')} #${key}`;
-}
-
 /** Đổi dấu tick trong segment: done → [x], chưa → [ ]. Bỏ qua các thẻ HTML dẫn đầu (<p>/<li>…). */
 function setChecked(seg: string, done: boolean): string {
   return seg.replace(
@@ -151,12 +146,19 @@ function setChecked(seg: string, done: boolean): string {
 
 export type MinuteSyncResult = { html: string; created: number; updated: number };
 
+// KHOÁ LIÊN KẾT dòng "[]" ↔ việc = TIÊU ĐỀ đã chuẩn hoá (bỏ dấu, thường hoá, gộp khoảng trắng),
+// lưu ở okr_initiatives.minutes_key. Nhờ khoá theo tiêu đề, đồng bộ LẶP LẠI (mỗi lần tự lưu) là
+// idempotent — không tạo trùng — nên có thể chạy NGAY khi tự lưu nháp (việc hiện xuống Hành động
+// mà không cần "Lưu & đóng"). KHÔNG chèn ký tự lạ (#Tn) vào biên bản → sạch như Lark.
+export function minuteTaskKey(title: string): string {
+  return (title || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().replace(/\s+/g, ' ').trim().slice(0, 180);
+}
+
 /**
  * Đồng bộ dòng "[]" trong biên bản → công việc (okr_initiatives, gắn meeting_id).
- * - Dòng chưa có #Tn → TẠO việc mới, cấp thẻ #Tn, chèn vào HTML.
- * - Dòng có #Tn → CẬP NHẬT việc tương ứng (tên/người/hạn/tick xong).
- * KHÔNG xoá việc khi xoá dòng (tránh mất việc ngoài ý muốn).
- * Trả HTML (có thể đã chèn #Tn) để lưu lại.
+ * Khớp theo TIÊU ĐỀ (minutes_key): có → CẬP NHẬT (người/hạn/tick xong); chưa → TẠO mới.
+ * KHÔNG xoá việc khi xoá dòng (tránh mất việc ngoài ý muốn). Không đổi HTML biên bản.
  */
 export async function syncMeetingMinutesTasks(opts: {
   meetingId: string;
@@ -167,28 +169,27 @@ export async function syncMeetingMinutesTasks(opts: {
 }): Promise<MinuteSyncResult> {
   const { meetingId, minutesHtml, actor, todayYear } = opts;
   const userOpts = opts.users.map((u) => ({ email: u.email, name: u.display_name || u.email }));
-  const { segments, tasks } = parseMinutesTasks(minutesHtml, userOpts, todayYear);
-  if (tasks.length === 0) return { html: minutesHtml, created: 0, updated: 0 };
+  const { tasks } = parseMinutesTasks(minutesHtml, userOpts, todayYear);
+  const real = tasks.filter((t) => t.title);
+  if (real.length === 0) return { html: minutesHtml, created: 0, updated: 0 };
 
-  // Việc hiện có của cuộc họp có thẻ minutes_key.
   const existing = await query<{ id: string; minutes_key: string; status: string }>(
     `SELECT id, minutes_key, status FROM okr_initiatives WHERE meeting_id=$1 AND minutes_key IS NOT NULL`,
     [meetingId],
   );
   const byKey = new Map(existing.map((e) => [e.minutes_key, e]));
-  let maxN = 0;
-  for (const e of existing) { const n = parseInt(e.minutes_key.replace(/^T/, ''), 10); if (n > maxN) maxN = n; }
+  const handled = new Set<string>();
 
   let created = 0, updated = 0;
-  for (const t of tasks) {
-    if (!t.title) continue;
+  for (const t of real) {
+    const key = minuteTaskKey(t.title);
+    if (handled.has(key)) continue; // 2 dòng trùng tiêu đề trong 1 lần → chỉ xử 1
+    handled.add(key);
     const owner = t.ownerEmails[0] ?? null;
     const others = t.ownerNames.slice(1);
     const desc = others.length ? `Cùng tham gia: ${others.join(', ')}` : null;
-    if (t.key && byKey.has(t.key)) {
-      // CẬP NHẬT
-      const ex = byKey.get(t.key)!;
-      // Trạng thái: chỉ chuyển qua/khỏi 'done' theo dấu tick, giữ nguyên in_progress/blocked.
+    const ex = byKey.get(key);
+    if (ex) {
       let status = ex.status;
       if (t.done && ex.status !== 'done') status = 'done';
       else if (!t.done && ex.status === 'done') status = 'todo';
@@ -203,9 +204,6 @@ export async function syncMeetingMinutesTasks(opts: {
       );
       updated++;
     } else {
-      // TẠO MỚI
-      const key = `T${++maxN}`;
-      const code = await nextInitCode(null); // meeting task không gắn OKR → null (không có mã OKR)
       const status = t.done ? 'done' : 'todo';
       await query(
         `INSERT INTO okr_initiatives
@@ -213,16 +211,16 @@ export async function syncMeetingMinutesTasks(opts: {
             project_id, meeting_id, status, priority, start_on, due_on, budget_planned, budget_actual,
             budget_source, created_by, code, minutes_key, done_on, progress)
          VALUES (NULL, NULL, NULL, 'action', $1, $2, $3, NULL, NULL, $4, $5, 'medium', NULL, $6, 0, 0,
-                 NULL, $7, $8, $9,
+                 NULL, $7, NULL, $8,
                  CASE WHEN $5='done' THEN now()::date ELSE NULL END,
-                 CASE WHEN $5='done' THEN 100 ELSE 0 END)`,
-        [t.title, desc, owner, meetingId, status, t.dueOn, actor, code, key],
+                 CASE WHEN $5='done' THEN 100 ELSE 0 END)
+         ON CONFLICT (meeting_id, minutes_key) WHERE minutes_key IS NOT NULL DO NOTHING`,
+        [t.title, desc, owner, meetingId, status, t.dueOn, actor, key],
       );
-      segments[t.segIndex] = injectKey(segments[t.segIndex], key);
       created++;
     }
   }
-  return { html: segments.join(''), created, updated };
+  return { html: minutesHtml, created, updated };
 }
 
 /**
@@ -243,18 +241,61 @@ export async function meetingMinutesTaskStates(
   return { done, open };
 }
 
-export function applyTaskDoneToMinutes(html: string, doneKeys: Set<string>, openKeys: Set<string>): string {
+export function applyTaskDoneToMinutes(
+  html: string,
+  doneKeys: Set<string>,
+  openKeys: Set<string>,
+  people: { email: string; name: string }[] = [],
+  todayYear = 2026,
+): string {
   if (!html || (doneKeys.size === 0 && openKeys.size === 0)) return html;
-  const segments = (html || '').split(BLOCK_SPLIT);
+  const { segments, tasks } = parseMinutesTasks(html, people, todayYear);
+  for (const t of tasks) {
+    if (!t.title) continue;
+    const key = minuteTaskKey(t.title);
+    if (doneKeys.has(key)) segments[t.segIndex] = setChecked(segments[t.segIndex], true);
+    else if (openKeys.has(key)) segments[t.segIndex] = setChecked(segments[t.segIndex], false);
+  }
+  return segments.join('');
+}
+
+// ── HIỂN THỊ (read-only) đẹp: dòng "[]" → ô tick + chip người + chip hạn (giống ô soạn) ──
+const escRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const isoLabel = (iso: string) => { const [y, m, d] = iso.split('-'); return `${d}/${m}/${y}`; };
+export function renderMinutesTasksView(
+  html: string,
+  people: { email: string; name: string }[] = [],
+  todayYear = 2026,
+): string {
+  const sanitized = sanitizeRichHtml(html || '');
+  if (!sanitized) return '';
+  const { segments, tasks } = parseMinutesTasks(sanitized, people, todayYear);
+  const bySeg = new Map(tasks.filter((t) => t.title).map((t) => [t.segIndex, t]));
   for (let i = 0; i < segments.length; i++) {
-    const seg = segments[i];
-    if (/^(<br\s*\/?>|<\/(?:p|div|li|h3|h4|blockquote)>)$/i.test(seg)) continue;
-    const text = stripTags(seg);
-    const km = KEY_RE.exec(text);
-    if (!km) continue;
-    const key = `T${km[1]}`;
-    if (doneKeys.has(key)) segments[i] = setChecked(seg, true);
-    else if (openKeys.has(key)) segments[i] = setChecked(seg, false);
+    const t = bySeg.get(i);
+    if (!t) continue;
+    let seg = segments[i];
+    // marker → ô tick (đã/chưa xong)
+    seg = seg.replace(
+      /^(\s*(?:<[^>]+>\s*)*)(?:[-*]\s*)?(\[\s*[xX ]?\s*\]|☐|▢|◻|◻️|☑|☑️|✅|✔️|✔)\s?/,
+      (_m, pre) => `${pre}<span class="mv-cb${t.done ? ' on' : ''}"></span> `,
+    );
+    // @tên đã khớp → chip
+    for (const nm of t.ownerNames) {
+      seg = seg.replace(new RegExp('@' + escRe(nm)), `<span class="mv-at">@${nm}</span>`);
+    }
+    // ngày → chip hạn
+    if (t.dueOn) seg = seg.replace(DATE_RE, `<span class="mv-due">📅 ${isoLabel(t.dueOn)}</span>`);
+    // bỏ thẻ #Tn cũ (nếu dữ liệu cũ còn) cho sạch
+    seg = seg.replace(KEY_RE, '');
+    if (t.done) {
+      // Bọc mv-done TRONG thẻ block (không bọc cả <p> → tránh span chứa block sai chuẩn).
+      const mOpen = seg.match(/^(\s*<(?:p|div|li|h3|h4|blockquote)\b[^>]*>)/i);
+      seg = mOpen
+        ? `${mOpen[1]}<span class="mv-done">${seg.slice(mOpen[1].length)}</span>`
+        : `<span class="mv-done">${seg}</span>`;
+    }
+    segments[i] = seg;
   }
   return segments.join('');
 }

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-25.198';
+export const GUIDE_VERSION = '2026-08-25.199';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -623,6 +623,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '25/08/2026 (Biên bản họp: việc hiện ngay + hiển thị đẹp + icon trên dòng)',
+    items: [
+      'Việc "[]" nay TỰ HIỆN xuống mục "Hành động" NGAY khi tự lưu (không cần bấm "Lưu & đóng"); sửa lại cùng dòng thì cập nhật đúng việc, không tạo trùng.',
+      'Khối "Biên bản & Quyết định" hiển thị dòng việc dạng Ô TICK + chip người + chip hạn (thay vì chữ thô "[ ] … @… ngày"); việc xong gạch ngang.',
+      'Trong ô soạn, mỗi dòng việc có thanh icon nổi: 👤 giao người · 📅 đặt hạn (không phải chỉ nút trên thanh công cụ).',
+    ],
+  },
   {
     date: '25/08/2026 (Giờ Hà Nội + tên người bấm được xem hồ sơ)',
     items: [

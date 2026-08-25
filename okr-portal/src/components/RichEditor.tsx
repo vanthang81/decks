@@ -185,26 +185,38 @@ export default function RichEditor({
     let menu: HTMLDivElement | null = null;
     let menuItems: Person[] = [];
     let menuActive = 0;
+    let menuOnPick: (p: Person) => void = () => {};
     const closeMenu = () => { if (menu) { menu.remove(); menu = null; menuItems = []; } };
     const updateActive = () => { if (menu) [...menu.children].forEach((c, i) => (c as HTMLElement).classList.toggle('active', i === menuActive)); };
-    const pick = (i: number) => {
-      const p = menuItems[i]; if (!p) return;
-      const r = caret(); if (!r) return;
-      const node = r.startContainer;
-      if (node.nodeType === 3) {
-        const before = (node.nodeValue || '').slice(0, r.startOffset);
-        const atIdx = before.lastIndexOf('@');
-        if (atIdx >= 0) {
-          const rng = document.createRange();
-          rng.setStart(node, atIdx); rng.setEnd(node, r.startOffset); rng.deleteContents();
-          const chip = atEl(p.name, p.email); const space = document.createTextNode(' ');
-          rng.insertNode(space); rng.insertNode(chip);
-          const nr = document.createRange(); nr.setStartAfter(space); nr.collapse(true);
-          const s = winSel(); s?.removeAllRanges(); s?.addRange(nr);
-        }
-      }
-      closeMenu(); emit();
+    // Mở menu chọn người (dùng cho cả gõ "@" lẫn nút 👤 trên dòng việc).
+    const openMenu = (rect: DOMRect, matches: Person[], onPick: (p: Person) => void) => {
+      closeMenu();
+      menu = document.createElement('div'); menu.className = 'mt-menu'; menuItems = matches; menuActive = 0; menuOnPick = onPick;
+      matches.forEach((p, i) => {
+        const it = document.createElement('div'); it.className = 'mt-item' + (i === 0 ? ' active' : '');
+        it.textContent = p.name;
+        it.addEventListener('mousedown', (e) => { e.preventDefault(); closeMenu(); onPick(p); });
+        menu!.appendChild(it);
+      });
+      document.body.appendChild(menu);
+      const ref = (rect.width || rect.height) ? rect : ed.getBoundingClientRect();
+      menu.style.left = ref.left + 'px'; menu.style.top = (ref.bottom + 4) + 'px';
     };
+    // Đặt con trỏ cuối 1 block (dòng) → trả range để chèn chip.
+    const putCaretEnd = (block: Element) => {
+      const r = document.createRange(); r.selectNodeContents(block); r.collapse(false);
+      const s = winSel(); s?.removeAllRanges(); s?.addRange(r);
+      return caret();
+    };
+    const insertChipAt = (rng: Range | null, chip: HTMLElement) => {
+      if (!rng) return;
+      const space = document.createTextNode(' ');
+      rng.insertNode(space); rng.insertNode(chip);
+      const nr = document.createRange(); nr.setStartAfter(space); nr.collapse(true);
+      const s = winSel(); s?.removeAllRanges(); s?.addRange(nr);
+      emit();
+    };
+    // Gõ "@..." → menu; chọn → thay "@query" bằng chip.
     const checkMention = () => {
       const r = caret(); if (!r || !r.collapsed) { closeMenu(); return; }
       const node = r.startContainer; if (node.nodeType !== 3) { closeMenu(); return; }
@@ -213,18 +225,19 @@ export default function RichEditor({
       const nq = norm(m[1]);
       const matches = people.filter((p) => norm(p.name).includes(nq)).slice(0, 8);
       if (!matches.length) { closeMenu(); return; }
-      closeMenu();
-      menu = document.createElement('div'); menu.className = 'mt-menu'; menuItems = matches; menuActive = 0;
-      matches.forEach((p, i) => {
-        const it = document.createElement('div'); it.className = 'mt-item' + (i === 0 ? ' active' : '');
-        it.textContent = p.name;
-        it.addEventListener('mousedown', (e) => { e.preventDefault(); pick(i); });
-        menu!.appendChild(it);
-      });
-      document.body.appendChild(menu);
       const rect = r.getBoundingClientRect();
-      const ref = (rect.width || rect.height) ? rect : ed.getBoundingClientRect();
-      menu.style.left = ref.left + 'px'; menu.style.top = (ref.bottom + 4) + 'px';
+      openMenu((rect.width || rect.height) ? rect : ed.getBoundingClientRect(), matches, (p) => {
+        const rr = caret(); if (!rr) return;
+        const nd = rr.startContainer;
+        if (nd.nodeType === 3) {
+          const bf = (nd.nodeValue || '').slice(0, rr.startOffset);
+          const atIdx = bf.lastIndexOf('@');
+          if (atIdx >= 0) {
+            const rng = document.createRange(); rng.setStart(nd, atIdx); rng.setEnd(nd, rr.startOffset); rng.deleteContents();
+            insertChipAt(rng, atEl(p.name, p.email));
+          }
+        }
+      });
     };
     const checkCheckbox = () => {
       const r = caret(); if (!r || !r.collapsed) return;
@@ -256,42 +269,109 @@ export default function RichEditor({
       if (!menu) return;
       if (e.key === 'ArrowDown') { e.preventDefault(); menuActive = (menuActive + 1) % menuItems.length; updateActive(); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); menuActive = (menuActive - 1 + menuItems.length) % menuItems.length; updateActive(); }
-      else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); pick(menuActive); }
+      else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); const p = menuItems[menuActive]; closeMenu(); if (p) menuOnPick(p); }
       else if (e.key === 'Escape') { e.preventDefault(); closeMenu(); }
     };
-    const onClick = (e: MouseEvent) => {
-      const t = e.target as HTMLElement;
-      const cb = t.closest && t.closest('.mt-cb') as HTMLElement | null;
-      if (!cb) return;
-      const done = cb.dataset.done === '1' ? '0' : '1';
-      cb.dataset.done = done;
-      const block = cb.closest('p,div,li,h3,h4,blockquote');
-      if (block) block.classList.toggle('mt-done', done === '1');
-      emit();
-    };
-    // Nút 📅: chọn hạn cho việc ở dòng con trỏ.
-    openDateRef.current = () => {
+
+    // Con trỏ ĐÃ LƯU khi bấm nút trên thanh (giữ vị trí chèn vì bấm nút không làm mất selection).
+    let savedCaret: Range | null = null;
+    // Chọn ngày → chèn chip HẠN tại range cho trước (con trỏ / con trỏ đã lưu).
+    const pickDate = (at: Range | null) => {
       const inp = document.createElement('input'); inp.type = 'date';
       inp.style.position = 'fixed'; inp.style.left = '-9999px'; document.body.appendChild(inp);
-      const r = caret();
       inp.addEventListener('change', () => {
         const iso = inp.value; inp.remove(); if (!iso) return;
         ed.focus();
-        const s = winSel(); if (r) { s?.removeAllRanges(); s?.addRange(r); }
-        const rr = caret() || r; if (!rr) return;
-        const chip = dueEl(iso, isoToLabel(iso)); const space = document.createTextNode(' ');
-        rr.insertNode(space); rr.insertNode(chip); emit();
+        const rr = at || caret();
+        if (rr) { const s = winSel(); s?.removeAllRanges(); s?.addRange(rr); }
+        insertChipAt(rr, dueEl(iso, isoToLabel(iso)));
       });
       if (typeof inp.showPicker === 'function') inp.showPicker(); else inp.click();
     };
+    openDateRef.current = () => pickDate(caret());
 
-    ed.addEventListener('input', onInput);
+    // ── Thanh icon nổi trên DÒNG VIỆC đang soạn (kiểu Lark): 👤 giao người · 📅 đặt hạn ──
+    const bar = document.createElement('div');
+    bar.className = 'mt-linebar'; bar.style.display = 'none';
+    const btnAssign = document.createElement('button');
+    btnAssign.type = 'button'; btnAssign.className = 'mt-lb-btn'; btnAssign.title = 'Giao người phụ trách'; btnAssign.textContent = '👤';
+    const btnDate = document.createElement('button');
+    btnDate.type = 'button'; btnDate.className = 'mt-lb-btn'; btnDate.title = 'Đặt hạn'; btnDate.textContent = '📅';
+    bar.appendChild(btnAssign); bar.appendChild(btnDate);
+    ed.parentElement?.appendChild(bar);
+    btnAssign.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      savedCaret = caret(); if (!savedCaret) return;
+      openMenu(btnAssign.getBoundingClientRect(), people.slice(0, 8), (p) => {
+        if (savedCaret) { const s = winSel(); s?.removeAllRanges(); s?.addRange(savedCaret); }
+        insertChipAt(savedCaret || caret(), atEl(p.name, p.email));
+      });
+    });
+    btnDate.addEventListener('mousedown', (e) => { e.preventDefault(); savedCaret = caret(); pickDate(savedCaret); });
+
+    // Checkbox của DÒNG chứa con trỏ (bao cả trường hợp nội dung chưa bọc trong block).
+    const lineCheckbox = (range: Range): HTMLElement | null => {
+      const node = range.startContainer;
+      const el: Element | null = node.nodeType === 3 ? node.parentElement : (node as Element);
+      const block = el?.closest('p,div,li,h3,h4,blockquote') ?? null;
+      const cont: Element = (block && block !== ed) ? block : ed;
+      const kids = Array.from(cont.childNodes);
+      let idx = kids.findIndex((k) => k === node || k.contains(node));
+      if (idx < 0) idx = Math.min(range.startOffset, Math.max(0, kids.length - 1));
+      let s = idx; while (s > 0 && kids[s - 1].nodeName !== 'BR') s--;
+      let e = idx; while (e < kids.length - 1 && kids[e + 1].nodeName !== 'BR') e++;
+      for (let i = s; i <= e; i++) {
+        const k = kids[i];
+        if (k.nodeType === 1) {
+          const el2 = k as Element;
+          if (el2.classList?.contains('mt-cb')) return el2 as HTMLElement;
+          const q = el2.querySelector?.('.mt-cb'); if (q) return q as HTMLElement;
+        }
+      }
+      return null;
+    };
+    const updateBar = () => {
+      try {
+        const r = caret();
+        const cb = r ? lineCheckbox(r) : null;
+        if (!cb) { bar.style.display = 'none'; return; }
+        const wrap = ed.parentElement as HTMLElement; if (!wrap) return;
+        const wr = wrap.getBoundingClientRect(); const cr = cb.getBoundingClientRect();
+        bar.style.display = 'flex';
+        bar.style.top = Math.max(2, cr.top - wr.top - 2) + 'px';
+        bar.style.right = '6px';
+      } catch { bar.style.display = 'none'; }
+    };
+
+    const onInputAll = () => { onInput(); updateBar(); };
+    const onKeyup = () => updateBar();
+    const onMouseup = () => updateBar();
+    const onClick = (e: MouseEvent) => {
+      const t = e.target as HTMLElement;
+      const cb = t.closest && t.closest('.mt-cb') as HTMLElement | null;
+      if (cb) {
+        const done = cb.dataset.done === '1' ? '0' : '1';
+        cb.dataset.done = done;
+        const block = cb.closest('p,div,li,h3,h4,blockquote');
+        if (block) block.classList.toggle('mt-done', done === '1');
+        emit();
+      }
+      updateBar();
+    };
+
+    ed.addEventListener('input', onInputAll);
     ed.addEventListener('keydown', onKeydown);
+    ed.addEventListener('keyup', onKeyup);
+    ed.addEventListener('mouseup', onMouseup);
     ed.addEventListener('click', onClick);
+    ed.addEventListener('blur', () => setTimeout(() => { if (!menu) bar.style.display = 'none'; }, 200));
     return () => {
-      ed.removeEventListener('input', onInput);
+      ed.removeEventListener('input', onInputAll);
       ed.removeEventListener('keydown', onKeydown);
+      ed.removeEventListener('keyup', onKeyup);
+      ed.removeEventListener('mouseup', onMouseup);
       ed.removeEventListener('click', onClick);
+      bar.remove();
       closeMenu();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

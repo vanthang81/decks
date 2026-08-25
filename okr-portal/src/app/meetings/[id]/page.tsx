@@ -13,7 +13,7 @@ import UserLink from '@/components/UserLink';
 import ActivityLogButton from '@/components/ActivityLogButton';
 import { loadEntityAuditAction } from '@/app/audit/actions';
 import { sanitizeRichHtml } from '@/lib/sanitizeHtml';
-import { meetingMinutesTaskStates, applyTaskDoneToMinutes } from '@/lib/minutes-tasks';
+import { meetingMinutesTaskStates, applyTaskDoneToMinutes, renderMinutesTasksView } from '@/lib/minutes-tasks';
 import { requireUser } from '@/lib/current-user';
 import { listUsers, personTitle } from '@/lib/users';
 import { listUnits } from '@/lib/org';
@@ -111,7 +111,10 @@ export default async function MeetingDetail({ params }: { params: { id: string }
 
   // Phản ánh dấu tick 2 chiều: việc "[]" đánh Xong ở phần Hành động → hiện [x] trong biên bản.
   const mtStates = await meetingMinutesTaskStates(m.id);
-  const displayMinutes = applyTaskDoneToMinutes(m.minutes ?? '', mtStates.done, mtStates.open);
+  const displayMinutes = applyTaskDoneToMinutes(
+    m.minutes ?? '', mtStates.done, mtStates.open,
+    personOpts.map((p) => ({ email: p.email, name: p.name })), new Date().getFullYear(),
+  );
 
   return (
     <>
@@ -207,7 +210,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
           {m.minutes || m.decisions ? (
             <>
               {m.minutes && (
-                <div className="rte-view" style={{ marginTop: 6 }} dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(displayMinutes) }} />
+                <div className="rte-view" style={{ marginTop: 6 }} dangerouslySetInnerHTML={{ __html: renderMinutesTasksView(displayMinutes, personOpts.map((p) => ({ email: p.email, name: p.name })), new Date().getFullYear()) }} />
               )}
               {m.decisions && (
                 <div style={{ marginTop: 12 }}>
