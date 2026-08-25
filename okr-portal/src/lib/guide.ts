@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-25.200';
+export const GUIDE_VERSION = '2026-08-25.201';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -623,6 +623,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '25/08/2026 (Biên bản họp ↔ Hành động: đồng bộ tick/bỏ tick/xoá đầy đủ)',
+    items: [
+      'Tick việc trong biên bản → việc sang cột "Xong"; bỏ tick → về "Đang làm"; XOÁ dòng "[]" trong biên bản → xoá luôn việc ở mục Hành động.',
+      'Ngược lại, đổi trạng thái việc ở Hành động (Xong / chưa Xong) cũng phản ánh dấu tick trong biên bản.',
+    ],
+  },
   {
     date: '25/08/2026 (Biên bản họp: giữ đúng xuống dòng/dòng trống — WYSIWYG)',
     items: [

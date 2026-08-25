@@ -158,7 +158,8 @@ export function minuteTaskKey(title: string): string {
 /**
  * Đồng bộ dòng "[]" trong biên bản → công việc (okr_initiatives, gắn meeting_id).
  * Khớp theo TIÊU ĐỀ (minutes_key): có → CẬP NHẬT (người/hạn/tick xong); chưa → TẠO mới.
- * KHÔNG xoá việc khi xoá dòng (tránh mất việc ngoài ý muốn). Không đổi HTML biên bản.
+ * Dòng bị XOÁ khỏi biên bản → XOÁ việc tương ứng (reconcile). Tick [x]→Xong, bỏ tick→Đang làm
+ * (nếu trước đó Xong). Không đổi HTML biên bản.
  */
 export async function syncMeetingMinutesTasks(opts: {
   meetingId: string;
@@ -171,15 +172,21 @@ export async function syncMeetingMinutesTasks(opts: {
   const userOpts = opts.users.map((u) => ({ email: u.email, name: u.display_name || u.email }));
   const { tasks } = parseMinutesTasks(minutesHtml, userOpts, todayYear);
   const real = tasks.filter((t) => t.title);
-  if (real.length === 0) return { html: minutesHtml, created: 0, updated: 0 };
+  const presentKeys = new Set(real.map((t) => minuteTaskKey(t.title)));
 
   const existing = await query<{ id: string; minutes_key: string; status: string }>(
     `SELECT id, minutes_key, status FROM okr_initiatives WHERE meeting_id=$1 AND minutes_key IS NOT NULL`,
     [meetingId],
   );
   const byKey = new Map(existing.map((e) => [e.minutes_key, e]));
-  const handled = new Set<string>();
 
+  // Reconcile: việc (tạo từ biên bản) mà dòng "[]" đã bị XOÁ → xoá luôn việc.
+  for (const e of existing) {
+    if (!presentKeys.has(e.minutes_key)) await query('DELETE FROM okr_initiatives WHERE id=$1', [e.id]);
+  }
+  if (real.length === 0) return { html: minutesHtml, created: 0, updated: 0 };
+
+  const handled = new Set<string>();
   let created = 0, updated = 0;
   for (const t of real) {
     const key = minuteTaskKey(t.title);
@@ -192,7 +199,7 @@ export async function syncMeetingMinutesTasks(opts: {
     if (ex) {
       let status = ex.status;
       if (t.done && ex.status !== 'done') status = 'done';
-      else if (!t.done && ex.status === 'done') status = 'todo';
+      else if (!t.done && ex.status === 'done') status = 'in_progress'; // bỏ tick việc đã Xong → Đang làm
       await query(
         `UPDATE okr_initiatives SET title=$2, owner_email=$3, due_on=$4,
             description=COALESCE($5, description), status=$6,
