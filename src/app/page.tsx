@@ -52,6 +52,7 @@ export default async function GalleryPage() {
     category: d.category,
     tags: d.tags,
     company: d.company,
+    has_source: !!d.source_url,
     groups: groupMap[d.id] ?? [],
     pending: pendingMap[d.id] ?? 0,
   }));

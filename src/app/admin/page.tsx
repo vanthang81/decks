@@ -42,6 +42,7 @@ export default async function AdminDecksPage({
     is_published: d.is_published,
     has_password: d.has_password,
     has_thumbnail: d.has_thumbnail ?? false,
+    has_source: !!d.source_url,
     createdLabel: fmtVN(d.created_at),
     updatedLabel: fmtVN(d.updated_at),
   }));

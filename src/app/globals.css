@@ -4,7 +4,7 @@
   --paper: #F4F7FB; --card: #FFFFFF; --raise: #FFFFFF;
   --ink: #16202B; --neutral: #5A6675; --faint: #8A94A2;
   --line: #E2E8F0; --line-strong: #CFD8E3;
-  --ok: #157F4A; --ok-soft: #E4F3EA; --bad: #C0432B; --bad-soft: #F7E7E2; --warn: #9A6B1E;
+  --ok: #157F4A; --ok-soft: #E4F3EA; --bad: #C0432B; --bad-soft: #F7E7E2; --warn: #9A6B1E; --warn-soft: #FBF1DE;
   --shadow: 0 1px 2px rgba(16,32,43,.04), 0 8px 24px -16px rgba(16,32,43,.18);
   --shadow-lg: 0 24px 60px -34px rgba(16,32,43,.35);
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -17,7 +17,7 @@
     --paper: #0F1620; --card: #172230; --raise: #1C2836;
     --ink: #EAF0F6; --neutral: #9EAAB8; --faint: #6C7787;
     --line: #26323F; --line-strong: #33414F;
-    --ok: #46B884; --ok-soft: #123528; --bad: #E27a63; --bad-soft: #3A211B; --warn: #D2A253;
+    --ok: #46B884; --ok-soft: #123528; --bad: #E27a63; --bad-soft: #3A211B; --warn: #D2A253; --warn-soft: #3A2E17;
     --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -18px rgba(0,0,0,.6);
     --shadow-lg: 0 30px 70px -40px rgba(0,0,0,.7);
   }
@@ -90,6 +90,7 @@ a.card:hover { text-decoration: none; transform: translateY(-2px); box-shadow: v
 .pill { font-size: 11px; padding: 2px 9px; border-radius: 100px; border: 1px solid var(--line); font-weight: 600; }
 .pill.ok { color: var(--ok); background: var(--ok-soft); border-color: transparent; }
 .pill.bad { color: var(--bad); background: var(--bad-soft); border-color: transparent; }
+.pill.warn { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
 
 /* ---------- Buttons ---------- */
 .btn { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line-strong);

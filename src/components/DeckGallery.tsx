@@ -16,6 +16,7 @@ export type DeckLite = {
   category: string | null;
   tags: string[];
   company: string;
+  has_source: boolean; // đã có link "Nguồn / Chat gốc" (claude chat/cowork) chưa
   groups: string[]; // tên các nhóm được cấp deck này
   pending: number; // số yêu cầu cấp quyền đang chờ duyệt
 };
@@ -90,6 +91,11 @@ function Badges({ d }: { d: DeckLite }) {
       {d.require_otp && <span className="pill" style={{ fontSize: 10 }}>OTP</span>}
       {!d.is_published && <span className="pill bad" style={{ fontSize: 10 }}>đã ẩn</span>}
       {d.pending > 0 && <span className="pill bad" style={{ fontSize: 10 }}>🔔 {d.pending} chờ duyệt</span>}
+      {!d.has_source && (
+        <span className="pill warn" style={{ fontSize: 10 }} title="Chưa gắn link Nguồn / Chat gốc (claude chat/cowork)">
+          ⚠ chưa có nguồn
+        </span>
+      )}
     </span>
   );
 }

@@ -15,6 +15,7 @@ export type AdminDeckLite = {
   is_published: boolean;
   has_password: boolean;
   has_thumbnail: boolean;
+  has_source: boolean; // đã gắn link Nguồn / Chat gốc (claude chat/cowork) chưa
   createdLabel: string;
   updatedLabel: string;
 };
@@ -54,6 +55,7 @@ function Flags({ d }: { d: AdminDeckLite }) {
       {d.has_password && <span className="pill" style={{ fontSize: 10 }}>🔒 mật khẩu</span>}
       {d.require_otp && <span className="pill" style={{ fontSize: 10 }}>OTP</span>}
       {!d.is_published && <span className="pill bad" style={{ fontSize: 10 }}>đã ẩn</span>}
+      {!d.has_source && <span className="pill warn" style={{ fontSize: 10 }} title="Chưa gắn link Nguồn / Chat gốc">⚠ chưa có nguồn</span>}
     </>
   );
 }
@@ -163,7 +165,10 @@ export default function AdminDeckBrowser({ decks }: { decks: AdminDeckLite[] }) 
                   {d.has_password && <span className="pill" style={{ marginLeft: 6 }}>🔒</span>}
                   {d.require_otp && <span className="pill" style={{ marginLeft: 6 }}>OTP</span>}
                 </td>
-                <td>{d.is_published ? 'Đã xuất bản' : <span className="pill bad">Đã ẩn</span>}</td>
+                <td>
+                  {d.is_published ? 'Đã xuất bản' : <span className="pill bad">Đã ẩn</span>}
+                  {!d.has_source && <span className="pill warn" style={{ marginLeft: 6, fontSize: 10 }} title="Chưa gắn link Nguồn / Chat gốc">⚠ chưa có nguồn</span>}
+                </td>
                 <td className="muted" style={{ whiteSpace: 'nowrap', fontSize: 12.5 }}>{d.createdLabel}</td>
                 <td className="muted" style={{ whiteSpace: 'nowrap', fontSize: 12.5 }}>{d.updatedLabel}</td>
                 <td><Link className="btn" href={`/admin/decks/${d.id}`}>Quản lý</Link></td>
