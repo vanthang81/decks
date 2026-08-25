@@ -11,7 +11,7 @@ import { listObjectivesByPeriod } from '@/lib/okr';
 import { getCurrentPeriod } from '@/lib/periods';
 import { depsForTasks } from '@/lib/deps';
 import { loadAccess, buildTaskViewCtx, canViewInitiative, canEditObjective } from '@/lib/access';
-import { editInitiativeAction, deleteInitiativeAction, moveInitiativeAction, createTaskAction } from '@/app/objectives/actions';
+import { editInitiativeAction, deleteInitiativeAction, moveInitiativeAction, createTaskAction, bulkTasksAction } from '@/app/objectives/actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -122,6 +122,7 @@ export default async function TasksPage({
           editAction={editInitiativeAction}
           deleteAction={deleteInitiativeAction}
           move={moveInitiativeAction}
+          bulkAction={bulkTasksAction}
           initialTaskId={searchParams.task}
           initialMine={!!searchParams.mine}
           initialStatus={searchParams.status}

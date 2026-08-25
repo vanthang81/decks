@@ -15,6 +15,7 @@ import type { PersonOpt, UnitOpt, ProjectOpt } from '@/components/ExecutionTabs'
 
 // Nhãn/màu khai lại tại chỗ (KHÔNG import runtime từ initiatives.ts → tránh kéo pg vào bundle).
 type Status = 'todo' | 'in_progress' | 'blocked' | 'done' | 'canceled';
+type BulkOp = 'delete' | Status;
 type Kind = 'project' | 'subproject' | 'action';
 const STATUS_LABEL: Record<Status, string> = {
   todo: 'Chưa làm',
@@ -121,6 +122,7 @@ export default function TaskExplorer({
   editAction,
   deleteAction,
   move,
+  bulkAction,
   depsMap = {},
   initialTaskId,
   initialMine,
@@ -140,6 +142,7 @@ export default function TaskExplorer({
   editAction: (fd: FormData) => Promise<void>;
   deleteAction: (fd: FormData) => Promise<void>;
   move: (id: string, status: Status) => Promise<void>;
+  bulkAction: (ids: string[], op: BulkOp) => Promise<{ done: number; skipped: number }>;
   initialTaskId?: string;
   initialMine?: boolean;
   initialStatus?: string;
@@ -198,6 +201,14 @@ export default function TaskExplorer({
   const [hideDone, setHideDone] = useState(initialStatus !== 'done');
   const [repOpen, setRepOpen] = useState(true); // hiện báo cáo tổng quan
   const [dim, setDim] = useState<'unit' | 'project' | 'owner' | 'prio'>('unit'); // chiều phân bổ (breakout)
+
+  // Chọn nhiều việc → thao tác hàng loạt (chỉ người quản lý được). selected ⊆ việc quản-lý-được đang hiển thị.
+  const router = useRouter();
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const [bulkPending, startBulk] = useTransition();
+  const [bulkMsg, setBulkMsg] = useState('');
+  const headRef = useRef<HTMLInputElement>(null);
+  const canBulk = manageIds.length > 0;
 
   const emailLc = currentEmail.toLowerCase();
 
@@ -282,6 +293,57 @@ export default function TaskExplorer({
       return r * dir;
     });
   }, [filtered, sortKey, sortDir]);
+
+  // ── Chọn nhiều & thao tác hàng loạt ──
+  // Chỉ chọn được việc user QUẢN LÝ (manageSet). "Chọn tất cả" áp trên TOÀN BỘ kết quả lọc (sorted),
+  // không chỉ trang hiện tại → lọc + chọn tất cả + xoá = dọn hàng loạt nhanh.
+  const manageableFiltered = useMemo(() => sorted.filter((t) => manageSet.has(t.id)), [sorted, manageSet]);
+  const allSel = manageableFiltered.length > 0 && manageableFiltered.every((t) => selected.has(t.id));
+  const someSel = !allSel && manageableFiltered.some((t) => selected.has(t.id));
+  useEffect(() => { if (headRef.current) headRef.current.indeterminate = someSel; }, [someSel]);
+  // Giữ selection luôn ⊆ việc quản-lý-được đang hiển thị (đổi bộ lọc → bỏ chọn phần đã ẩn).
+  useEffect(() => {
+    setSelected((prev) => {
+      if (prev.size === 0) return prev;
+      const valid = new Set(manageableFiltered.map((t) => t.id));
+      let changed = false;
+      const next = new Set<string>();
+      prev.forEach((id) => { if (valid.has(id)) next.add(id); else changed = true; });
+      return changed ? next : prev;
+    });
+  }, [manageableFiltered]);
+  const toggleOne = (id: string) =>
+    setSelected((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const toggleAll = () =>
+    setSelected((prev) => {
+      const ids = manageableFiltered.map((t) => t.id);
+      const n = new Set(prev);
+      if (ids.length > 0 && ids.every((id) => prev.has(id))) ids.forEach((id) => n.delete(id));
+      else ids.forEach((id) => n.add(id));
+      return n;
+    });
+  const runBulk = (op: BulkOp) => {
+    const ids = [...selected];
+    if (ids.length === 0 || bulkPending) return;
+    const msg = op === 'delete'
+      ? `Xoá vĩnh viễn ${ids.length} công việc đã chọn? Thao tác KHÔNG thể hoàn tác (việc con sẽ bị xoá theo).`
+      : `Đổi trạng thái ${ids.length} công việc sang “${STATUS_LABEL[op]}”?`;
+    if (typeof window !== 'undefined' && !window.confirm(msg)) return;
+    setBulkMsg('');
+    startBulk(async () => {
+      try {
+        const r = await bulkAction(ids, op);
+        setSelected(new Set());
+        setBulkMsg(
+          `${op === 'delete' ? 'Đã xoá' : 'Đã cập nhật'} ${r.done} việc` +
+            (r.skipped ? ` · bỏ qua ${r.skipped} (không đủ quyền)` : '') + '.',
+        );
+        router.refresh();
+      } catch (e) {
+        alert('Không thực hiện được: ' + (e instanceof Error ? e.message : String(e)));
+      }
+    });
+  };
 
   // Phân trang danh sách (50 việc/trang) — chỉ ở chế độ Danh sách; Kanban/Gantt vẫn hiện đủ.
   const PAGE_SIZE = 50;
@@ -554,10 +616,50 @@ export default function TaskExplorer({
       )}
 
       {view === 'list' && <>
+      {canBulk && (
+        selected.size > 0 ? (
+          <div className="bulk-bar">
+            <span className="bulk-count">Đã chọn <b>{selected.size}</b> việc</span>
+            <select
+              className="i bulk-sel"
+              value=""
+              disabled={bulkPending}
+              onChange={(e) => { const v = e.target.value as Status; if (v) runBulk(v); e.currentTarget.value = ''; }}
+              title="Đổi trạng thái các việc đã chọn"
+            >
+              <option value="">⇄ Đổi trạng thái…</option>
+              {COLUMNS.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+            </select>
+            <button type="button" className="btn sm" disabled={bulkPending} onClick={() => runBulk('done')}>✓ Hoàn thành</button>
+            <button type="button" className="btn ghost sm" disabled={bulkPending} onClick={() => runBulk('canceled')}>⊘ Huỷ / Dừng</button>
+            <button type="button" className="btn danger sm" disabled={bulkPending} onClick={() => runBulk('delete')}>🗑 Xoá ({selected.size})</button>
+            <button type="button" className="btn ghost sm" disabled={bulkPending} onClick={() => setSelected(new Set())}>Bỏ chọn</button>
+            {bulkPending && <span className="muted" style={{ fontSize: 12.5 }}>Đang xử lý…</span>}
+          </div>
+        ) : (
+          <div className="bulk-hint">
+            <span className="muted">Tick ô vuông đầu mỗi dòng để chọn nhiều việc → xoá / đổi trạng thái hàng loạt. Ô ở tiêu đề = chọn tất cả theo bộ lọc.</span>
+            {bulkMsg && <span className="badge green" style={{ marginLeft: 8 }}>{bulkMsg}</span>}
+          </div>
+        )
+      )}
       <div className="table-sticky">
-        <table className="t task-table">
+        <table className={`t task-table${canBulk ? ' has-check' : ''}`}>
           <thead>
             <tr>
+              {canBulk && (
+                <th className="tt-check">
+                  <input
+                    ref={headRef}
+                    type="checkbox"
+                    checked={allSel}
+                    onChange={toggleAll}
+                    disabled={manageableFiltered.length === 0}
+                    title="Chọn / bỏ chọn tất cả (theo bộ lọc hiện tại)"
+                    aria-label="Chọn tất cả"
+                  />
+                </th>
+              )}
               {COLS.map((c) => (
                 <th
                   key={c.key}
@@ -574,7 +676,21 @@ export default function TaskExplorer({
           </thead>
           <tbody>
             {pageRows.map((t) => (
-              <tr key={t.id} className="te-row" onClick={() => setEditing(t)} title="Bấm để cập nhật / sửa / xoá">
+              <tr key={t.id} className={`te-row${selected.has(t.id) ? ' te-sel' : ''}`} onClick={() => setEditing(t)} title="Bấm để cập nhật / sửa / xoá">
+                {canBulk && (
+                  <td className="tt-check" onClick={(e) => e.stopPropagation()}>
+                    {manageSet.has(t.id) ? (
+                      <input
+                        type="checkbox"
+                        checked={selected.has(t.id)}
+                        onChange={() => toggleOne(t.id)}
+                        aria-label="Chọn việc này"
+                      />
+                    ) : (
+                      <span className="tt-nocheck" title="Bạn không có quyền quản lý việc này">–</span>
+                    )}
+                  </td>
+                )}
                 <td>{t.code && <span className="okr-code">{t.code}</span>}</td>
                 <td>
                   {/* CHỈ hiện nhãn khi là NHÓM (Dự án/Tiểu dự án có việc con) — việc lẻ không cần

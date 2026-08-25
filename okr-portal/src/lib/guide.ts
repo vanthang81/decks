@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-20.191';
+export const GUIDE_VERSION = '2026-08-20.192';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -623,6 +623,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '20/08/2026 (Công việc: chọn nhiều & xoá / đổi trạng thái hàng loạt)',
+    items: [
+      'Trang Công việc: người có quyền quản lý có thể TICK CHỌN NHIỀU việc (ô vuông đầu mỗi dòng, ô ở tiêu đề = chọn tất cả theo bộ lọc hiện tại) rồi thao tác HÀNG LOẠT: Xoá vĩnh viễn · Hoàn thành · Huỷ/Dừng · đổi sang trạng thái bất kỳ.',
+      'Chỉ chọn được việc BẠN quản lý (đúng phân quyền); việc ngoài quyền hiển thị dấu "–" không tick được. Xoá có xác nhận, không thể hoàn tác (việc con bị xoá theo).',
+      'Cách dọn nhanh task cũ: mở Công việc → bỏ tick "Ẩn việc đã xong" (và lọc theo ý muốn) → tick ô ở tiêu đề để chọn tất cả → Xoá.',
+    ],
+  },
   {
     date: '20/08/2026 (Sửa lỗi trọng số số thập phân >2 chữ số biến thành số nguyên)',
     items: [

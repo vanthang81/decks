@@ -875,3 +875,54 @@ export async function moveInitiativeAction(id: string, status: InitStatus) {
   await setInitiativeStatus(id, status);
   await auditTask(user.email, 'initiative.status', init, { title: init.title, status });  revalidateTask(init);
 }
+
+// ── Thao tác HÀNG LOẠT trên nhiều công việc (dành cho người có quyền quản lý) ──
+// op = 'delete' (xoá vĩnh viễn, cascade nhánh con) HOẶC đổi trạng thái sang 1 trong 5 giá trị.
+// Kiểm quyền TỪNG việc: xoá cần quyền quản lý việc; đổi trạng thái cần quản lý HOẶC được giao.
+// Bỏ qua (skip) việc không đủ quyền / không tồn tại thay vì ném lỗi → phần còn lại vẫn chạy.
+export type BulkTaskOp = 'delete' | InitStatus;
+export async function bulkTasksAction(
+  ids: string[],
+  op: BulkTaskOp,
+): Promise<{ done: number; skipped: number }> {
+  const user = await requireUser();
+  const uniq = Array.from(new Set((ids ?? []).filter(Boolean))).slice(0, 3000);
+  let done = 0;
+  let skipped = 0;
+  const objIds = new Set<string>();
+  const mtgIds = new Set<string>();
+  const prjIds = new Set<string>();
+  for (const id of uniq) {
+    const init = await getInitiative(id);
+    if (!init) {
+      skipped++;
+      continue;
+    }
+    if (op === 'delete') {
+      if (!(await canManageTaskLoose(user, init))) {
+        skipped++;
+        continue;
+      }
+      await deleteInitiative(id);
+      await auditTask(user.email, 'initiative.delete', init, { title: init.title, bulk: true });
+    } else {
+      const manage = await canManageTaskLoose(user, init);
+      const perm = canUpdateInitiative(user, init, manage);
+      if (!perm.manage && !perm.assignee) {
+        skipped++;
+        continue;
+      }
+      await setInitiativeStatus(id, op);
+      await auditTask(user.email, 'initiative.status', init, { title: init.title, status: op, bulk: true });
+    }
+    if (init.objective_id) objIds.add(init.objective_id);
+    if (init.meeting_id) mtgIds.add(init.meeting_id);
+    if (init.project_id) prjIds.add(init.project_id);
+    done++;
+  }
+  objIds.forEach((id) => revalidatePath(`/objectives/${id}`));
+  mtgIds.forEach((id) => revalidatePath(`/meetings/${id}`));
+  prjIds.forEach((id) => revalidatePath(`/projects/${id}`));
+  revalidatePath('/tasks');
+  return { done, skipped };
+}
