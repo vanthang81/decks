@@ -50,11 +50,17 @@ export default function MinutesEditor({
     timer.current = setTimeout(doSave, 1200);
   }, [doSave]);
 
-  // Lưu nốt khi rời trang (đóng tab/điều hướng) nếu còn nháp chưa lưu.
+  // Lưu nốt nháp còn dở: (1) khi rời trang (đóng tab/điều hướng); (2) khi ĐÓNG popup
+  // (component unmount) — kể cả đóng NHANH trong vòng 1,2s trước khi debounce kịp chạy, nhờ đó
+  // đóng-mở lại vẫn thấy nội dung đang viết dở (CFO 25/08).
   useEffect(() => {
     const onLeave = () => { if (timer.current) clearTimeout(timer.current); void doSave(); };
     window.addEventListener('beforeunload', onLeave);
-    return () => { window.removeEventListener('beforeunload', onLeave); if (timer.current) clearTimeout(timer.current); };
+    return () => {
+      window.removeEventListener('beforeunload', onLeave);
+      if (timer.current) clearTimeout(timer.current);
+      void doSave(); // flush nháp khi đóng popup
+    };
   }, [doSave]);
 
   const label =

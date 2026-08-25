@@ -120,9 +120,11 @@ export async function saveMinutesAction(fd: FormData) {
 }
 
 /**
- * TỰ LƯU NHÁP biên bản khi đang gõ (CFO 11/08) — lưu THẲNG vào DB, KHÔNG revalidate
- * để tránh làm mới trang giữa lúc soạn (mất con trỏ/nội dung đang gõ). Vẫn kiểm quyền +
- * làm sạch HTML như lưu chính thức. Nút "Lưu biên bản" (saveMinutesAction) đóng popup như cũ.
+ * TỰ LƯU NHÁP biên bản khi đang gõ (CFO 11/08) — lưu THẲNG vào DB. CÓ revalidate để khi ĐÓNG
+ * popup rồi MỞ LẠI vẫn thấy nội dung nháp để viết tiếp (CFO 25/08 — trước đây không revalidate
+ * nên prop `initialMinutes` phía client bị cũ → mở lại thấy trống dù DB đã lưu). Vùng soạn nay
+ * là contentEditable KHÔNG-kiểm-soát (RichEditor) nên revalidate KHÔNG còn làm mất chữ đang gõ.
+ * Vẫn kiểm quyền + làm sạch HTML như lưu chính thức.
  */
 export async function autosaveMinutesAction(fd: FormData) {
   const id = str(fd, 'id');
@@ -130,6 +132,7 @@ export async function autosaveMinutesAction(fd: FormData) {
   const minutes = sanitizeRichHtml(str(fd, 'minutes'));
   const decisions = sanitizeRichHtml(str(fd, 'decisions'));
   await updateMinutes(id, isRichEmpty(minutes) ? null : minutes, isRichEmpty(decisions) ? null : decisions);
+  revalidatePath(`/meetings/${id}`);
 }
 
 export async function deleteMeetingAction(fd: FormData) {
