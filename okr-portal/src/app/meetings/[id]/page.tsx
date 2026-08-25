@@ -12,6 +12,7 @@ import MinutesEditor from '@/components/MinutesEditor';
 import ActivityLogButton from '@/components/ActivityLogButton';
 import { loadEntityAuditAction } from '@/app/audit/actions';
 import { sanitizeRichHtml } from '@/lib/sanitizeHtml';
+import { meetingMinutesTaskStates, applyTaskDoneToMinutes } from '@/lib/minutes-tasks';
 import { requireUser } from '@/lib/current-user';
 import { listUsers, personTitle } from '@/lib/users';
 import { listUnits } from '@/lib/org';
@@ -102,6 +103,10 @@ export default async function MeetingDetail({ params }: { params: { id: string }
   const periodForObjs = m.period_id ?? (await getCurrentPeriod())?.id ?? null;
   const objectiveOpts = periodForObjs ? await listObjectivesWithKrs(periodForObjs) : [];
 
+  // Phản ánh dấu tick 2 chiều: việc "[]" đánh Xong ở phần Hành động → hiện [x] trong biên bản.
+  const mtStates = await meetingMinutesTaskStates(m.id);
+  const displayMinutes = applyTaskDoneToMinutes(m.minutes ?? '', mtStates.done, mtStates.open);
+
   return (
     <>
       <SiteHeader active="meetings" />
@@ -177,7 +182,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
                 <input type="hidden" name="id" value={m.id} />
                 <MinutesEditor
                   meetingId={m.id}
-                  initialMinutes={m.minutes ?? ''}
+                  initialMinutes={displayMinutes}
                   initialDecisions={m.decisions ?? ''}
                   action={autosaveMinutesAction}
                   savedByName={m.minutes_updated_by_name || m.minutes_updated_by || ''}
@@ -195,7 +200,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
           {m.minutes || m.decisions ? (
             <>
               {m.minutes && (
-                <div className="rte-view" style={{ marginTop: 6 }} dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(m.minutes) }} />
+                <div className="rte-view" style={{ marginTop: 6 }} dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(displayMinutes) }} />
               )}
               {m.decisions && (
                 <div style={{ marginTop: 12 }}>

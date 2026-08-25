@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-25.195';
+export const GUIDE_VERSION = '2026-08-25.196';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -623,6 +623,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '25/08/2026 (Biên bản họp: tạo việc nhanh kiểu "[]" + đồng bộ Hành động)',
+    items: [
+      'Trong biên bản họp, gõ "[]" đầu dòng để TẠO CÔNG VIỆC; "@Tên người" giao phụ trách (người đầu tiên; các @còn lại ghi "cùng tham gia"); ngày "25/08" đặt hạn. Bấm "Lưu & đóng" → việc TỰ hiện ở mục "Hành động (next actions)" cùng trang.',
+      'Sửa dòng "[]" trong biên bản (tên/người/hạn) sẽ cập nhật ĐÚNG việc bên dưới (mỗi dòng được gắn thẻ #Tn để liên kết). Đánh "[x]" = đã xong — đồng bộ 2 chiều với trạng thái việc.',
+    ],
+  },
   {
     date: '25/08/2026 (Biên bản họp: hiển thị AI lưu & thời điểm lưu lần cuối)',
     items: [

@@ -93,8 +93,13 @@ export default function MinutesEditor({
         )}
       </div>
       <label className="f">Biên bản (minutes)</label>
+      <p className="muted minutes-hint">
+        Mẹo tạo việc nhanh: gõ <code>[]</code> đầu dòng để tạo <b>công việc</b> · <code>@Tên người</code> giao
+        phụ trách (người đầu tiên) · <code>25/08</code> đặt hạn. Bấm <b>Lưu &amp; đóng</b> → việc tự hiện ở
+        mục <b>Hành động</b> bên dưới. Đánh <code>[x]</code> = đã xong (đồng bộ 2 chiều).
+      </p>
       <RichEditor name="minutes" defaultValue={initialMinutes} minHeight={180}
-        placeholder="Nội dung trao đổi, ý kiến, kết luận…"
+        placeholder="Nội dung… Vd: [] Soạn hợp đồng @Nguyễn Văn A 25/08"
         onChange={(html) => { minutesRef.current = html; schedule(); }} />
       <label className="f" style={{ marginTop: 10 }}>Quyết định (decisions)</label>
       <RichEditor name="decisions" defaultValue={initialDecisions} minHeight={120}

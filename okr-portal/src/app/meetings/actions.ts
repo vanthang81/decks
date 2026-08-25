@@ -12,6 +12,8 @@ import {
 import { notifySimple } from '@/lib/notifications';
 import { logAudit } from '@/lib/audit';
 import { createInitiative } from '@/lib/initiatives';
+import { syncMeetingMinutesTasks } from '@/lib/minutes-tasks';
+import { listUsers } from '@/lib/users';
 import { getObjective } from '@/lib/okr';
 import { canEditObjective, loadAccess } from '@/lib/access';
 import { listUnits } from '@/lib/org';
@@ -112,11 +114,21 @@ export async function saveMinutesAction(fd: FormData) {
   const id = str(fd, 'id');
   const { user } = await guardManage(id);
   // LÀM SẠCH HTML rich-text trước khi lưu (chống XSS); rỗng → NULL.
-  const minutes = sanitizeRichHtml(str(fd, 'minutes'));
+  const minutesRaw = sanitizeRichHtml(str(fd, 'minutes'));
   const decisions = sanitizeRichHtml(str(fd, 'decisions'));
+  // Đồng bộ dòng "[]" trong biên bản → công việc (Hành động). Trả HTML đã chèn thẻ #Tn.
+  const users = await listUsers();
+  const sync = await syncMeetingMinutesTasks({
+    meetingId: id, minutesHtml: minutesRaw, users, actor: user.email, todayYear: new Date().getFullYear(),
+  });
+  const minutes = sync.html;
   await updateMinutes(id, isRichEmpty(minutes) ? null : minutes, isRichEmpty(decisions) ? null : decisions, user.email);
-  await logAudit({ actor: user.email, action: 'meeting.minutes', entity: 'meeting', entityId: id });
+  await logAudit({
+    actor: user.email, action: 'meeting.minutes', entity: 'meeting', entityId: id,
+    detail: sync.created || sync.updated ? { tasks_created: sync.created, tasks_updated: sync.updated } : undefined,
+  });
   revalidatePath(`/meetings/${id}`);
+  if (sync.created || sync.updated) revalidatePath('/tasks');
 }
 
 /**
