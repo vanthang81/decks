@@ -27,16 +27,20 @@ export function progressColor(p: number): string {
   return '#dc2626';
 }
 
+// Múi giờ chuẩn TOÀN HỆ THỐNG = Hà Nội / Việt Nam (giờ hiển thị luôn theo VN, không phụ thuộc
+// máy chủ chạy ở UTC hay trình duyệt ở múi giờ khác) — CFO 25/08.
+export const VN_TZ = 'Asia/Ho_Chi_Minh';
+
 export function fmtDate(iso: string | null): string {
   if (!iso) return '—';
   const d = new Date(iso);
-  return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d);
+  return new Intl.DateTimeFormat('vi-VN', { timeZone: VN_TZ, day: '2-digit', month: '2-digit', year: 'numeric' }).format(d);
 }
 
 export function fmtDateTime(iso: string | null): string {
   if (!iso) return '—';
   const d = new Date(iso);
   return new Intl.DateTimeFormat('vi-VN', {
-    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    timeZone: VN_TZ, day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
   }).format(d);
 }

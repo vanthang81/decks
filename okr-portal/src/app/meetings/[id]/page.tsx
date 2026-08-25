@@ -9,6 +9,7 @@ import MeetingFields from '@/components/MeetingFields';
 import ExecutionTabs from '@/components/ExecutionTabs';
 import AddTaskToMeeting from '@/components/AddTaskToMeeting';
 import MinutesEditor from '@/components/MinutesEditor';
+import UserLink from '@/components/UserLink';
 import ActivityLogButton from '@/components/ActivityLogButton';
 import { loadEntityAuditAction } from '@/app/audit/actions';
 import { sanitizeRichHtml } from '@/lib/sanitizeHtml';
@@ -55,7 +56,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
         <div className="wrap">
           <p className="subtitle" style={{ marginBottom: 6 }}><Link href="/meetings">← Cuộc họp</Link></p>
           <div className="pagetitle">{m.code && <span className="okr-code" style={{ fontSize: 14, marginRight: 8 }}>{m.code}</span>}{m.title}</div>
-          <p className="subtitle">{MEETING_TYPE_LABEL[m.type]} · Chủ trì: {m.owner_name ?? m.owner_email ?? '—'}{m.meeting_at ? ` · ${fmtDateTime(m.meeting_at)}` : ''}</p>
+          <p className="subtitle">{MEETING_TYPE_LABEL[m.type]} · Chủ trì: <UserLink email={m.owner_email} name={m.owner_name ?? m.owner_email ?? '—'} />{m.meeting_at ? ` · ${fmtDateTime(m.meeting_at)}` : ''}</p>
           <div className="card" style={{ borderLeft: '4px solid var(--accent)' }}>
             <h3 style={{ marginTop: 0 }}>🔒 Nội dung cuộc họp được bảo mật</h3>
             <p className="muted">Bạn chưa được phân quyền xem biên bản/nội dung cuộc họp này. Gửi yêu cầu để chủ trì hoặc thư ký duyệt.</p>
@@ -93,8 +94,13 @@ export default async function MeetingDetail({ params }: { params: { id: string }
   // Đồng chủ trì = role host trừ chủ trì chính; thư ký = role secretary. Để prefill ô chọn nhiều người.
   const cohostText = participants.filter((p) => p.role === 'host' && p.email.toLowerCase() !== ownerLc).map((p) => p.email).join(', ');
   const secretaryText = participants.filter((p) => p.role === 'secretary').map((p) => p.email).join(', ');
-  const cohostNames = participants.filter((p) => p.role === 'host' && p.email.toLowerCase() !== ownerLc).map((p) => p.name || p.email);
-  const secretaryNames = participants.filter((p) => p.role === 'secretary').map((p) => p.name || p.email);
+  const cohostList = participants.filter((p) => p.role === 'host' && p.email.toLowerCase() !== ownerLc);
+  const secretaryList = participants.filter((p) => p.role === 'secretary');
+  // Chuỗi tên → link hồ sơ user (mỗi tên bấm được). Ngăn cách bằng dấu phẩy.
+  const nameLinks = (list: { email: string; name: string | null }[]) =>
+    list.map((p, i) => (
+      <span key={p.email}>{i > 0 ? ', ' : ''}<UserLink email={p.email} name={p.name || p.email} /></span>
+    ));
   const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url, unit_id: u.unit_id, title: personTitle(u) }));
   // Tra chức danh (vai trò · đơn vị) theo email — kèm vào danh sách người tham gia để phân biệt người trùng tên.
   const titleByEmail = new Map(personOpts.filter((p) => p.title).map((p) => [p.email.toLowerCase(), p.title as string]));
@@ -126,9 +132,9 @@ export default async function MeetingDetail({ params }: { params: { id: string }
                 {m.meeting_at ? `🕑 ${fmtDateTime(m.meeting_at)}` : ''}{m.location ? ` · 📍 ${m.location}` : ''}
               </div>
               <div className="obj-meta" style={{ marginTop: 4 }}>
-                Chủ trì: <b>{m.owner_name ?? m.owner_email ?? '—'}</b>
-                {cohostNames.length > 0 ? `, ${cohostNames.join(', ')}` : ''}
-                {secretaryNames.length > 0 ? ` · Thư ký: ${secretaryNames.join(', ')}` : ''}
+                Chủ trì: <b><UserLink email={m.owner_email} name={m.owner_name ?? m.owner_email ?? '—'} /></b>
+                {cohostList.length > 0 ? <>, {nameLinks(cohostList)}</> : ''}
+                {secretaryList.length > 0 ? <> · Thư ký: {nameLinks(secretaryList)}</> : ''}
                 {m.related_units ? ` · ${m.related_units}` : ''}
                 {m.related_projects ? ` · 🗂 ${m.related_projects}` : ''}
                 {` · 👁 ${VISIBILITY_LABEL[m.visibility]}`}
@@ -195,7 +201,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
           </div>
           {(m.minutes || m.decisions) && m.minutes_updated_at && (
             <p className="muted" style={{ margin: '2px 0 0', fontSize: 12.5 }}>
-              Lưu lần cuối{(m.minutes_updated_by_name || m.minutes_updated_by) ? ` bởi ${m.minutes_updated_by_name || m.minutes_updated_by}` : ''} · {fmtDateTime(m.minutes_updated_at)}
+              Lưu lần cuối{(m.minutes_updated_by_name || m.minutes_updated_by) ? <> bởi <UserLink email={m.minutes_updated_by} name={m.minutes_updated_by_name || m.minutes_updated_by} /></> : ''} · {fmtDateTime(m.minutes_updated_at)}
             </p>
           )}
           {m.minutes || m.decisions ? (
@@ -258,7 +264,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
             {participants.length === 0 ? <p className="muted" style={{ margin: 0 }}>Chưa thêm người tham gia.</p> : (
               <ul className="charter-ul" style={{ paddingLeft: 16 }}>
                 {participants.map((p) => (
-                  <li key={p.email}><b>{p.name || p.email}</b> <span className="muted" style={{ fontSize: 12 }}>· {PART_ROLE[p.role] ?? p.role}{titleByEmail.get(p.email.toLowerCase()) ? ` · ${titleByEmail.get(p.email.toLowerCase())}` : ''}</span></li>
+                  <li key={p.email}><b><UserLink email={p.email} name={p.name || p.email} /></b> <span className="muted" style={{ fontSize: 12 }}>· {PART_ROLE[p.role] ?? p.role}{titleByEmail.get(p.email.toLowerCase()) ? ` · ${titleByEmail.get(p.email.toLowerCase())}` : ''}</span></li>
                 ))}
               </ul>
             )}

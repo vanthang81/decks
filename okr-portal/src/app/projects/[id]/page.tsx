@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import UserLink from '@/components/UserLink';
 import { notFound } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import { ProgressBar } from '@/components/ui';
@@ -108,7 +109,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
               <div className="pagetitle" style={{ margin: 0 }}>{p.name}<HelpTip k="projects" /></div>
               <div className="obj-meta" style={{ marginTop: 4 }}>
                 {p.unit_name ? `🏢 ${p.unit_name} · ` : ''}
-                {p.owner_name ? `Chủ trì: ${p.owner_name} · ` : ''}
+                {p.owner_email ? <>Chủ trì: <UserLink email={p.owner_email} name={p.owner_name ?? p.owner_email} /> · </> : ''}
                 {p.task_count} việc ({p.done_count} xong)
                 {p.start_on || p.due_on
                   ? ` · ${p.start_on ? fmtDate(p.start_on) : ''}${p.due_on ? ' → ' + fmtDate(p.due_on) : ''}`

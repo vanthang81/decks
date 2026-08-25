@@ -44,10 +44,10 @@ export default function MinutesEditor({
       fd.set('decisions', decisionsRef.current);
       await action(fd);
       setState('saved');
-      setAt(new Date().toLocaleTimeString('vi-VN'));
+      setAt(new Date().toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }));
       // Người đang gõ CHÍNH là người lưu lần cuối → cập nhật nhật ký hiển thị ngay.
       if (currentUserName) setByName(currentUserName);
-      setAtLabel(new Date().toLocaleString('vi-VN'));
+      setAtLabel(new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }));
     } catch {
       dirty.current = true; // để lần sau thử lưu lại
       setState('error');

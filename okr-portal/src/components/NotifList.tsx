@@ -19,7 +19,7 @@ type Notif = {
 function fmtTime(iso: string): string {
   const d = new Date(iso);
   return new Intl.DateTimeFormat('vi-VN', {
-    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+    timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
   }).format(d);
 }
 const TYPE_LABEL: Record<string, string> = {

@@ -216,7 +216,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                     </span>
                   </div>
                   <div className="kri-meta">
-                    {it.owner_name ? `👤 ${it.owner_name}` : 'Chưa giao'}
+                    {it.owner_email ? <>👤 <UserLink email={it.owner_email} name={it.owner_name ?? it.owner_email} /></> : (it.owner_name ? `👤 ${it.owner_name}` : 'Chưa giao')}
                     {kids > 0 ? ` · ${kids} việc con` : ''}
                     {it.due_on ? ` · hạn ${fmtDate(it.due_on)}` : ''}
                     {it.project_name ? ` · 🗂 ${it.project_name}` : ''}
@@ -668,7 +668,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                   <div className="ttl">
                     <LevelBadge level={c.level} /> <Link href={`/objectives/${c.id}`}>{c.title}</Link>
                   </div>
-                  <div className="obj-meta">{c.unit_name || c.owner_name || ''}</div>
+                  <div className="obj-meta">{c.unit_name ? c.unit_name : (c.owner_email ? <UserLink email={c.owner_email} name={c.owner_name ?? c.owner_email} /> : (c.owner_name || ''))}</div>
                 </div>
                 <div className="obj-prog">
                   <ProgressBar value={c.progress} />

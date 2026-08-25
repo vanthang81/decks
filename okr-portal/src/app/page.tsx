@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import HelpTip from '@/components/HelpTip';
 import SiteHeader from '@/components/SiteHeader';
+import UserLink from '@/components/UserLink';
 import { ProgressBar } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
 import { getCurrentPeriod, listPeriods } from '@/lib/periods';
@@ -400,7 +401,7 @@ function ObjLine({ o, showUnit }: { o: ObjectiveRow; showUnit?: boolean }) {
         </div>
         <div className="obj-meta">
           {showUnit && o.unit_name ? `${o.unit_name} · ` : ''}
-          {o.owner_name ? `Chủ trì: ${o.owner_name} · ` : ''}
+          {o.owner_email ? <>Chủ trì: <UserLink email={o.owner_email} name={o.owner_name ?? o.owner_email} /> · </> : ''}
           {o.kr_count} kết quả then chốt
         </div>
       </div>

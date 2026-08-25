@@ -54,7 +54,7 @@ function fmtPct(att: number | null): string {
 function fmtWhen(iso: string | null): string {
   if (!iso) return '';
   try {
-    return new Date(iso).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return new Date(iso).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   } catch {
     return iso.slice(0, 16).replace('T', ' ');
   }

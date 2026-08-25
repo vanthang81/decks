@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-25.197';
+export const GUIDE_VERSION = '2026-08-25.198';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -623,6 +623,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '25/08/2026 (Giờ Hà Nội + tên người bấm được xem hồ sơ)',
+    items: [
+      'Mọi thời gian hiển thị trong hệ thống nay theo đúng GIỜ HÀ NỘI (Asia/Ho_Chi_Minh), không lệch theo máy chủ/trình duyệt.',
+      'Tên người ở các trang (người tham gia họp, chủ trì/thư ký, người lưu biên bản, phụ trách OKR/việc/dự án…) đều BẤM ĐƯỢC để mở hồ sơ 360° của người đó.',
+    ],
+  },
   {
     date: '25/08/2026 (Biên bản họp: ô soạn tương tác kiểu Lark)',
     items: [

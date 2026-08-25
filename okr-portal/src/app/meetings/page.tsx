@@ -4,6 +4,7 @@ import HelpTip from '@/components/HelpTip';
 import EditModal from '@/components/EditModal';
 import NavIcon from '@/components/NavIcon';
 import MeetingFields from '@/components/MeetingFields';
+import UserLink from '@/components/UserLink';
 import { requireUser } from '@/lib/current-user';
 import { listUsers } from '@/lib/users';
 import { listUnits } from '@/lib/org';
@@ -67,7 +68,7 @@ export default async function MeetingsPage() {
                       </td>
                       <td style={{ fontSize: 12.5 }}>{MEETING_TYPE_LABEL[m.type]}</td>
                       <td style={{ fontSize: 12.5 }}>{m.meeting_at ? fmtDateTime(m.meeting_at) : <span className="muted">—</span>}</td>
-                      <td style={{ fontSize: 12.5 }}>{m.owner_name ?? m.owner_email ?? '—'}</td>
+                      <td style={{ fontSize: 12.5 }}>{m.owner_email ? <UserLink email={m.owner_email} name={m.owner_name ?? m.owner_email} /> : '—'}</td>
                       <td className="right mono">{m.participant_count}</td>
                       <td className="right mono">{m.action_count}</td>
                       <td>{(() => { const sv = meetingStatusView(m); return <span className={`badge ${sv.cls}`}>{sv.label}</span>; })()}</td>
