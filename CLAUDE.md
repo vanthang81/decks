@@ -142,6 +142,15 @@ phục vụ + chèn watermark/log.
   22/08 phân lại 35 deck theo nội dung, dồn "Nội bộ" 31→ phân bổ đúng 8 danh mục, 0 deck lệch bộ chuẩn.)
   **Ghi chú**: auto dùng từ khoá (nhanh, xác định) — gần đúng, không thay được review của người; muốn AI đọc-hiểu
   từng deck để phân loại thì thêm bước gọi LLM ở pipeline publish (chưa làm).
+- **MỌI deck LUÔN có MÔ TẢ NGẮN ở card (tự động — CFO 27/08)**: `description` = "đoạn tóm tắt nội dung" hiện dưới
+  tiêu đề card. Khi publish/tạo deck mà KHÔNG nhập mô tả thì hệ **tự suy** (`src/lib/categorize.ts`
+  `inferDescription`): (1) `<meta name=description/og:description>` → (2) **phụ đề trang bìa** (deck generator MBB
+  dùng `<div class="csub">`, thêm fallback `.deck-sub/.subtitle/.lead/.sub`) → (3) câu có nghĩa đầu tiên sau tiêu
+  đề; cắt gọn ~220 ký tự. `resolveDescription`: **người nhập > mô tả hiện có (GIỮ NGUYÊN) > tự suy nội dung**. Áp ở
+  `/api/publish` (⇒ tool MCP `deck_publish`) + `createDeckAction` + `updateContentAction` (deck chưa có mô tả thì
+  suy từ nội dung mới). **Sửa luôn 1 lỗi ngầm**: trước đây `upsertDeck` ghi `description=EXCLUDED` ⇒ republish thiếu
+  `description` sẽ **XOÁ mô tả cũ** (card mất tóm tắt như deck Nam tiến); nay resolve nên giữ nguyên. Backfill 27/08:
+  7 deck thiếu mô tả đã tự suy xong (dùng chung `inferDescription`, chạy 1 lần qua node trong container).
 - **Thư viện phân loại (nhiều deck)**: mỗi deck có **category** (danh mục), **tags** (`text[]`), **company**
   (mặc định BTMH) + **thumbnail** (ảnh preview slide đầu). Trang chủ dùng `src/components/DeckGallery.tsx`
   ('use client'): ô tìm kiếm + chip lọc theo danh mục + **nút đổi kiểu hiển thị Lưới/Danh sách** (giống
