@@ -99,7 +99,6 @@ function accessGate(
        *{box-sizing:border-box}
        body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#0F1620;color:#EAF0F6;display:grid;place-items:center;min-height:100vh;margin:0;padding:20px}
        .card{width:min(94vw,400px);background:#172230;border:1px solid #26323F;border-radius:16px;padding:30px 28px;box-shadow:0 30px 70px -40px rgba(0,0,0,.7)}
-       .tag{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#52A8E6;font-weight:700;text-align:center}
        h2{margin:6px 0 2px;font-size:21px;text-align:center} .sub{color:#9EAAB8;margin:4px 0 20px;font-size:13.5px;text-align:center}
        .sec{display:flex;flex-direction:column;gap:8px;margin:0}
        label{font-size:12.5px;color:#B9C4D0;font-weight:600}
@@ -118,7 +117,6 @@ function accessGate(
        .or::before,.or::after{content:"";flex:1;height:1px;background:#26323F}
      </style></head>
      <body><div class="card">
-       <div class="tag">deck.consultx.vn</div>
        <h2>${esc(deck.title)}</h2>
        <p class="sub">Deck bảo mật — chọn cách bạn được cấp quyền để xem.</p>
        ${help}${body}
