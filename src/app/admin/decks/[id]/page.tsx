@@ -16,6 +16,12 @@ function fmt(ts: string | null): string {
   if (!ts) return '—';
   return new Date(ts).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
 }
+// Chỉ ngày (cho cột hết hạn). null = không hết hạn.
+function fmtDay(ts: string | null): string {
+  if (!ts) return 'Không hết hạn';
+  return new Date(ts).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+}
+const isExpired = (ts: string | null): boolean => !!ts && new Date(ts).getTime() < Date.now();
 
 export default async function DeckDetailPage({
   params,
@@ -350,6 +356,25 @@ export default async function DeckDetailPage({
         <label htmlFor="company">Công ty (tùy chọn)</label>
         <input id="company" name="company" />
         <div className="row" style={{ marginTop: 12 }}>
+          <div style={{ flex: 1 }}>
+            <label htmlFor="expiry">Thời hạn hiệu lực</label>
+            <select id="expiry" name="expiry" defaultValue="never">
+              <option value="never">Không hết hạn</option>
+              <option value="7">7 ngày</option>
+              <option value="30">30 ngày</option>
+              <option value="90">90 ngày</option>
+              <option value="365">1 năm</option>
+            </select>
+          </div>
+          <div style={{ flex: 1 }}>
+            <label htmlFor="expiry_date">…hoặc chọn ngày cụ thể</label>
+            <input id="expiry_date" name="expiry_date" type="date" />
+          </div>
+        </div>
+        <p className="muted" style={{ fontSize: 12.5, margin: '6px 0 0' }}>
+          Chọn ngày cụ thể sẽ ưu tiên hơn preset. Hết hạn = link ngừng xem được (có thể cấp lại). Mặc định: không hết hạn.
+        </p>
+        <div className="row" style={{ marginTop: 12 }}>
           <label style={{ margin: 0 }}>
             <input type="checkbox" name="send_email" style={{ width: 'auto' }} /> Gửi email link luôn
           </label>
@@ -364,15 +389,22 @@ export default async function DeckDetailPage({
         soát truy cập, chặn tải/in và ghi log.
       </p>
       <table style={{ marginBottom: 32 }}>
-        <thead><tr><th>Người xem</th><th>Trạng thái</th><th>Watermark</th><th>Lượt xem</th><th>Xem gần nhất</th><th></th></tr></thead>
+        <thead><tr><th>Người xem</th><th>Trạng thái</th><th>Hết hạn</th><th>Watermark</th><th>Lượt xem</th><th>Xem gần nhất</th><th></th></tr></thead>
         <tbody>
           {grants.map((g) => (
             <tr key={g.id}>
               <td>{g.viewer_name ? `${g.viewer_name} · ` : ''}<span className="muted">{g.viewer_email}</span></td>
               <td>
-                <span className={`pill ${g.status === 'active' ? 'ok' : 'bad'}`}>
-                  {g.status === 'active' ? 'Hiệu lực' : 'Đã thu hồi'}
-                </span>
+                {g.status !== 'active' ? (
+                  <span className="pill bad">Đã thu hồi</span>
+                ) : isExpired(g.expires_at) ? (
+                  <span className="pill bad">Đã hết hạn</span>
+                ) : (
+                  <span className="pill ok">Hiệu lực</span>
+                )}
+              </td>
+              <td className={isExpired(g.expires_at) && g.status === 'active' ? '' : 'muted'} style={{ whiteSpace: 'nowrap', fontSize: 12.5 }}>
+                {fmtDay(g.expires_at)}
               </td>
               <td>
                 <WmSelect
@@ -394,7 +426,7 @@ export default async function DeckDetailPage({
               </td>
             </tr>
           ))}
-          {grants.length === 0 && <tr><td colSpan={6} className="muted">Chưa cấp cho ai.</td></tr>}
+          {grants.length === 0 && <tr><td colSpan={7} className="muted">Chưa cấp cho ai.</td></tr>}
         </tbody>
       </table>
 

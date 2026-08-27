@@ -334,6 +334,22 @@ export async function updateContentAction(formData: FormData) {
   redirect(`/admin/decks/${deckId}?content=${convertError ? 'convertfail' : content ? 'ok' : 'empty'}`);
 }
 
+// Suy ngày hết hạn của grant từ lựa chọn trên form.
+//   date (YYYY-MM-DD) nếu có nhập → ưu tiên (hết hạn cuối ngày đó); ngược lại preset số ngày;
+//   'never' hoặc giá trị lạ → null = KHÔNG hết hạn.
+function parseExpiry(preset: string, date: string): Date | null {
+  const d = date.trim();
+  if (d) {
+    const dt = new Date(`${d}T23:59:59`);
+    if (!Number.isNaN(dt.getTime()) && dt.getTime() > Date.now()) return dt;
+    return null; // ngày trống/không hợp lệ/đã qua → coi như không đặt hạn
+  }
+  if (preset === 'never' || !preset) return null;
+  const days = parseInt(preset, 10);
+  if (Number.isFinite(days) && days > 0) return new Date(Date.now() + days * 86_400_000);
+  return null;
+}
+
 export async function issueLinkAction(formData: FormData) {
   const by = await requireAdminEmail();
   const deckId = String(formData.get('deck_id') ?? '');
@@ -348,15 +364,21 @@ export async function issueLinkAction(formData: FormData) {
     company: String(formData.get('company') ?? '').trim() || null,
     createdBy: by,
   });
-  const { token } = await issueGrant(deckId, viewer.id, by);
+  // Thời hạn hiệu lực của link: 'never' (mặc định) = không hết hạn; preset số ngày; hoặc ngày cụ thể
+  // (expiry_date, ưu tiên nếu có nhập). expiresAt=null ⇒ link vĩnh viễn (khớp cột expires_at NULL).
+  const expiresAt = parseExpiry(String(formData.get('expiry') ?? 'never'), String(formData.get('expiry_date') ?? ''));
+  const { token } = await issueGrant(deckId, viewer.id, by, expiresAt);
   const link = `${process.env.APP_URL ?? ''}/v/${token}`;
 
   if (formData.get('send_email') === 'on') {
+    const expNote = expiresAt
+      ? `<p style="color:#6b7280;font-size:13px">Link có hiệu lực đến <b>${expiresAt.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</b>.</p>`
+      : '';
     await sendMail({
       to: email,
       subject: `Mời xem deck: ${deck.title}`,
       html: `<p>Bạn được mời xem deck <b>${deck.title}</b>.</p>
-             <p><a href="${link}">Mở deck</a> (link cá nhân, chỉ dành cho bạn).</p>`,
+             <p><a href="${link}">Mở deck</a> (link cá nhân, chỉ dành cho bạn).</p>${expNote}`,
       kind: 'link',
     }).catch(() => {});
   }
