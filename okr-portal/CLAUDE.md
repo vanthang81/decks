@@ -368,11 +368,27 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
 - **Deploy/redeploy = chạy tay workflow n8n "OKR Deploy — manual (SSH VPS)" (id `S2sxTDJOSjQ3Yd39`)**:
   node SSH (cred "SSH - VPS deploy") — fetch nhánh + `git reset --hard` worktree + `docker build` +
   chạy lại container + migrate (idempotent). Đổi command của node cho từng bước (build vs nginx).
-  **⚠ Khi redeploy (build image mới) PHẢI recreate CẢ 2 container** `okr-portal` (:8640, env-file) VÀ
-  `okr-portal-vt` (:8641, thêm `-e AUTH_URL/GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET` client vanthang) —
-  nếu chỉ recreate 1 thì container kia chạy image cũ. Thao tác root (nginx/certbot) qua container
-  privileged: `docker run --rm --privileged --pid=host --network host -v /:/host nginx:latest ...`
+  **⚠ Khi redeploy (build image mới) PHẢI recreate CẢ 3 container** `okr-portal` (:8640, env-file),
+  `okr-portal-vt` (:8641, `-e AUTH_URL=https://okr.vanthang.io` + client vanthang) VÀ `okr-portal-btmh`
+  (:8643, `-e AUTH_URL=https://okr.baotinmanhhai.vn` + client vanthang) — nếu chỉ recreate 1 thì container
+  kia chạy image cũ. (Command canonical của workflow đã recreate đủ 3.) Thao tác root (nginx/certbot) qua
+  container privileged: `docker run --rm --privileged --pid=host --network host -v /:/host nginx:latest ...`
   (BẮT BUỘC `--pid=host` để `nginx -s reload` gửi được tín hiệu).
+- **Domain thứ 3 = `https://okr.baotinmanhhai.vn` (27/08, brand chính BTMH)**: DNS `okr.baotinmanhhai.vn`
+  A → VPS (BTMH tự trỏ). Container **`okr-portal-btmh` (:8643)** = cùng image, `-e AUTH_URL=https://okr.baotinmanhhai.vn`
+  + **DÙNG LẠI Google client vanthang** (`717726…`) → redirect URI `https://okr.baotinmanhhai.vn/api/auth/callback/google`
+  **PHẢI whitelist trong client vanthang ở Google Console** (nếu chưa, /login mở được nhưng bấm "Đăng nhập Google"
+  báo redirect_uri_mismatch). Cổng 8642 đã bị `deck-converter` chiếm → dùng **8643**. TLS = **cert wildcard
+  `*.baotinmanhhai.vn`** (GlobalSign OV, hạn 07/02/2027) đặt tại **`/etc/nginx/ssl/baotinmanhhai.vn/{fullchain,privkey}.pem`**
+  (KHÔNG phải certbot — cert do BTMH mua, gia hạn tay: thay 2 file này + `nginx -s reload`). vhost
+  `/etc/nginx/sites-available/okr.baotinmanhhai.vn` → `proxy_pass 127.0.0.1:8643`. cert cùng wildcard phục vụ
+  được mọi `*.baotinmanhhai.vn` khác sau này.
+- **Email hệ thống OKR = gửi SMTP TRỰC TIẾP từ `okr@baotinmanhhai.vn` (27/08)**: `src/lib/mail.ts` ưu tiên
+  nodemailer khi có env `SMTP_HOST` (Gmail `smtp.gmail.com:587` STARTTLS, app-password), fallback
+  `N8N_MAIL_WEBHOOK` cũ. Cred trong **`.env` VPS** (ngoài git): `SMTP_HOST/SMTP_PORT/SMTP_USER=okr@baotinmanhhai.vn/
+  SMTP_PASS(app-password 16 ký tự, BỎ dấu cách)/MAIL_FROM="BTMH OKR <okr@baotinmanhhai.vn>"`. **`next.config.mjs`
+  PHẢI có `experimental.serverComponentsExternalPackages:['nodemailer']`** — nếu bundle, standalone báo
+  MODULE_NOT_FOUND lúc chạy. Cả 3 container đọc chung `.env` → mọi domain đều gửi từ okr@baotinmanhhai.vn.
 - Migration đã chạy: `db/001_okr_core.sql` + `002_grants.sql` + `010_seed_example.sql` bằng superuser
   (`docker exec wg8owogscc4ogog8ccgw0ok8 psql -U postgres -d btmh_data`). Seed exec = `vanthang81@gmail.com`.
 
