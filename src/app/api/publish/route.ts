@@ -8,14 +8,19 @@ import { isValidSlug } from '@/lib/content';
 export const dynamic = 'force-dynamic';
 
 // API publish deck cho máy/Claude: xác thực bằng header x-publish-key (secret trong .env).
-// Body: { slug, title, html, description?, visibility?, require_otp?, is_published?, password?,
+// Body: { slug, title, html | html_url, description?, visibility?, require_otp?, is_published?, password?,
 //         generate_password?, category?, tags?, company? }
+// html: HTML self-contained dán inline. HOẶC html_url: link để SERVER tự tải HTML về (cho deck lớn,
+//   nhúng font — không phải dán cả file qua chat/MCP). Cần MỘT trong hai.
 // password: chuỗi(>=4) = đặt/đổi; '' hoặc null = gỡ; bỏ trống = giữ nguyên.
 // generate_password: true (khi không truyền password) = tự sinh mật khẩu, trả về trong response.
 const Body = z.object({
   slug: z.string(),
   title: z.string().min(1),
-  html: z.string().min(20),
+  // Cần html HOẶC html_url (kiểm ở refine bên dưới).
+  html: z.string().min(20).optional(),
+  // Link để server tự tải HTML deck về (Google Drive / Dropbox / link http(s) trực tiếp…).
+  html_url: z.string().optional(),
   description: z.string().nullish(),
   // Bỏ trống khi CẬP NHẬT deck có sẵn = GIỮ NGUYÊN giá trị hiện tại (không reset). Chỉ dùng mặc định
   // (protected / false / true) khi TẠO MỚI deck chưa tồn tại. → republish nội dung không đổi phân quyền.
@@ -33,7 +38,57 @@ const Body = z.object({
   // Optimistic lock chống ghi đè khi nhiều phiên cùng sửa 1 deck:
   //   bỏ trống = không khoá (y như cũ) · "new" = chỉ tạo mới · <md5 32 hex> = chỉ ghi khi content hiện tại khớp.
   if_match: z.string().nullish(),
+}).refine((d) => !!(d.html || d.html_url), {
+  message: 'cần html hoặc html_url',
+  path: ['html'],
 });
+
+// Tải HTML deck từ 1 URL (thay cho dán html inline) → cho phép publish deck lớn (nhúng font) mà không
+// phải bê cả file qua chat/MCP. Fetch phía server (portal VPS có outbound). Giới hạn dung lượng + sniff HTML.
+const MAX_HTML_BYTES = 25 * 1024 * 1024; // 25MB
+
+function normalizeFetchUrl(raw: string): string {
+  let u: URL;
+  try { u = new URL(raw); } catch { throw new Error('html_url không hợp lệ'); }
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error('html_url chỉ hỗ trợ http/https');
+  // Google Drive: đổi link chia sẻ → link tải trực tiếp.
+  //   /file/d/<ID>/view…  hoặc  ?id=<ID>  →  uc?export=download&id=<ID>
+  if (u.hostname === 'drive.google.com') {
+    const m = u.pathname.match(/\/file\/d\/([^/]+)/);
+    const id = m?.[1] ?? u.searchParams.get('id');
+    if (id) return `https://drive.google.com/uc?export=download&id=${id}`;
+  }
+  // Dropbox: ép tải trực tiếp.
+  if (u.hostname.endsWith('dropbox.com')) { u.searchParams.set('dl', '1'); return u.toString(); }
+  return raw;
+}
+
+async function fetchHtmlFromUrl(raw: string): Promise<string> {
+  const url = normalizeFetchUrl(raw);
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 30_000);
+  let res: Response;
+  try {
+    res = await fetch(url, { redirect: 'follow', signal: ctrl.signal, headers: { 'user-agent': 'decks-portal/1.0' } });
+  } catch (e) {
+    throw new Error(`không tải được html_url: ${e instanceof Error ? e.message : String(e)}`);
+  } finally {
+    clearTimeout(timer);
+  }
+  if (!res.ok) throw new Error(`html_url trả HTTP ${res.status}`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  if (buf.length > MAX_HTML_BYTES) throw new Error(`file quá lớn (${buf.length} bytes > ${MAX_HTML_BYTES})`);
+  const html = buf.toString('utf8');
+  if (html.length < 20) throw new Error('html tải về quá ngắn');
+  if (!/<html[\s>]|<!doctype html/i.test(html)) {
+    throw new Error('nội dung tải về không phải HTML (có thể là trang xác nhận/đăng nhập của nguồn — hãy dùng link tải trực tiếp / chia sẻ "ai có link")');
+  }
+  // Chặn nhầm trang cảnh báo quét virus của Google Drive (khi file quá lớn).
+  if (/Google Drive.*(can.?t scan|virus scan)/is.test(html) && html.length < 20000) {
+    throw new Error('Google Drive trả trang cảnh báo quét virus thay vì file — file có thể quá lớn để tải trực tiếp');
+  }
+  return html;
+}
 
 export async function POST(req: NextRequest) {
   const key = process.env.PUBLISH_KEY;
@@ -57,6 +112,15 @@ export async function POST(req: NextRequest) {
   const slug = d.slug.trim().toLowerCase();
   if (!isValidSlug(slug)) {
     return NextResponse.json({ ok: false, error: 'invalid slug (a-z 0-9 -)' }, { status: 400 });
+  }
+
+  // Nội dung HTML: dán inline (html) HOẶC để server tự tải về (html_url). html_url được ưu tiên khi có.
+  let htmlContent: string;
+  if (d.html_url) {
+    try { htmlContent = await fetchHtmlFromUrl(d.html_url); }
+    catch (e) { return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : 'không tải được html_url' }, { status: 400 }); }
+  } else {
+    htmlContent = d.html as string; // refine đảm bảo có html khi thiếu html_url
   }
 
   // Deck hiện tại (nếu có) — dùng để GIỮ NGUYÊN phân quyền/mật khẩu khi caller không truyền lại.
@@ -86,7 +150,7 @@ export async function POST(req: NextRequest) {
         visibility,
         require_otp,
         is_published,
-        content: d.html,
+        content: htmlContent,
         createdBy: 'api',
       },
       guard,
@@ -114,7 +178,7 @@ export async function POST(req: NextRequest) {
       visibility,
       require_otp,
       is_published,
-      content: d.html,
+      content: htmlContent,
       createdBy: 'api',
     });
   }
@@ -137,7 +201,7 @@ export async function POST(req: NextRequest) {
   // Metadata phân loại. LUÔN đảm bảo deck có danh mục: ưu tiên category truyền vào > danh mục hiện có >
   // tự suy từ tiêu đề/mô tả/thẻ (có thể sinh danh mục mới). deck.category = danh mục hiện tại (upsert không đổi nó).
   const category = resolveCategory(d.category, deck.category, {
-    content: d.html,
+    content: htmlContent,
     title: d.title, description: d.description, tags: d.tags,
   });
   await updateDeckMeta(deck.id, {

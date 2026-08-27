@@ -34,10 +34,15 @@ deck 'protected' KHÔNG công khai — chỉ xem được qua link cá nhân do 
 Kiểm soát truy cập bằng MẬT KHẨU (tùy chọn): đặt 'password' hoặc bật 'generate_password' để khoá deck
 bằng một mật khẩu chung — ai có link + mật khẩu là xem được ngay (không cần cấp link cá nhân).
 
+Với deck LỚN (HTML nhúng font/ảnh, >~100KB) đừng dán cả file vào 'html' (dễ vượt giới hạn) — thay vào đó
+tải file lên một nơi có link (Google Drive chia sẻ "ai có link", Dropbox, hoặc link http(s) trực tiếp) rồi
+truyền 'html_url'; server sẽ TỰ TẢI HTML về. Cần MỘT trong hai: 'html' hoặc 'html_url'.
+
 Args:
   - slug (string): định danh URL, chỉ a-z 0-9 và gạch nối, vd 'btmh-investor-2026'
   - title (string): tiêu đề deck
-  - html (string): TOÀN BỘ HTML self-contained của deck
+  - html (string, tùy chọn nếu có html_url): TOÀN BỘ HTML self-contained của deck (dán inline — hợp deck nhỏ)
+  - html_url (string, tùy chọn nếu có html): link để server TỰ TẢI HTML deck về (Google Drive/Dropbox/link trực tiếp) — dùng cho deck lớn
   - visibility ('public' | 'protected'): khi TẠO MỚI mặc định 'protected'. Khi CẬP NHẬT deck có sẵn mà BỎ TRỐNG = GIỮ NGUYÊN chế độ hiện tại (không đổi phân quyền).
   - require_otp (boolean): bắt OTP email khi xem (chỉ áp dụng deck protected). Khi CẬP NHẬT mà bỏ trống = GIỮ NGUYÊN.
   - is_published (boolean, tùy chọn): xuất bản/ẩn deck. Khi CẬP NHẬT mà bỏ trống = GIỮ NGUYÊN (không tự bỏ ẩn deck đang ẩn).
@@ -66,7 +71,15 @@ Deck TẠO MỚI mặc định BẬT watermark (trừ khi truyền watermark:fal
           .regex(/^[a-z0-9][a-z0-9-]{0,80}$/, 'slug chỉ gồm a-z, 0-9 và gạch nối')
           .describe("Định danh URL, vd 'btmh-investor-2026'"),
         title: z.string().min(1).describe('Tiêu đề deck'),
-        html: z.string().min(20).describe('Toàn bộ HTML self-contained của deck'),
+        html: z
+          .string()
+          .min(20)
+          .optional()
+          .describe('Toàn bộ HTML self-contained của deck (dán inline — hợp deck nhỏ). Bỏ trống nếu dùng html_url'),
+        html_url: z
+          .string()
+          .optional()
+          .describe('Link để server TỰ TẢI HTML deck về (Google Drive/Dropbox/link http(s) trực tiếp) — dùng cho deck lớn thay vì dán inline'),
         visibility: z
           .enum(['public', 'protected'])
           .optional()
