@@ -238,6 +238,15 @@ phục vụ + chèn watermark/log.
   `{slug,title,html,visibility('public'|'protected'),require_otp?,description?}` → upsert vào DB, trả
   `{ok,url}`. Dùng cách này khi CFO nhờ "tạo deck ở Claude chat, publish luôn": sinh HTML self-contained
   → gọi API → trả link. (Proxy sandbox chặn deck.consultx.vn → gọi qua relay curl trên VPS.)
+  - **`html_url` — publish deck LỚN không cần dán HTML inline (CFO 27/08)**: body nhận `html` HOẶC `html_url`
+    (cần đúng 1 trong 2). `html_url` = link để **SERVER TỰ TẢI** HTML về (portal VPS có outbound) → deck HTML
+    self-contained nhúng font (400KB+) publish qua chat/MCP mà KHÔNG phải bê cả file qua chuỗi inline (vượt
+    giới hạn token đầu ra của model ⇒ trước đây "không publish được từ MCP"). Chuẩn hoá link **Google Drive**
+    (`/file/d/<id>/…` hoặc `?id=` → `uc?export=download&id=<id>`) + **Dropbox** (`dl=1`); cap **25MB**; sniff
+    HTML (chặn trang xác nhận/đăng nhập); timeout 30s. `normalizeFetchUrl`/`fetchHtmlFromUrl` trong route.
+    Tool MCP `deck_publish` cũng có `html_url` (đã rebuild `decks-mcp` + cần **reconnect connector claude.ai**
+    để nạp schema mới). Luồng CFO: thả file vào Google Drive (chia sẻ "ai có link") → chat bảo publish → Claude
+    lấy link Drive + gọi tool. Mọi logic bảo toàn (mật khẩu/watermark/source/grants/nhóm) GIỮ NGUYÊN như cũ.
   - **CẬP NHẬT deck có sẵn = GIỮ NGUYÊN mọi thứ không truyền lại** (CFO chốt 22/08): republish cùng slug chỉ
     đổi nội dung (`html`) + những trường có truyền. **Bảo toàn**: mật khẩu chung (`password_hash/plain`), link
     "Nguồn / Chat gốc" (`source_url`), **phân quyền** (`visibility`/`require_otp`/`is_published` — bỏ trống khi
