@@ -62,6 +62,85 @@ export function inferCategory(d: {
   return FALLBACK;
 }
 
+// ================= Tự suy MÔ TẢ NGẮN (description) cho card thư viện =================
+// Mục tiêu: mọi deck LUÔN có "đoạn tóm tắt nội dung" ở card (giống các tài liệu khác) kể cả khi
+// người publish không nhập mô tả. Suy từ NỘI DUNG deck: ưu tiên meta description → phụ đề trang bìa
+// (deck generator MBB dùng .csub) → câu có nghĩa đầu tiên. KHÔNG dùng LLM (nhanh, xác định).
+
+function normText(s: string): string {
+  return s.replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+}
+
+// Cắt gọn về độ dài card, ưu tiên cắt ở ranh giới từ + thêm dấu … khi bị cắt.
+function clip(s: string, max = 220): string {
+  const t = s.replace(/\s+/g, ' ').trim();
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max);
+  const sp = cut.lastIndexOf(' ');
+  return (sp > max * 0.6 ? cut.slice(0, sp) : cut).replace(/[\s·|–—-]+$/, '').trim() + '…';
+}
+
+function metaDesc(html: string): string | null {
+  const m =
+    html.match(/<meta[^>]+(?:name|property)=["'](?:description|og:description)["'][^>]*\scontent=["']([^"']+)["']/i) ||
+    html.match(/<meta[^>]+\scontent=["']([^"']+)["'][^>]*(?:name|property)=["'](?:description|og:description)["']/i);
+  const t = m ? normText(m[1]) : '';
+  return t || null;
+}
+
+// Inner text của phần tử ĐẦU TIÊN có class khớp (lấy thô tới thẻ đóng cùng tên — đủ cho phụ đề 1 dòng).
+function firstByClass(html: string, cls: string): string | null {
+  const re = new RegExp(`<([a-z0-9]+)[^>]*class="[^"]*\\b${cls}\\b[^"]*"[^>]*>([\\s\\S]*?)<\\/\\1>`, 'i');
+  const m = html.match(re);
+  const t = m ? normText(m[2]) : '';
+  return t || null;
+}
+
+function sameAsTitle(s: string, title?: string | null): boolean {
+  const a = normText(s).toLowerCase();
+  const b = normText(title ?? '').toLowerCase();
+  return !!b && (a === b || a.startsWith(b) || b.startsWith(a));
+}
+
+// Suy mô tả ngắn từ HTML nội dung deck. Trả null nếu không moi được gì đáng kể.
+export function inferDescription(content: string | null | undefined, title?: string | null): string | null {
+  if (!content) return null;
+  const html = String(content);
+  // 1) meta description (nếu deck có khai báo)
+  const md = metaDesc(html);
+  if (md && md.length >= 12) return clip(md);
+  // 2) phụ đề trang bìa của deck generator / các lớp phụ đề thường gặp
+  for (const cls of ['csub', 'deck-sub', 'subtitle', 'lead', 'sub']) {
+    const t = firstByClass(html, cls);
+    if (t && t.length >= 12 && !sameAsTitle(t, title)) return clip(t);
+  }
+  // 3) fallback: câu/đoạn có nghĩa đầu tiên sau tiêu đề
+  const body = normText(
+    html.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/data:[^\s"')]+/g, ' '),
+  ).slice(0, 4000);
+  const t = normText(title ?? '');
+  let rest = body;
+  if (t) { const idx = body.indexOf(t); if (idx >= 0) rest = body.slice(idx + t.length); }
+  rest = rest.replace(/^[\s·|–—-]+/, '').trim();
+  const first = rest.split(/(?<=[.!?])\s+/)[0] ?? rest;
+  const pick = first.length >= 20 ? first : rest;
+  return pick.length >= 12 ? clip(pick) : null;
+}
+
+// Quyết định mô tả cuối cùng cho 1 lần ghi deck: người nhập > mô tả hiện có (GIỮ NGUYÊN, không mất khi
+// republish thiếu description) > tự suy từ nội dung. → card luôn có tóm tắt.
+export function resolveDescription(
+  explicit: string | null | undefined,
+  existing: string | null | undefined,
+  d: { content?: string | null; title?: string | null },
+): string | null {
+  const e = (explicit ?? '').trim();
+  if (e) return e;
+  const cur = (existing ?? '').trim();
+  if (cur) return cur;
+  return inferDescription(d.content, d.title);
+}
+
 // Quyết định danh mục cuối cùng cho 1 lần ghi deck. KHÔNG ghi đè danh mục sẵn có khi không có ý định đổi.
 //   explicit = giá trị người dùng/API vừa nhập (nếu có) ; existing = danh mục hiện tại của deck.
 //   d.content (tuỳ chọn) = HTML nội dung deck để review khi phải tự suy.

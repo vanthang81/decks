@@ -151,11 +151,12 @@ export async function updateDeckContent(id: string, content: string): Promise<vo
 // ---- Metadata phân loại: chỉ cập nhật field được truyền (undefined = giữ nguyên) ----
 export async function updateDeckMeta(
   id: string,
-  m: { category?: string | null; tags?: string[]; company?: string },
+  m: { category?: string | null; tags?: string[]; company?: string; description?: string | null },
 ): Promise<void> {
   const sets: string[] = [];
   const vals: unknown[] = [];
   let i = 1;
+  if (m.description !== undefined) { sets.push(`description=$${i++}`); vals.push(m.description ? decodeEntities(m.description) : null); }
   if (m.category !== undefined) { sets.push(`category=$${i++}`); vals.push(m.category ? decodeEntities(m.category) : null); }
   if (m.tags !== undefined) { sets.push(`tags=$${i++}`); vals.push(m.tags.map(decodeEntities)); }
   if (m.company !== undefined) { sets.push(`company=$${i++}`); vals.push(m.company ? decodeEntities(m.company) : 'BTMH'); }

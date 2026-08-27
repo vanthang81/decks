@@ -7,7 +7,7 @@ import {
   upsertDeck, getDeckById, getDeckBySlug, updateDeckContent, updateDeckMeta,
   setDeckPassword, generateDeckPassword, setDeckPublished, setDeckVisibility, setDeckSource, setDeckWatermark, deleteDeck, type Visibility,
 } from '@/lib/decks';
-import { resolveCategory } from '@/lib/categorize';
+import { resolveCategory, resolveDescription, inferDescription } from '@/lib/categorize';
 import { isConvertibleDoc, convertDocToDeckHtml } from '@/lib/convert';
 import { generateDeckThumbnail } from '@/lib/thumbnail';
 import { upsertViewer } from '@/lib/viewers';
@@ -199,10 +199,12 @@ export async function createDeckAction(formData: FormData) {
   if (!/^[a-z0-9][a-z0-9-]{0,80}$/.test(slug) || !title) return;
   const existed = await getDeckBySlug(slug); // để biết deck MỚI hay đang cập nhật (giữ nguyên watermark khi update)
   const { html: content, convertError } = await extractDeckContent(formData, title);
+  // Mô tả ngắn cho card: admin nhập > mô tả hiện có > tự suy từ nội dung (card luôn có tóm tắt).
+  const description = resolveDescription(String(formData.get('description') ?? ''), existed?.description, { content, title });
   const deck = await upsertDeck({
     slug,
     title,
-    description: (String(formData.get('description') ?? '').trim() || null),
+    description,
     visibility: (String(formData.get('visibility') ?? 'protected') as Visibility),
     require_otp: formData.get('require_otp') === 'on',
     is_published: formData.get('is_published') !== 'off',
@@ -320,6 +322,11 @@ export async function updateContentAction(formData: FormData) {
   const { html: content, convertError } = await extractDeckContent(formData, deck?.title ?? 'Deck');
   if (content) {
     await updateDeckContent(deckId, content);
+    // Nếu deck chưa có mô tả → tự suy từ nội dung mới để card có tóm tắt (không đụng mô tả sẵn có).
+    if (deck && !(deck.description ?? '').trim()) {
+      const desc = inferDescription(content, deck.title);
+      if (desc) await updateDeckMeta(deckId, { description: desc });
+    }
     if (deck) await generateDeckThumbnail({ id: deck.id, slug: deck.slug }).catch(() => false);
   }
   revalidatePath(`/admin/decks/${deckId}`);

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 import { upsertDeck, upsertDeckGuarded, getDeckContentState, setDeckPassword, generateDeckPassword, getDeckBySlug, updateDeckMeta, setDeckSource, setDeckWatermark, type Deck } from '@/lib/decks';
-import { resolveCategory } from '@/lib/categorize';
+import { resolveCategory, resolveDescription } from '@/lib/categorize';
 import { generateDeckThumbnail } from '@/lib/thumbnail';
 import { isValidSlug } from '@/lib/content';
 
@@ -130,6 +130,9 @@ export async function POST(req: NextRequest) {
   const visibility = d.visibility ?? existing?.visibility ?? 'protected';
   const require_otp = d.require_otp ?? existing?.require_otp ?? false;
   const is_published = d.is_published ?? existing?.is_published ?? true;
+  // Mô tả ngắn cho card: người nhập > mô tả hiện có (GIỮ NGUYÊN khi republish thiếu) > tự suy từ nội dung.
+  // → card luôn có "đoạn tóm tắt" giống các tài liệu khác; đồng thời không mất mô tả cũ khi update chỉ đổi nội dung.
+  const description = resolveDescription(d.description, existing?.description, { content: htmlContent, title: d.title });
 
   // Optimistic lock (tuỳ chọn). Kiểm tra + ghi atomic trong upsertDeckGuarded → không có khe TOCTOU.
   let guard: { mode: 'new' } | { mode: 'md5'; md5: string } | null = null;
@@ -146,7 +149,7 @@ export async function POST(req: NextRequest) {
       {
         slug,
         title: d.title,
-        description: d.description ?? null,
+        description,
         visibility,
         require_otp,
         is_published,
@@ -174,7 +177,7 @@ export async function POST(req: NextRequest) {
     deck = await upsertDeck({
       slug,
       title: d.title,
-      description: d.description ?? null,
+      description,
       visibility,
       require_otp,
       is_published,
@@ -202,7 +205,7 @@ export async function POST(req: NextRequest) {
   // tự suy từ tiêu đề/mô tả/thẻ (có thể sinh danh mục mới). deck.category = danh mục hiện tại (upsert không đổi nó).
   const category = resolveCategory(d.category, deck.category, {
     content: htmlContent,
-    title: d.title, description: d.description, tags: d.tags,
+    title: d.title, description, tags: d.tags,
   });
   await updateDeckMeta(deck.id, {
     category,
