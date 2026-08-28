@@ -382,7 +382,11 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   `*.baotinmanhhai.vn`** (GlobalSign OV, hạn 07/02/2027) đặt tại **`/etc/nginx/ssl/baotinmanhhai.vn/{fullchain,privkey}.pem`**
   (KHÔNG phải certbot — cert do BTMH mua, gia hạn tay: thay 2 file này + `nginx -s reload`). vhost
   `/etc/nginx/sites-available/okr.baotinmanhhai.vn` → `proxy_pass 127.0.0.1:8643`. cert cùng wildcard phục vụ
-  được mọi `*.baotinmanhhai.vn` khác sau này.
+  được mọi `*.baotinmanhhai.vn` khác sau này. **⚠ vhost dựng TAY PHẢI có `include /etc/letsencrypt/options-ssl-nginx.conf;`
+  + `ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;`** (giống vhost certbot) — nếu thiếu, vhost rơi về `ssl_ciphers`
+  cũ/hẹp trong `nginx.conf` → `curl` vào được nhưng **Chrome báo `ERR_SSL_PROTOCOL_ERROR`** (đã dính 28/08). Chẩn
+  đoán nhanh SSL: `openssl s_client -connect 45.77.247.185:443 -servername <host>` + `curl --resolve <host>:443:45.77.247.185`
+  (bỏ qua DNS) — nếu 2 lệnh này OK mà trình duyệt lỗi thì KHÔNG phải server/DNS mà là cấu hình TLS vhost / cache trình duyệt.
 - **Email hệ thống OKR = gửi SMTP TRỰC TIẾP từ `okr@baotinmanhhai.vn` (27/08)**: `src/lib/mail.ts` ưu tiên
   nodemailer khi có env `SMTP_HOST` (Gmail `smtp.gmail.com:587` STARTTLS, app-password), fallback
   `N8N_MAIL_WEBHOOK` cũ. Cred trong **`.env` VPS** (ngoài git): `SMTP_HOST/SMTP_PORT/SMTP_USER=okr@baotinmanhhai.vn/
