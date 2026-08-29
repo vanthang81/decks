@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import HelpTip from '@/components/HelpTip';
 import SiteHeader from '@/components/SiteHeader';
+import PageGuide from '@/components/PageGuide';
 import NewPersonalOkrModal from '@/components/NewPersonalOkrModal';
 import { ProgressBar, StatusBadge } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
@@ -29,6 +30,7 @@ export default async function MyPage() {
     <>
       <SiteHeader active="my" />
       <div className="wrap">
+        <PageGuide pageKey="my" />
         <div className="flexbtw">
           <div>
             <div className="pagetitle">OKR & việc của tôi<HelpTip k="my" /></div>

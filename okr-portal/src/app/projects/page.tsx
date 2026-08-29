@@ -1,5 +1,6 @@
 import HelpTip from '@/components/HelpTip';
 import SiteHeader from '@/components/SiteHeader';
+import PageGuide from '@/components/PageGuide';
 import ProjectsList from '@/components/ProjectsList';
 import SearchSelect from '@/components/SearchSelect';
 import NumberInput from '@/components/NumberInput';
@@ -93,6 +94,7 @@ export default async function ProjectsPage({
     <>
       <SiteHeader active="projects" />
       <div className="wrap">
+        <PageGuide pageKey="projects" />
         <div className="flexbtw">
           <div>
             <div className="pagetitle">Dự án<HelpTip k="projects" /></div>

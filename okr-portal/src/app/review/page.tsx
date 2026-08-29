@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import SiteHeader from '@/components/SiteHeader';
+import PageGuide from '@/components/PageGuide';
 import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
 import { currentReviewData } from '@/lib/review';
@@ -29,6 +30,7 @@ export default async function ReviewPage() {
       <>
         <SiteHeader active="review" />
         <div className="wrap">
+          <PageGuide pageKey="review" />
           <div className="pagetitle">Họp điều hành</div>
           <div className="card"><p className="muted">Chưa có kỳ OKR nào.</p></div>
         </div>

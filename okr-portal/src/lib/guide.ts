@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-29.103';
+export const GUIDE_VERSION = '2026-08-29.104';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -164,6 +164,15 @@ export type Feature = {
 };
 
 export const FEATURES: Feature[] = [
+  {
+    key: 'page-guide',
+    title: 'Hướng dẫn nhanh theo trang',
+    where: 'Đầu mỗi trang (khung màu vàng nhạt "Hướng dẫn nhanh")',
+    help: 'Mỗi trang có khung tóm tắt các thao tác chính của chính trang đó — nhìn là dùng được ngay; thu gọn được và tự nhớ theo từng trang.',
+    detail: [
+      'Ngay đầu mỗi trang có một khung "Hướng dẫn nhanh" liệt kê 3–4 thao tác quan trọng nhất của CHÍNH trang đang xem (bấm nút nào, để làm gì, ý nghĩa) — mục tiêu để người dùng mới tự dùng được mà không cần đào tạo. Bấm vào tiêu đề khung để thu gọn/mở lại; lựa chọn được ghi nhớ riêng cho từng trang (đã đọc rồi thì lần sau vào trang đó khung tự thu gọn cho gọn màn hình). Cuối khung có link "Xem hướng dẫn đầy đủ →" dẫn tới trang Hướng dẫn chi tiết của tính năng liên quan. Nội dung các khung được quản lý tập trung, tự cập nhật khi hệ thống có tính năng mới.',
+    ],
+  },
   {
     key: 'report-levels',
     title: 'Báo cáo theo cấp (kết quả tổng có trọng số)',
@@ -623,6 +632,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '29/08/2026 (Hướng dẫn nhanh ở mỗi trang)',
+    items: [
+      'Mỗi trang có khung "Hướng dẫn nhanh" ngay đầu trang: tóm tắt các thao tác chính của CHÍNH trang đó (bấm ở đâu, để làm gì) — người mới nhìn là dùng được ngay, không cần đào tạo.',
+      'Thu gọn được và tự nhớ theo từng trang (đã đọc thì lần sau vào thu gọn sẵn); có link "Xem hướng dẫn đầy đủ →" tới trang Hướng dẫn.',
+    ],
+  },
   {
     date: '29/08/2026 (Cuộc họp: bộ lọc & tìm kiếm)',
     items: [

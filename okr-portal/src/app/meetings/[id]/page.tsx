@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
+import PageGuide from '@/components/PageGuide';
 import HelpTip from '@/components/HelpTip';
 import EditModal from '@/components/EditModal';
 import NavIcon from '@/components/NavIcon';
@@ -121,6 +122,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
     <>
       <SiteHeader active="meetings" />
       <div className="wrap">
+        <PageGuide pageKey="meeting-detail" />
         <p className="subtitle" style={{ marginBottom: 6 }}><Link href="/meetings">← Cuộc họp</Link></p>
 
         {/* Header */}

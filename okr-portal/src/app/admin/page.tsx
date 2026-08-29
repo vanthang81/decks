@@ -2,6 +2,7 @@ import Link from 'next/link';
 import HelpTip from '@/components/HelpTip';
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
+import PageGuide from '@/components/PageGuide';
 import NavIcon from '@/components/NavIcon';
 import { requireUser } from '@/lib/current-user';
 import { loadAccess, canManageSystem } from '@/lib/access';
@@ -48,6 +49,7 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
     <>
       <SiteHeader active="admin" />
       <div className="wrap">
+        <PageGuide pageKey="admin" />
         <div className="pagetitle">Quản trị hệ thống<HelpTip k="admin" /></div>
         <p className="subtitle">Chỉ CEO/CFO. Thiết lập nền tảng · đo lường · tự động hoá.</p>
 

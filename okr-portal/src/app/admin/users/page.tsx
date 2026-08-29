@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
+import PageGuide from '@/components/PageGuide';
 import ConfirmButton from '@/components/ConfirmButton';
 import ToastForm from '@/components/ToastForm';
 import EditUserModal from '@/components/EditUserModal';
@@ -48,6 +49,7 @@ export default async function AdminUsers() {
     <>
       <SiteHeader active="admin" />
       <div className="wrap">
+        <PageGuide pageKey="admin-users" />
         <div className="pagetitle">Người dùng & phân quyền</div>
         <p className="subtitle">
           Thêm bằng email Google. Vai trò: CEO · CFO (toàn quyền) · GĐ khối · Trưởng phòng · Nhân viên.

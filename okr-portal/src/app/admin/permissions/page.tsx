@@ -2,6 +2,7 @@ import { Fragment } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
+import PageGuide from '@/components/PageGuide';
 import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
 import { loadAccess, canManageSystem, canAssignPerms } from '@/lib/access';
@@ -27,6 +28,7 @@ export default async function AdminPermissions({
     <>
       <SiteHeader active="admin" />
       <div className="wrap">
+        <PageGuide pageKey="admin-permissions" />
         <p className="subtitle" style={{ marginBottom: 6 }}>
           <Link href="/admin">← Quản trị</Link>
         </p>

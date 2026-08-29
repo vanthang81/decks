@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
+import PageGuide from '@/components/PageGuide';
 import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
 import { getUser } from '@/lib/users';
@@ -65,6 +66,7 @@ export default async function BudgetPage({ searchParams }: { searchParams: { per
     <>
       <SiteHeader active="budget" />
       <div className="wrap">
+        <PageGuide pageKey="budget" />
         <div className="flexbtw flexbtw-top">
           <div>
             <div className="pagetitle">Quản trị ngân sách<HelpTip k="budget" /></div>

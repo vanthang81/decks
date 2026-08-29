@@ -202,6 +202,17 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   (thêm/sửa mục + `help` tooltip) và/hoặc `METHODOLOGY`; (2) thêm 1 dòng vào `CHANGELOG` + đổi
   `GUIDE_VERSION`; (3) gắn `<HelpTip k="..."/>` tại UI tính năng đó. Nhờ vậy tài liệu + tooltip luôn
   đồng bộ với hệ thống một cách tự động.
+- **HƯỚNG DẪN NHANH THEO TRANG (CFO 29/08 — áp cho MỌI trang, KHÔNG cần nhắc lại)**: mỗi trang có khung
+  **"Hướng dẫn nhanh"** ngay đầu trang (component **`src/components/PageGuide.tsx`**, đặt `<PageGuide
+  pageKey="..." />` NGAY dưới `<div className="wrap">`, TRÊN tiêu đề) tóm tắt 3–4 thao tác chính của CHÍNH
+  trang đó → người mới nhìn là dùng được ngay. Nội dung tập trung ở **`src/lib/page-guides.ts`** (registry
+  `PAGE_GUIDES[key] = {title, intro?, tips[{k,v}], guideHref?}`). Khung thu gọn được + nhớ theo trang
+  (localStorage `pg_<key>`), có link "Xem hướng dẫn đầy đủ →" (`guideHref`). CSS `.pgd*` ở globals.css
+  (nền gold nhạt, tiêu đề maroon; `.pgd-sub` ẩn ở ≤640px). **THÊM TRANG MỚI ⇒ thêm 1 entry vào
+  `PAGE_GUIDES` + đặt `<PageGuide pageKey="..."/>` dưới `.wrap`**. Trang chi tiết có nhánh "không có
+  quyền/ngoài phạm vi" (2 `.wrap`) thì đặt ở `.wrap` NỘI DUNG CHÍNH (nhánh cuối), KHÔNG đặt ở nhánh chặn.
+  Đã gắn 15 trang: dashboard/objectives/objective-detail/tasks/meetings/meeting-detail/projects/kpi/
+  review/my/strategy/budget/admin/admin-users/admin-permissions.
 
 ## Tài liệu SLIDE DECK giới thiệu hệ thống (deck.consultx.vn) — TỰ ĐỘNG CẬP NHẬT
 - **Nguồn**: `okr-portal/docs/system-overview-deck.html` (HTML self-contained, house style deck ConsultX:

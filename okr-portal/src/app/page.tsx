@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import HelpTip from '@/components/HelpTip';
 import SiteHeader from '@/components/SiteHeader';
+import PageGuide from '@/components/PageGuide';
 import UserLink from '@/components/UserLink';
 import { ProgressBar } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
@@ -96,6 +97,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { tour
     <>
       <SiteHeader active="home" />
       <div className="wrap">
+        <PageGuide pageKey="dashboard" />
         <div className="flexbtw">
           <div>
             <div className="pagetitle">Bảng điều khiển OKR<HelpTip k="dashboard" /></div>
