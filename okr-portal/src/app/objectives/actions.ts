@@ -817,9 +817,10 @@ export async function editInitiativeAction(fd: FormData) {
       progress: num(fd, 'progress'),
       priority: (str(fd, 'priority') || 'medium') as Priority,
       start_on: orNull(str(fd, 'start_on')),
-      // HẠN (due_on) KHOÁ: form sửa việc hiển thị read-only để đánh giá đúng/trễ hạn công bằng → server
-      // GIỮ giá trị đã lưu, KHÔNG nhận từ form (chống sửa lén hidden input làm sai badge "Đúng hạn/Trễ").
-      due_on: init.due_on,
+      // HẠN (due_on): NGƯỜI QUẢN việc (quản OKR / chủ trì · thư ký cuộc họp / quản trị) được SỬA lại
+      // (CFO 29/08 — vd thư ký họp dời hạn). Nhánh này chỉ chạy khi perm.manage; người ĐƯỢC GIAO (assignee)
+      // KHÔNG vào nhánh này nên không tự dời hạn của mình. Form không gửi 'due_on' → giữ giá trị cũ.
+      due_on: fd.has('due_on') ? orNull(str(fd, 'due_on')) : init.due_on,
       done_on: fd.has('done_on') ? orNull(str(fd, 'done_on')) : undefined,
       budget_planned: num(fd, 'budget_planned'),
       budget_actual: num(fd, 'budget_actual'),

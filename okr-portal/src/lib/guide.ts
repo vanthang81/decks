@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-29.101';
+export const GUIDE_VERSION = '2026-08-29.102';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -623,6 +623,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '29/08/2026 (Sửa được Hạn công việc sau khi tạo)',
+    items: [
+      'Hạn (deadline) công việc nay SỬA LẠI ĐƯỢC bởi người quản việc: chủ trì / thư ký cuộc họp, người quản OKR, quản trị — trước đây bị khoá cứng sau khi tạo.',
+      'Người ĐƯỢC GIAO việc vẫn chỉ xem hạn (không tự dời hạn của mình) để giữ đánh giá đúng/trễ hạn khách quan.',
+    ],
+  },
   {
     date: '29/08/2026 (Bàn giao công việc khi nhân sự nghỉ)',
     items: [

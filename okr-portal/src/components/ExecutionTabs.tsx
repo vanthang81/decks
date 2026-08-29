@@ -872,11 +872,11 @@ function EditModal({
                     <input className="i" type="date" name="start_on" defaultValue={card.start_on ?? ''} />
                   </div>
                   <div>
-                    <label className="f">Hạn <span className="muted" style={{ fontWeight: 400 }}>— cố định</span></label>
-                    {/* Hạn KHOÁ để đánh giá đúng/trễ hạn khách quan; giá trị vẫn gửi qua input ẩn. */}
-                    <input className="i" type="date" defaultValue={card.due_on ?? ''} disabled
-                      title="Hạn cố định để đánh giá đúng hạn — không sửa ở đây" />
-                    <input type="hidden" name="due_on" value={card.due_on ?? ''} />
+                    <label className="f">Hạn</label>
+                    {/* Người QUẢN việc (chủ trì/thư ký họp, quản OKR, quản trị) được SỬA lại hạn (CFO 29/08);
+                        người ĐƯỢC GIAO chỉ xem (disabled) — không tự dời hạn của mình. */}
+                    <input className="i" type="date" name="due_on" defaultValue={card.due_on ?? ''}
+                      disabled={!canManage} title="Hạn hoàn thành — người quản việc/thư ký họp sửa được" />
                   </div>
                   <div>
                     <label className="f">Hoàn thành</label>

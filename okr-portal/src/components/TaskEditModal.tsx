@@ -253,11 +253,10 @@ export default function TaskEditModal({
                   <input className="i" type="date" name="start_on" defaultValue={task.start_on ?? ''} />
                 </div>
                 <div>
-                  <label className="f">Hạn <span className="muted" style={{ fontWeight: 400 }}>— cố định</span></label>
-                  {/* Hạn KHOÁ để đánh giá đúng/trễ hạn khách quan; giá trị vẫn gửi qua input ẩn. */}
-                  <input className="i" type="date" defaultValue={task.due_on ?? ''} disabled
-                    title="Hạn cố định để đánh giá đúng hạn — không sửa ở đây" />
-                  <input type="hidden" name="due_on" value={task.due_on ?? ''} />
+                  <label className="f">Hạn</label>
+                  {/* Người QUẢN việc (chủ trì/thư ký họp, quản OKR, quản trị) được SỬA lại hạn (CFO 29/08). */}
+                  <input className="i" type="date" name="due_on" defaultValue={task.due_on ?? ''}
+                    title="Hạn hoàn thành — người quản việc/thư ký họp sửa được" />
                 </div>
                 <div>
                   <label className="f">Hoàn thành</label>

@@ -302,7 +302,10 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
 - **Công việc — tự điền đơn vị + hoàn thành đúng hạn (CFO 10/08)**: (a) `NewTaskModal` — chọn "Giao cho"
   (owner) → tự set `unit_id` = đơn vị của người đó (owner/unit thành controlled; chỉ nhảy khi unit trong
   phạm vi); PersonOpt + userOpts thêm `unit_id`. (b) Cập nhật công việc (**cả `TaskEditModal` /tasks LẪN
-  `ExecutionTabs` OKR-detail**): trường **Hạn KHOÁ** (disabled + input ẩn giữ giá trị) + thêm **Hoàn thành**
+  `ExecutionTabs` OKR-detail**): trường **Hạn (`due_on`) — người QUẢN việc SỬA được** (CFO 29/08, đảo lại
+  quyết định khoá 10/08: chủ trì/thư ký họp, quản OKR, quản trị dời được hạn; người ĐƯỢC GIAO chỉ xem
+  `disabled` — không tự dời hạn mình). Server: nhánh `perm.manage` của `editInitiativeAction` nhận
+  `due_on: fd.has('due_on') ? orNull(...) : init.due_on`; nhánh assignee KHÔNG đọc `due_on`) + thêm **Hoàn thành**
   (`done_on`) + huy hiệu đúng/trễ hạn (so `done_on` vs `due_on`). `editInitiative` nhận `done_on`
   (`CASE WHEN status='done' THEN COALESCE($done_on,done_on,now()) ELSE NULL`); `editInitiativeAction` truyền
   `done_on` khi form gửi. `Card`/`TaskRow` + TASK_SELECT thêm cột `done_on`.
