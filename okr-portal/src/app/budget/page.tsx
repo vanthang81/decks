@@ -80,7 +80,7 @@ export default async function BudgetPage({ searchParams }: { searchParams: { per
             basePath="/budget"
           />
         </div>
-        <div className="bud-filterbar">
+        <div className="bud-filterbar" data-tour="budget-filter">
           <div className="cal-legend" style={{ margin: 0 }}>
             <span className="muted" style={{ fontSize: 12.5 }}>Lọc dự án:</span>
             {STATUS_FILTERS.map((s) => (
@@ -95,7 +95,7 @@ export default async function BudgetPage({ searchParams }: { searchParams: { per
         ) : (
           <>
             {/* KPIs */}
-            <div className="card">
+            <div className="card" data-tour="budget-kpis">
               <div className="stat">
                 <div><div className="n" style={{ color: 'var(--primary)' }}>{fmtVnd(d.totalPlanned)}</div><div className="l">Ngân sách kế hoạch</div></div>
                 <div><div className="n">{fmtVnd(d.totalActual)}</div><div className="l">Đã chi (gom việc)</div></div>
@@ -105,7 +105,7 @@ export default async function BudgetPage({ searchParams }: { searchParams: { per
             </div>
 
             {/* Theo dự án */}
-            <div className="card">
+            <div className="card" data-tour="budget-projects">
               <h3 style={{ marginTop: 0 }}>Theo dự án</h3>
               <div className="table-scroll">
                 <table className="t">
@@ -145,7 +145,7 @@ export default async function BudgetPage({ searchParams }: { searchParams: { per
 
             {/* Theo khối */}
             {d.units.length > 0 && (
-              <div className="card">
+              <div className="card" data-tour="budget-units">
                 <h3 style={{ marginTop: 0 }}>Theo khối / đơn vị</h3>
                 <p className="muted" style={{ margin: '0 0 8px', fontSize: 12.5 }}>Bấm vào tên đơn vị để mở chi tiết các dự án &amp; hạng mục ngân sách của đơn vị đó.</p>
                 <div className="table-scroll">

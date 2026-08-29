@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-29.105';
+export const GUIDE_VERSION = '2026-08-29.106';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -170,7 +170,7 @@ export const FEATURES: Feature[] = [
     where: 'Mỗi trang — tự chạy lần đầu; mở lại từ nút "Hướng dẫn" trên thanh trên cùng',
     help: 'Mỗi trang có một tour pop-up nhiều bước, dẫn bạn đi qua các tính năng của chính trang đó — nhìn là dùng được ngay; tự chạy lần đầu, mở lại bất cứ lúc nào.',
     detail: [
-      'Khi bạn vào một trang lần đầu, một hộp hướng dẫn (pop-up) tự hiện và dẫn bạn đi TỪNG BƯỚC qua các tính năng chính của CHÍNH trang đó ("Bước 1/…", có nút Tiếp → / Quay lại / Bỏ qua, chấm tiến độ) — tối đa 10 bước mỗi trang, mục tiêu để người mới tự dùng được mà không cần đào tạo. Đã xem xong thì lần sau trang đó không tự bật lại (nhớ riêng từng trang). Muốn xem lại bất cứ lúc nào: bấm nút "Hướng dẫn" (biểu tượng ?) trên thanh trên cùng — chỉ hiện ở trang có hướng dẫn. Nội dung tất cả các tour được quản lý tập trung ở một nơi và TỰ mở rộng: thêm trang mới hoặc tính năng mới ⇒ chỉ khai báo thêm là tour cập nhật, không phải sửa từng trang.',
+      'Khi bạn vào một trang lần đầu, một hộp hướng dẫn (pop-up) tự hiện và dẫn bạn đi TỪNG BƯỚC qua các tính năng chính của CHÍNH trang đó — mỗi bước KHOÉT SÁNG đúng nút/khu vực TẠI VỊ TRÍ THẬT trên trang (như tour Trang chủ), có "Bước 1/…", nút Tiếp → / Quay lại / Bỏ qua và chấm tiến độ. Tối đa 10 bước mỗi trang, mục tiêu để người mới tự dùng được mà không cần đào tạo. Đã xem xong thì lần sau trang đó không tự bật lại (nhớ riêng từng trang). Muốn xem lại bất cứ lúc nào: bấm nút "Hướng dẫn" (biểu tượng ?) trên thanh trên cùng — chỉ hiện ở trang có hướng dẫn. Nội dung tất cả các tour được quản lý tập trung ở một nơi và TỰ mở rộng: thêm trang mới hoặc tính năng mới ⇒ chỉ khai báo thêm là tour cập nhật, không phải sửa từng trang.',
     ],
   },
   {
@@ -635,7 +635,7 @@ export const CHANGELOG: ChangeLog[] = [
   {
     date: '29/08/2026 (Hướng dẫn từng bước — walkthrough theo trang)',
     items: [
-      'Mỗi trang có tour pop-up dẫn TỪNG BƯỚC qua các tính năng của chính trang đó (giống tour Trang chủ): "Bước 1/…", nút Tiếp/Quay lại/Bỏ qua, tối đa 10 bước — tự chạy lần đầu, người mới nhìn là dùng được ngay.',
+      'Mỗi trang có tour pop-up dẫn TỪNG BƯỚC qua các tính năng của chính trang đó, KHOÉT SÁNG đúng nút/khu vực tại vị trí thật (giống tour Trang chủ): "Bước 1/…", nút Tiếp/Quay lại/Bỏ qua, tối đa 10 bước — tự chạy lần đầu, người mới nhìn là dùng được ngay.',
       'Mở lại bất cứ lúc nào bằng nút "Hướng dẫn" (biểu tượng ?) trên thanh trên cùng (chỉ hiện ở trang có hướng dẫn). Nội dung quản lý tập trung, TỰ mở rộng khi thêm trang/tính năng mới.',
     ],
   },

@@ -96,7 +96,7 @@ export default async function TasksPage({
               bấm một dòng để cập nhật.
             </p>
           </div>
-          <div>
+          <div data-tour="tasks-new">
             <NewTaskModal
               users={userOpts}
               units={unitOpts}
@@ -108,6 +108,7 @@ export default async function TasksPage({
           </div>
         </div>
 
+        <div data-tour="tasks-explorer">
         <TaskExplorer
           tasks={visible}
           depsMap={depsMap}
@@ -128,6 +129,7 @@ export default async function TasksPage({
           initialStatus={searchParams.status}
           initialOverdue={!!searchParams.overdue}
         />
+        </div>
       </div>
     </>
   );

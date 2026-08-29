@@ -112,14 +112,16 @@ export default async function ProjectsPage({
               basePath="/projects"
             />
             {canCreate && period && (
-              <EditModal title="Tạo dự án mới" label="Dự án mới" icon={<NavIcon name="plus" />} submitLabel="Tạo dự án" action={createProjectInlineAction} wide>
-                <ProjectFields periodId={period.id} user={user} users={users} unitOptions={unitOptions} />
-              </EditModal>
+              <span data-tour="projects-new" style={{ display: 'inline-flex' }}>
+                <EditModal title="Tạo dự án mới" label="Dự án mới" icon={<NavIcon name="plus" />} submitLabel="Tạo dự án" action={createProjectInlineAction} wide>
+                  <ProjectFields periodId={period.id} user={user} users={users} unitOptions={unitOptions} />
+                </EditModal>
+              </span>
             )}
           </div>
         </div>
 
-        {period && projects.length > 0 && <ProjectsList projects={projects} />}
+        {period && projects.length > 0 && <div data-tour="projects-list"><ProjectsList projects={projects} /></div>}
 
         {period && projects.length === 0 && (
           <div className="card">

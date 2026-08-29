@@ -311,7 +311,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
           )}
         </p>
 
-        <div className="card">
+        <div className="card" data-tour="od-head">
           <div className="flexbtw obj-detail-head">
             <div style={{ minWidth: 0 }}>
               <div style={{ marginBottom: 6 }}>
@@ -400,7 +400,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
         </div>
 
         {/* ---------- Key Results ---------- */}
-        <div className="card">
+        <div className="card" data-tour="od-kr">
           <h3 style={{ marginTop: 0 }}>Kết quả then chốt (Key Results)<HelpTip k="key-result" /></h3>
           {krs.length > 0 && (
             <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
@@ -612,7 +612,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
         </div>
 
         {/* ---------- Ngân sách ---------- */}
-        <div className="grid two">
+        <div className="grid two" data-tour="od-budget">
           <div className="card">
             <h3 style={{ marginTop: 0 }}>Ngân sách gắn OKR<HelpTip k="budget" /></h3>
             <div className="stat">
@@ -679,7 +679,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
         </div>
 
         {/* ---------- Dự án & Kế hoạch hành động (thực thi) ---------- */}
-        <div className="card">
+        <div className="card" data-tour="od-exec">
           <h3 style={{ marginTop: 0 }}>
             Dự án &amp; Kế hoạch hành động<HelpTip k="initiative" />
           </h3>

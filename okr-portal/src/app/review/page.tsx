@@ -49,7 +49,7 @@ export default async function ReviewPage() {
         </div>
 
         {/* Nhịp độ tổng quan */}
-        <div className="card">
+        <div className="card" data-tour="review-kpis">
           <div className="rv-kpis">
             <div className="rv-kpi">
               <div className="n" style={{ color: progressColor(d.companyProg) }}>{d.companyProg}%</div>
@@ -79,7 +79,7 @@ export default async function ReviewPage() {
         </div>
 
         {/* Nhận định & Khuyến nghị */}
-        <div className="card">
+        <div className="card" data-tour="review-insights">
           <h3 style={{ marginTop: 0 }}>Nhận định &amp; Khuyến nghị<HelpTip k="insights" /></h3>
           <div className="ins-list">
             {d.insights.map((it, i) => (
@@ -95,7 +95,7 @@ export default async function ReviewPage() {
           </div>
         </div>
 
-        <div className="grid two">
+        <div className="grid two" data-tour="review-breakdown">
           {/* Tiến độ theo Khối */}
           <div className="card">
             <h3 style={{ marginTop: 0 }}>Tiến độ theo Khối</h3>

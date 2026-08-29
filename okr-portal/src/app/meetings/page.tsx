@@ -47,17 +47,21 @@ export default async function MeetingsPage() {
               theo dõi hành động. Chỉ người tham gia / được thêm mới xem được nội dung.
             </p>
           </div>
-          <EditModal title="Tạo cuộc họp mới" label="Cuộc họp mới" icon={<NavIcon name="plus" />} submitLabel="Tạo cuộc họp" action={createMeetingAction} wide>
-            <MeetingFields users={users} units={units} projects={projects} meetings={meetings.map((mm) => ({ id: mm.id, code: mm.code, title: mm.title }))} defaultOwner={user.email} />
-          </EditModal>
+          <span data-tour="meetings-new" style={{ display: 'inline-flex' }}>
+            <EditModal title="Tạo cuộc họp mới" label="Cuộc họp mới" icon={<NavIcon name="plus" />} submitLabel="Tạo cuộc họp" action={createMeetingAction} wide>
+              <MeetingFields users={users} units={units} projects={projects} meetings={meetings.map((mm) => ({ id: mm.id, code: mm.code, title: mm.title }))} defaultOwner={user.email} />
+            </EditModal>
+          </span>
         </div>
 
         {meetings.length === 0 ? (
           <div className="card"><p className="muted" style={{ margin: 0 }}>Chưa có cuộc họp nào bạn được xem. Bấm "Cuộc họp mới" để tạo.</p></div>
         ) : (
-          <div className="card">
-            <MeetingFilterBar targetId="meetings-tbody" total={meetings.length}
-              types={typeOpts} statuses={statusOpts} hosts={hostOpts} />
+          <div className="card" data-tour="meetings-list">
+            <div data-tour="meetings-filter">
+              <MeetingFilterBar targetId="meetings-tbody" total={meetings.length}
+                types={typeOpts} statuses={statusOpts} hosts={hostOpts} />
+            </div>
             <div className="table-scroll">
               <table className="t">
                 <thead>

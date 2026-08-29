@@ -38,14 +38,14 @@ export default async function MyPage() {
             </p>
           </div>
           {period && (
-            <div>
+            <div data-tour="my-new">
               <NewPersonalOkrModal periodId={period.id} action={createPersonalOkrAction} />
             </div>
           )}
         </div>
 
         {/* Tổng quan công việc cá nhân — mỗi ô bấm được → mở trang Công việc đã lọc sẵn */}
-        <div className="card">
+        <div className="card" data-tour="my-tiles">
           <div className="stat prof-tiles my-tiles">
             {myTiles.map((t) => (
               <Link key={t.l} href={t.href} className="my-tile">
@@ -56,7 +56,7 @@ export default async function MyPage() {
           </div>
         </div>
 
-        <div className="card">
+        <div className="card" data-tour="my-okr">
           <h3 style={{ marginTop: 0 }}>OKR tôi chủ trì</h3>
           {objectives.length === 0 && <p className="muted">Bạn chưa chủ trì OKR nào trong kỳ.</p>}
           {objectives.map((o) => (
@@ -79,7 +79,7 @@ export default async function MyPage() {
           ))}
         </div>
 
-        <div className="card">
+        <div className="card" data-tour="my-tasks">
           <h3 style={{ marginTop: 0 }}>Việc đang mở của tôi</h3>
           {initiatives.length === 0 && <p className="muted">Không có việc nào đang mở.</p>}
           <div className="table-scroll">

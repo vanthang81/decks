@@ -44,7 +44,7 @@ export default async function AdminPermissions({
         )}
 
         {/* Chú thích nhóm */}
-        <div className="card">
+        <div className="card" data-tour="perm-legend">
           <div className="grp-legend">
             {groups.map((g) => (
               <div key={g.key} className="grp-chip">
@@ -59,7 +59,7 @@ export default async function AdminPermissions({
         </div>
 
         <form action={savePermissionsAction}>
-          <div className="card">
+          <div className="card" data-tour="perm-matrix">
             <div className="table-scroll">
               <table className="perm-matrix">
                 <thead>

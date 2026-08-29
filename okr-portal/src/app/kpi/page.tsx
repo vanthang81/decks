@@ -83,11 +83,13 @@ export default async function KpiScorecardPage({
               ⬇ Xuất Excel
             </a>
             {canMakeKpi && (
-              <NewKpiModal
-                action={createKpiAction}
-                defaultBsc={fbsc}
-                bscOptions={BSC_PERSPECTIVES.map((b) => ({ value: b, label: `${BSC_PERSPECTIVE_ICON[b]} ${BSC_PERSPECTIVE_LABEL[b]}` }))}
-              />
+              <span data-tour="kpi-new" style={{ display: 'inline-flex' }}>
+                <NewKpiModal
+                  action={createKpiAction}
+                  defaultBsc={fbsc}
+                  bscOptions={BSC_PERSPECTIVES.map((b) => ({ value: b, label: `${BSC_PERSPECTIVE_ICON[b]} ${BSC_PERSPECTIVE_LABEL[b]}` }))}
+                />
+              </span>
             )}
           </div>
         </div>
@@ -97,7 +99,7 @@ export default async function KpiScorecardPage({
         </p>
 
         {/* Bộ lọc kỳ · đơn vị · viễn cảnh */}
-        <form method="get" className="filterbar" style={{ marginBottom: 14 }}>
+        <form method="get" className="filterbar" data-tour="kpi-filter" style={{ marginBottom: 14 }}>
           <select className="i fb-sel" name="period" defaultValue={period?.id ?? ''}>
             {orderPeriodsHierarchically(periods).map(({ period: p, depth }) => (
               <option key={p.id} value={p.id}>{'· '.repeat(depth)}{PERIOD_KIND_LABEL[p.kind]}: {p.name}</option>
@@ -116,7 +118,7 @@ export default async function KpiScorecardPage({
         </form>
 
         {/* Điểm scorecard */}
-        <div className="card" style={{ marginBottom: 14 }}>
+        <div className="card" data-tour="kpi-score" style={{ marginBottom: 14 }}>
           <div className="flexbtw" style={{ gap: 14, flexWrap: 'wrap', alignItems: 'baseline' }}>
             <h3 style={{ margin: 0 }}>
               Điểm scorecard: <span style={{ color: 'var(--primary)' }}>{score}</span> / {weighted || 0}
@@ -134,7 +136,7 @@ export default async function KpiScorecardPage({
           </p>
         )}
 
-        <div className="card">
+        <div className="card" data-tour="kpi-table">
           <div className="table-scroll wide-x">
             <table className="t task-table">
               <thead>

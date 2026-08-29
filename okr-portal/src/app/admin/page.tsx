@@ -53,7 +53,7 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
 
         {/* 1) Nền tảng tổ chức */}
         <div className="admin-sec-h">1 · Nền tảng tổ chức</div>
-        <div className="grid two">
+        <div className="grid two" data-tour="admin-foundation">
           <NavCard href="/admin/users" icon="user" title="Người dùng & phân quyền"
             desc={`${users.length} tài khoản · thêm/khoá, gán vai trò CEO/CFO · GĐ khối · Trưởng phòng · NV.`} />
           <NavCard href="/admin/org" icon="sliders" title="Cây tổ chức"
@@ -66,7 +66,7 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
 
         {/* 2) Đo lường & thiết lập */}
         <div className="admin-sec-h">2 · Đo lường &amp; thiết lập</div>
-        <div className="grid two">
+        <div className="grid two" data-tour="admin-measure">
           <NavCard href="/admin/kpi" icon="chart" title="Thư viện KPI"
             desc="Chỉ số đo dùng lại: viễn cảnh BSC · module (KRA) · tầng & trọng số · nguồn (auto/tay) · ngưỡng W/A/E · chủ sở hữu." />
           <NavCard href="/admin/settings" icon="review" title="Cài đặt · Nhắc check-in"
@@ -77,7 +77,7 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
 
         {/* 3) Tự động hoá & trao đổi dữ liệu */}
         <div className="admin-sec-h">3 · Tự động hoá &amp; trao đổi dữ liệu</div>
-        <div className="grid two">
+        <div className="grid two" data-tour="admin-automation">
           <div className="card">
             <h3 style={{ marginTop: 0 }}>Đồng bộ KPI (BigQuery)</h3>
             <p className="muted" style={{ marginTop: 0 }}>
@@ -147,7 +147,7 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
 
         {/* 4) Bắt đầu nhanh (richer) */}
         <div className="admin-sec-h">4 · Bắt đầu nhanh</div>
-        <div className="card">
+        <div className="card" data-tour="admin-quickstart">
           <p className="muted" style={{ marginTop: 0 }}>
             Trình tự thiết lập hệ thống từ đầu — bấm từng bước để mở đúng nơi:
           </p>

@@ -53,7 +53,7 @@ export default async function AdminUsers() {
           Thêm bằng email Google. Vai trò: CEO · CFO (toàn quyền) · GĐ khối · Trưởng phòng · Nhân viên.
         </p>
 
-        <div className="card">
+        <div className="card" data-tour="admin-users-add">
           <h3 style={{ marginTop: 0 }}>Thêm / cập nhật người dùng</h3>
           <ToastForm action={saveUserAction} done="Đã lưu người dùng">
             <div className="row">
@@ -109,8 +109,10 @@ export default async function AdminUsers() {
           </ToastForm>
         </div>
 
-        <div className="card">
-          <UserFilterBar targetId="users-tbody" total={users.length} roles={roleOpts} units={unitOpts} groups={groupOpts} />
+        <div className="card" data-tour="admin-users-table">
+          <div data-tour="admin-users-filter">
+            <UserFilterBar targetId="users-tbody" total={users.length} roles={roleOpts} units={unitOpts} groups={groupOpts} />
+          </div>
           <div className="table-scroll">
             <table className="t">
               <thead>

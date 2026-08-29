@@ -117,16 +117,20 @@ export default async function ObjectivesPage({
                 ⬇ Form mẫu
               </a>
             )}
-            <ExportOkrModal
-              periods={orderPeriodsHierarchically(periods).map(({ period: p, depth }) => ({
-                value: p.id,
-                label: `${'· '.repeat(depth)}${PERIOD_KIND_LABEL[p.kind]}: ${p.name}`,
-              }))}
-              units={unitOptions}
-              currentPeriodId={period?.id ?? null}
-            />
+            <span data-tour="objectives-export" style={{ display: 'inline-flex' }}>
+              <ExportOkrModal
+                periods={orderPeriodsHierarchically(periods).map(({ period: p, depth }) => ({
+                  value: p.id,
+                  label: `${'· '.repeat(depth)}${PERIOD_KIND_LABEL[p.kind]}: ${p.name}`,
+                }))}
+                units={unitOptions}
+                currentPeriodId={period?.id ?? null}
+              />
+            </span>
             {okrFormProps && (
-              <NewObjectiveModal formProps={okrFormProps} create={createObjectiveAction} />
+              <span data-tour="objectives-new" style={{ display: 'inline-flex' }}>
+                <NewObjectiveModal formProps={okrFormProps} create={createObjectiveAction} />
+              </span>
             )}
           </div>
         </div>
@@ -141,7 +145,7 @@ export default async function ObjectivesPage({
           </div>
         )}
 
-        <div className="card">
+        <div className="card" data-tour="objectives-tree">
           {!period && <p className="muted">Chưa có kỳ OKR.</p>}
           {period && objectives.length === 0 && (
             <p className="muted">Kỳ này chưa có OKR nào. Bấm “+ Tạo OKR”.</p>

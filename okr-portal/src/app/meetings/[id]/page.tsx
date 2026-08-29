@@ -124,7 +124,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
         <p className="subtitle" style={{ marginBottom: 6 }}><Link href="/meetings">← Cuộc họp</Link></p>
 
         {/* Header */}
-        <div className="card">
+        <div className="card" data-tour="md-head">
           <div className="flexbtw flexbtw-top">
             <div>
               <div className="pagetitle" style={{ marginBottom: 4 }}>
@@ -184,7 +184,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
         )}
 
         {/* Biên bản + quyết định */}
-        <div className="card">
+        <div className="card" data-tour="md-minutes">
           <div className="flexbtw flexbtw-top">
             <h3 style={{ marginTop: 0 }}>Biên bản &amp; Quyết định</h3>
             {canManage && (
@@ -226,7 +226,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
         </div>
 
         {/* Hành động (next actions) — thêm việc + xem list/kanban/gantt như trang dự án */}
-        <div className="card">
+        <div className="card" data-tour="md-actions">
           <div className="flexbtw flexbtw-top">
             <h3 style={{ marginTop: 0 }}>Hành động (next actions) — {tasks.length} việc<HelpTip k="meeting-tasks" /></h3>
             {canManage && (

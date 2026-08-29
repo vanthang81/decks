@@ -58,14 +58,16 @@ export default async function StrategyPage() {
             </p>
           </div>
           {canEdit && (
-            <EditModal title="Khai báo / sửa chiến lược công ty" label={has ? 'Sửa chiến lược' : 'Khai báo chiến lược'} icon={<NavIcon name="pencil" />} submitLabel="Lưu chiến lược" action={saveStrategyAction}>
-              <StrategyFields strat={strat} />
-            </EditModal>
+            <span data-tour="strategy-edit" style={{ display: 'inline-flex' }}>
+              <EditModal title="Khai báo / sửa chiến lược công ty" label={has ? 'Sửa chiến lược' : 'Khai báo chiến lược'} icon={<NavIcon name="pencil" />} submitLabel="Lưu chiến lược" action={saveStrategyAction}>
+                <StrategyFields strat={strat} />
+              </EditModal>
+            </span>
           )}
         </div>
 
         {/* Chuỗi phương pháp luận */}
-        <div className="card strat-chain">
+        <div className="card strat-chain" data-tour="strategy-chain">
           <Link className="sc-step apex" href="#pillars">🧭 Chiến lược</Link><span className="sc-arr">→</span>
           <Link className="sc-step" href="/map?v=strategy">🎯 BSC (4 viễn cảnh)</Link><span className="sc-arr">→</span>
           <Link className="sc-step" href="/map?v=flow">📌 OKR (Công ty→Khối→Phòng)</Link><span className="sc-arr">→</span>
@@ -84,7 +86,7 @@ export default async function StrategyPage() {
         )}
 
         {has && (
-          <div className="grid two">
+          <div className="grid two" data-tour="strategy-vision">
             <div className="card strat-card">
               <div className="strat-k">Tầm nhìn</div>
               <div className="strat-v">{strat.vision || <span className="muted">—</span>}</div>
@@ -127,7 +129,7 @@ export default async function StrategyPage() {
         )}
 
         {/* Trụ cột chiến lược = OKR multiyear công ty */}
-        <div className="card" id="pillars" style={{ scrollMarginTop: 84 }}>
+        <div className="card" id="pillars" data-tour="strategy-pillars" style={{ scrollMarginTop: 84 }}>
           <div className="flexbtw">
             <h3 style={{ margin: 0 }}>Trụ cột chiến lược {speriod ? <span className="muted" style={{ fontSize: 13, fontWeight: 400 }}>· {speriod.name}</span> : null}</h3>
             {canEdit && speriod && (
