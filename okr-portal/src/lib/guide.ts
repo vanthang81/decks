@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-29.102';
+export const GUIDE_VERSION = '2026-08-29.103';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -623,6 +623,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '29/08/2026 (Cuộc họp: bộ lọc & tìm kiếm)',
+    items: [
+      'Trang Cuộc họp có thanh lọc/tìm: ô tìm theo mã/tên/đơn vị/chủ trì (không dấu) + lọc theo Loại họp, Trạng thái, Chủ trì — lọc ngay tại chỗ, không tải lại trang; có nút "Xoá lọc" và số lượng hiển thị.',
+    ],
+  },
   {
     date: '29/08/2026 (Sửa được Hạn công việc sau khi tạo)',
     items: [

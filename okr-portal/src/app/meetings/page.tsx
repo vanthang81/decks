@@ -4,13 +4,14 @@ import HelpTip from '@/components/HelpTip';
 import EditModal from '@/components/EditModal';
 import NavIcon from '@/components/NavIcon';
 import MeetingFields from '@/components/MeetingFields';
+import MeetingFilterBar from '@/components/MeetingFilterBar';
 import UserLink from '@/components/UserLink';
 import { requireUser } from '@/lib/current-user';
 import { listUsers } from '@/lib/users';
 import { listUnits } from '@/lib/org';
 import { listAllProjectOptions } from '@/lib/projects';
 import {
-  listMeetings, MEETING_TYPE_LABEL, meetingStatusView,
+  listMeetings, MEETING_TYPE_LABEL, MEETING_TYPES, MEETING_STATUS_LABEL, meetingStatusView, type MeetingStatus,
 } from '@/lib/meetings';
 import { fmtDateTime } from '@/lib/format';
 import { createMeetingAction } from './actions';
@@ -23,6 +24,16 @@ export default async function MeetingsPage() {
   const [meetings, users, units, projects] = await Promise.all([
     listMeetings(user), listUsers(), listUnits(), listAllProjectOptions(),
   ]);
+
+  // Chuẩn hoá chuỗi tìm kiếm (bỏ dấu) cho mỗi dòng + dựng các lựa chọn lọc CHỈ từ dữ liệu hiện có.
+  const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
+  const typeOpts = MEETING_TYPES.filter((t) => meetings.some((m) => m.type === t)).map((t) => ({ value: t, label: MEETING_TYPE_LABEL[t] }));
+  const statusOpts = (['scheduled', 'held', 'cancelled'] as MeetingStatus[])
+    .filter((s) => meetings.some((m) => m.status === s))
+    .map((s) => ({ value: s, label: MEETING_STATUS_LABEL[s] }));
+  const hostMap = new Map<string, string>();
+  for (const m of meetings) if (m.owner_email) hostMap.set(m.owner_email, m.owner_name ?? m.owner_email);
+  const hostOpts = [...hostMap].map(([value, label]) => ({ value, label })).sort((a, b) => a.label.localeCompare(b.label, 'vi'));
 
   return (
     <>
@@ -45,6 +56,8 @@ export default async function MeetingsPage() {
           <div className="card"><p className="muted" style={{ margin: 0 }}>Chưa có cuộc họp nào bạn được xem. Bấm "Cuộc họp mới" để tạo.</p></div>
         ) : (
           <div className="card">
+            <MeetingFilterBar targetId="meetings-tbody" total={meetings.length}
+              types={typeOpts} statuses={statusOpts} hosts={hostOpts} />
             <div className="table-scroll">
               <table className="t">
                 <thead>
@@ -54,9 +67,11 @@ export default async function MeetingsPage() {
                     <th className="right">Người dự</th><th className="right">Hành động</th><th>Trạng thái</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="meetings-tbody">
                   {meetings.map((m) => (
-                    <tr key={m.id}>
+                    <tr key={m.id}
+                      data-s={norm([m.code, m.title, m.related_units, m.related_projects, m.owner_name, m.owner_email, MEETING_TYPE_LABEL[m.type]].filter(Boolean).join(' '))}
+                      data-type={m.type} data-status={m.status} data-host={m.owner_email ?? ''}>
                       <td>
                         <Link href={`/meetings/${m.id}`} className="tbl-link">
                           {m.code && <span className="okr-code" style={{ marginRight: 6 }}>{m.code}</span>}{m.title}
