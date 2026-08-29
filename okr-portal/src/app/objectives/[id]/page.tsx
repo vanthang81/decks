@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
-import PageGuide from '@/components/PageGuide';
 import HelpTip from '@/components/HelpTip';
 import ExecutionTabs from '@/components/ExecutionTabs';
 import ResettableForm from '@/components/ResettableForm';
@@ -302,7 +301,6 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
     <>
       <SiteHeader active="okr" />
       <div className="wrap">
-        <PageGuide pageKey="objective-detail" />
         <p className="subtitle" style={{ marginBottom: 6 }}>
           <Link href="/objectives">← Toàn bộ OKR</Link>
           {parent && (

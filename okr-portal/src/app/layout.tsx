@@ -6,6 +6,7 @@ import SiteFooter from '@/components/SiteFooter';
 import BackToTop from '@/components/BackToTop';
 import MobileGestures from '@/components/MobileGestures';
 import AutoHideHeader from '@/components/AutoHideHeader';
+import AutoPageTour from '@/components/AutoPageTour';
 import TopLoadingBar from '@/components/TopLoadingBar';
 import ToastProvider from '@/components/ToastProvider';
 import FlashToaster from '@/components/FlashToaster';
@@ -46,6 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <BackToTop />
           <MobileGestures />
           <AutoHideHeader />
+          <AutoPageTour />
         </ToastProvider>
       </body>
     </html>

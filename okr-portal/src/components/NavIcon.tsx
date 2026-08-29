@@ -97,6 +97,13 @@ const P: Record<string, ReactNode> = {
       <path d="M5 11.5v6c0 1.55 3.13 2.8 7 2.8s7-1.25 7-2.8v-6" />
     </>
   ),
+  help: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.2 9.3a2.8 2.8 0 0 1 5.4 1c0 1.9-2.6 2.3-2.6 3.9" />
+      <path d="M12 17.2h.01" />
+    </>
+  ),
 };
 
 export default function NavIcon({ name, className = 'nav-ic' }: { name: string; className?: string }) {

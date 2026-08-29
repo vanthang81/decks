@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import SiteHeader from '@/components/SiteHeader';
-import PageGuide from '@/components/PageGuide';
 import HelpTip from '@/components/HelpTip';
 import EditModal from '@/components/EditModal';
 import NavIcon from '@/components/NavIcon';
@@ -40,7 +39,6 @@ export default async function MeetingsPage() {
     <>
       <SiteHeader active="meetings" />
       <div className="wrap">
-        <PageGuide pageKey="meetings" />
         <div className="flexbtw flexbtw-top">
           <div>
             <div className="pagetitle">Cuộc họp<HelpTip k="meetings" /></div>

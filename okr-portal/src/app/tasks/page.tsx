@@ -1,6 +1,5 @@
 import HelpTip from '@/components/HelpTip';
 import SiteHeader from '@/components/SiteHeader';
-import PageGuide from '@/components/PageGuide';
 import TaskExplorer from '@/components/TaskExplorer';
 import NewTaskModal from '@/components/NewTaskModal';
 import { requireUser } from '@/lib/current-user';
@@ -89,7 +88,6 @@ export default async function TasksPage({
     <>
       <SiteHeader active="tasks" />
       <div className="wrap">
-        <PageGuide pageKey="tasks" />
         <div className="flexbtw">
           <div>
             <div className="pagetitle">Công việc<HelpTip k="tasks" /></div>

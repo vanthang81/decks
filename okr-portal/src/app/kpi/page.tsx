@@ -1,5 +1,4 @@
 import SiteHeader from '@/components/SiteHeader';
-import PageGuide from '@/components/PageGuide';
 import HelpTip from '@/components/HelpTip';
 import SearchSelect from '@/components/SearchSelect';
 import { ProgressBar } from '@/components/ui';
@@ -74,7 +73,6 @@ export default async function KpiScorecardPage({
     <>
       <SiteHeader active="kpi" />
       <div className="wrap">
-        <PageGuide pageKey="kpi" />
         <div className="flexbtw">
           <div className="pagetitle">Scorecard KPI<HelpTip k="kpi-scorecard" /></div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>

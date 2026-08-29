@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-29.104';
+export const GUIDE_VERSION = '2026-08-29.105';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -166,11 +166,11 @@ export type Feature = {
 export const FEATURES: Feature[] = [
   {
     key: 'page-guide',
-    title: 'Hướng dẫn nhanh theo trang',
-    where: 'Đầu mỗi trang (khung màu vàng nhạt "Hướng dẫn nhanh")',
-    help: 'Mỗi trang có khung tóm tắt các thao tác chính của chính trang đó — nhìn là dùng được ngay; thu gọn được và tự nhớ theo từng trang.',
+    title: 'Hướng dẫn từng bước (walkthrough) theo trang',
+    where: 'Mỗi trang — tự chạy lần đầu; mở lại từ nút "Hướng dẫn" trên thanh trên cùng',
+    help: 'Mỗi trang có một tour pop-up nhiều bước, dẫn bạn đi qua các tính năng của chính trang đó — nhìn là dùng được ngay; tự chạy lần đầu, mở lại bất cứ lúc nào.',
     detail: [
-      'Ngay đầu mỗi trang có một khung "Hướng dẫn nhanh" liệt kê 3–4 thao tác quan trọng nhất của CHÍNH trang đang xem (bấm nút nào, để làm gì, ý nghĩa) — mục tiêu để người dùng mới tự dùng được mà không cần đào tạo. Bấm vào tiêu đề khung để thu gọn/mở lại; lựa chọn được ghi nhớ riêng cho từng trang (đã đọc rồi thì lần sau vào trang đó khung tự thu gọn cho gọn màn hình). Cuối khung có link "Xem hướng dẫn đầy đủ →" dẫn tới trang Hướng dẫn chi tiết của tính năng liên quan. Nội dung các khung được quản lý tập trung, tự cập nhật khi hệ thống có tính năng mới.',
+      'Khi bạn vào một trang lần đầu, một hộp hướng dẫn (pop-up) tự hiện và dẫn bạn đi TỪNG BƯỚC qua các tính năng chính của CHÍNH trang đó ("Bước 1/…", có nút Tiếp → / Quay lại / Bỏ qua, chấm tiến độ) — tối đa 10 bước mỗi trang, mục tiêu để người mới tự dùng được mà không cần đào tạo. Đã xem xong thì lần sau trang đó không tự bật lại (nhớ riêng từng trang). Muốn xem lại bất cứ lúc nào: bấm nút "Hướng dẫn" (biểu tượng ?) trên thanh trên cùng — chỉ hiện ở trang có hướng dẫn. Nội dung tất cả các tour được quản lý tập trung ở một nơi và TỰ mở rộng: thêm trang mới hoặc tính năng mới ⇒ chỉ khai báo thêm là tour cập nhật, không phải sửa từng trang.',
     ],
   },
   {
@@ -633,10 +633,10 @@ export const GLOSSARY: { term: string; def: string }[] = [
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
   {
-    date: '29/08/2026 (Hướng dẫn nhanh ở mỗi trang)',
+    date: '29/08/2026 (Hướng dẫn từng bước — walkthrough theo trang)',
     items: [
-      'Mỗi trang có khung "Hướng dẫn nhanh" ngay đầu trang: tóm tắt các thao tác chính của CHÍNH trang đó (bấm ở đâu, để làm gì) — người mới nhìn là dùng được ngay, không cần đào tạo.',
-      'Thu gọn được và tự nhớ theo từng trang (đã đọc thì lần sau vào thu gọn sẵn); có link "Xem hướng dẫn đầy đủ →" tới trang Hướng dẫn.',
+      'Mỗi trang có tour pop-up dẫn TỪNG BƯỚC qua các tính năng của chính trang đó (giống tour Trang chủ): "Bước 1/…", nút Tiếp/Quay lại/Bỏ qua, tối đa 10 bước — tự chạy lần đầu, người mới nhìn là dùng được ngay.',
+      'Mở lại bất cứ lúc nào bằng nút "Hướng dẫn" (biểu tượng ?) trên thanh trên cùng (chỉ hiện ở trang có hướng dẫn). Nội dung quản lý tập trung, TỰ mở rộng khi thêm trang/tính năng mới.',
     ],
   },
   {

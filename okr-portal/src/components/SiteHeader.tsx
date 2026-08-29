@@ -4,6 +4,7 @@ import { auth, signOut } from '@/auth';
 import { LOGO_WORDMARK } from '@/lib/brand';
 import { ROLE_LABEL, type Role } from '@/lib/rbac';
 import NavIcon from '@/components/NavIcon';
+import HeaderTourButton from '@/components/HeaderTourButton';
 import NotifBell from '@/components/NotifBell';
 import InviteUserButton from '@/components/InviteUserButton';
 import { unreadCount } from '@/lib/notifications';
@@ -126,6 +127,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
           })}
         </nav>
         <div className="spacer" />
+        <HeaderTourButton />
         {email && <span className="hdr-invite" title="Mời người dùng qua email"><InviteUserButton units={unitOpts} compact /></span>}
         {email && <span data-tour="tour-bell"><NotifBell initialCount={notifCount} /></span>}
         <div className="userchip userchip-desktop">

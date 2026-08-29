@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import SiteHeader from '@/components/SiteHeader';
-import PageGuide from '@/components/PageGuide';
 import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
 import { getUser } from '@/lib/users';
@@ -50,7 +49,6 @@ export default async function StrategyPage() {
     <>
       <SiteHeader active="strategy" />
       <div className="wrap">
-        <PageGuide pageKey="strategy" />
         <div className="flexbtw flexbtw-top">
           <div>
             <div className="pagetitle">Chiến lược công ty<HelpTip k="company-strategy" /></div>

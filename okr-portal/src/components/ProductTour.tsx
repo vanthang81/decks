@@ -1,76 +1,34 @@
 'use client';
 
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import type { TourStep } from '@/lib/page-tours';
 
-// TOUR LÀM QUEN (product tour) — tự chạy lần đầu đăng nhập, bật lại bất cứ lúc nào.
+// TOUR LÀM QUEN (product tour) GENERIC — tự chạy lần đầu vào trang, bật lại bất cứ lúc nào.
 // Tự chứa (không thư viện ngoài): spotlight khoét sáng phần tử + bong bóng hướng dẫn.
-// Bước trỏ tới phần tử [data-tour="key"]; nếu không thấy (vd mobile ẩn nav) → thẻ giữa màn.
+// Nội dung các bước truyền qua prop `steps` (nguồn: src/lib/page-tours.ts). Mỗi trang 1 `tourKey`
+// riêng để nhớ "đã xem" độc lập. Bước có `target` trỏ tới [data-tour="key"]; không thấy → thẻ giữa màn.
 
-type Step = { target?: string; title: string; body: string; link?: { href: string; label: string } };
+const seenKey = (tourKey: string) => `okrTourSeen:${tourKey}`;
 
-// Tài liệu giới thiệu hệ thống dạng slide (mở tab mới) — cập nhật khi đổi deck.
-const DECK_URL = 'https://deck.consultx.vn/d/he-thong-quan-tri-hieu-suat-btmh';
-
-const STEPS: Step[] = [
-  {
-    title: '👋 Chào mừng đến Hệ thống Điều hành OKR BTMH',
-    body: 'Đi nhanh một vòng (khoảng 1 phút) để biết đặt gì ở đâu và bắt đầu dùng được ngay. Bạn có thể Bỏ qua bất cứ lúc nào và mở lại từ nút "Hướng dẫn nhanh".',
-  },
-  {
-    target: 'nav-overview',
-    title: 'Tổng quan & Họp điều hành',
-    body: 'Bảng điều khiển cho bức tranh tiến độ toàn công ty; "Họp điều hành" (WBR/MBR) tổng hợp nhận định & khuyến nghị, KPI cảnh báo, việc quá hạn.',
-  },
-  {
-    target: 'nav-strategy',
-    title: 'Chiến lược → OKR → KPI',
-    body: 'Chuỗi đo lường: khai báo Chiến lược (tầm nhìn/sứ mệnh) → rải xuống OKR (Mục tiêu · Kết quả then chốt) theo cây Công ty → Khối → Phòng → Cá nhân → đo bằng Thư viện KPI (thẻ điểm BSC).',
-  },
-  {
-    target: 'nav-exec',
-    title: 'Thực thi: Dự án & Công việc',
-    body: 'Nơi biến mục tiêu thành hành động: quản lý Dự án (xuyên nhiều OKR) và Công việc — xem dạng Danh sách / Kanban kéo-thả / Dòng thời gian, gán người & theo hạn.',
-  },
-  {
-    target: 'tour-all-okr',
-    title: 'Xem toàn bộ cây OKR',
-    body: 'Bấm đây để mở toàn bộ cây mục tiêu của kỳ, tạo OKR mới và liên kết (cascade) lên cấp trên.',
-  },
-  {
-    target: 'tour-bell',
-    title: 'Thông báo',
-    body: 'Chuông báo khi bạn được @nhắc tên, có người trả lời bình luận, có bình luận ở mục bạn phụ trách, hoặc được giao việc. Bấm để xem danh sách và mở tới đúng chỗ.',
-  },
-  {
-    target: 'tour-user',
-    title: 'Cài đặt cá nhân',
-    body: 'Bấm TÊN của bạn để xem hồ sơ và bật/tắt từng loại thông báo (và email). Mọi thao tác Sửa/Thêm nằm ở nút gọn góc phải-trên của mỗi khu vực.',
-  },
-  {
-    title: '🎉 Sẵn sàng rồi!',
-    body: 'Gợi ý thứ tự: Chiến lược → OKR → gắn KPI → tạo Dự án/Công việc → check-in định kỳ. Cần xem lại chi tiết, mở mục "Hướng dẫn" trên menu bất cứ lúc nào. Chúc bạn điều hành hiệu quả!',
-    link: { href: DECK_URL, label: '📖 Xem tài liệu giới thiệu hệ thống (slide)' },
-  },
-];
-
-const seenKey = (userKey: string) => `okrTourSeen:${userKey}`;
-
-export default function ProductTour({ userKey, force }: { userKey: string; force?: boolean }) {
+export default function ProductTour({
+  steps, tourKey, force,
+}: { steps: TourStep[]; tourKey: string; force?: boolean }) {
   const [open, setOpen] = useState(false);
   const [i, setI] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
 
-  // Khởi động: ép (từ ?tour=1 / nút) hoặc lần đầu chưa xem.
+  // Khởi động: ép (từ ?tour=1 / nút) hoặc lần đầu chưa xem tour của trang này.
   useEffect(() => {
+    if (!steps || steps.length === 0) return;
     let seen = false;
-    try { seen = !!localStorage.getItem(seenKey(userKey)); } catch { /* ignore */ }
+    try { seen = !!localStorage.getItem(seenKey(tourKey)); } catch { /* ignore */ }
     if (force || !seen) {
       const t = setTimeout(() => { setI(0); setOpen(true); }, 500);
       return () => clearTimeout(t);
     }
-  }, [userKey, force]);
+  }, [tourKey, force, steps]);
 
-  // Cho phép bật lại từ nơi khác qua sự kiện.
+  // Cho phép bật lại từ nơi khác (nút "Hướng dẫn" trên header) qua sự kiện.
   useEffect(() => {
     const h = () => { setI(0); setOpen(true); };
     window.addEventListener('okr:start-tour', h);
@@ -78,7 +36,7 @@ export default function ProductTour({ userKey, force }: { userKey: string; force
   }, []);
 
   const measure = useCallback(() => {
-    const step = STEPS[i];
+    const step = steps[i];
     if (!step?.target) { setRect(null); return; }
     const el = document.querySelector(`[data-tour="${step.target}"]`) as HTMLElement | null;
     if (el && el.offsetParent !== null) {
@@ -87,7 +45,7 @@ export default function ProductTour({ userKey, force }: { userKey: string; force
     } else {
       setRect(null); // không thấy (mobile ẩn) → thẻ giữa màn
     }
-  }, [i]);
+  }, [i, steps]);
 
   useLayoutEffect(() => {
     if (!open) return;
@@ -100,23 +58,23 @@ export default function ProductTour({ userKey, force }: { userKey: string; force
 
   const finish = useCallback(() => {
     setOpen(false);
-    try { localStorage.setItem(seenKey(userKey), '1'); } catch { /* ignore */ }
-  }, [userKey]);
+    try { localStorage.setItem(seenKey(tourKey), '1'); } catch { /* ignore */ }
+  }, [tourKey]);
 
   useEffect(() => {
     if (!open) return;
     const h = (e: KeyboardEvent) => {
       if (e.key === 'Escape') finish();
-      else if (e.key === 'ArrowRight') setI((v) => Math.min(v + 1, STEPS.length - 1));
+      else if (e.key === 'ArrowRight') setI((v) => Math.min(v + 1, steps.length - 1));
       else if (e.key === 'ArrowLeft') setI((v) => Math.max(v - 1, 0));
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [open, finish]);
+  }, [open, finish, steps]);
 
-  if (!open) return null;
-  const step = STEPS[i];
-  const last = i === STEPS.length - 1;
+  if (!open || !steps || steps.length === 0) return null;
+  const step = steps[i];
+  const last = i === steps.length - 1;
 
   // Vị trí bong bóng: dưới target nếu còn chỗ, không thì trên; không có target → giữa màn.
   const PAD = 8;
@@ -148,14 +106,14 @@ export default function ProductTour({ userKey, force }: { userKey: string; force
       )}
 
       <div className="tour-bubble" style={bubbleStyle}>
-        <div className="tour-step">Bước {i + 1}/{STEPS.length}</div>
+        <div className="tour-step">Bước {i + 1}/{steps.length}</div>
         <div className="tour-title">{step.title}</div>
         <div className="tour-body">{step.body}</div>
         {step.link && (
           <a className="tour-deck-link" href={step.link.href} target="_blank" rel="noopener noreferrer">{step.link.label}</a>
         )}
         <div className="tour-dots">
-          {STEPS.map((_, k) => <span key={k} className={k === i ? 'on' : ''} />)}
+          {steps.map((_, k) => <span key={k} className={k === i ? 'on' : ''} />)}
         </div>
         <div className="tour-actions">
           <button type="button" className="tour-skip" onClick={finish}>Bỏ qua</button>
@@ -171,7 +129,7 @@ export default function ProductTour({ userKey, force }: { userKey: string; force
   );
 }
 
-/** Nút bật lại tour (đặt ở Dashboard / Hướng dẫn). */
+/** Nút bật lại tour (dispatch sự kiện; tour của trang hiện tại sẽ mở). */
 export function TourButton({ className = 'btn ghost sm' }: { className?: string }) {
   return (
     <button type="button" className={className} onClick={() => window.dispatchEvent(new Event('okr:start-tour'))}>

@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import HelpTip from '@/components/HelpTip';
 import SiteHeader from '@/components/SiteHeader';
-import PageGuide from '@/components/PageGuide';
 import UserLink from '@/components/UserLink';
 import { ProgressBar } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
@@ -20,7 +19,6 @@ import { reviewData } from '@/lib/review';
 import { unitIcon } from '@/lib/unit-icons';
 import { fmtNumber, progressColor } from '@/lib/format';
 import { Donut, BarList, Legend } from '@/components/charts';
-import ProductTour, { TourButton } from '@/components/ProductTour';
 
 const PROG_C = { done: '#16a34a', ahead: '#2563eb', behind: '#f59e0b', notStarted: '#cbd5e1' };
 const CONF_C = { on_track: '#16a34a', at_risk: '#d97706', off_track: '#dc2626', none: '#cbd5e1' };
@@ -97,7 +95,6 @@ export default async function Dashboard({ searchParams }: { searchParams: { tour
     <>
       <SiteHeader active="home" />
       <div className="wrap">
-        <PageGuide pageKey="dashboard" />
         <div className="flexbtw">
           <div>
             <div className="pagetitle">Bảng điều khiển OKR<HelpTip k="dashboard" /></div>
@@ -112,7 +109,6 @@ export default async function Dashboard({ searchParams }: { searchParams: { tour
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <TourButton />
             <Link className="btn" href="/objectives" data-tour="tour-all-okr">
               Xem toàn bộ OKR
             </Link>
@@ -382,7 +378,6 @@ export default async function Dashboard({ searchParams }: { searchParams: { tour
           </>
         )}
       </div>
-      <ProductTour userKey={user.email} force={searchParams.tour === '1'} />
     </>
   );
 }

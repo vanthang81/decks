@@ -1,5 +1,4 @@
 import SiteHeader from '@/components/SiteHeader';
-import PageGuide from '@/components/PageGuide';
 import ObjectiveTree, { type TreeObjective } from '@/components/ObjectiveTree';
 import PeriodPicker from '@/components/PeriodPicker';
 import HelpTip from '@/components/HelpTip';
@@ -93,7 +92,6 @@ export default async function ObjectivesPage({
     <>
       <SiteHeader active="okr" />
       <div className="wrap">
-        <PageGuide pageKey="objectives" />
         <div className="flexbtw">
           <div>
             <div className="pagetitle">{scopedView ? 'OKR của đơn vị tôi' : 'Toàn bộ OKR'}<HelpTip k="okr-cascade" /></div>
