@@ -2095,3 +2095,8 @@ a.strat-bsc-cell:hover { text-decoration: none; box-shadow: 0 6px 18px rgba(0,0,
 @media (max-width: 640px) {
   .toast-wrap { top: 10px; right: 10px; left: 10px; max-width: none; }
 }
+
+/* Hàng lựa chọn radio/checkbox trong popup (vd Bàn giao) — ô control neo trái, chữ chảy tự nhiên
+   (KHÔNG dùng flex cho cả label để nhiều đoạn inline không bị cắt thành cột) */
+.opt { display: block; position: relative; padding-left: 26px; font-size: 14px; cursor: pointer; line-height: 1.5; }
+.opt input { position: absolute; left: 0; top: 3px; width: auto; margin: 0; }

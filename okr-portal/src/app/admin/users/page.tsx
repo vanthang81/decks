@@ -4,6 +4,7 @@ import SiteHeader from '@/components/SiteHeader';
 import ConfirmButton from '@/components/ConfirmButton';
 import ToastForm from '@/components/ToastForm';
 import EditUserModal from '@/components/EditUserModal';
+import HandoverModal from '@/components/HandoverModal';
 import UserFilterBar from '@/components/UserFilterBar';
 import SearchSelect from '@/components/SearchSelect';
 import { unitTreeOptions } from '@/lib/unit-options';
@@ -13,7 +14,8 @@ import { loadAccess, canManageSystem, canAssignPerms } from '@/lib/access';
 import { DEFAULT_GROUPS, defaultGroupForRole } from '@/lib/capabilities';
 import { listUsers } from '@/lib/users';
 import { listUnits, ancestorIds } from '@/lib/org';
-import { saveUserAction, toggleUserAction, removeUserAction } from '../actions';
+import { handoverCountsAll, type HandoverCounts } from '@/lib/handover';
+import { saveUserAction, toggleUserAction, removeUserAction, handoverAction } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +24,15 @@ export default async function AdminUsers() {
   const access = await loadAccess();
   if (!canManageSystem(me, access)) redirect('/');
   const assignPerms = canAssignPerms(me, access);
-  const [users, units] = await Promise.all([listUsers(), listUnits()]);
+  const [users, units, hoCounts] = await Promise.all([listUsers(), listUnits(), handoverCountsAll()]);
+  const EMPTY_CO: HandoverCounts = { openTasks: 0, allTasks: 0, objectives: 0, projects: 0, meetings: 0 };
+  // Ứng viên thay thế = người đang hoạt động (loại theo từng dòng ở dưới).
+  const activeUserOpts = users
+    .filter((u) => u.is_active)
+    .map((u) => ({
+      value: u.email,
+      label: `${u.display_name || u.email}${u.title ? ` · ${u.title}` : ''}${u.unit_name ? ` · ${u.unit_name}` : ''}`,
+    }));
 
   // Bộ lọc: danh sách vai trò (đang dùng) + đơn vị (cây thụt cấp) + nhóm quyền.
   const usedRoles = ROLES.filter((r) => users.some((u) => u.role === r));
@@ -173,6 +183,12 @@ export default async function AdminUsers() {
                           groups={DEFAULT_GROUPS.map((g) => ({ key: g.key, icon: g.icon, label: g.label, desc: g.desc }))}
                           assignPerms={assignPerms}
                           action={saveUserAction}
+                        />
+                        <HandoverModal
+                          from={{ email: u.email, name: u.display_name || u.email }}
+                          counts={hoCounts[u.email.toLowerCase()] ?? EMPTY_CO}
+                          userOptions={activeUserOpts.filter((o) => o.value.toLowerCase() !== u.email.toLowerCase())}
+                          action={handoverAction}
                         />
                         <ToastForm action={toggleUserAction} done={u.is_active ? 'Đã khoá người dùng' : 'Đã mở khoá'}>
                           <input type="hidden" name="email" value={u.email} />

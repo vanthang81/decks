@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-25.202';
+export const GUIDE_VERSION = '2026-08-29.101';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -623,6 +623,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '29/08/2026 (Bàn giao công việc khi nhân sự nghỉ)',
+    items: [
+      'Quản trị → Người dùng: mỗi người có nút "Bàn giao" → chuyển toàn bộ việc/OKR/dự án/cuộc họp đang phụ trách sang một người thay thế khi nghỉ/luân chuyển.',
+      'Chọn phạm vi: chỉ việc CHƯA hoàn thành (mặc định) / tất cả việc / không chuyển; kèm tuỳ chọn chuyển OKR, dự án, vai trò họp; và tuỳ chọn khoá tài khoản người nghỉ sau khi bàn giao. Lịch sử "người tạo" giữ nguyên, chỉ đổi người phụ trách.',
+    ],
+  },
   {
     date: '25/08/2026 (Phân quyền: bổ sung Chiến lược · Họp · Ngân sách vào ma trận quyền)',
     items: [

@@ -18,6 +18,8 @@ import { syncAllKpi } from '@/lib/kpi';
 import { redirect } from 'next/navigation';
 import { setSetting } from '@/lib/settings';
 import { REMINDER_KEY, runCheckinReminders, type ReminderConfig } from '@/lib/reminders';
+import { reassignOwnership } from '@/lib/handover';
+import { logAudit } from '@/lib/audit';
 
 async function requireExec() {
   const user = await requireUser();
@@ -78,6 +80,57 @@ export async function removeUserAction(fd: FormData) {
   }
   await removeUser(email);
   revalidatePath('/admin/users');
+}
+
+/**
+ * BÀN GIAO công việc khi 1 nhân sự nghỉ: chuyển quyền phụ trách (owner) từ người nghỉ → người thay thế.
+ * Chỉ Quản trị hệ thống. Có thể kèm khoá tài khoản người nghỉ (không khoá CEO/CFO cuối).
+ */
+export async function handoverAction(fd: FormData) {
+  const me = await requireExec();
+  const from = str(fd, 'from');
+  const to = str(fd, 'to');
+  if (!from || !to) throw new Error('Thiếu người nghỉ hoặc người thay thế.');
+  if (from.toLowerCase() === to.toLowerCase()) throw new Error('Người thay thế phải khác người nghỉ.');
+  const toUser = await getUser(to);
+  if (!toUser) throw new Error('Người thay thế chưa có trong hệ thống.');
+  if (!toUser.is_active) throw new Error('Người thay thế đang bị khoá — mở khoá trước khi bàn giao.');
+
+  const tasks = (['open', 'all', 'none'] as const).includes(str(fd, 'tasks') as never)
+    ? (str(fd, 'tasks') as 'open' | 'all' | 'none')
+    : 'open';
+  const res = await reassignOwnership({
+    from,
+    to,
+    tasks,
+    objectives: str(fd, 'objectives') === 'on',
+    projects: str(fd, 'projects') === 'on',
+    meetings: str(fd, 'meetings') === 'on',
+  });
+
+  // Tuỳ chọn: khoá tài khoản người nghỉ sau khi bàn giao (không khoá CEO/CFO cuối).
+  let locked = false;
+  if (str(fd, 'lock_from') === 'on') {
+    const u = await getUser(from);
+    if (isExec(u?.role) && (await countActiveExecs()) <= 1) {
+      throw new Error('Đã bàn giao nhưng KHÔNG khoá được vì đây là CEO/CFO cuối cùng.');
+    }
+    await setUserActive(from, false);
+    locked = true;
+  }
+
+  await logAudit({
+    actor: me.email,
+    action: 'user.handover',
+    entity: 'user',
+    entityId: from,
+    detail: { to, scope: tasks, moved: res, locked },
+  });
+  revalidatePath('/admin/users');
+  revalidatePath('/tasks');
+  revalidatePath('/objectives');
+  revalidatePath('/projects');
+  revalidatePath('/meetings');
 }
 
 // ---------- Cây tổ chức ----------
