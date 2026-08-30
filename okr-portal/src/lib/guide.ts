@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-30.113';
+export const GUIDE_VERSION = '2026-08-30.114';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -495,9 +495,9 @@ export const FEATURES: Feature[] = [
     key: 'notifications',
     title: 'Thông báo (chuông 🔔)',
     where: 'Biểu tượng 🔔 góc phải · trang "Thông báo"',
-    help: 'Bấm chuông → danh sách thông báo, mỗi cái mở tới đúng mục. Tuỳ chọn loại thông báo ở Cài đặt cá nhân.',
+    help: 'Bấm chuông → BẢNG thả xuống: xem + DUYỆT/TỪ CHỐI/BÌNH LUẬN ngay không cần mở trang.',
     detail:
-      'Chuông 🔔 cạnh tên bạn hiện số chưa đọc (tự làm mới). Bấm chuông mở trang Thông báo — DANH SÁCH mọi thông báo, bấm từng cái để tới đúng Objective/KR/Công việc và tự đánh dấu đã đọc; có "Đánh dấu tất cả đã đọc". Bạn nhận thông báo khi: được @nhắc tên · có người trả lời bình luận của bạn · có bình luận trên OKR/việc bạn phụ trách · được giao việc mới · công việc sắp đến hạn (trước 1 ngày) · công việc quá hạn · và email TỔNG HỢP việc quá hạn HÀNG TUẦN. Bật/tắt từng loại + email ở Cài đặt cá nhân (bấm tên bạn ở góc phải).',
+      'Chuông 🔔 cạnh tên bạn hiện số chưa đọc (tự làm mới). Bấm chuông mở BẢNG thả xuống ngay tại chỗ — hoặc "Xem tất cả" để mở trang Thông báo đầy đủ. XỬ LÝ NGAY tại thông báo, KHÔNG cần vào đúng cuộc họp/mục: yêu cầu xem cuộc họp & lời mời người dùng có nút Duyệt/Từ chối (kèm ô Ghi chú tuỳ chọn gửi cho người yêu cầu); thông báo gắn OKR/KR/công việc có nút "↩ Trả lời" để bình luận thẳng vào mục đó. Bấm từng cái để tới đúng Objective/KR/Công việc và tự đánh dấu đã đọc; có "Đánh dấu tất cả đã đọc". Bạn nhận thông báo khi: được @nhắc tên · có người trả lời bình luận của bạn · có bình luận trên OKR/việc bạn phụ trách · được giao việc mới · công việc sắp đến hạn (trước 1 ngày) · công việc quá hạn · và email TỔNG HỢP việc quá hạn HÀNG TUẦN. Bật/tắt từng loại + email ở Cài đặt cá nhân (bấm tên bạn ở góc phải).',
   },
   {
     key: 'settings',
@@ -632,6 +632,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '30/08/2026 (Xử lý ngay tại chuông thông báo)',
+    items: [
+      'Chuông 🔔 nay là BẢNG thả xuống: xem thông báo + DUYỆT/TỪ CHỐI/BÌNH LUẬN ngay không cần mở đúng cuộc họp/mục.',
+      'Yêu cầu xem cuộc họp & lời mời người dùng: nút Duyệt/Từ chối kèm ô Ghi chú (tuỳ chọn) gửi cho người yêu cầu.',
+      'Thông báo gắn OKR/KR/công việc: nút "↩ Trả lời" để bình luận thẳng vào mục. Quyền luôn được kiểm lại phía máy chủ.',
+    ],
+  },
   {
     date: '30/08/2026 (Email nhắc công việc)',
     items: [

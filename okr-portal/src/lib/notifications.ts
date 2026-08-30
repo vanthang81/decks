@@ -48,6 +48,10 @@ export function notifEnabled(prefs: Record<string, unknown> | null | undefined, 
 export async function notifySimple(input: {
   recipients: string[]; type: string; actorEmail: string; actorName: string | null;
   preview: string; link: string;
+  // Ngữ cảnh để XỬ LÝ NGAY tại chuông (duyệt/từ chối/bình luận không cần mở trang):
+  // entityType = 'meeting_access' | 'user_invite' | 'objective' | 'key_result' | 'initiative' …
+  // entityId   = id của yêu cầu/lời mời/thực thể tương ứng.
+  entityType?: string | null; entityId?: string | null;
 }): Promise<void> {
   const actorLc = input.actorEmail.toLowerCase();
   const uniq = Array.from(new Set(input.recipients.map((r) => r.trim()).filter(Boolean)))
@@ -59,11 +63,30 @@ export async function notifySimple(input: {
   );
   for (const u of active) {
     await query(
-      `INSERT INTO okr_notifications (recipient_email, type, actor_email, actor_name, preview, link)
-       VALUES ($1,$2,$3,$4,$5,$6)`,
-      [u.email, input.type, input.actorEmail, input.actorName, input.preview, input.link],
+      `INSERT INTO okr_notifications (recipient_email, type, entity_type, entity_id, actor_email, actor_name, preview, link)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+      [u.email, input.type, input.entityType ?? null, input.entityId ?? null,
+       input.actorEmail, input.actorName, input.preview, input.link],
     );
   }
+}
+
+/** Lấy 1 thông báo của CHÍNH người nhận (để xử lý inline ở chuông — chỉ đọc được của mình). */
+export async function getNotification(id: string, recipient: string): Promise<Notification | null> {
+  return queryOne<Notification>(
+    `SELECT n.id, n.type, n.entity_type, n.entity_id, n.comment_id, n.actor_email, n.actor_name,
+            au.avatar_url AS actor_avatar, n.preview, n.link, n.is_read, n.created_at::text
+       FROM okr_notifications n
+       LEFT JOIN okr_users au ON au.email = n.actor_email
+      WHERE n.id=$1 AND n.recipient_email=$2`,
+    [id, recipient],
+  );
+}
+
+/** Sau khi một yêu cầu/lời mời được xử lý → đánh dấu ĐÃ ĐỌC mọi thông báo cùng loại+thực thể của
+ * MỌI người nhận (vd 2 người cùng được báo 1 yêu cầu, 1 người duyệt thì người kia hết chờ). */
+export async function markSiblingNotifsRead(type: string, entityId: string): Promise<void> {
+  await query('UPDATE okr_notifications SET is_read=true WHERE type=$1 AND entity_id=$2', [type, entityId]);
 }
 
 export async function unreadCount(email: string): Promise<number> {

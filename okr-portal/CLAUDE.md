@@ -194,6 +194,19 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   daily (đến hạn + quá hạn)" (id `IeYNzbjs1jsig9vA`, `0 8 * * *` VN → `?kind=daily`) + "OKR Task Overdue —
   weekly (tổng hợp quá hạn)" (id `OXOeqKGsHz1uQAtf`, `30 7 * * 1` = Thứ 2 07:30 VN → `?kind=weekly`), SSH
   đọc SYNC_KEY từ .env rồi curl `127.0.0.1:8640`. Email gửi qua `sendMail` (SMTP okr@baotinmanhhai.vn).
+- **XỬ LÝ NGAY TẠI CHUÔNG — duyệt/từ chối/bình luận không cần mở trang (CFO 30/08)**: chuông 🔔 (`NotifBell.tsx`)
+  nay là **BẢNG THẢ XUỐNG** (popover, đóng khi bấm ngoài/Esc) render `NotifItems.tsx` (dùng CHUNG với trang
+  `/notifications` qua `NotifList.tsx`). Mỗi thông báo có thao tác inline: **Duyệt/Từ chối** cho `meeting_access_request`
+  + `user_invite_pending` (kèm ô **Ghi chú** tuỳ chọn → đính vào thông báo quyết định gửi người yêu cầu); **↩ Trả lời**
+  (bình luận thẳng qua `addComment`) cho thông báo gắn `entity_type ∈ objective/key_result/initiative` (mention/reply/
+  comment_mine/assignment). Endpoint **`POST /api/notifications/act`** `{id,action:'approve'|'deny'|'comment',text?}` —
+  chỉ đọc thông báo CỦA MÌNH + **kiểm quyền lại phía máy chủ theo loại** (`isMeetingEditor` / `canApproveUsers` /
+  entity là mục bình luận được) → KHÔNG tin client. Sau khi xử lý: `markSiblingNotifsRead(type,entity_id)` để người
+  đồng-nhận khác hết chờ. **Để hiện được nút inline, notifSimple PHẢI lưu `entity_type`/`entity_id`** — đã mở rộng
+  `notifySimple` (2 cột mới) + 2 nơi tạo: yêu cầu xem họp (`meeting_access` + request id) & lời mời (`user_invite` +
+  invite id); thông báo CŨ thiếu entity_id → chỉ còn nút "Mở" (fallback). **Thêm loại thông báo cần duyệt/bình luận
+  mới ⇒ lưu entity_type/entity_id khi tạo + thêm nhánh xử lý trong `/api/notifications/act` + cho vào APPROVE_TYPES/
+  COMMENT_ENTITIES ở `NotifItems.tsx`.**
 
 ## Điều hành: Họp điều hành + Nhận định/Khuyến nghị + Sức khỏe OKR + Bản tin tuần (02/08)
 - **`src/lib/health.ts`**: chấm SỨC KHỎE mỗi OKR theo 7 tiêu chí (chủ trì 20 · có KR 20 · có KR lagging 10 ·

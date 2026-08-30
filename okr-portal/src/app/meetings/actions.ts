@@ -213,8 +213,8 @@ export async function requestMeetingAccessAction(fd: FormData) {
   const id = str(fd, 'id');
   const m = await getMeeting(id);
   if (!m) throw new Error('Không tìm thấy cuộc họp.');
-  await requestAccess(id, user.email, orNull(str(fd, 'reason')));
-  // Báo cho chủ trì + thư ký.
+  const reqId = await requestAccess(id, user.email, orNull(str(fd, 'reason')));
+  // Báo cho chủ trì + thư ký (kèm ngữ cảnh để duyệt/từ chối NGAY tại chuông).
   const to = [m.owner_email, m.secretary_email].filter(Boolean) as string[];
   await notifySimple({
     recipients: to,
@@ -223,6 +223,8 @@ export async function requestMeetingAccessAction(fd: FormData) {
     actorName: user.display_name || user.email,
     preview: `xin xem nội dung cuộc họp "${m.title}"`,
     link: `/meetings/${id}`,
+    entityType: 'meeting_access',
+    entityId: reqId,
   }).catch(() => {});
   revalidatePath(`/meetings/${id}`);
 }

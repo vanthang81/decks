@@ -43,6 +43,8 @@ export async function inviteUserAction(fd: FormData) {
     actorName: me.display_name || me.email,
     preview,
     link: '/admin/invites',
+    entityType: 'user_invite',
+    entityId: res.status === 'created' ? res.id : null,
   }).catch(() => {});
   for (const a of approvers) {
     if (a.toLowerCase() === me.email.toLowerCase()) continue;

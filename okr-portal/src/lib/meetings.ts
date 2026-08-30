@@ -303,12 +303,20 @@ export async function listActionItems(meetingId: string): Promise<ActionItem[]> 
 }
 
 // ── Yêu cầu xem ──
-export async function requestAccess(meetingId: string, requester: string, reason: string | null): Promise<void> {
-  await query(
+export async function requestAccess(meetingId: string, requester: string, reason: string | null): Promise<string> {
+  const r = await queryOne<{ id: string }>(
     `INSERT INTO okr_meeting_access_requests (meeting_id, requester_email, reason)
      VALUES ($1,$2,$3) ON CONFLICT (meeting_id, requester_email)
-     DO UPDATE SET reason=EXCLUDED.reason, status='pending', created_at=now()`,
+     DO UPDATE SET reason=EXCLUDED.reason, status='pending', created_at=now()
+     RETURNING id`,
     [meetingId, requester.toLowerCase(), reason],
+  );
+  return r!.id;
+}
+export async function getAccessRequestById(id: string): Promise<{ id: string; meeting_id: string; requester_email: string; status: string } | null> {
+  return queryOne<{ id: string; meeting_id: string; requester_email: string; status: string }>(
+    `SELECT id, meeting_id, requester_email, status FROM okr_meeting_access_requests WHERE id=$1`,
+    [id],
   );
 }
 export async function listAccessRequests(meetingId: string, status = 'pending'): Promise<AccessRequest[]> {

@@ -1,71 +1,27 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-
-type Notif = {
-  id: string;
-  type: string;
-  actor_name: string | null;
-  actor_email: string | null;
-  actor_avatar: string | null;
-  preview: string | null;
-  link: string | null;
-  is_read: boolean;
-  created_at: string;
-};
-
-function fmtTime(iso: string): string {
-  const d = new Date(iso);
-  return new Intl.DateTimeFormat('vi-VN', {
-    timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
-  }).format(d);
-}
-const TYPE_LABEL: Record<string, string> = {
-  mention: 'đã nhắc bạn',
-  reply: 'đã trả lời bạn',
-  comment_mine: 'đã bình luận ở mục bạn phụ trách',
-  assignment: 'đã giao việc cho bạn',
-  user_invite_pending: '', // preview đã đủ nghĩa ("… đề xuất thêm người dùng …")
-  user_invite_decided: '',
-  meeting_access_request: '',
-  meeting_access_decided: '',
-};
+import NotifItems, { type Notif } from '@/components/NotifItems';
 
 export default function NotifList() {
-  const router = useRouter();
   const [items, setItems] = useState<Notif[]>([]);
   const [loaded, setLoaded] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const r = await fetch('/api/notifications');
     if (r.ok) {
       const j = await r.json();
       setItems(j.items ?? []);
     }
     setLoaded(true);
-  };
-  useEffect(() => {
-    load();
   }, []);
-
-  const post = async (payload: Record<string, unknown>) => {
-    await fetch('/api/notifications', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-  };
-
-  const openItem = async (n: Notif) => {
-    if (!n.is_read) await post({ action: 'read', id: n.id });
-    if (n.link) router.push(n.link);
-    else load();
-  };
+  useEffect(() => { load(); }, [load]);
 
   const readAll = async () => {
-    await post({ action: 'read_all' });
+    await fetch('/api/notifications', {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'read_all' }),
+    });
     load();
   };
 
@@ -81,35 +37,7 @@ export default function NotifList() {
       </div>
 
       {!loaded && <p className="muted">Đang tải…</p>}
-      {loaded && items.length === 0 && <p className="muted">Chưa có thông báo nào.</p>}
-
-      <div className="ntf-list">
-        {items.map((n) => (
-          <button
-            key={n.id}
-            type="button"
-            className={`ntf-item ${n.is_read ? '' : 'unread'}`}
-            onClick={() => openItem(n)}
-          >
-            <span className="ntf-dot" aria-hidden />
-            {n.actor_avatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="ntf-av" src={n.actor_avatar} alt="" referrerPolicy="no-referrer" />
-            ) : (
-              <span className="ntf-av" aria-hidden>
-                {(n.actor_name ?? n.actor_email ?? '?').trim().charAt(0).toUpperCase()}
-              </span>
-            )}
-            <span className="ntf-body">
-              <span className="ntf-line">
-                <b>{n.actor_name || n.actor_email}</b> {TYPE_LABEL[n.type] ?? 'có hoạt động'}
-              </span>
-              {n.preview && <span className="ntf-preview">“{n.preview}”</span>}
-              <span className="ntf-time">{fmtTime(n.created_at)}</span>
-            </span>
-          </button>
-        ))}
-      </div>
+      {loaded && <NotifItems items={items} onReload={load} />}
     </div>
   );
 }
