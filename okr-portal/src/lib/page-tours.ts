@@ -147,6 +147,12 @@ export const PAGE_TOURS: Record<string, TourStep[]> = {
     { target: 'perm-matrix', title: 'Ma trận Năng lực', body: 'Mỗi cột là một Nhóm quyền, mỗi hàng là một Năng lực; tick/bỏ tick để cấp/thu quyền rồi Lưu. Thêm tính năng mới → năng lực mới TỰ hiện thành hàng ở đây. CEO/CFO luôn toàn quyền.' },
     done('Bạn đã nắm cách phân quyền theo nhóm × năng lực. Mở lại từ nút "Hướng dẫn" trên header.'),
   ],
+  'admin-activity': [
+    { title: '📜 Nhật ký hoạt động', body: 'Xem ai đăng nhập, khi nào và làm gì trên hệ thống. Đi nhanh một vòng.' },
+    { title: 'Lưu trữ & dọn dẹp', body: 'Đặt thời hạn TỰ ĐỘNG xoá nhật ký cũ (mặc định 180 ngày) để nhẹ dữ liệu; hoặc xoá thủ công log cũ hơn N ngày / xoá sạch. Hệ thống KHÔNG ghi lượt xem trang nên không phình nhanh.' },
+    { title: 'Lọc & tra cứu', body: 'Lọc theo người · loại hành động · khoảng ngày · từ khoá. Bấm tên người để mở hồ sơ 360°.' },
+    done('Bạn đã nắm cách xem & dọn nhật ký. Mở lại từ nút "Hướng dẫn" trên header.'),
+  ],
 };
 
 // Ánh xạ đường dẫn → khoá tour. Thêm trang mới ⇒ thêm 1 dòng ở đây (khớp với entry PAGE_TOURS).
@@ -167,5 +173,6 @@ export function tourKeyForPath(pathname: string): string | null {
   if (p === '/admin') return 'admin';
   if (p === '/admin/users') return 'admin-users';
   if (p === '/admin/permissions') return 'admin-permissions';
+  if (p === '/admin/activity') return 'admin-activity';
   return null;
 }

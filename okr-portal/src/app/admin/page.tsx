@@ -73,6 +73,8 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
             desc="Bật/tắt email nhắc check-in, chọn thứ gửi · ngưỡng ngày · người nhận." />
           <NavCard href="/admin/errors" icon="review" title={errCount > 0 ? `Nhật ký lỗi hệ thống · ${errCount} lỗi mới` : 'Nhật ký lỗi hệ thống'}
             desc="Tự ghi lỗi server/render (digest) để phát hiện & sửa nhanh. Tra digest trong log container để lấy chi tiết." />
+          <NavCard href="/admin/activity" icon="user" title="Nhật ký hoạt động"
+            desc="Ai đăng nhập / làm gì (tạo·sửa·xoá OKR·việc·dự án·họp·người dùng). Lọc theo người/loại/ngày · tự xoá theo thời hạn + xoá thủ công (chống phình DB)." />
         </div>
 
         {/* 3) Tự động hoá & trao đổi dữ liệu */}

@@ -29,6 +29,21 @@ export async function recordLogin(email: string): Promise<void> {
     'UPDATE okr_users SET last_login_at=now(), login_count=login_count+1 WHERE lower(email)=lower($1)',
     [email],
   );
+  // Ghi 1 SỰ KIỆN đăng nhập vào nhật ký hoạt động (để Quản trị xem "ai đăng nhập khi nào").
+  // CHỐNG PHÌNH: bỏ qua nếu cùng người vừa có sự kiện đăng nhập trong 10 phút (nhiều tab/refresh token).
+  try {
+    await query(
+      `INSERT INTO okr_audit_log (actor, action, entity, entity_id)
+       SELECT $1, 'auth.login', 'user', $1
+        WHERE NOT EXISTS (
+          SELECT 1 FROM okr_audit_log
+           WHERE actor = $1 AND action = 'auth.login' AND created_at > now() - interval '10 minutes'
+        )`,
+      [email],
+    );
+  } catch (e) {
+    console.error('[audit] ghi đăng nhập lỗi', e);
+  }
 }
 
 /** Cập nhật avatar Google (gọi lúc đăng nhập). Best-effort, chỉ ghi khi đổi. */

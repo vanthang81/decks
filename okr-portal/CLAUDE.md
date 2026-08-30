@@ -358,6 +358,18 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   `.person-filter` (gold) nhắc "đang lọc" + nút bỏ lọc. **Thêm khu vực cần lọc-theo-người mới ⇒ theo mẫu này:
   thêm `owner` searchParam + `initialOwner`→`fOwner` (khớp `owner_email`, gồm trong `filterActive`/clear) + link
   `allHref` ở hồ sơ.** (Người = `owner_email` viết thường, khớp toàn app.)
+- **NHẬT KÝ HOẠT ĐỘNG hệ thống (CFO 30/08 — `/admin/activity`)**: dùng LẠI bảng `okr_audit_log` (KHÔNG bảng mới).
+  Ghi thêm **đăng nhập** = `action='auth.login'` trong `recordLogin` (`users.ts`), **gộp 10 phút** (INSERT…WHERE NOT
+  EXISTS trong 10') tránh trùng do nhiều tab/refresh. Trang `src/app/admin/activity/` (gác `canManageSystem`): lọc
+  người/loại(`AUDIT_GROUPS` theo tiền tố action)/khoảng ngày/từ khoá + phân trang (`listAudit`/`countAudit` trong
+  `audit.ts`); actor bọc `UserLink`. **CHỐNG PHÌNH DB — 2 lớp**: (1) **tự động** — retention lưu ở `okr_settings`
+  key `audit_retention_days` (mặc định 180; `getAuditRetentionDays`/`setAuditRetentionDays`, options 0/30/60/90/180/365,
+  0=không xoá); route **`/api/audit/prune`** (gác `x-sync-key`/admin, `pruneAuditByRetention`, `?days=N` để ép) do
+  **cron n8n "OKR Audit Prune"** gọi hằng ngày. (2) **thủ công** — actions `pruneAuditNowAction`(cũ hơn N ngày)/
+  `clearAllAuditAction`(gõ "XOA"). **KHÔNG ghi lượt xem trang** (đây là nguồn phình chính — giữ nguyên không log).
+  Migration **`db/460_audit_activity.sql`** thêm index `(actor,created_at)`+`(action,created_at)` + **`GRANT DELETE
+  ON okr_audit_log TO btmh_app`** (chạy SUPERUSER — app không tự grant được). Thêm hành động cần truy vết mới ⇒ gọi
+  `logAudit()` + thêm nhãn vào `AUDIT_ACTION_LABEL` (+ tiền tố vào `AUDIT_GROUPS` nếu là nhóm mới).
 - **VAI TRÒ vs VỊ TRÍ (CFO 30/08)**: **Vai trò** (`rbac.ts` Role: ceo/cfo/division_lead/dept_lead/function_lead/staff)
   = CẤP QUYỀN HẠN → phạm vi quản lý (`manageScope`), lập trình cứng. **Vị trí/Chức danh** = preset TỰ PHỤC VỤ
   (`src/lib/positions.ts`, lưu okr_settings key `positions`, KHÔNG cần DDL): mỗi vị trí = nhãn + base_role +

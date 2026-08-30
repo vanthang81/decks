@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-30.117';
+export const GUIDE_VERSION = '2026-08-30.118';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -587,6 +587,14 @@ export const FEATURES: Feature[] = [
     detail:
       'Hai tầng: (A) VAI TRÒ tổ chức (CEO/CFO · GĐ khối · Trưởng phòng · Nhân viên) quyết định PHẠM VI (đụng OKR đơn vị nào). (B) NHÓM QUYỀN quyết định NĂNG LỰC (được làm gì). 5 nhóm mặc định: 🛡️ Quản trị hệ thống (toàn quyền) · ⭐ Quản trị OKR (mọi OKR, toàn phạm vi) · 👔 Quản lý (tạo/sửa OKR trong phạm vi) · ✍️ Cộng tác (check-in/bình luận của mình, sửa trong 3h; tự quản OKR cá nhân) · 👁️ Người xem. CEO/CFO LUÔN toàn quyền. Năng lực OKR (Tạo/Sửa/Xoá) áp trong phạm vi tổ chức, trừ khi có năng lực "Toàn phạm vi". "Sổ năng lực" là nguồn duy nhất — thêm tính năng cần phân quyền chỉ cần thêm 1 năng lực, trang Phân quyền TỰ hiện toggle cho mọi nhóm. Nhóm năng lực gồm: Hệ thống · Chiến lược công ty · OKR & Key Result · Thực thi, Dự án & Họp · Ngân sách & Tài chính · Báo cáo & Lịch · KPI & Chỉ số · Dữ liệu. Ngoài OKR/KPI/Dự án, nay phân quyền được cả "Quản lý Chiến lược công ty", "Quản lý mọi cuộc họp", "Quản lý Ngân sách", "Xem Báo cáo theo cấp" và "Xem Lịch toàn công ty" (trước khoá cứng theo vai trò); ai cũng vẫn tự tạo cuộc họp của mình, "Quản lý mọi cuộc họp" chỉ là quyền quản trị họp toàn công ty. TỰ GỢI Ý: mỗi năng lực khai báo sẵn các nhóm nên có nó → khi thêm tính năng/quyền mới, trang Phân quyền hiện ô "gợi ý" ở đúng nhóm và nút "Áp dụng gợi ý" để bật nhanh (admin xem lại rồi Lưu). Chỉ người có năng lực "Phân quyền người dùng" (CEO/CFO + Quản trị hệ thống) mới gán được nhóm cho người khác. Phân quyền áp cả ở giao diện lẫn máy chủ.',
   },
+  {
+    key: 'admin-activity',
+    title: 'Nhật ký hoạt động (Quản trị hệ thống)',
+    where: 'Quản trị → "Nhật ký hoạt động"',
+    help: 'Ai đăng nhập / làm gì, khi nào. Lọc theo người·loại·ngày; tự xoá theo thời hạn + xoá thủ công.',
+    detail:
+      'Nhật ký ghi lại ĐĂNG NHẬP và mọi thao tác THAY ĐỔI dữ liệu (tạo/sửa/xoá OKR · Key Result · check-in · công việc · dự án · cuộc họp · người dùng · phân quyền). Mỗi dòng: thời gian (giờ Hà Nội) · người (bấm mở hồ sơ 360°) · hành động · đối tượng. Lọc theo Người · Loại hành động · Khoảng ngày · từ khoá, có phân trang. **Chống phình dữ liệu**: (1) KHÔNG ghi lượt xem trang; (2) đăng nhập gộp trong 10 phút để tránh trùng; (3) **tự động xoá** log cũ hơn thời hạn cấu hình (mặc định 180 ngày — chọn 30/60/90/180/365 ngày hoặc "Không tự xoá"; cron dọn hằng ngày); (4) **xoá thủ công** log cũ hơn N ngày hoặc xoá sạch (có xác nhận). Chỉ Quản trị hệ thống xem/dọn được.',
+  },
 ];
 
 // ---- Lộ trình đề xuất (từ research best practice — chưa có, chờ CFO duyệt) ----
@@ -632,6 +640,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '30/08/2026 (Nhật ký hoạt động hệ thống)',
+    items: [
+      'Quản trị → "Nhật ký hoạt động": xem ai ĐĂNG NHẬP và LÀM GÌ (tạo/sửa/xoá OKR·việc·dự án·họp·người dùng·phân quyền), lọc theo người/loại/ngày + tìm.',
+      'Chống phình DB: không ghi lượt xem trang · gộp đăng nhập trong 10 phút · TỰ ĐỘNG xoá log cũ hơn thời hạn (mặc định 180 ngày, cron hằng ngày) · xoá thủ công theo mốc hoặc xoá sạch.',
+    ],
+  },
   {
     date: '30/08/2026 (Hồ sơ 360° — quyền cấu hình + lọc riêng người)',
     items: [
