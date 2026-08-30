@@ -54,7 +54,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
     { href: '/tasks', label: 'Công việc', key: 'tasks', group: 'exec', icon: 'check', show: true },
     { href: '/budget', label: 'Ngân sách', key: 'budget', group: 'exec', icon: 'wallet', show: showBudget },
     { href: '/my', label: 'Của tôi', key: 'my', group: 'personal', icon: 'user', show: true },
-    { href: '/guide', label: 'Hướng dẫn', key: 'guide', group: 'personal', icon: 'book', show: true },
+    { href: '/guide', label: 'Hướng dẫn', key: 'guide', group: 'help', icon: 'book', show: true },
     { href: '/admin/invites', label: pendingInvites > 0 ? `Lời mời (${pendingInvites})` : 'Lời mời', key: 'invites', group: 'admin', icon: 'user-plus', show: showInvites },
     { href: '/admin', label: 'Quản trị', key: 'admin', group: 'admin', icon: 'sliders', show: showAdmin },
   ].filter((l) => l.show);
@@ -64,6 +64,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
     strategy: 'Chiến lược & Đo lường',
     exec: 'Thực thi',
     personal: 'Cá nhân',
+    help: 'Hướng dẫn',
     admin: 'Quản trị',
   };
   const GROUP_ICON: Record<string, string> = {
@@ -71,11 +72,12 @@ export default async function SiteHeader({ active }: { active?: string }) {
     strategy: 'compass',
     exec: 'bolt',
     personal: 'user',
+    help: 'book',
     admin: 'sliders',
   };
 
   // Desktop: gom link thành CỤM DROPDOWN (giống Control Tower) → thanh menu gọn 1 hàng.
-  const GROUP_ORDER = ['overview', 'strategy', 'exec', 'personal', 'admin'];
+  const GROUP_ORDER = ['overview', 'strategy', 'exec', 'personal', 'help', 'admin'];
   const groups = GROUP_ORDER.map((gk) => ({
     key: gk,
     label: GROUP_LABEL[gk],
