@@ -8,7 +8,7 @@ import { requireUser } from '@/lib/current-user';
 import { loadAccess, canManageSystem } from '@/lib/access';
 import {
   listAudit, countAudit, auditStats, getAuditRetentionDays,
-  AUDIT_GROUPS, AUDIT_RETENTION_OPTIONS, describeAudit, type AuditFilter,
+  AUDIT_GROUPS, AUDIT_RETENTION_OPTIONS, auditActionLabel, auditDetailText, type AuditFilter,
 } from '@/lib/audit';
 import { listUsers } from '@/lib/users';
 import { fmtDateTime, fmtDate } from '@/lib/format';
@@ -163,10 +163,10 @@ export default async function AdminActivity({
               <table className="t">
                 <thead>
                   <tr>
-                    <th style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>Thời gian</th>
-                    <th style={{ textAlign: 'left' }}>Người</th>
+                    <th style={{ textAlign: 'left', whiteSpace: 'nowrap', width: 140 }}>Thời gian</th>
+                    <th style={{ textAlign: 'left', width: 150 }}>Người</th>
                     <th style={{ textAlign: 'left' }}>Hành động</th>
-                    <th style={{ textAlign: 'left' }}>Đối tượng</th>
+                    <th style={{ textAlign: 'left', width: 230 }}>Đối tượng</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -179,8 +179,11 @@ export default async function AdminActivity({
                           : <span className="muted">—</span>}
                       </td>
                       <td style={{ fontSize: 13 }}>
-                        <span className={`badge ${GROUP_BADGE[groupOf(e.action)] ?? 'gray'}`} style={{ marginRight: 6 }}>
-                          {describeAudit(e)}
+                        <span className="act-cell">
+                          <span className={`badge ${GROUP_BADGE[groupOf(e.action)] ?? 'gray'}`}>
+                            {auditActionLabel(e)}
+                          </span>
+                          {auditDetailText(e) && <span className="muted act-detail">{auditDetailText(e)}</span>}
                         </span>
                       </td>
                       <td className="mono" style={{ fontSize: 11.5, color: 'var(--muted)' }}>

@@ -84,16 +84,26 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   'meeting.minutes': 'Cập nhật biên bản/quyết định',
 };
 
-/** Mô tả ngắn 1 dòng cho 1 entry (nhãn hành động + thông tin phụ trong detail nếu có). */
-export function describeAudit(e: AuditEntry): string {
-  const base = AUDIT_ACTION_LABEL[e.action] ?? e.action;
+/** Nhãn hành động NGẮN (không kèm chi tiết) — dùng cho badge. */
+export function auditActionLabel(e: AuditEntry): string {
+  return AUDIT_ACTION_LABEL[e.action] ?? e.action;
+}
+
+/** Chi tiết phụ (tên/ô/trạng thái/ghi chú) tách riêng khỏi nhãn — hiển thị dạng text thường. */
+export function auditDetailText(e: AuditEntry): string {
   const d = e.detail ?? {};
   const extra: string[] = [];
   if (typeof d.title === 'string' && d.title) extra.push(`"${d.title}"`);
   if (typeof d.field === 'string' && d.field) extra.push(d.field);
   if (typeof d.status === 'string' && d.status) extra.push(`→ ${d.status}`);
   if (typeof d.note === 'string' && d.note) extra.push(d.note);
-  return extra.length ? `${base}: ${extra.join(' · ')}` : base;
+  return extra.join(' · ');
+}
+
+/** Mô tả ngắn 1 dòng cho 1 entry (nhãn hành động + thông tin phụ) — dùng ở popup nhật ký theo thực thể. */
+export function describeAudit(e: AuditEntry): string {
+  const detail = auditDetailText(e);
+  return detail ? `${auditActionLabel(e)}: ${detail}` : auditActionLabel(e);
 }
 
 // ============================================================================
