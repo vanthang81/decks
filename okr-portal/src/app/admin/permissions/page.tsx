@@ -6,7 +6,10 @@ import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
 import { loadAccess, canManageSystem, canAssignPerms } from '@/lib/access';
 import { CAPABILITIES, CAP_CATEGORIES, DEFAULT_GROUPS } from '@/lib/capabilities';
-import { savePermissionsAction } from '../actions';
+import { ROLES, ROLE_LABEL } from '@/lib/rbac';
+import { listPositions } from '@/lib/positions';
+import PositionsManager from '@/components/PositionsManager';
+import { savePermissionsAction, savePositionAction, deletePositionAction } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +25,7 @@ export default async function AdminPermissions({
 
   const groups = DEFAULT_GROUPS; // thứ tự + nhãn cố định; caps lấy từ access
   const has = (g: string, cap: string) => access.groups[g]?.has(cap as never) ?? false;
+  const positions = await listPositions();
 
   return (
     <>
@@ -42,6 +46,16 @@ export default async function AdminPermissions({
         {!editable && (
           <p className="badge amber">Bạn xem được nhưng cần năng lực “Phân quyền người dùng” để chỉnh.</p>
         )}
+
+        {/* Vị trí / Chức danh (preset điền nhanh khi thêm người dùng) */}
+        <PositionsManager
+          positions={positions}
+          roles={ROLES.map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
+          groups={DEFAULT_GROUPS.map((g) => ({ key: g.key, icon: g.icon, label: g.label }))}
+          editable={editable}
+          saveAction={savePositionAction}
+          deleteAction={deletePositionAction}
+        />
 
         {/* Chú thích nhóm */}
         <div className="card" data-tour="perm-legend">

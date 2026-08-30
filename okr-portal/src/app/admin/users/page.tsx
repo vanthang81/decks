@@ -7,7 +7,9 @@ import EditUserModal from '@/components/EditUserModal';
 import HandoverModal from '@/components/HandoverModal';
 import UserFilterBar from '@/components/UserFilterBar';
 import SearchSelect from '@/components/SearchSelect';
+import PositionAutofill from '@/components/PositionAutofill';
 import { unitTreeOptions } from '@/lib/unit-options';
+import { listPositions } from '@/lib/positions';
 import { requireUser } from '@/lib/current-user';
 import { ROLE_LABEL, ROLES, isExec } from '@/lib/rbac';
 import { loadAccess, canManageSystem, canAssignPerms } from '@/lib/access';
@@ -24,7 +26,8 @@ export default async function AdminUsers() {
   const access = await loadAccess();
   if (!canManageSystem(me, access)) redirect('/');
   const assignPerms = canAssignPerms(me, access);
-  const [users, units, hoCounts] = await Promise.all([listUsers(), listUnits(), handoverCountsAll()]);
+  const [users, units, hoCounts, positions] = await Promise.all([listUsers(), listUnits(), handoverCountsAll(), listPositions()]);
+  const posOpts = positions.map((p) => ({ key: p.key, label: p.label, base_role: p.base_role, perm_group: p.perm_group }));
   const EMPTY_CO: HandoverCounts = { openTasks: 0, allTasks: 0, objectives: 0, projects: 0, meetings: 0 };
   // Ứng viên thay thế = người đang hoạt động (loại theo từng dòng ở dưới).
   const activeUserOpts = users
@@ -70,6 +73,14 @@ export default async function AdminUsers() {
                 <input className="i" name="title" placeholder="VD: Trưởng phòng Bán lẻ" />
               </div>
             </div>
+            {posOpts.length > 0 && (
+              <div style={{ marginBottom: 4 }}>
+                <label className="f">Vị trí (chọn nhanh)
+                  <span className="muted" style={{ fontWeight: 400 }}> — tự điền Vai trò · Nhóm quyền · Chức danh</span>
+                </label>
+                <div style={{ maxWidth: 400 }}><PositionAutofill positions={posOpts} /></div>
+              </div>
+            )}
             <div className="row">
               <div>
                 <label className="f">Vai trò</label>
@@ -183,6 +194,7 @@ export default async function AdminUsers() {
                           units={units.map((x) => ({ id: x.id, name: x.name, type: x.type, parent_id: x.parent_id, sort: x.sort }))}
                           roles={ROLES.map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
                           groups={DEFAULT_GROUPS.map((g) => ({ key: g.key, icon: g.icon, label: g.label, desc: g.desc }))}
+                          positions={posOpts}
                           assignPerms={assignPerms}
                           action={saveUserAction}
                         />

@@ -20,6 +20,7 @@ import { redirect } from 'next/navigation';
 import { setSetting } from '@/lib/settings';
 import { REMINDER_KEY, runCheckinReminders, type ReminderConfig } from '@/lib/reminders';
 import { reassignOwnership } from '@/lib/handover';
+import { upsertPosition, deletePosition } from '@/lib/positions';
 import { logAudit } from '@/lib/audit';
 
 async function requireExec() {
@@ -80,6 +81,32 @@ export async function toggleUserAction(fd: FormData) {
     }
   }
   await setUserActive(email, active);
+  revalidatePath('/admin/users');
+}
+
+// ---------- Vị trí / chức danh (preset) — quản lý trong Phân quyền ----------
+export async function savePositionAction(fd: FormData) {
+  const me = await requireUser();
+  const access = await loadAccess();
+  if (!canAssignPerms(me, access)) throw new Error('Cần quyền "Phân quyền người dùng".');
+  await upsertPosition({
+    key: orNull(str(fd, 'key')) ?? undefined,
+    label: str(fd, 'label'),
+    base_role: str(fd, 'base_role'),
+    perm_group: str(fd, 'perm_group'),
+  });
+  await logAudit({ actor: me.email, action: 'position.save', entity: 'position', detail: { label: str(fd, 'label') } });
+  revalidatePath('/admin/permissions');
+  revalidatePath('/admin/users');
+}
+
+export async function deletePositionAction(fd: FormData) {
+  const me = await requireUser();
+  const access = await loadAccess();
+  if (!canAssignPerms(me, access)) throw new Error('Cần quyền "Phân quyền người dùng".');
+  await deletePosition(str(fd, 'key'));
+  await logAudit({ actor: me.email, action: 'position.delete', entity: 'position', entityId: str(fd, 'key') });
+  revalidatePath('/admin/permissions');
   revalidatePath('/admin/users');
 }
 

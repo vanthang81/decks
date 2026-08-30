@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-30.110';
+export const GUIDE_VERSION = '2026-08-30.111';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -632,6 +632,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '30/08/2026 (Vị trí / Chức danh tự phục vụ)',
+    items: [
+      'Quản trị viên tự tạo "Vị trí / chức danh" (vd Quản lý vùng, Phó phòng) trong Phân quyền: mỗi vị trí gắn Cấp quyền hạn nền + Nhóm quyền mặc định.',
+      'Khi thêm/sửa người dùng, chọn một Vị trí là tự điền Vai trò + Nhóm quyền + gợi ý Chức danh — không phải nhớ từng thứ. Chức danh tách khỏi cấp quyền hạn (chuẩn HR).',
+    ],
+  },
   {
     date: '30/08/2026 (Vai trò mới: Quản lý chức năng)',
     items: [

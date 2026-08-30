@@ -306,6 +306,13 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
      `Initiative` type + `SELECT` bổ sung cột `created_by`. **⚠ Deploy PHẢI chạy migration 440** (superuser)
      trước/khi build, nếu không INSERT việc cá nhân sẽ vi phạm CHECK cũ.
   Admin hệ thống (users/org/periods) chỉ `exec` (`canAdmin`), guard không xoá exec cuối/chính mình.
+- **VAI TRÒ vs VỊ TRÍ (CFO 30/08)**: **Vai trò** (`rbac.ts` Role: ceo/cfo/division_lead/dept_lead/function_lead/staff)
+  = CẤP QUYỀN HẠN → phạm vi quản lý (`manageScope`), lập trình cứng. **Vị trí/Chức danh** = preset TỰ PHỤC VỤ
+  (`src/lib/positions.ts`, lưu okr_settings key `positions`, KHÔNG cần DDL): mỗi vị trí = nhãn + base_role +
+  nhóm quyền mặc định. Quản lý ở **/admin/permissions** (`PositionsManager`); khi thêm/sửa user chọn Vị trí →
+  `PositionAutofill` tự điền role+perm_group+title (chỉ điền nhanh, KHÔNG đụng logic phân quyền). Thêm role cấp
+  bậc mới ⇒ vẫn phải sửa `rbac.ts` + `manageScope` + `defaultGroupForRole` + Record<Role,*>; còn "chức danh" thì
+  admin tự thêm qua Vị trí, không cần lập trình.
 - **ĐỔI EMAIL người dùng (CFO 30/08 — email là KHOÁ CHÍNH `okr_users.email`)**: sửa email nhập sai ở popup
   "Sửa" người dùng (ô "Email đăng nhập"). Vì email là PK + nhiều bảng tham chiếu, `changeUserEmail()` trong
   `src/lib/users.ts` chạy TRONG 1 GIAO DỊCH: INSERT bản ghi user email mới (copy hồ sơ) → dời MỌI tham chiếu

@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ToastProvider';
 import SearchSelect from '@/components/SearchSelect';
+import PositionAutofill, { type PositionOpt } from '@/components/PositionAutofill';
 import { unitTreeOptions } from '@/lib/unit-options';
 
 // Popup SỬA QUYỀN 1 người dùng — dùng lại saveUserAction (upsert theo email).
@@ -24,6 +25,7 @@ export default function EditUserModal({
   units,
   roles,
   groups,
+  positions = [],
   assignPerms,
   action,
 }: {
@@ -31,6 +33,7 @@ export default function EditUserModal({
   units: Unit[];
   roles: Role[];
   groups: Group[];
+  positions?: PositionOpt[];
   assignPerms: boolean;
   action: (fd: FormData) => Promise<void>;
 }) {
@@ -93,6 +96,14 @@ export default function EditUserModal({
               <input className="i" name="display_name" defaultValue={user.display_name ?? ''} />
               <label className="f">Chức danh</label>
               <input className="i" name="title" defaultValue={user.title ?? ''} placeholder="VD: Trưởng phòng Bán lẻ" />
+              {positions.length > 0 && (
+                <>
+                  <label className="f">Vị trí (chọn nhanh)
+                    <span className="muted" style={{ fontWeight: 400 }}> — tự điền Vai trò · Nhóm quyền · Chức danh</span>
+                  </label>
+                  <PositionAutofill positions={positions} />
+                </>
+              )}
               <div className="row">
                 <div>
                   <label className="f">Vai trò</label>
