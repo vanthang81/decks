@@ -22,10 +22,16 @@ const PROJECT_STATUS_CLS: Record<ProjectStatus, string> = {
 };
 const STATUS_ORDER: ProjectStatus[] = ['active', 'done', 'paused', 'archived'];
 
-export default function ProjectsList({ projects }: { projects: ProjectRow[] }) {
+export default function ProjectsList({ projects, initialOwner }: { projects: ProjectRow[]; initialOwner?: string }) {
   const [q, setQ] = useState('');
   const [fStatus, setFStatus] = useState('');
   const [fUnit, setFUnit] = useState('');
+  const [fOwner, setFOwner] = useState(initialOwner ?? '');
+  const fOwnerLc = fOwner.toLowerCase();
+  const ownerName = useMemo(
+    () => projects.find((p) => (p.owner_email ?? '').toLowerCase() === fOwnerLc)?.owner_name || fOwner,
+    [projects, fOwnerLc, fOwner],
+  );
 
   const unitList = useMemo(() => {
     const m = new Map<string, string>();
@@ -36,10 +42,11 @@ export default function ProjectsList({ projects }: { projects: ProjectRow[] }) {
   }, [projects]);
 
   const qlc = q.trim().toLowerCase();
-  const fActive = !!(qlc || fStatus || fUnit);
+  const fActive = !!(qlc || fStatus || fUnit || fOwner);
   const filtered = useMemo(
     () =>
       projects.filter((p) => {
+        if (fOwnerLc && (p.owner_email ?? '').toLowerCase() !== fOwnerLc) return false;
         if (fStatus && p.status !== fStatus) return false;
         if (fUnit && p.unit_id !== fUnit) return false;
         if (qlc) {
@@ -48,16 +55,23 @@ export default function ProjectsList({ projects }: { projects: ProjectRow[] }) {
         }
         return true;
       }),
-    [projects, fStatus, fUnit, qlc],
+    [projects, fOwnerLc, fStatus, fUnit, qlc],
   );
   const clearFilter = () => {
     setQ('');
     setFStatus('');
     setFUnit('');
+    setFOwner('');
   };
 
   return (
     <div>
+      {fOwner && (
+        <div className="person-filter">
+          <span>👤 Đang lọc dự án của: <b>{ownerName}</b></span>
+          <button type="button" className="ntf-link" onClick={() => setFOwner('')}>✕ Bỏ lọc người</button>
+        </div>
+      )}
       <div className="filterbar" style={{ marginTop: 2 }}>
         <input
           className="i fb-search"

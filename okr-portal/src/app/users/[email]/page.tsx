@@ -4,15 +4,21 @@ import SiteHeader from '@/components/SiteHeader';
 import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
 import { isExec, ROLE_LABEL } from '@/lib/rbac';
+import { loadAccess, canViewFullProfile } from '@/lib/access';
 import { getUserProfile, type ProfileListItem } from '@/lib/people';
 import { fmtDateTime, fmtDate } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
-function ListCard({ title, items, empty }: { title: string; items: ProfileListItem[]; empty: string }) {
+function ListCard({ title, items, empty, allHref, allLabel }: { title: string; items: ProfileListItem[]; empty: string; allHref?: string; allLabel?: string }) {
   return (
     <div className="card">
-      <h3 style={{ marginTop: 0 }}>{title} <span className="muted" style={{ fontWeight: 400, fontSize: 13 }}>({items.length})</span></h3>
+      <div className="flexbtw" style={{ alignItems: 'baseline', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+        <h3 style={{ margin: 0 }}>{title} <span className="muted" style={{ fontWeight: 400, fontSize: 13 }}>({items.length})</span></h3>
+        {allHref && items.length > 0 && (
+          <Link href={allHref} className="prof-all" title={allLabel ?? 'Xem tất cả của người này'}>{allLabel ?? 'Xem tất cả'} →</Link>
+        )}
+      </div>
       {items.length === 0 ? (
         <p className="muted" style={{ margin: 0 }}>{empty}</p>
       ) : (
@@ -36,10 +42,14 @@ function ListCard({ title, items, empty }: { title: string; items: ProfileListIt
 export default async function UserProfilePage({ params }: { params: { email: string } }) {
   const viewer = await requireUser();
   const email = decodeURIComponent(params.email);
-  const full = isExec(viewer.role);
+  const access = await loadAccess();
+  // Xem hồ sơ 360° đầy đủ: CEO/CFO, HOẶC người có năng lực "Xem hồ sơ 360° người dùng"
+  // (mặc định gợi ý cho nhóm Quản trị hệ thống + Quản trị OKR — cấu hình ở /admin/permissions).
+  const full = isExec(viewer.role) || canViewFullProfile(viewer, access);
   const p = await getUserProfile(email, full);
   if (!p) notFound();
   const { identity: id, counts } = p;
+  const ownerQ = encodeURIComponent(email); // lọc danh sách theo đúng người này
 
   const tiles: { n: number; l: string; color?: string; sub?: string }[] = [
     { n: counts.objectives, l: 'OKR chủ trì' },
@@ -106,16 +116,22 @@ export default async function UserProfilePage({ params }: { params: { email: str
           <div className="card" style={{ borderLeft: '4px solid var(--accent)' }}>
             <p className="muted" style={{ margin: 0 }}>
               Bạn đang xem hồ sơ ở chế độ CƠ BẢN (định danh + số lượng). Chi tiết nhiệm vụ, check-in,
-              lịch sử đăng nhập… chỉ hiển thị cho quản trị (CEO/CFO).
+              lịch sử đăng nhập… chỉ hiển thị cho người có năng lực “Xem hồ sơ 360° người dùng”
+              (mặc định: Quản trị hệ thống & Quản trị OKR).
             </p>
           </div>
         ) : (
           <>
             <div className="grid two">
-              <ListCard title="🎯 OKR chủ trì" items={p.objectives ?? []} empty="Không chủ trì OKR nào." />
-              <ListCard title="🗂 Dự án chủ trì" items={p.projects ?? []} empty="Không chủ trì dự án nào." />
+              <ListCard title="🎯 OKR chủ trì" items={p.objectives ?? []} empty="Không chủ trì OKR nào."
+                allHref={`/objectives?owner=${ownerQ}`} allLabel="Xem OKR của người này" />
+              <ListCard title="🗂 Dự án chủ trì" items={p.projects ?? []} empty="Không chủ trì dự án nào."
+                allHref={`/projects?owner=${ownerQ}`} allLabel="Xem dự án của người này" />
             </div>
-            <ListCard title="✅ Công việc được giao" items={p.tasks ?? []} empty="Chưa được giao việc nào." />
+            <ListCard title="✅ Công việc được giao"
+              items={(p.tasks ?? []).map((t) => (t.href === '/tasks' ? { ...t, href: `/tasks?owner=${ownerQ}` } : t))}
+              empty="Chưa được giao việc nào."
+              allHref={`/tasks?owner=${ownerQ}`} allLabel="Xem công việc của người này" />
             <div className="grid two">
               <div className="card">
                 <h3 style={{ marginTop: 0 }}>📌 Check-in gần đây <span className="muted" style={{ fontWeight: 400, fontSize: 13 }}>({(p.checkins ?? []).length})</span></h3>

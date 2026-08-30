@@ -350,6 +350,14 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   page), `budget.manage` nay gồm cả XUẤT ngân sách (bỏ isExec ở budget/export). `stored perm_groups` GHI ĐÈ default
   (VALID_CAP lọc key hợp lệ) nên cap mới KHÔNG tự vào nhóm đã tuỳ biến → dùng gợi ý; nhóm chưa tuỳ biến tự nhận qua
   DEFAULT_GROUPS. `savePermissionsAction` vẫn ép system_admin = mọi cap.
+- **HỒ SƠ 360° + LỌC THEO NGƯỜI (CFO 30/08)**: xem hồ sơ 360° đầy đủ nay gác bằng năng lực **`user.view360`**
+  (`canViewFullProfile`, mặc định gợi ý `system_admin`+`okr_admin`; `users/[email]/page.tsx` OR với `isExec`).
+  **Lọc danh sách theo 1 người** qua URL `?owner=<email>`: `/objectives` (ObjectiveTree `initialOwner`→`fOwner`),
+  `/tasks` (TaskExplorer `initialOwner`→`fOwner`, khớp `owner_email`), `/projects` (ProjectsList `initialOwner`).
+  Hồ sơ 360° (`ListCard` prop `allHref`) render link "Xem …của người này →" trỏ tới các URL đó; băng
+  `.person-filter` (gold) nhắc "đang lọc" + nút bỏ lọc. **Thêm khu vực cần lọc-theo-người mới ⇒ theo mẫu này:
+  thêm `owner` searchParam + `initialOwner`→`fOwner` (khớp `owner_email`, gồm trong `filterActive`/clear) + link
+  `allHref` ở hồ sơ.** (Người = `owner_email` viết thường, khớp toàn app.)
 - **VAI TRÒ vs VỊ TRÍ (CFO 30/08)**: **Vai trò** (`rbac.ts` Role: ceo/cfo/division_lead/dept_lead/function_lead/staff)
   = CẤP QUYỀN HẠN → phạm vi quản lý (`manageScope`), lập trình cứng. **Vị trí/Chức danh** = preset TỰ PHỤC VỤ
   (`src/lib/positions.ts`, lưu okr_settings key `positions`, KHÔNG cần DDL): mỗi vị trí = nhãn + base_role +

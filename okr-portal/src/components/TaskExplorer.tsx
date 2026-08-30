@@ -129,6 +129,7 @@ export default function TaskExplorer({
   initialMine,
   initialStatus,
   initialOverdue,
+  initialOwner,
 }: {
   tasks: TaskRow[];
   depsMap?: Record<string, string[]>;
@@ -148,6 +149,7 @@ export default function TaskExplorer({
   initialMine?: boolean;
   initialStatus?: string;
   initialOverdue?: boolean;
+  initialOwner?: string;
 }) {
   const manageSet = useMemo(() => new Set(manageIds), [manageIds]);
   const taskById = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks]);
@@ -188,7 +190,7 @@ export default function TaskExplorer({
   };
 
   const [q, setQ] = useState('');
-  const [fOwner, setFOwner] = useState('');
+  const [fOwner, setFOwner] = useState(initialOwner ?? '');
   const [fUnit, setFUnit] = useState('');
   const [fObj, setFObj] = useState('');
   const [fProject, setFProject] = useState('');

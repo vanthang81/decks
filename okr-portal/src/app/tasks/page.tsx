@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic';
 export default async function TasksPage({
   searchParams,
 }: {
-  searchParams: { task?: string; mine?: string; status?: string; overdue?: string };
+  searchParams: { task?: string; mine?: string; status?: string; overdue?: string; owner?: string };
 }) {
   const user = await requireUser();
   const [access, units, all, users, projects] = await Promise.all([
@@ -128,6 +128,7 @@ export default async function TasksPage({
           initialMine={!!searchParams.mine}
           initialStatus={searchParams.status}
           initialOverdue={!!searchParams.overdue}
+          initialOwner={searchParams.owner}
         />
         </div>
       </div>

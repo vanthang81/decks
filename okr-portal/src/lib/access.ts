@@ -73,6 +73,10 @@ export function canAssignPerms(user: OkrUser, access: Access): boolean {
 export function canApproveUsers(user: OkrUser, access: Access): boolean {
   return hasCap(user, 'user.approve', access);
 }
+/** Xem ĐẦY ĐỦ hồ sơ 360° của người khác (chi tiết nhiệm vụ, check-in, lịch sử đăng nhập). */
+export function canViewFullProfile(user: OkrUser, access: Access): boolean {
+  return hasCap(user, 'user.view360', access);
+}
 export function canImportData(user: OkrUser, access: Access): boolean {
   return hasCap(user, 'data.import', access);
 }

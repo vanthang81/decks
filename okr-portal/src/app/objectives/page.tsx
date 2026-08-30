@@ -31,7 +31,7 @@ export const dynamic = 'force-dynamic';
 export default async function ObjectivesPage({
   searchParams,
 }: {
-  searchParams: { period?: string };
+  searchParams: { period?: string; owner?: string };
 }) {
   const user = await requireUser();
   const periods = await listPeriods();
@@ -150,7 +150,7 @@ export default async function ObjectivesPage({
           {period && objectives.length === 0 && (
             <p className="muted">Kỳ này chưa có OKR nào. Bấm “+ Tạo OKR”.</p>
           )}
-          {period && objectives.length > 0 && <ObjectiveTree objectives={treeData} unitOptions={unitOptions} />}
+          {period && objectives.length > 0 && <ObjectiveTree objectives={treeData} unitOptions={unitOptions} initialOwner={searchParams.owner} />}
         </div>
 
         {childSections.length > 0 && (

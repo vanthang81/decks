@@ -75,7 +75,7 @@ export const dynamic = 'force-dynamic';
 export default async function ProjectsPage({
   searchParams,
 }: {
-  searchParams: { period?: string };
+  searchParams: { period?: string; owner?: string };
 }) {
   const user = await requireUser();
   const periods = await listPeriods();
@@ -122,7 +122,7 @@ export default async function ProjectsPage({
           </div>
         </div>
 
-        {period && projects.length > 0 && <div data-tour="projects-list"><ProjectsList projects={projects} /></div>}
+        {period && projects.length > 0 && <div data-tour="projects-list"><ProjectsList projects={projects} initialOwner={searchParams.owner} /></div>}
 
         {period && projects.length === 0 && (
           <div className="card">

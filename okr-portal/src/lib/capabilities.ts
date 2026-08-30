@@ -10,6 +10,7 @@ export type CapKey =
   | 'system.admin'
   | 'system.permissions'
   | 'user.approve'
+  | 'user.view360'
   | 'scope.all'
   | 'strategy.manage'
   | 'okr.create'
@@ -47,6 +48,7 @@ export const CAPABILITIES: Capability[] = [
   { key: 'system.admin', cat: 'system', label: 'Quản trị hệ thống', desc: 'Quản lý người dùng, cây tổ chức, kỳ OKR, cấu hình nhắc nhở.', suggest: ['system_admin'] },
   { key: 'system.permissions', cat: 'system', label: 'Phân quyền người dùng', desc: 'Gán Nhóm quyền cho người khác và chỉnh Nhóm quyền.', suggest: ['system_admin'] },
   { key: 'user.approve', cat: 'system', label: 'Duyệt người dùng', desc: 'Duyệt/từ chối lời mời thêm người dùng mới (qua email) do người khác đề xuất.', suggest: ['system_admin', 'okr_admin'] },
+  { key: 'user.view360', cat: 'system', label: 'Xem hồ sơ 360° người dùng', desc: 'Xem ĐẦY ĐỦ hồ sơ 1 người: định danh, số liệu, chi tiết OKR/dự án/công việc/check-in/cuộc họp, lịch sử đăng nhập & hoạt động. Không có quyền này chỉ xem định danh + số lượng.', suggest: ['system_admin', 'okr_admin'] },
   { key: 'scope.all', cat: 'system', label: 'Toàn phạm vi (mọi đơn vị)', desc: 'Bỏ qua giới hạn phạm vi tổ chức — thao tác được MỌI OKR/đơn vị VÀ xem TẤT CẢ công việc ở trang "Công việc" (không có quyền này chỉ thấy việc liên quan tới mình + phạm vi đơn vị mình quản).', suggest: ['system_admin', 'okr_admin', 'kpi_admin'] },
   { key: 'strategy.manage', cat: 'strategy', label: 'Quản lý Chiến lược công ty', desc: 'Khai báo / sửa Tầm nhìn – Sứ mệnh – Giá trị – Khát vọng và sắp xếp trụ cột chiến lược ở trang "Chiến lược".', suggest: ['system_admin', 'okr_admin'] },
   { key: 'okr.create', cat: 'okr', label: 'Tạo OKR', desc: 'Tạo Objective mới (trong phạm vi, trừ khi có "Toàn phạm vi").', suggest: ['system_admin', 'okr_admin', 'manager'] },

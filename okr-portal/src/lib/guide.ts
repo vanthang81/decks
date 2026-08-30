@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-30.116';
+export const GUIDE_VERSION = '2026-08-30.117';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -545,7 +545,7 @@ export const FEATURES: Feature[] = [
     where: 'Bấm tên người dùng (vd ở Quản trị → Người dùng)',
     help: 'Xem toàn cảnh 1 người: đơn vị, số OKR/dự án/việc, và (chỉ quản trị) chi tiết + đăng nhập.',
     detail:
-      'Bấm vào tên một người để mở hồ sơ 360°. QUẢN TRỊ (CEO/CFO) xem ĐẦY ĐỦ: định danh (đơn vị, chức danh, email, ngày tham gia, số lần & lần đăng nhập gần nhất), số liệu (OKR chủ trì · Key Result · dự án · công việc được giao — kèm đang mở/quá hạn/đã xong · check-in · cuộc họp), và CHI TIẾT danh sách OKR/dự án/việc/check-in/cuộc họp + hoạt động gần đây (đều bấm mở được). Người KHÔNG phải quản trị chỉ xem định danh + SỐ LƯỢNG (không xem chi tiết nhiệm vụ/đăng nhập) để bảo vệ quyền riêng tư.',
+      'Bấm vào tên một người để mở hồ sơ 360°. Người có năng lực "Xem hồ sơ 360° người dùng" (mặc định: Quản trị hệ thống & Quản trị OKR — CEO/CFO luôn có; cấu hình thêm ở Phân quyền) xem ĐẦY ĐỦ: định danh (đơn vị, chức danh, email, ngày tham gia, số lần & lần đăng nhập gần nhất), số liệu (OKR chủ trì · Key Result · dự án · công việc được giao — kèm đang mở/quá hạn/đã xong · check-in · cuộc họp), và CHI TIẾT danh sách OKR/dự án/việc/check-in/cuộc họp + hoạt động gần đây (đều bấm mở được). Mỗi thẻ có link "Xem OKR/dự án/công việc của người này →" mở danh sách LỌC RIÊNG người đó (không phải toàn công ty), có băng nhắc "đang lọc" + nút bỏ lọc. Người KHÔNG có năng lực này chỉ xem định danh + SỐ LƯỢNG (không xem chi tiết nhiệm vụ/đăng nhập) để bảo vệ quyền riêng tư.',
   },
   {
     key: 'meeting-tasks',
@@ -632,6 +632,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '30/08/2026 (Hồ sơ 360° — quyền cấu hình + lọc riêng người)',
+    items: [
+      'Xem hồ sơ 360° ĐẦY ĐỦ nay là năng lực phân quyền "Xem hồ sơ 360° người dùng" — mặc định cho nhóm Quản trị hệ thống & Quản trị OKR (trước chỉ CEO/CFO), cấu hình ở Phân quyền.',
+      'Ở hồ sơ mỗi người: bấm "Xem OKR / dự án / công việc của người này →" mở danh sách LỌC RIÊNG người đó (kèm băng "đang lọc" + nút bỏ lọc), thay vì toàn công ty.',
+    ],
+  },
   {
     date: '30/08/2026 (Phân quyền đầy đủ + tự gợi ý)',
     items: [

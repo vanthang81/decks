@@ -410,6 +410,13 @@ html:has(.mobile-menu[open]) .site-header { transform: none !important; }
 /* Nút "Xoá lọc" dùng chung (ClearFiltersButton) — luôn in-flow, không lọt ra ngoài thanh lọc.
    flex:0 0 auto để không co giãn; nowrap để chữ không xuống dòng giữa nút. */
 .fb-clear { flex: 0 0 auto; white-space: nowrap; }
+/* Băng "đang lọc theo NGƯỜI" (tới từ hồ sơ 360° → xem OKR/việc/dự án của 1 người) */
+.person-filter { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--gold-tint); border: 1px solid #E4D5A9; border-radius: 9px; padding: 7px 12px;
+  margin-bottom: 10px; font-size: 13.5px; color: #6b5416; }
+.person-filter b { color: var(--ink); }
+/* Link "Xem tất cả →" ở đầu thẻ hồ sơ 360° (mở danh sách lọc riêng người đó) */
+.prof-all { font-size: 12.5px; font-weight: 600; white-space: nowrap; flex: 0 0 auto; }
 /* Phân trang danh sách công việc */
 .pager { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 14px 0 4px; flex-wrap: wrap; }
 .pager-info { font-size: 13px; color: var(--muted); font-weight: 600; white-space: nowrap; }

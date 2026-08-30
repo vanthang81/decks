@@ -75,7 +75,7 @@ function collectParents(nodes: Node[], acc: Set<string>): Set<string> {
   return acc;
 }
 
-export default function ObjectiveTree({ objectives, unitOptions }: { objectives: TreeObjective[]; unitOptions?: { value: string; label: string }[] }) {
+export default function ObjectiveTree({ objectives, unitOptions, initialOwner }: { objectives: TreeObjective[]; unitOptions?: { value: string; label: string }[]; initialOwner?: string }) {
   const roots = useMemo(() => buildTree(objectives), [objectives]);
   const parentIds = useMemo(() => collectParents(roots, new Set<string>()), [roots]);
 
@@ -114,6 +114,12 @@ export default function ObjectiveTree({ objectives, unitOptions }: { objectives:
   const [fLevel, setFLevel] = useState('');
   const [fStatus, setFStatus] = useState('');
   const [fType, setFType] = useState('');
+  // Lọc theo NGƯỜI chủ trì (tới từ hồ sơ 360°: "Xem OKR của người này" → ?owner=email).
+  const [fOwner, setFOwner] = useState(initialOwner ?? '');
+  const ownerName = useMemo(
+    () => objectives.find((o) => (o.owner_email ?? '').toLowerCase() === fOwner.toLowerCase())?.owner_name || fOwner,
+    [objectives, fOwner],
+  );
 
   // Chỉ hiện đơn vị CÓ OKR; nếu có unitOptions (cây tổ chức từ server) → giữ THỨ TỰ + thụt cấp,
   // nếu không → suy từ objectives (phẳng, sắp theo tên) để tương thích ngược.
@@ -135,11 +141,13 @@ export default function ObjectiveTree({ objectives, unitOptions }: { objectives:
   }, [objectives]);
   const types = useMemo(() => [...new Set(objectives.map((o) => o.okr_type))], [objectives]);
 
-  const filterActive = !!(q.trim() || fUnit || fLevel || fStatus || fType);
+  const filterActive = !!(q.trim() || fUnit || fLevel || fStatus || fType || fOwner);
   const qlc = q.trim().toLowerCase();
+  const fOwnerLc = fOwner.toLowerCase();
   const matched = useMemo(() => {
     if (!filterActive) return [];
     return objectives.filter((o) => {
+      if (fOwnerLc && (o.owner_email ?? '').toLowerCase() !== fOwnerLc) return false;
       if (fUnit && o.unit_id !== fUnit) return false;
       if (fLevel && o.level !== fLevel) return false;
       if (fStatus && o.status !== fStatus) return false;
@@ -150,13 +158,14 @@ export default function ObjectiveTree({ objectives, unitOptions }: { objectives:
       }
       return true;
     });
-  }, [objectives, filterActive, fUnit, fLevel, fStatus, fType, qlc]);
+  }, [objectives, filterActive, fOwnerLc, fUnit, fLevel, fStatus, fType, qlc]);
   const clearFilter = () => {
     setQ('');
     setFUnit('');
     setFLevel('');
     setFStatus('');
     setFType('');
+    setFOwner('');
   };
 
   // Dòng phẳng (dùng khi đang lọc — bỏ cây thụt cấp, hiện đủ ngữ cảnh).
@@ -244,6 +253,12 @@ export default function ObjectiveTree({ objectives, unitOptions }: { objectives:
 
   return (
     <div className="ot">
+      {fOwner && (
+        <div className="person-filter">
+          <span>👤 Đang lọc OKR của: <b>{ownerName}</b></span>
+          <button type="button" className="ntf-link" onClick={() => setFOwner('')}>✕ Bỏ lọc người</button>
+        </div>
+      )}
       <div className="filterbar">
         <input
           className="i fb-search"
