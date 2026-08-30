@@ -185,14 +185,14 @@ export async function buildOkrTemplateWorkbook(): Promise<Buffer> {
       ORDER BY CASE u.type WHEN 'company' THEN 0 WHEN 'division' THEN 1 WHEN 'department' THEN 2 ELSE 3 END,
                COALESCE(u.sort, 0), u.code,
                CASE us.role WHEN 'exec' THEN 0 WHEN 'ceo' THEN 0 WHEN 'cfo' THEN 0
-                            WHEN 'division_lead' THEN 1 WHEN 'dept_lead' THEN 2 ELSE 3 END,
+                            WHEN 'division_lead' THEN 1 WHEN 'dept_lead' THEN 2 WHEN 'function_lead' THEN 2 ELSE 3 END,
                us.display_name NULLS LAST, us.email`,
   );
   // Người dùng KHÔNG gắn đơn vị (vd điều hành cấp công ty) — thêm ở cuối.
   const noUnit = await query<{ display_name: string | null; role: string | null; email: string | null }>(
     `SELECT display_name, role, email FROM okr_users WHERE unit_id IS NULL
       ORDER BY CASE role WHEN 'exec' THEN 0 WHEN 'ceo' THEN 0 WHEN 'cfo' THEN 0
-                         WHEN 'division_lead' THEN 1 WHEN 'dept_lead' THEN 2 ELSE 3 END, display_name`,
+                         WHEN 'division_lead' THEN 1 WHEN 'dept_lead' THEN 2 WHEN 'function_lead' THEN 2 ELSE 3 END, display_name`,
   );
   const roleLabel = (r: string | null): string => (r ? ROLE_LABEL[r as Role] ?? r : '');
   const MASTER_HEAD = ['Mã đơn vị', 'Tên đơn vị', 'Họ tên', 'Vai trò', 'Email'];

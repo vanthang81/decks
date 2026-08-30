@@ -27,7 +27,7 @@ export default function KpiOwnerFields({
   const leadByUnit = useMemo(() => {
     const m: Record<string, string> = {};
     for (const u of users) {
-      if ((u.role === 'division_lead' || u.role === 'dept_lead') && u.unit_id && !m[u.unit_id]) m[u.unit_id] = u.email;
+      if ((u.role === 'division_lead' || u.role === 'dept_lead' || u.role === 'function_lead') && u.unit_id && !m[u.unit_id]) m[u.unit_id] = u.email;
     }
     return m;
   }, [users]);

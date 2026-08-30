@@ -71,7 +71,7 @@ export async function listUsers(): Promise<
        FROM okr_users u
        LEFT JOIN okr_units n ON n.id = u.unit_id
       ORDER BY CASE u.role WHEN 'exec' THEN 0 WHEN 'ceo' THEN 0 WHEN 'cfo' THEN 0 WHEN 'division_lead' THEN 1
-                           WHEN 'dept_lead' THEN 2 ELSE 3 END,
+                           WHEN 'dept_lead' THEN 2 WHEN 'function_lead' THEN 2 ELSE 3 END,
                u.display_name NULLS LAST, u.email`,
   );
 }

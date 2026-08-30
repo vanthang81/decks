@@ -1,7 +1,8 @@
 // Vai trò theo cây tổ chức BTMH.
-// CEO/CFO (đồng cấp điều hành, toàn quyền) > division_lead (Giám đốc khối) > dept_lead (Trưởng phòng) > staff.
+// CEO/CFO (đồng cấp điều hành, toàn quyền) > division_lead (Giám đốc khối) > dept_lead (Trưởng phòng)
+//   ≈ function_lead (Quản lý chức năng — cùng cấp Trưởng phòng, phụ trách 1 nhóm CBNV) > staff.
 // 'exec' = giá trị CŨ (gộp CEO/CFO) — GIỮ để tương thích dữ liệu cũ; coi như cấp điều hành qua isExec().
-export type Role = 'exec' | 'ceo' | 'cfo' | 'division_lead' | 'dept_lead' | 'staff';
+export type Role = 'exec' | 'ceo' | 'cfo' | 'division_lead' | 'dept_lead' | 'function_lead' | 'staff';
 
 export const ROLE_ORDER: Record<Role, number> = {
   exec: 4,
@@ -9,6 +10,7 @@ export const ROLE_ORDER: Record<Role, number> = {
   cfo: 4,
   division_lead: 3,
   dept_lead: 2,
+  function_lead: 2, // cùng cấp Trưởng phòng
   staff: 1,
 };
 
@@ -18,11 +20,12 @@ export const ROLE_LABEL: Record<Role, string> = {
   cfo: 'CFO',
   division_lead: 'Giám đốc khối',
   dept_lead: 'Trưởng phòng',
+  function_lead: 'Quản lý chức năng',
   staff: 'Nhân viên',
 };
 
 // Danh sách CHỌN được ở dropdown (tách riêng CEO & CFO; 'exec' cũ không còn cho chọn mới).
-export const ROLES: Role[] = ['ceo', 'cfo', 'division_lead', 'dept_lead', 'staff'];
+export const ROLES: Role[] = ['ceo', 'cfo', 'division_lead', 'dept_lead', 'function_lead', 'staff'];
 
 export function isRole(x: unknown): x is Role {
   return typeof x === 'string' && x in ROLE_ORDER;

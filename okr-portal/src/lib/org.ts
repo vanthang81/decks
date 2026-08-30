@@ -88,7 +88,7 @@ export function ancestorIds(units: Unit[], unitId: string): Set<string> {
 export function manageScope(user: OkrUser, units: Unit[]): Set<string> | null {
   if (isExec(user.role)) return null;
   if (!user.unit_id) return new Set();
-  if (user.role === 'division_lead' || user.role === 'dept_lead') {
+  if (user.role === 'division_lead' || user.role === 'dept_lead' || user.role === 'function_lead') {
     return subtreeIds(units, user.unit_id);
   }
   return new Set([user.unit_id]); // staff
@@ -217,5 +217,6 @@ export const ROLE_CAN_MANAGE_ROLE: Record<Role, boolean> = {
   cfo: true,
   division_lead: false,
   dept_lead: false,
+  function_lead: false,
   staff: false,
 };

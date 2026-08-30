@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-30.109';
+export const GUIDE_VERSION = '2026-08-30.110';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -632,6 +632,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '30/08/2026 (Vai trò mới: Quản lý chức năng)',
+    items: [
+      'Thêm vai trò "Quản lý chức năng" — cùng cấp Trưởng phòng, phụ trách một nhóm CBNV: quản lý OKR/việc trong đơn vị mình (và cấp con), xem toàn cảnh như quản lý; nhóm quyền mặc định = "Quản lý". Dùng khi người phụ trách chức năng/bộ phận nhưng không phải Trưởng phòng chính thức.',
+    ],
+  },
   {
     date: '30/08/2026 (Tìm đơn vị theo Khối ra đủ các Phòng)',
     items: [

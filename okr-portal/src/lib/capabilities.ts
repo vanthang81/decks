@@ -110,6 +110,6 @@ export const DEFAULT_GROUPS: PermGroup[] = [
 // Nhóm mặc định suy từ vai trò tổ chức khi user chưa được gán nhóm riêng.
 export function defaultGroupForRole(role: string): GroupKey {
   if (role === 'exec' || role === 'ceo' || role === 'cfo') return 'system_admin';
-  if (role === 'division_lead' || role === 'dept_lead') return 'manager';
+  if (role === 'division_lead' || role === 'dept_lead' || role === 'function_lead') return 'manager';
   return 'contributor';
 }
