@@ -422,6 +422,13 @@ html:has(.mobile-menu[open]) .site-header { transform: none !important; }
 .act-cell { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; max-width: 560px; }
 .act-cell > .badge { flex: 0 0 auto; white-space: nowrap; }
 .act-detail { font-size: 12.5px; word-break: break-word; }
+/* Nháy nhẹ khu vực đích khi mở link có #hash (từ chuông thông báo) → thấy ngay chỗ cần xử lý */
+.hash-flash { animation: hashFlash 2.3s ease-out; border-radius: 12px; }
+@keyframes hashFlash {
+  0%   { box-shadow: 0 0 0 3px var(--accent), 0 0 0 9px var(--gold-tint); }
+  60%  { box-shadow: 0 0 0 3px var(--accent), 0 0 0 9px var(--gold-tint); }
+  100% { box-shadow: 0 0 0 0 rgba(0,0,0,0), 0 0 0 0 rgba(0,0,0,0); }
+}
 /* Phân trang danh sách công việc */
 .pager { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 14px 0 4px; flex-wrap: wrap; }
 .pager-info { font-size: 13px; color: var(--muted); font-weight: 600; white-space: nowrap; }
@@ -2164,10 +2171,10 @@ a.strat-bsc-cell:hover { text-decoration: none; box-shadow: 0 6px 18px rgba(0,0,
 .mtf select.i { width: auto; min-width: 150px; max-width: 220px; flex: 0 1 auto; }
 @media (max-width: 640px) { .mtf .mtf-search, .mtf select.i { flex: 1 1 100%; width: 100%; max-width: none; min-width: 0; } }
 
-/* Nút "Hướng dẫn" trên header (mở lại tour walkthrough của trang hiện tại) — tông gold trên nền maroon. */
-.hdr-tour-btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px;
-  background: transparent; border: 1px solid rgba(255,255,255,.28); border-radius: 8px;
-  color: var(--accent); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+/* Nút "?" CHỈ-ICON trên header (chạy lại tour walkthrough của trang hiện tại) — tông gold trên nền maroon.
+   Icon-only để KHÔNG trùng nhãn với mục "Hướng dẫn" (tài liệu) trên thanh nav. */
+.hdr-tour-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px;
+  padding: 0; background: transparent; border: 1px solid rgba(255,255,255,.28); border-radius: 8px;
+  color: var(--accent); font: inherit; cursor: pointer; flex: 0 0 auto; }
 .hdr-tour-btn:hover { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.5); }
-.hdr-tour-btn .nav-ic { width: 16px; height: 16px; color: var(--accent); }
-@media (max-width: 640px) { .hdr-tour-txt { display: none; } .hdr-tour-btn { padding: 0 8px; } }
+.hdr-tour-btn .nav-ic { width: 17px; height: 17px; color: var(--accent); }

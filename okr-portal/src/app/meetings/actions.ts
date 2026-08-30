@@ -222,7 +222,7 @@ export async function requestMeetingAccessAction(fd: FormData) {
     actorEmail: user.email,
     actorName: user.display_name || user.email,
     preview: `xin xem nội dung cuộc họp "${m.title}"`,
-    link: `/meetings/${id}`,
+    link: `/meetings/${id}#access-requests`, // mở đúng mục "Yêu cầu xem" để duyệt ngay
     entityType: 'meeting_access',
     entityId: reqId,
   }).catch(() => {});

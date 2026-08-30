@@ -213,6 +213,13 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   invite id); thông báo CŨ thiếu entity_id → chỉ còn nút "Mở" (fallback). **Thêm loại thông báo cần duyệt/bình luận
   mới ⇒ lưu entity_type/entity_id khi tạo + thêm nhánh xử lý trong `/api/notifications/act` + cho vào APPROVE_TYPES/
   COMMENT_ENTITIES ở `NotifItems.tsx`.**
+- **THÔNG BÁO MỞ ĐÚNG CHỖ CẦN XỬ LÝ — deep-link #anchor (CFO 30/08, áp cho MỌI thông báo/điều hướng)**: `link` của
+  thông báo PHẢI trỏ tới đúng **khu vực hành động** bằng `#<id>`, không chỉ tới trang. Cơ chế chung: **`HashScroller`**
+  (`src/components/HashScroller.tsx`, mount ở layout) — mở link có `#id` sẽ **cuộn tới `getElementById(id)` + nháy
+  `.hash-flash`** (chờ nội dung render, retry ~3s, chừa `scroll-margin-top:72px`). Đã gắn: yêu cầu xem họp →
+  `/meetings/<id>#access-requests` (card "Yêu cầu xem" `id="access-requests"`); lời mời → `/admin/invites#pending-invites`
+  (card "Chờ duyệt"); KR → `/objectives/<obj>#kr-<id>` (đã có sẵn); được giao việc → `/tasks?task=<id>` (mở popup việc).
+  **Thêm thông báo/khu vực hành động mới ⇒ đặt `id="<anchor>"` lên khối đích + cho `#<anchor>` vào link thông báo.**
 
 ## Điều hành: Họp điều hành + Nhận định/Khuyến nghị + Sức khỏe OKR + Bản tin tuần (02/08)
 - **`src/lib/health.ts`**: chấm SỨC KHỎE mỗi OKR theo 7 tiêu chí (chủ trì 20 · có KR 20 · có KR lagging 10 ·

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-30.120';
+export const GUIDE_VERSION = '2026-08-30.121';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '30/08/2026 (Thông báo mở đúng chỗ cần xử lý)',
+    items: [
+      'Bấm một thông báo giờ đưa THẲNG tới đúng khu vực cần xử lý và NHÁY nhẹ để dễ thấy: yêu cầu xem họp → mục "Yêu cầu xem"; lời mời người dùng → danh sách "Chờ duyệt"; được giao việc → mở popup công việc.',
+      'Dọn trùng: nút chạy hướng dẫn nhanh trên header thu về icon "?" (tài liệu "Hướng dẫn" đã là mục menu riêng).',
+    ],
+  },
   {
     date: '30/08/2026 (Menu "Hướng dẫn" ra ngoài)',
     items: [

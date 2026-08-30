@@ -7,6 +7,7 @@ import BackToTop from '@/components/BackToTop';
 import MobileGestures from '@/components/MobileGestures';
 import AutoHideHeader from '@/components/AutoHideHeader';
 import AutoPageTour from '@/components/AutoPageTour';
+import HashScroller from '@/components/HashScroller';
 import TopLoadingBar from '@/components/TopLoadingBar';
 import ToastProvider from '@/components/ToastProvider';
 import FlashToaster from '@/components/FlashToaster';
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <MobileGestures />
           <AutoHideHeader />
           <AutoPageTour />
+          <HashScroller />
         </ToastProvider>
       </body>
     </html>

@@ -41,7 +41,7 @@ export default async function AdminInvites() {
           <InviteUserButton units={unitOpts} />
         </div>
 
-        <div className="card">
+        <div className="card" id="pending-invites">
           <h3 style={{ marginTop: 0 }}>Chờ duyệt {pending.length > 0 && <span className="badge amber" style={{ marginLeft: 6 }}>{pending.length}</span>}</h3>
           {pending.length === 0 ? (
             <p className="muted">Không có lời mời nào đang chờ.</p>

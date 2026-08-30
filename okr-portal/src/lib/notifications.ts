@@ -213,25 +213,23 @@ export async function notifyTaskAssigned(
   const owner = (task.owner_email ?? '').trim();
   if (!owner || owner.toLowerCase() === actorEmail.toLowerCase()) return; // không có người nhận / tự giao cho mình
   try {
-    let link = '/my';
+    // label = NGỮ CẢNH việc thuộc về (OKR/Dự án/Cuộc họp/việc cá nhân) để hiện trong thông báo;
+    // link luôn mở THẲNG popup chi tiết việc (/tasks?task=…) — đúng chỗ để cập nhật ngay.
     let label = 'việc cá nhân';
     if (task.objective_id) {
       const o = await queryOne<{ title: string; code: string | null }>(
         'SELECT title, code FROM okr_objectives WHERE id=$1',
         [task.objective_id],
       );
-      link = `/objectives/${task.objective_id}`;
       label = o ? `OKR ${o.code ? o.code + ' · ' : ''}${o.title}` : 'OKR';
     } else if (task.project_id) {
       const p = await queryOne<{ name: string; code: string | null }>(
         'SELECT name, code FROM okr_projects WHERE id=$1',
         [task.project_id],
       );
-      link = `/projects/${task.project_id}`;
       label = p ? `Dự án ${p.code ? p.code + ' · ' : ''}${p.name}` : 'Dự án';
     } else if (task.meeting_id) {
       const m = await queryOne<{ title: string }>('SELECT title FROM okr_meetings WHERE id=$1', [task.meeting_id]);
-      link = `/meetings/${task.meeting_id}`;
       label = m ? `Cuộc họp: ${m.title}` : 'Cuộc họp';
     }
     const actor = await queryOne<{ display_name: string | null }>(
@@ -248,7 +246,7 @@ export async function notifyTaskAssigned(
       entityId: task.id,
       commentId: null,
       preview: `${task.title}${due}`,
-      link,
+      link: `/tasks?task=${task.id}`,
       entityLabel: label,
     });
   } catch (e) {

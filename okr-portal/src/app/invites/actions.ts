@@ -42,7 +42,7 @@ export async function inviteUserAction(fd: FormData) {
     actorEmail: me.email,
     actorName: me.display_name || me.email,
     preview,
-    link: '/admin/invites',
+    link: '/admin/invites#pending-invites', // mở đúng danh sách "Chờ duyệt"
     entityType: 'user_invite',
     entityId: res.status === 'created' ? res.id : null,
   }).catch(() => {});

@@ -276,7 +276,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
 
           {/* Yêu cầu xem (chủ trì/thư ký) */}
           {canManage && (
-            <div className="card">
+            <div className="card" id="access-requests">
               <h3 style={{ marginTop: 0 }}>Yêu cầu xem {pending.length > 0 && <span className="badge amber">{pending.length}</span>}</h3>
               {pending.length === 0 ? <p className="muted" style={{ margin: 0 }}>Không có yêu cầu chờ duyệt.</p> : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
