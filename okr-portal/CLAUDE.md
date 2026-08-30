@@ -298,6 +298,15 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
      `Initiative` type + `SELECT` bổ sung cột `created_by`. **⚠ Deploy PHẢI chạy migration 440** (superuser)
      trước/khi build, nếu không INSERT việc cá nhân sẽ vi phạm CHECK cũ.
   Admin hệ thống (users/org/periods) chỉ `exec` (`canAdmin`), guard không xoá exec cuối/chính mình.
+- **ĐỔI EMAIL người dùng (CFO 30/08 — email là KHOÁ CHÍNH `okr_users.email`)**: sửa email nhập sai ở popup
+  "Sửa" người dùng (ô "Email đăng nhập"). Vì email là PK + nhiều bảng tham chiếu, `changeUserEmail()` trong
+  `src/lib/users.ts` chạy TRONG 1 GIAO DỊCH: INSERT bản ghi user email mới (copy hồ sơ) → dời MỌI tham chiếu
+  → DELETE bản cũ (nguyên tử, rollback nếu lỗi). Danh sách cột phải dời nằm ở hằng **`EMAIL_REF_COLS`** +
+  2 cột xử lý riêng (`okr_meeting_participants.email` gỡ trùng unique; `okr_google_tokens.email` xoá token
+  email mới trước). **⚠ THÊM BẢNG/CỘT MỚI LƯU EMAIL người dùng ⇒ PHẢI thêm vào `EMAIL_REF_COLS`** (nếu không,
+  đổi email sẽ bỏ sót → mồ côi dữ liệu). Guard: không đổi email CHÍNH MÌNH (tránh mất phiên → tự khoá);
+  không đổi trùng email người khác. `saveUserAction` nhận thêm field `new_email` (chỉ có ở popup Sửa; form
+  Thêm user không có nên tương thích ngược). Nhật ký `user.email_change`.
 
 ## Trang (src/app/)
 - `/` dashboard (tiến độ công ty + OKR công ty/khối) · `/objectives` cây OKR toàn kỳ + tạo mới ·

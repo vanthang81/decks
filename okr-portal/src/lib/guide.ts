@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-29.106';
+export const GUIDE_VERSION = '2026-08-30.107';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -632,6 +632,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '30/08/2026 (Sửa lại được email đăng nhập của người dùng)',
+    items: [
+      'Quản trị viên sửa lại được EMAIL đăng nhập khi nhập sai (trước đây bị khoá): mở "Sửa" người dùng → sửa ô "Email đăng nhập (Google)" → xác nhận.',
+      'Khi đổi email, hệ thống TỰ chuyển toàn bộ dữ liệu & lịch sử (OKR, việc, dự án, cuộc họp, thông báo, nhật ký…) sang email mới trong một thao tác an toàn; người dùng đăng nhập lại bằng email mới. (Không đổi được email của chính mình để tránh mất phiên.)',
+    ],
+  },
   {
     date: '29/08/2026 (Hướng dẫn từng bước — walkthrough theo trang)',
     items: [

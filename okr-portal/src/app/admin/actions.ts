@@ -11,6 +11,7 @@ import {
   removeUser,
   countActiveExecs,
   getUser,
+  changeUserEmail,
 } from '@/lib/users';
 import { createUnit, updateUnit, deleteUnit, recordUnitVersion, listUnits, subtreeIds, type UnitType } from '@/lib/org';
 import { createPeriod, setCurrentPeriod, setPeriodStatus } from '@/lib/periods';
@@ -40,11 +41,23 @@ export async function saveUserAction(fd: FormData) {
   const me = await requireExec();
   const access = await loadAccess();
   const role = str(fd, 'role');
+  // Khoá định danh = email hiện tại; `new_email` (chỉ có ở popup Sửa) cho phép ĐỔI email nếu nhập sai.
+  let key = str(fd, 'email');
+  const newEmail = str(fd, 'new_email').toLowerCase();
+  if (newEmail && newEmail !== key.toLowerCase()) {
+    // Không cho đổi email CHÍNH MÌNH (tránh mất phiên đăng nhập → tự khoá).
+    if (key.toLowerCase() === me.email.toLowerCase()) {
+      throw new Error('Không đổi email của chính bạn (tránh mất phiên). Nhờ quản trị viên khác đổi giúp.');
+    }
+    await changeUserEmail(key, newEmail); // dời toàn bộ dữ liệu/lịch sử; ném lỗi nếu email mới không hợp lệ/trùng
+    await logAudit({ actor: me.email, action: 'user.email_change', entity: 'user', entityId: newEmail, detail: { from: key, to: newEmail } });
+    key = newEmail;
+  }
   // Chỉ người có quyền "Phân quyền" mới đặt được Nhóm quyền; người khác giữ nguyên.
   const grp = orNull(str(fd, 'perm_group'));
-  const permGroup = canAssignPerms(me, access) ? grp : (await getUser(str(fd, 'email')))?.perm_group ?? null;
+  const permGroup = canAssignPerms(me, access) ? grp : (await getUser(key))?.perm_group ?? null;
   await upsertUser({
-    email: str(fd, 'email'),
+    email: key,
     display_name: orNull(str(fd, 'display_name')),
     title: orNull(str(fd, 'title')),
     role: (isRole(role) ? role : 'staff') as Role,

@@ -43,7 +43,17 @@ export default function EditUserModal({
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    fd.set('email', user.email); // khoá theo email — KHÔNG cho đổi email
+    fd.set('email', user.email); // khoá định danh cũ; `new_email` (nếu đổi) sẽ dời dữ liệu sang email mới
+    const newEmail = String(fd.get('new_email') ?? '').trim().toLowerCase();
+    // Đổi email = chuyển toàn bộ dữ liệu/lịch sử → xác nhận rõ ràng trước khi thực hiện.
+    if (newEmail && newEmail !== user.email.toLowerCase()) {
+      const ok = window.confirm(
+        `Đổi email đăng nhập của "${user.display_name || user.email}"\n\ntừ:  ${user.email}\nsang: ${newEmail}\n\n` +
+        `Toàn bộ dữ liệu & lịch sử (OKR, việc, dự án, cuộc họp, thông báo…) sẽ được chuyển sang email mới. ` +
+        `Người dùng phải đăng nhập Google bằng email mới. Tiếp tục?`,
+      );
+      if (!ok) return;
+    }
     setErr('');
     start(async () => {
       try {
@@ -72,7 +82,13 @@ export default function EditUserModal({
               </button>
             </div>
             <form onSubmit={submit}>
-              <div className="obj-meta mono" style={{ marginBottom: 10 }}>{user.email}</div>
+              <label className="f">Email đăng nhập (Google)</label>
+              <input className="i mono" name="new_email" type="email" defaultValue={user.email}
+                autoCapitalize="off" autoCorrect="off" spellCheck={false} />
+              <p className="muted" style={{ fontSize: 12, margin: '4px 0 12px' }}>
+                Sửa ô này nếu email bị nhập <b>sai</b>. Khi đổi, toàn bộ dữ liệu &amp; lịch sử của người này sẽ được
+                chuyển sang email mới; họ phải đăng nhập Google bằng email mới. (Không đổi được email của chính bạn.)
+              </p>
               <label className="f">Họ tên</label>
               <input className="i" name="display_name" defaultValue={user.display_name ?? ''} />
               <label className="f">Chức danh</label>
