@@ -650,6 +650,10 @@ td:has(> .row-actions) { white-space: nowrap; width: 1%; }
 .grp-h { font-size: 18px; line-height: 1; }
 .grp-h-l { font-size: 11px; font-weight: 700; color: var(--muted); max-width: 92px; margin: 2px auto 0; line-height: 1.2; }
 .perm-cat td { background: var(--primary-tint); font-weight: 800; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--primary); }
+/* Gợi ý phân quyền: ô được khuyến nghị bật nhưng đang tắt */
+.perm-sg-cell { background: var(--gold-tint); }
+.perm-sg { font-size: 9.5px; font-weight: 700; color: #8A6A1E; text-transform: uppercase; letter-spacing: .03em; margin-top: 2px; }
+.perm-sg-inline { display: inline-block; background: var(--gold-tint); color: #8A6A1E; border: 1px solid #E4D5A9; border-radius: 5px; padding: 0 5px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
 .obj-row:last-child { border-bottom: 0; }
 .obj-main { flex: 1; min-width: 0; }
 .obj-main .ttl { font-weight: 600; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }

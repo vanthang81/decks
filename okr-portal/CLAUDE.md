@@ -337,6 +337,19 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
      `Initiative` type + `SELECT` bổ sung cột `created_by`. **⚠ Deploy PHẢI chạy migration 440** (superuser)
      trước/khi build, nếu không INSERT việc cá nhân sẽ vi phạm CHECK cũ.
   Admin hệ thống (users/org/periods) chỉ `exec` (`canAdmin`), guard không xoá exec cuối/chính mình.
+- **NĂNG LỰC (Capabilities) = NGUỒN DUY NHẤT của phân quyền (`src/lib/capabilities.ts`)**: `CAPABILITIES` (mỗi mục
+  `{key,cat,label,desc,suggest}`) → trang **/admin/permissions** TỰ render ma trận Nhóm quyền × Năng lực (auto, không
+  sửa UI). **`DEFAULT_GROUPS` nay SUY từ `suggest`** (không hardcode cap-set nữa): cap-set của mỗi nhóm = mọi cap có
+  `suggest` chứa nhóm đó (system_admin luôn có TẤT CẢ). **TỰ GỢI Ý (CFO 30/08)**: thêm 1 năng lực + khai `suggest`
+  = nhóm nên có → matrix hiện ô "gợi ý" (gold, `.perm-sg`) ở nhóm suggest nhưng CHƯA bật (do nhóm đã tuỳ biến/lưu
+  `okr_settings.perm_groups`), + nút **"Áp dụng gợi ý"** (`ApplySuggestions.tsx`) tick nhanh rồi Lưu. **THÊM TÍNH NĂNG
+  MỚI CẦN PHÂN QUYỀN ⇒ (1) thêm `CapKey` + 1 mục `CAPABILITIES` (kèm `suggest`); (2) thêm `can*` helper ở `access.ts`
+  (`hasCap`); (3) gắn helper vào guard tính năng (trang/route/action) — LÀM ADDITIVE (cap OR gate cũ) để không ai mất
+  quyền.** Đã đóng các "role-gap" (tính năng trước khoá cứng `isExec`/`role!=='staff'`, nay có cap): `report.view`
+  (Xem Báo cáo theo cấp — report page/export + link header), `calendar.viewall` (Xem Lịch toàn công ty — calendar
+  page), `budget.manage` nay gồm cả XUẤT ngân sách (bỏ isExec ở budget/export). `stored perm_groups` GHI ĐÈ default
+  (VALID_CAP lọc key hợp lệ) nên cap mới KHÔNG tự vào nhóm đã tuỳ biến → dùng gợi ý; nhóm chưa tuỳ biến tự nhận qua
+  DEFAULT_GROUPS. `savePermissionsAction` vẫn ép system_admin = mọi cap.
 - **VAI TRÒ vs VỊ TRÍ (CFO 30/08)**: **Vai trò** (`rbac.ts` Role: ceo/cfo/division_lead/dept_lead/function_lead/staff)
   = CẤP QUYỀN HẠN → phạm vi quản lý (`manageScope`), lập trình cứng. **Vị trí/Chức danh** = preset TỰ PHỤC VỤ
   (`src/lib/positions.ts`, lưu okr_settings key `positions`, KHÔNG cần DDL): mỗi vị trí = nhãn + base_role +

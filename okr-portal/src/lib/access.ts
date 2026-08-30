@@ -95,6 +95,14 @@ export function canManageAnyMeeting(user: OkrUser, access: Access): boolean {
 export function canManageBudget(user: OkrUser, access: Access): boolean {
   return hasCap(user, 'budget.manage', access);
 }
+/** Xem/xuất trang "Báo cáo" (roll-up theo cấp). Nhân viên (role staff) không có nếu chưa được cấp. */
+export function canViewReports(user: OkrUser, access: Access): boolean {
+  return hasCap(user, 'report.view', access);
+}
+/** Xem lịch TOÀN công ty (thay vì chỉ của mình/đơn vị mình). */
+export function canViewAllCalendar(user: OkrUser, access: Access): boolean {
+  return hasCap(user, 'calendar.viewall', access) || hasCap(user, 'scope.all', access);
+}
 
 // ---- Kiểm quyền theo OKR (năng lực × phạm vi) ----
 // level tuỳ chọn: có → bật ngoại lệ "chủ nhân OKR cá nhân tự cập nhật"; thiếu → giữ hành vi cũ.

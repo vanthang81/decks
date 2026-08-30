@@ -14,6 +14,7 @@ import {
 import { okrLevelReport, type ReportGroup } from '@/lib/okr-report';
 import { progressColor } from '@/lib/format';
 import { isExec } from '@/lib/rbac';
+import { loadAccess, canViewReports, canManageStrategy } from '@/lib/access';
 import WeightEditor from '@/components/WeightEditor';
 import PrintButton from '@/components/PrintButton';
 import NavIcon from '@/components/NavIcon';
@@ -77,15 +78,17 @@ function Section({ title, help, groups, canEdit }: { title: string; help?: strin
 
 export default async function ReportPage({ searchParams }: { searchParams: { period?: string } }) {
   const user = await requireUser();
-  // Báo cáo điều hành tổng hợp toàn công ty → chỉ quản lý/điều hành xem (nhân viên chỉ xem phạm vi mình ở /objectives).
-  if (user.role === 'staff') redirect('/');
+  const access = await loadAccess();
+  // Báo cáo điều hành tổng hợp toàn công ty → mặc định chỉ quản lý/điều hành xem; Nhân viên KHÔNG xem,
+  // TRỪ KHI được cấp năng lực "Xem Báo cáo theo cấp" (report.view) ở trang Phân quyền.
+  if (user.role === 'staff' && !canViewReports(user, access)) redirect('/');
 
   const periods = await listPeriods();
   const period = searchParams.period ? await getPeriod(searchParams.period) : (await getCurrentPeriod()) ?? periods[0] ?? null;
   const rep = period ? await okrLevelReport(period.id) : null;
-  // Chỉnh trọng số ngay tại báo cáo: dành cho điều hành (CEO/CFO) — ưu tiên tổng thể công ty.
+  // Chỉnh trọng số ngay tại báo cáo: điều hành (CEO/CFO) hoặc người có năng lực "Quản lý Chiến lược".
   // Giám đốc khối / trưởng phòng vẫn đặt trọng số OKR của mình ở form Sửa OKR (trang chi tiết).
-  const canEditWeight = isExec(user.role);
+  const canEditWeight = isExec(user.role) || canManageStrategy(user, access);
 
   return (
     <>

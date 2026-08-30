@@ -9,7 +9,7 @@ import NotifBell from '@/components/NotifBell';
 import InviteUserButton from '@/components/InviteUserButton';
 import { unreadCount } from '@/lib/notifications';
 import { getUser } from '@/lib/users';
-import { loadAccess, canManageSystem, canApproveUsers, canManageKpi, canManageBudget } from '@/lib/access';
+import { loadAccess, canManageSystem, canApproveUsers, canManageKpi, canManageBudget, canViewReports } from '@/lib/access';
 import { countPendingInvites } from '@/lib/invites';
 import { listUnits } from '@/lib/org';
 
@@ -29,6 +29,8 @@ export default async function SiteHeader({ active }: { active?: string }) {
   const showKpiLib = me ? canManageKpi(me, access) : false;
   const showBudget = me ? canManageBudget(me, access) : false;
   const showInvites = me ? canApproveUsers(me, access) : false;
+  // Báo cáo theo cấp: mọi vai trò trừ Nhân viên; Nhân viên vẫn thấy nếu được cấp năng lực "Xem Báo cáo theo cấp".
+  const showReport = me ? (role !== 'staff' || canViewReports(me, access)) : role !== 'staff';
   const pendingInvites = showInvites ? await countPendingInvites().catch(() => 0) : 0;
   // Đơn vị cho ô "Mời người dùng" (hiện ở mọi trang). Chỉ nạp khi đã đăng nhập.
   const unitOpts = email
@@ -40,7 +42,7 @@ export default async function SiteHeader({ active }: { active?: string }) {
   const links = [
     { href: '/', label: 'Bảng điều khiển', key: 'home', group: 'overview', icon: 'home', show: true },
     { href: '/review', label: 'Họp điều hành', key: 'review', group: 'overview', icon: 'review', show: true },
-    { href: '/report', label: 'Báo cáo theo cấp', key: 'report', group: 'overview', icon: 'chart', show: role !== 'staff' },
+    { href: '/report', label: 'Báo cáo theo cấp', key: 'report', group: 'overview', icon: 'chart', show: showReport },
     { href: '/meetings', label: 'Cuộc họp', key: 'meetings', group: 'overview', icon: 'users', show: true },
     { href: '/calendar', label: 'Lịch', key: 'calendar', group: 'overview', icon: 'calendar', show: true },
     { href: '/strategy', label: 'Chiến lược', key: 'strategy', group: 'strategy', icon: 'compass', show: true },

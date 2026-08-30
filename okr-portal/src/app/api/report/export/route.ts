@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireUser } from '@/lib/current-user';
+import { loadAccess, canViewReports } from '@/lib/access';
 import { getCurrentPeriod, getPeriod, listPeriods, PERIOD_KIND_LABEL } from '@/lib/periods';
 import { okrLevelReport } from '@/lib/okr-report';
 import { buildOkrReportWorkbook } from '@/lib/excel';
@@ -9,7 +10,7 @@ export const dynamic = 'force-dynamic';
 // Xuất "Báo cáo đánh giá OKR theo cấp" của 1 kỳ ra Excel. Gác giống trang /report (nhân viên không xem).
 export async function GET(req: NextRequest) {
   const user = await requireUser();
-  if (user.role === 'staff') {
+  if (user.role === 'staff' && !canViewReports(user, await loadAccess())) {
     return NextResponse.json({ error: 'Bạn không có quyền xem báo cáo tổng hợp.' }, { status: 403 });
   }
   const periods = await listPeriods();

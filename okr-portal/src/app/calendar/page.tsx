@@ -3,6 +3,7 @@ import HelpTip from '@/components/HelpTip';
 import CalendarView, { type CalView } from '@/components/CalendarView';
 import { requireUser } from '@/lib/current-user';
 import { isExec } from '@/lib/rbac';
+import { loadAccess, canViewAllCalendar } from '@/lib/access';
 import { calendarEvents, type CalEvent, type CalScope } from '@/lib/calendar';
 import { listUsers, personTitle } from '@/lib/users';
 import { listAllProjectOptions } from '@/lib/projects';
@@ -19,7 +20,8 @@ const iso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.ge
 
 export default async function CalendarPage({ searchParams }: { searchParams: { view?: string; d?: string; scope?: string } }) {
   const user = await requireUser();
-  const canAll = isExec(user.role);
+  // Xem lịch TOÀN công ty: điều hành, hoặc người có năng lực "Xem Lịch toàn công ty" / "Toàn phạm vi".
+  const canAll = isExec(user.role) || canViewAllCalendar(user, await loadAccess());
   const scope: CalScope = searchParams.scope === 'all' && canAll ? 'all' : 'mine';
   const view: CalView = searchParams.view === 'day' || searchParams.view === 'week' ? searchParams.view : 'month';
 
