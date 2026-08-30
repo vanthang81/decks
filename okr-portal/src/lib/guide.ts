@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-30.112';
+export const GUIDE_VERSION = '2026-08-30.113';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -497,7 +497,7 @@ export const FEATURES: Feature[] = [
     where: 'Biểu tượng 🔔 góc phải · trang "Thông báo"',
     help: 'Bấm chuông → danh sách thông báo, mỗi cái mở tới đúng mục. Tuỳ chọn loại thông báo ở Cài đặt cá nhân.',
     detail:
-      'Chuông 🔔 cạnh tên bạn hiện số chưa đọc (tự làm mới). Bấm chuông mở trang Thông báo — DANH SÁCH mọi thông báo, bấm từng cái để tới đúng Objective/KR/Công việc và tự đánh dấu đã đọc; có "Đánh dấu tất cả đã đọc". Bạn nhận thông báo khi: được @nhắc tên · có người trả lời bình luận của bạn · có bình luận trên OKR/việc bạn phụ trách · được giao việc. Bật/tắt từng loại + email ở Cài đặt cá nhân (bấm tên bạn ở góc phải).',
+      'Chuông 🔔 cạnh tên bạn hiện số chưa đọc (tự làm mới). Bấm chuông mở trang Thông báo — DANH SÁCH mọi thông báo, bấm từng cái để tới đúng Objective/KR/Công việc và tự đánh dấu đã đọc; có "Đánh dấu tất cả đã đọc". Bạn nhận thông báo khi: được @nhắc tên · có người trả lời bình luận của bạn · có bình luận trên OKR/việc bạn phụ trách · được giao việc mới · công việc sắp đến hạn (trước 1 ngày) · công việc quá hạn · và email TỔNG HỢP việc quá hạn HÀNG TUẦN. Bật/tắt từng loại + email ở Cài đặt cá nhân (bấm tên bạn ở góc phải).',
   },
   {
     key: 'settings',
@@ -505,7 +505,7 @@ export const FEATURES: Feature[] = [
     where: 'Bấm TÊN bạn ở góc phải header → trang "Cài đặt cá nhân"',
     help: 'Hồ sơ của bạn + bật/tắt từng loại thông báo và email.',
     detail:
-      'Bấm vào tên bạn ở góc phải để mở Cài đặt cá nhân: xem hồ sơ (họ tên · vai trò · đơn vị — do quản trị viên quản lý) và tuỳ chọn thông báo. Mỗi loại (được nhắc @ · trả lời bình luận · bình luận ở mục bạn phụ trách · được giao việc) có công tắc riêng, thêm công tắc gửi email tổng. Lưu là áp dụng ngay.',
+      'Bấm vào tên bạn ở góc phải để mở Cài đặt cá nhân: xem hồ sơ (họ tên · vai trò · đơn vị — do quản trị viên quản lý) và tuỳ chọn thông báo. Mỗi loại (được nhắc @ · trả lời bình luận · bình luận ở mục bạn phụ trách · được giao việc mới · công việc sắp đến hạn · công việc quá hạn · tổng hợp quá hạn tuần) có công tắc riêng, thêm công tắc gửi email tổng. Mặc định BẬT tất cả; mỗi người tự tắt loại không cần. Lưu là áp dụng ngay.',
   },
   {
     key: 'calendar',

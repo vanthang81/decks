@@ -182,6 +182,18 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   ngày). `src/lib/reminders.ts` tính KR chưa check-in > stale_days → email qua **Deck Mail webhook**
   (`N8N_MAIL_WEBHOOK` trong .env VPS). **Cron n8n "OKR Check-in Reminder" (id `p0cAn5ghp8ZU0Sfw`, ACTIVE,
   `0 8 * * *` giờ VN)** — app tự gác theo weekday cấu hình. Đã test `sent:1` tới vanthang81@gmail.com.
+- **NHẮC CÔNG VIỆC qua email + chuông (CFO 30/08)**: 4 loại thông báo việc — (1) **được giao mới** (đã có sẵn
+  qua `notifyTaskAssigned`/`notify`, type `assignment`); (2) **sắp đến hạn 1 ngày** (`task_due_soon`); (3)
+  **quá hạn** (`task_overdue`); (4) **email TỔNG HỢP quá hạn HÀNG TUẦN** (`task_overdue_weekly`). Logic ở
+  `src/lib/task-reminders.ts` (`remindTasksDueSoon`/`remindTasksOverdue`/`weeklyOverdueDigest`) — OPEN =
+  `status NOT IN ('done','canceled')`, giờ VN, **idempotent** (dedup theo (người nhận,type,entity_id) trong
+  cửa sổ: due_soon 20h · overdue 20 ngày) nên chạy nhiều lần/ngày không spam. Route `POST/GET
+  /api/reminders/tasks?kind=due_soon|overdue|weekly|daily` (gác `x-sync-key`/admin; `daily`=due_soon+overdue).
+  **Mặc định BẬT cho MỌI user**; mỗi người tự tắt từng loại ở **Cài đặt cá nhân** (`notif_prefs`, auto-render
+  từ `NOTIF_TYPE_META` → thêm loại mới chỉ cần 1 dòng ở đó). 2 cron n8n **ACTIVE**: "OKR Task Reminders —
+  daily (đến hạn + quá hạn)" (id `IeYNzbjs1jsig9vA`, `0 8 * * *` VN → `?kind=daily`) + "OKR Task Overdue —
+  weekly (tổng hợp quá hạn)" (id `OXOeqKGsHz1uQAtf`, `30 7 * * 1` = Thứ 2 07:30 VN → `?kind=weekly`), SSH
+  đọc SYNC_KEY từ .env rồi curl `127.0.0.1:8640`. Email gửi qua `sendMail` (SMTP okr@baotinmanhhai.vn).
 
 ## Điều hành: Họp điều hành + Nhận định/Khuyến nghị + Sức khỏe OKR + Bản tin tuần (02/08)
 - **`src/lib/health.ts`**: chấm SỨC KHỎE mỗi OKR theo 7 tiêu chí (chủ trì 20 · có KR 20 · có KR lagging 10 ·
