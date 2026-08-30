@@ -51,6 +51,12 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   KHÔNG để khối form dài ở cuối trang / `<details>` bung trong bảng. Nhiều nút/hàng ⇒ gom `.row-actions`
   (nowrap, KHÔNG để nút rớt xuống dòng) bằng `.icon-btn` (Sửa/Ẩn/Xoá). MỌI nút Sửa/Thêm/Xoá/Update
   CHỈ render khi user CÓ QUYỀN (gác UI ở nơi gọi, ngoài guard server-side).
+- **THANH LỌC & NÚT "XOÁ LỌC" (CFO 30/08 — áp cho MỌI thanh lọc, KHÔNG cần nhắc lại)**: container thanh lọc
+  luôn là `display:flex; flex-wrap:wrap; gap:8px; align-items:center` (class `.filterbar`/`.usr-filterbar`/`.mtf`).
+  Nút "Xoá lọc" PHẢI dùng chung **`src/components/ClearFiltersButton.tsx`** (`btn ghost sm .fb-clear`, in-flow,
+  đặt CUỐI thanh lọc, chỉ hiện khi ĐANG lọc) — **TUYỆT ĐỐI KHÔNG `position:absolute`/`float`/tái dùng
+  `.usr-search-x`** (class đó chỉ dành cho nút ✕ TRONG ô tìm `.usr-search-box` position:relative; đặt ngoài
+  sẽ lọt ra mép phải màn — đúng lỗi CFO gặp 30/08 ở /admin/users). Thêm thanh lọc mới ⇒ dùng `ClearFiltersButton`.
 - **CẢNH BÁO TẠO TRÙNG TÊN (CFO 30/08 — áp cho MỌI thực thể tạo theo TÊN, KHÔNG cần nhắc lại)**: khi TẠO
   MỚI mà tên trùng một mục đã có (chuẩn hoá: bỏ dấu + đ→d + thường hoá + gộp khoảng trắng) ⇒ **window.confirm**
   "có thể đang tạo trùng — chắc chưa?" trước khi gọi action. Với modal dùng `EditModal`: truyền props

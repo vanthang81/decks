@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import ClearFiltersButton from '@/components/ClearFiltersButton';
 import Link from 'next/link';
 import CommentThread from '@/components/CommentThread';
 import ConfirmButton from '@/components/ConfirmButton';
@@ -370,11 +371,7 @@ export default function ExecutionTabs({
         <label className="fb-chk">
           <input type="checkbox" checked={hideDone} onChange={(e) => setHideDone(e.target.checked)} /> Ẩn việc đã xong
         </label>
-        {fActive && (
-          <button type="button" className="btn ghost sm" onClick={clearFilter}>
-            ✕ Xoá lọc ({filtered.length})
-          </button>
-        )}
+        {fActive && <ClearFiltersButton onClear={clearFilter} count={filtered.length} />}
       </div>
 
       {view === 'list' && (

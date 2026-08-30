@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import ClearFiltersButton from '@/components/ClearFiltersButton';
 import { ProgressBar } from './ui';
 import SearchSelect from '@/components/SearchSelect';
 import UserLink from '@/components/UserLink';
@@ -271,11 +272,7 @@ export default function ObjectiveTree({ objectives, unitOptions }: { objectives:
             <option key={t} value={t}>{TYPE_LABEL[t] ?? t}</option>
           ))}
         </select>
-        {filterActive && (
-          <button type="button" className="btn ghost sm" onClick={clearFilter}>
-            ✕ Xoá lọc
-          </button>
-        )}
+        {filterActive && <ClearFiltersButton onClear={clearFilter} />}
       </div>
 
       {filterActive ? (

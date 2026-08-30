@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-30.114';
+export const GUIDE_VERSION = '2026-08-30.115';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -632,6 +632,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '30/08/2026 (Chuẩn hoá nút "Xoá lọc")',
+    items: [
+      'Nút "Xoá lọc" ở mọi thanh lọc nay dùng chung một kiểu gọn, luôn nằm gọn trong thanh lọc (sửa lỗi nút trôi ra ngoài ở màn Người dùng).',
+    ],
+  },
   {
     date: '30/08/2026 (Xử lý ngay tại chuông thông báo)',
     items: [

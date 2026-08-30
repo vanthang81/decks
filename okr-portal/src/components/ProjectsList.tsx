@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import ClearFiltersButton from '@/components/ClearFiltersButton';
 import { ProgressBar } from '@/components/ui';
 import { fmtVnd } from '@/lib/format';
 import type { ProjectRow, ProjectStatus } from '@/lib/projects';
@@ -76,11 +77,7 @@ export default function ProjectsList({ projects }: { projects: ProjectRow[] }) {
             <option key={u.id} value={u.id}>{u.name}</option>
           ))}
         </select>
-        {fActive && (
-          <button type="button" className="btn ghost sm" onClick={clearFilter}>
-            ✕ Xoá lọc ({filtered.length})
-          </button>
-        )}
+        {fActive && <ClearFiltersButton onClear={clearFilter} count={filtered.length} />}
       </div>
 
       {filtered.length > 0 ? (

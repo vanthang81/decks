@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import ClearFiltersButton from '@/components/ClearFiltersButton';
 
 // Lọc bảng người dùng đã render (mỗi <tr> mang data-s / data-role / data-units / data-group).
 // Kết hợp: ô tìm (tên/email/chức danh) + Vai trò + Khối/Phòng (khớp cả cấp dưới) + Nhóm quyền.
@@ -85,10 +86,10 @@ export default function UserFilterBar({
       </select>
 
       {active && (
-        <span className="usr-filter-cnt">
-          {shown}/{total} người
-          <button type="button" className="usr-search-x" onClick={clearAll} aria-label="Xoá lọc" title="Xoá tất cả bộ lọc">✕</button>
-        </span>
+        <>
+          <span className="usr-filter-cnt">{shown}/{total} người</span>
+          <ClearFiltersButton onClear={clearAll} />
+        </>
       )}
     </div>
   );

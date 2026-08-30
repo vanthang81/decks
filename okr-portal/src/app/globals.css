@@ -407,6 +407,9 @@ html:has(.mobile-menu[open]) .site-header { transform: none !important; }
 @media (max-width: 640px) {
   .filterbar .fb-search, .filterbar .fb-sel { flex: 1 1 100%; width: 100%; min-width: 0; }
 }
+/* Nút "Xoá lọc" dùng chung (ClearFiltersButton) — luôn in-flow, không lọt ra ngoài thanh lọc.
+   flex:0 0 auto để không co giãn; nowrap để chữ không xuống dòng giữa nút. */
+.fb-clear { flex: 0 0 auto; white-space: nowrap; }
 /* Phân trang danh sách công việc */
 .pager { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 14px 0 4px; flex-wrap: wrap; }
 .pager-info { font-size: 13px; color: var(--muted); font-weight: 600; white-space: nowrap; }

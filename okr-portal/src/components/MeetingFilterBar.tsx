@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import ClearFiltersButton from '@/components/ClearFiltersButton';
 
 // Bộ LỌC/TÌM cuộc họp — lọc trực tiếp các dòng bảng đã render (mỗi <tr> mang data-*), nhẹ,
 // không tải lại trang. Gộp: ô tìm (mã/tên/đơn vị/dự án/chủ trì) + Loại + Trạng thái + Chủ trì.
@@ -68,7 +69,7 @@ export default function MeetingFilterBar({
       {active && (
         <>
           <span className="usr-search-cnt">{shown}/{total} cuộc họp</span>
-          <button type="button" className="btn ghost sm" onClick={reset}>✕ Xoá lọc</button>
+          <ClearFiltersButton onClear={reset} />
         </>
       )}
     </div>
