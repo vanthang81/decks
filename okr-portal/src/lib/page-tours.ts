@@ -149,8 +149,9 @@ export const PAGE_TOURS: Record<string, TourStep[]> = {
   ],
   'admin-activity': [
     { title: '📜 Nhật ký hoạt động', body: 'Xem ai đăng nhập, khi nào và làm gì trên hệ thống. Đi nhanh một vòng.' },
-    { title: 'Lưu trữ & dọn dẹp', body: 'Đặt thời hạn TỰ ĐỘNG xoá nhật ký cũ (mặc định 180 ngày) để nhẹ dữ liệu; hoặc xoá thủ công log cũ hơn N ngày / xoá sạch. Hệ thống KHÔNG ghi lượt xem trang nên không phình nhanh.' },
-    { title: 'Lọc & tra cứu', body: 'Lọc theo người · loại hành động · khoảng ngày · từ khoá. Bấm tên người để mở hồ sơ 360°.' },
+    { target: 'activity-retention', title: 'Lưu trữ & dọn dẹp', body: 'Đặt thời hạn TỰ ĐỘNG xoá nhật ký cũ (mặc định 180 ngày) để nhẹ dữ liệu; hoặc xoá thủ công log cũ hơn N ngày / xoá sạch. Hệ thống KHÔNG ghi lượt xem trang nên không phình nhanh.' },
+    { target: 'activity-filter', title: 'Lọc & tra cứu', body: 'Lọc theo người · loại hành động · khoảng ngày · từ khoá rồi bấm "Lọc". Nhanh chóng tìm đúng hoạt động cần xem.' },
+    { target: 'activity-table', title: 'Kết quả', body: 'Mỗi dòng: thời gian · người (bấm tên mở hồ sơ 360°) · hành động (màu theo nhóm) · đối tượng. Dùng nút Trước/Sau để lật trang.' },
     done('Bạn đã nắm cách xem & dọn nhật ký. Mở lại từ nút "Hướng dẫn" trên header.'),
   ],
 };

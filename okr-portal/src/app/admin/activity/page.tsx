@@ -80,7 +80,7 @@ export default async function AdminActivity({
         {searchParams.err === 'confirm' && <p className="badge red">Chưa xoá: cần gõ đúng “XOA” để xác nhận.</p>}
 
         {/* Lưu trữ & dọn dẹp */}
-        <div className="card">
+        <div className="card" data-tour="activity-retention">
           <div className="flexbtw" style={{ alignItems: 'baseline', flexWrap: 'wrap', gap: 8 }}>
             <h3 style={{ margin: 0 }}>Lưu trữ &amp; dọn dẹp</h3>
             <span className="muted" style={{ fontSize: 12.5 }}>
@@ -130,7 +130,7 @@ export default async function AdminActivity({
         </div>
 
         {/* Bộ lọc */}
-        <div className="card">
+        <div className="card" data-tour="activity-filter">
           <form className="filterbar" method="get" action="/admin/activity" style={{ marginBottom: 0 }}>
             <select className="i fb-sel" name="actor" defaultValue={filter.actor ?? ''}>
               <option value="">Người: tất cả</option>
@@ -151,7 +151,7 @@ export default async function AdminActivity({
         </div>
 
         {/* Bảng nhật ký */}
-        <div className="card">
+        <div className="card" data-tour="activity-table">
           <div className="flexbtw" style={{ alignItems: 'baseline', flexWrap: 'wrap', gap: 8 }}>
             <h3 style={{ margin: 0 }}>Kết quả</h3>
             <span className="muted" style={{ fontSize: 12.5 }}>{total.toLocaleString('vi-VN')} dòng · trang {page}/{pages}</span>

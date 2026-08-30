@@ -5,7 +5,8 @@
   "description": "BTMH OKR Portal — OKR/KPI/action-plan/budget tracking (company → division → department → individual).",
   "scripts": {
     "dev": "next dev -p 3010",
-    "build": "next build",
+    "build": "node scripts/check-page-tours.mjs && next build",
+    "check:tours": "node scripts/check-page-tours.mjs",
     "start": "next start",
     "typecheck": "tsc --noEmit"
   },

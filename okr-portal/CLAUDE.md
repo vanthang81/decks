@@ -255,8 +255,17 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
     GENERIC: nhận `steps`+`tourKey` (KHÔNG hardcode STEPS nữa). CSS `.tour-*` + `.hdr-tour-btn` ở globals.css.
   - **THÊM TRANG MỚI ⇒ chỉ (1) thêm entry vào `PAGE_TOURS` + (2) thêm 1 dòng ánh xạ trong `tourKeyForPath`**
     → tour tự chạy + nút "Hướng dẫn" tự hiện, KHÔNG phải đụng file trang. **THÊM/ĐỔI TÍNH NĂNG ⇒ thêm/sửa
-    1 bước** ở tour của trang liên quan (giữ ≤10 bước). Đã có 15 tour: dashboard/objectives/objective-detail/
-    tasks/meetings/meeting-detail/projects/kpi/review/my/strategy/budget/admin/admin-users/admin-permissions.
+    1 bước** ở tour của trang liên quan (giữ ≤10 bước).
+  - **⭐ LUẬT KHOÉT SÁNG (CFO 30/08 — "không nhắc lại"): MỖI bước tour mô tả 1 khu vực/chức năng PHẢI có `target`
+    trỏ tới một `data-tour="<target>"` THẬT trên trang** (khoét sáng đúng chỗ). CHỈ **bước MỞ ĐẦU** (index 0)
+    và **bước KẾT `done(...)`** được phép không target. ⇒ Khi thêm bước, PHẢI gắn `data-tour` vào đúng khối trên
+    trang (dạng tĩnh `data-tour="x"` hoặc động `data-tour={\`nav-${g.key}\`}`) rồi đặt `target` khớp. Đừng để
+    bước "vào giữa màn" (lỗi CFO gặp ở /admin/activity 30/08).
+  - **GÁC TỰ ĐỘNG (khỏi phải nhớ)**: `scripts/check-page-tours.mjs` chạy TRONG `npm run build` (đã nối ở
+    `package.json` build + có `npm run check:tours`; Dockerfile build gọi `npm run build` nên **gác cả deploy**).
+    Nó FAIL build nếu: (A) có bước giữa thiếu `target`; (B) `target` không khớp `data-tour` nào trong `src/`.
+    → Sai là build đỏ ngay, không lên được production. Thêm tiền tố `data-tour` động mới ⇒ script tự nhận qua
+    mẫu `data-tour={\`prefix-${...}\`}`.
 
 ## Tài liệu SLIDE DECK giới thiệu hệ thống (deck.consultx.vn) — TỰ ĐỘNG CẬP NHẬT
 - **Nguồn**: `okr-portal/docs/system-overview-deck.html` (HTML self-contained, house style deck ConsultX:

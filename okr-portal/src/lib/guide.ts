@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-30.118';
+export const GUIDE_VERSION = '2026-08-30.119';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '30/08/2026 (Walkthrough khoét sáng đúng chỗ)',
+    items: [
+      'Tour hướng dẫn ở mọi trang giờ KHOÉT SÁNG đúng nút/khu vực thật (sửa trang Nhật ký hoạt động vốn hiện thẻ giữa màn).',
+      'Thêm gác tự động khi build: bước tour thiếu điểm neo là build đỏ ngay → không tái diễn lỗi này.',
+    ],
+  },
   {
     date: '30/08/2026 (Nhật ký hoạt động hệ thống)',
     items: [
