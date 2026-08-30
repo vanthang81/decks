@@ -10,7 +10,6 @@ import {
   FEATURES,
   ROADMAP,
   GLOSSARY,
-  CHANGELOG,
   GUIDE_VERSION,
 } from '@/lib/guide';
 
@@ -84,7 +83,7 @@ export default async function GuidePage() {
               <div className="nav-group">Tham khảo</div>
               <a href="#lo-trinh">Lộ trình đề xuất</a>
               <a href="#thuat-ngu">Thuật ngữ</a>
-              <a href="#nhat-ky">Nhật ký cập nhật</a>
+              <a href="/guide/changelog">Nhật ký cập nhật ↗</a>
             </div>
           </nav>
 
@@ -220,21 +219,13 @@ export default async function GuidePage() {
               </div>
             </div>
 
-            {/* Nhật ký */}
+            {/* Nhật ký — TÁCH RA TRANG RIÊNG cho trang Hướng dẫn gọn (CFO 30/08) */}
             <div className="card anchor" id="nhat-ky">
               <h2>🕓 Nhật ký cập nhật</h2>
-              <div className="timeline">
-                {CHANGELOG.map((c2) => (
-                  <div className="tl-item" key={c2.date}>
-                    <div className="tl-date">{c2.date}</div>
-                    <ul>
-                      {c2.items.map((it, i) => (
-                        <li key={i}>{it}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
+              <p className="muted" style={{ marginTop: 0 }}>
+                Danh sách thay đổi &amp; tính năng mới theo thời gian được tách sang trang riêng để mục Hướng dẫn gọn, dễ theo dõi.
+              </p>
+              <a className="btn ghost sm" href="/guide/changelog">Xem nhật ký cập nhật →</a>
             </div>
           </div>
         </div>
