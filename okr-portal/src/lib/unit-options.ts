@@ -53,12 +53,16 @@ export function unitTreeOptions(units: UnitLite[], opts?: { excludeCompany?: boo
   sortRec(roots);
 
   const out: SSOption[] = [];
-  const walk = (ns: Node[], depth: number) => {
+  // `sub` = đường dẫn CẤP TRÊN (Khối…, bỏ Công ty) → (1) HIỆN ngữ cảnh phòng thuộc khối nào;
+  // (2) TÌM KIẾM: SearchSelect tìm cả `sub` nên gõ tên KHỐI ("Tài chính") sẽ ra MỌI phòng thuộc khối đó
+  // (trước đây gõ "tài" chỉ ra "Phòng Tài chính", sót "Phòng Kế toán/Kế hoạch" vì tên phòng không chứa "tài").
+  const walk = (ns: Node[], depth: number, ancestors: string[]) => {
     for (const n of ns) {
-      out.push({ value: n.id, label: label(n, depth) });
-      if (n.children.length) walk(n.children, depth + 1);
+      out.push({ value: n.id, label: label(n, depth), sub: ancestors.length ? ancestors.join(' › ') : undefined });
+      // Tích luỹ tên cấp trên cho con (bỏ Công ty cho gọn — chỉ giữ Khối/Phòng cha).
+      if (n.children.length) walk(n.children, depth + 1, n.type === 'company' ? ancestors : [...ancestors, n.name]);
     }
   };
-  walk(roots, 0);
+  walk(roots, 0, []);
   return out;
 }

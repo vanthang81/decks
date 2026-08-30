@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-30.108';
+export const GUIDE_VERSION = '2026-08-30.109';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -632,6 +632,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '30/08/2026 (Tìm đơn vị theo Khối ra đủ các Phòng)',
+    items: [
+      'Ô chọn "Đơn vị" (thêm/sửa người dùng và mọi nơi chọn đơn vị): gõ tên KHỐI (vd "Tài chính") nay hiện ĐỦ mọi Phòng thuộc khối đó — trước đây chỉ ra phòng có tên chứa từ khoá. Mỗi phòng hiện thêm dòng nhỏ ghi rõ thuộc khối nào.',
+    ],
+  },
   {
     date: '30/08/2026 (Cảnh báo tạo trùng tên)',
     items: [
