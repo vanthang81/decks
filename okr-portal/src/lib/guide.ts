@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-30.111';
+export const GUIDE_VERSION = '2026-08-30.112';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -632,6 +632,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '30/08/2026 (Email nhắc công việc)',
+    items: [
+      'Thông báo (chuông + email) cho công việc: được giao mới · sắp đến hạn (trước 1 ngày) · quá hạn · và email TỔNG HỢP việc quá hạn HÀNG TUẦN.',
+      'Mặc định BẬT cho mọi người; mỗi người tự tắt/mở từng loại trong Cài đặt cá nhân → Thông báo. Nhắc không lặp lại (chống spam).',
+    ],
+  },
   {
     date: '30/08/2026 (Vị trí / Chức danh tự phục vụ)',
     items: [
