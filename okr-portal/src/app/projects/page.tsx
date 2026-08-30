@@ -113,7 +113,8 @@ export default async function ProjectsPage({
             />
             {canCreate && period && (
               <span data-tour="projects-new" style={{ display: 'inline-flex' }}>
-                <EditModal title="Tạo dự án mới" label="Dự án mới" icon={<NavIcon name="plus" />} submitLabel="Tạo dự án" action={createProjectInlineAction} wide>
+                <EditModal title="Tạo dự án mới" label="Dự án mới" icon={<NavIcon name="plus" />} submitLabel="Tạo dự án" action={createProjectInlineAction} wide
+                  dupField="name" dupLabel="dự án" dupValues={projects.map((p) => p.name)}>
                   <ProjectFields periodId={period.id} user={user} users={users} unitOptions={unitOptions} />
                 </EditModal>
               </span>

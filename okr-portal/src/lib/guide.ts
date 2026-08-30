@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-30.107';
+export const GUIDE_VERSION = '2026-08-30.108';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -632,6 +632,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '30/08/2026 (Cảnh báo tạo trùng tên)',
+    items: [
+      'Khi tạo Cuộc họp / Dự án / KPI / OKR mà TÊN trùng một mục đã có (không phân biệt hoa-thường & dấu), hệ thống hỏi xác nhận "có thể đang tạo trùng — chắc chưa?" trước khi tạo — giảm tình trạng tạo trùng do nhập tay.',
+    ],
+  },
   {
     date: '30/08/2026 (Sửa lại được email đăng nhập của người dùng)',
     items: [

@@ -8,13 +8,16 @@ export default function NewKpiModal({
   bscOptions,
   action,
   defaultBsc = '',
+  names = [],
 }: {
   bscOptions: { value: string; label: string }[];
   action: (fd: FormData) => Promise<void>;
   defaultBsc?: string;
+  names?: string[]; // tên KPI đã có → cảnh báo trùng tên khi tạo
 }) {
   return (
-    <EditModal title="Tạo chỉ tiêu KPI" label="+ Tạo KPI" submitLabel="Tạo KPI" action={action} triggerClass="btn ghost" wide>
+    <EditModal title="Tạo chỉ tiêu KPI" label="+ Tạo KPI" submitLabel="Tạo KPI" action={action} triggerClass="btn ghost" wide
+      dupField="name" dupLabel="KPI" dupValues={names}>
       <label className="f">Tên KPI *</label>
       <input className="i" name="name" required placeholder="VD: Biên lợi nhuận gộp thương mại" />
 

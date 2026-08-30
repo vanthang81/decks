@@ -20,6 +20,9 @@ export default function EditModal({
   triggerClass = 'btn ghost sm',
   wide = false,
   toastMsg = 'Đã lưu',
+  dupField,
+  dupValues,
+  dupLabel = 'mục',
 }: {
   title: string;
   label?: string;
@@ -30,6 +33,11 @@ export default function EditModal({
   triggerClass?: string;
   wide?: boolean;
   toastMsg?: string;
+  // CẢNH BÁO TRÙNG (đặc biệt trùng TÊN): nếu giá trị ô `dupField` (chuẩn hoá bỏ dấu/hoa-thường)
+  // khớp một trong `dupValues` (các tên đã có) → hỏi xác nhận trước khi tạo. `dupLabel` = danh từ hiển thị.
+  dupField?: string;
+  dupValues?: string[];
+  dupLabel?: string;
 }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -37,9 +45,22 @@ export default function EditModal({
   const [err, setErr] = useState('');
   const [pending, start] = useTransition();
 
+  // Chuẩn hoá để so tên: bỏ dấu tiếng Việt + đ→d + thường hoá + gộp khoảng trắng.
+  const norm = (s: string) =>
+    s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D')
+      .toLowerCase().replace(/\s+/g, ' ').trim();
+
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    // Cảnh báo TRÙNG (đặc biệt trùng tên): hỏi xác nhận nếu tên nhập trùng một mục đã có.
+    if (dupField && dupValues && dupValues.length) {
+      const raw = String(fd.get(dupField) ?? '').trim();
+      const v = norm(raw);
+      if (v && dupValues.some((x) => norm(x) === v)) {
+        if (!window.confirm(`Đã có ${dupLabel} tên "${raw}". Có thể bạn đang tạo TRÙNG.\n\nBạn có chắc muốn tạo mới?`)) return;
+      }
+    }
     setErr('');
     start(async () => {
       try {

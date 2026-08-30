@@ -87,6 +87,7 @@ export default async function KpiScorecardPage({
                 <NewKpiModal
                   action={createKpiAction}
                   defaultBsc={fbsc}
+                  names={rows.map((r) => r.name)}
                   bscOptions={BSC_PERSPECTIVES.map((b) => ({ value: b, label: `${BSC_PERSPECTIVE_ICON[b]} ${BSC_PERSPECTIVE_LABEL[b]}` }))}
                 />
               </span>

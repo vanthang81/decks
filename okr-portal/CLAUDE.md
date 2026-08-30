@@ -51,6 +51,14 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   KHÔNG để khối form dài ở cuối trang / `<details>` bung trong bảng. Nhiều nút/hàng ⇒ gom `.row-actions`
   (nowrap, KHÔNG để nút rớt xuống dòng) bằng `.icon-btn` (Sửa/Ẩn/Xoá). MỌI nút Sửa/Thêm/Xoá/Update
   CHỈ render khi user CÓ QUYỀN (gác UI ở nơi gọi, ngoài guard server-side).
+- **CẢNH BÁO TẠO TRÙNG TÊN (CFO 30/08 — áp cho MỌI thực thể tạo theo TÊN, KHÔNG cần nhắc lại)**: khi TẠO
+  MỚI mà tên trùng một mục đã có (chuẩn hoá: bỏ dấu + đ→d + thường hoá + gộp khoảng trắng) ⇒ **window.confirm**
+  "có thể đang tạo trùng — chắc chưa?" trước khi gọi action. Với modal dùng `EditModal`: truyền props
+  **`dupField`** (tên ô, vd 'title'/'name') + **`dupValues`** (danh sách tên đã có) + `dupLabel` (danh từ) →
+  EditModal tự cảnh báo. Với form RIÊNG (không qua EditModal, vd `NewObjectiveForm`): tự thêm `window.confirm`
+  trong `submit`. ĐÃ gắn: Cuộc họp (title) · Dự án (name) · KPI (name) · OKR (title, so trong kỳ qua
+  `periodObjectives`). **Thêm luồng tạo-theo-tên mới ⇒ gắn cảnh báo trùng tương tự.** (Bối cảnh: 28-29/08 thư ký
+  tạo trùng "Họp IBP tháng 8" — MTG-06 giữ (12 hành động), MTG-08 rỗng đã xoá 30/08; app trước không cảnh báo.)
 - **BẤM TÊN THỰC THỂ = MỞ BOX CHI TIẾT ĐẦY ĐỦ (CFO 14/08 — áp cho MỌI thực thể, KHÔNG cần nhắc lại)**:
   bấm vào TÊN một bản ghi (KPI/OKR/Dự án/Công việc/…) ⇒ mở box (modal) xem **ĐẦY ĐỦ mọi trường** (không
   chỉ cột trọng yếu trên bảng), kèm **trace-back "đang dùng bởi"** (liên kết tới thực thể phụ thuộc). Trong

@@ -103,6 +103,11 @@ export default function NewObjectiveForm({
     setErr(null);
     if (!title.trim()) { setErr('Nhập Mục tiêu (Objective).'); return; }
     if (needsUnit && !unitId) { setErr('Chọn Đơn vị (Khối/Phòng).'); return; }
+    // Cảnh báo TRÙNG TÊN OKR trong kỳ (chuẩn hoá bỏ dấu + thường hoá) — hỏi xác nhận trước khi tạo.
+    const normT = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().replace(/\s+/g, ' ').trim();
+    const tt = title.trim();
+    if (periodObjectives.some((o) => normT(o.title) === normT(tt)) &&
+        !window.confirm(`Đã có OKR tên "${tt}" trong kỳ. Có thể bạn đang tạo TRÙNG.\n\nBạn có chắc muốn tạo mới?`)) return;
     const fd = new FormData();
     fd.set('period_id', periodId);
     fd.set('level', level);
