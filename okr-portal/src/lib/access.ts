@@ -107,6 +107,10 @@ export function canViewReports(user: OkrUser, access: Access): boolean {
 export function canViewAllCalendar(user: OkrUser, access: Access): boolean {
   return hasCap(user, 'calendar.viewall', access) || hasCap(user, 'scope.all', access);
 }
+/** Thuộc nhóm ĐƯỢC nhận Bản tin điều hành tuần (email). */
+export function canReceiveWeeklyDigest(user: OkrUser, access: Access): boolean {
+  return hasCap(user, 'digest.weekly', access);
+}
 
 // ---- Kiểm quyền theo OKR (năng lực × phạm vi) ----
 // level tuỳ chọn: có → bật ngoại lệ "chủ nhân OKR cá nhân tự cập nhật"; thiếu → giữ hành vi cũ.

@@ -21,6 +21,7 @@ export type CapKey =
   | 'budget.manage'
   | 'report.view'
   | 'calendar.viewall'
+  | 'digest.weekly'
   | 'data.import'
   | 'kpi.sync'
   | 'kpi.manage'
@@ -59,6 +60,7 @@ export const CAPABILITIES: Capability[] = [
   { key: 'budget.manage', cat: 'fin', label: 'Quản lý Ngân sách', desc: 'Nhập ngân sách/cấu trúc chi phí từ CSV, đồng bộ thực chi và XUẤT ngân sách (trang "Ngân sách").', suggest: ['system_admin', 'okr_admin'] },
   { key: 'report.view', cat: 'report', label: 'Xem Báo cáo theo cấp', desc: 'Xem & xuất trang "Báo cáo" (roll-up theo cấp tổ chức). Không có quyền này chỉ xem dashboard tổng.', suggest: ['system_admin', 'okr_admin', 'kpi_admin', 'manager', 'contributor'] },
   { key: 'calendar.viewall', cat: 'report', label: 'Xem Lịch toàn công ty', desc: 'Xem lịch (cuộc họp, hạn công việc, check-in) của TOÀN công ty thay vì chỉ của mình / đơn vị mình.', suggest: ['system_admin', 'okr_admin', 'kpi_admin', 'manager'] },
+  { key: 'digest.weekly', cat: 'report', label: 'Nhận Bản tin điều hành tuần (email)', desc: 'Nhận email "Bản tin điều hành tuần" (tóm tắt tiến độ · KPI cảnh báo · việc quá hạn · sức khoẻ OKR). Người nhận có thể tự tắt ở Cài đặt cá nhân. Bản tin phải được BẬT ở Quản trị → Cài đặt.', suggest: ['system_admin', 'okr_admin'] },
   { key: 'data.import', cat: 'data', label: 'Nhập Excel', desc: 'Nhập / cập nhật OKR hàng loạt từ file Excel.', suggest: ['system_admin', 'okr_admin'] },
   { key: 'kpi.sync', cat: 'data', label: 'Đồng bộ KPI', desc: 'Chạy đồng bộ KPI kế hoạch/thực hiện từ BigQuery.', suggest: ['system_admin', 'okr_admin', 'kpi_admin'] },
   { key: 'kpi.manage', cat: 'kpi', label: 'Quản lý Thư viện KPI', desc: 'Khai báo / sửa / xoá KPI trong thư viện: công thức, nguồn, ngưỡng W/A/E, module, tầng, chủ sở hữu.', suggest: ['system_admin', 'okr_admin', 'kpi_admin'] },

@@ -19,7 +19,8 @@ export type Notification = {
 // ── Loại thông báo + tuỳ chọn chi tiết (per-user, lưu okr_users.notif_prefs) ──
 export type NotifType =
   | 'mention' | 'reply' | 'comment_mine' | 'assignment'
-  | 'task_due_soon' | 'task_overdue' | 'task_overdue_weekly';
+  | 'task_due_soon' | 'task_overdue' | 'task_overdue_weekly'
+  | 'weekly_digest';
 export const NOTIF_TYPE_META: { key: NotifType; label: string; desc: string }[] = [
   { key: 'mention', label: 'Được nhắc tên (@)', desc: 'Khi ai đó @nhắc bạn trong một bình luận.' },
   { key: 'reply', label: 'Trả lời bình luận của bạn', desc: 'Khi ai đó trả lời bình luận bạn đã viết.' },
@@ -28,6 +29,7 @@ export const NOTIF_TYPE_META: { key: NotifType; label: string; desc: string }[] 
   { key: 'task_due_soon', label: 'Công việc sắp đến hạn (trước 1 ngày)', desc: 'Nhắc trước 1 ngày cho công việc của bạn sắp đến hạn.' },
   { key: 'task_overdue', label: 'Công việc quá hạn', desc: 'Báo khi công việc của bạn quá hạn mà chưa hoàn thành.' },
   { key: 'task_overdue_weekly', label: 'Tổng hợp việc quá hạn hàng tuần', desc: 'Email tổng hợp các công việc quá hạn của bạn mỗi tuần.' },
+  { key: 'weekly_digest', label: 'Bản tin điều hành tuần (email)', desc: 'Email tóm tắt điều hành hằng tuần (chỉ áp dụng nếu bạn thuộc nhóm được nhận & quản trị đã bật bản tin).' },
 ];
 const NOTIF_VERB: Record<NotifType, string> = {
   mention: 'đã nhắc bạn',
@@ -37,6 +39,7 @@ const NOTIF_VERB: Record<NotifType, string> = {
   task_due_soon: 'nhắc: công việc sắp đến hạn',
   task_overdue: 'nhắc: công việc quá hạn',
   task_overdue_weekly: 'tổng hợp việc quá hạn tuần',
+  weekly_digest: 'bản tin điều hành tuần',
 };
 
 /** Mặc định MỌI loại BẬT; chỉ tắt khi prefs[type] === false. */

@@ -4,18 +4,21 @@ import SiteHeader from '@/components/SiteHeader';
 import { requireUser } from '@/lib/current-user';
 import { loadAccess, canManageSystem } from '@/lib/access';
 import { getReminderConfig, WEEKDAY_LABEL } from '@/lib/reminders';
-import { saveReminderAction, testReminderAction } from '../actions';
+import { getWeeklyDigestEnabled, digestRecipients } from '@/lib/digest';
+import { saveReminderAction, testReminderAction, saveDigestSettingsAction, sendDigestAction } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminSettings({
   searchParams,
 }: {
-  searchParams: { saved?: string; test?: string };
+  searchParams: { saved?: string; test?: string; digest?: string };
 }) {
   const me = await requireUser();
   if (!canManageSystem(me, await loadAccess())) redirect('/');
-  const cfg = await getReminderConfig();
+  const [cfg, digestOn, digestTo] = await Promise.all([
+    getReminderConfig(), getWeeklyDigestEnabled(), digestRecipients(),
+  ]);
 
   return (
     <>
@@ -24,12 +27,19 @@ export default async function AdminSettings({
         <p className="subtitle" style={{ marginBottom: 6 }}>
           <Link href="/admin">← Quản trị</Link>
         </p>
-        <div className="pagetitle">Cài đặt · Nhắc check-in</div>
+        <div className="pagetitle">Cài đặt · Email tự động</div>
         <p className="subtitle">
-          Tự động email nhắc người chủ trì cập nhật KR chưa check-in. Gửi qua hệ thống mail BTMH.
+          Nhắc check-in &amp; Bản tin điều hành tuần — gửi qua hệ thống mail BTMH.
         </p>
 
         {searchParams.saved && <p className="badge green">Đã lưu cấu hình.</p>}
+        {searchParams.digest && (
+          <p className={searchParams.digest.startsWith('ok:') ? 'badge green' : 'badge red'}>
+            {searchParams.digest.startsWith('ok:')
+              ? `Đã gửi bản tin tới ${searchParams.digest.slice(3)} người.`
+              : `Lỗi: ${searchParams.digest.replace(/^err:/, '')}`}
+          </p>
+        )}
         {searchParams.test && (
           <p className={searchParams.test.startsWith('sent:') ? 'badge green' : 'badge red'}>
             {searchParams.test.startsWith('sent:')
@@ -86,6 +96,41 @@ export default async function AdminSettings({
             <button className="btn ghost" type="submit">
               Gửi thử ngay (bỏ qua điều kiện ngày)
             </button>
+          </form>
+        </div>
+
+        {/* Bản tin điều hành tuần */}
+        <div className="card" style={{ maxWidth: 640 }}>
+          <h3 style={{ marginTop: 0 }}>📊 Bản tin điều hành tuần</h3>
+          <form action={saveDigestSettingsAction}>
+            <label className="f" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input type="checkbox" name="enabled" defaultChecked={digestOn} style={{ width: 'auto' }} />
+              Bật gửi Bản tin điều hành tuần {digestOn ? '' : '(đang TẮT)'}
+            </label>
+            <p className="muted" style={{ fontSize: 13, marginTop: 6 }}>
+              Mặc định TẮT. Khi bật, cron gửi <b>Thứ 2 hằng tuần (07:30 giờ VN)</b> cho những người có năng lực
+              <b> “Nhận Bản tin điều hành tuần”</b> (cấu hình nhóm ở{' '}
+              <Link href="/admin/permissions">Phân quyền</Link>; mặc định: Quản trị hệ thống &amp; Quản trị OKR).
+              Mỗi người có thể tự tắt ở <b>Cài đặt cá nhân</b>.
+            </p>
+            <div className="card" style={{ background: 'var(--bg)', marginTop: 8 }}>
+              <div className="muted" style={{ fontSize: 12.5, marginBottom: digestTo.length ? 6 : 0 }}>
+                <b>Người sẽ nhận hiện tại: {digestTo.length}</b>
+                {digestTo.length === 0 ? ' — chưa có ai (bật bản tin & cấp năng lực cho nhóm).' : ''}
+              </div>
+              {digestTo.length > 0 && (
+                <div style={{ fontSize: 12.5, display: 'flex', flexWrap: 'wrap', gap: '2px 10px' }}>
+                  {digestTo.map((r) => <span key={r.email}>{r.name || r.email}</span>)}
+                </div>
+              )}
+            </div>
+            <div style={{ marginTop: 12, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button className="btn" type="submit">Lưu</button>
+            </div>
+          </form>
+          <hr className="sep" />
+          <form action={sendDigestAction}>
+            <button className="btn ghost" type="submit">Gửi thử ngay (không cần bật công tắc)</button>
           </form>
         </div>
       </div>

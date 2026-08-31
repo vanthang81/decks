@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-30.122';
+export const GUIDE_VERSION = '2026-08-30.123';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '30/08/2026 (Bản tin điều hành tuần: công tắc + phân quyền + tự tắt)',
+    items: [
+      'Bản tin điều hành tuần MẶC ĐỊNH TẮT; bật/tắt ở Quản trị → Cài đặt (có xem trước danh sách người nhận).',
+      'Người nhận theo năng lực "Nhận Bản tin điều hành tuần" (mặc định Quản trị hệ thống & Quản trị OKR, cấu hình ở Phân quyền) — không còn gắn cứng theo vai trò.',
+      'Mỗi người tự bật/tắt nhận bản tin ở Cài đặt cá nhân.',
+    ],
+  },
   {
     date: '30/08/2026 (Nhật ký cập nhật tách trang riêng)',
     items: [

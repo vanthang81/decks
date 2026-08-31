@@ -229,11 +229,16 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   BSC, **KPI cảnh báo W/A/E** (quét okr_kpi_values mọi đơn vị, `kpiStatus`), OKR cần chú ý, việc quá hạn,
   toàn vẹn, sức khỏe + **Nhận định/Khuyến nghị rule-based** (Quan sát→Hàm ý→Khuyến nghị). Dùng chung cho:
   trang **`/review`** ("Họp điều hành" WBR/MBR, in đẹp), card Dashboard, và **Bản tin tuần**.
-- **Bản tin điều hành tuần**: `src/lib/digest.ts` `sendWeeklyDigest()` dựng HTML từ reviewData → gửi
-  **role=exec** (fallback vanthang81@) qua Deck Mail webhook. Route `POST/GET /api/digest/weekly` (gác
-  x-sync-key/admin). Nút "Gửi bản tin ngay" ở `/admin` (`sendDigestAction`). **Cron n8n "OKR Weekly Digest"
-  (id `zwiPmsyDaCRxgSG2`, ACTIVE, `30 0 * * 1` UTC = Thứ 2 07:30 VN)** SSH curl route. Đã test `sent:2`
-  (nguyenvanthang@baotinmanhhai.vn + vanthang81@gmail.com).
+- **Bản tin điều hành tuần (CFO 30/08 — công tắc + phân quyền + tự tắt)**: `src/lib/digest.ts` `sendWeeklyDigest()`.
+  **CÔNG TẮC TỔNG MẶC ĐỊNH TẮT** (okr_settings `weekly_digest_enabled`, `getWeeklyDigestEnabled`/`setWeeklyDigestEnabled`) —
+  cron gọi mà chưa bật thì `skipped:'disabled'`, KHÔNG gửi. Bật/tắt ở **Quản trị → Cài đặt** (`saveDigestSettingsAction`)
+  kèm **xem trước người nhận** (`digestRecipients`). **Người nhận = năng lực `digest.weekly`** (`canReceiveWeeklyDigest`,
+  mặc định gợi ý `system_admin`+`okr_admin`, cấu hình ở Phân quyền; exec luôn có mọi cap) + `notify_email=true` + **CHƯA tự
+  tắt** loại `weekly_digest` (`notif_prefs`, hiện ở **Cài đặt cá nhân**). Nút "Gửi thử ngay" ở /admin + settings dùng
+  `sendWeeklyDigest({force:true})` (bỏ qua công tắc, vẫn theo phân quyền). Route `POST/GET /api/digest/weekly` (gác
+  x-sync-key/admin, KHÔNG force → theo công tắc). **Cron n8n "OKR Weekly Digest" (id `zwiPmsyDaCRxgSG2`, ACTIVE,
+  `30 0 * * 1` UTC = Thứ 2 07:30 VN)** SSH curl route — giữ ACTIVE, tự no-op khi công tắc tắt. **Đổi ai nhận ⇒ Phân quyền
+  (cap `digest.weekly`); không hardcode role nữa.**
 - HelpTip: `review` · `insights` · `okr-health`. Nav "Họp điều hành" (/review) ở nhóm Tổng quan.
 
 ## Hướng dẫn sử dụng trong app + QUY TẮC CẬP NHẬT TÀI LIỆU (BẮT BUỘC)

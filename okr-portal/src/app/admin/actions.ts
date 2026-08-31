@@ -328,16 +328,25 @@ export async function syncKpiAction() {
   redirect(`/admin?kpi=${encodeURIComponent(msg)}`);
 }
 
-// ---------- Bản tin điều hành tuần (gửi thử) ----------
+// ---------- Bản tin điều hành tuần ----------
+// Gửi NGAY (bỏ qua công tắc tổng — dùng để thử/gửi thủ công). Người nhận vẫn theo năng lực + tuỳ chọn.
 export async function sendDigestAction() {
   await requireExec();
   let msg: string;
   try {
     const { sendWeeklyDigest } = await import('@/lib/digest');
-    const r = await sendWeeklyDigest();
+    const r = await sendWeeklyDigest({ force: true });
     msg = `ok:${r.sent}`;
   } catch (e) {
     msg = `err:${String(e).slice(0, 60)}`;
   }
   redirect(`/admin?digest=${encodeURIComponent(msg)}`);
+}
+
+/** Bật/tắt CÔNG TẮC TỔNG bản tin điều hành tuần (mặc định TẮT). */
+export async function saveDigestSettingsAction(fd: FormData) {
+  await requireExec();
+  const { setWeeklyDigestEnabled } = await import('@/lib/digest');
+  await setWeeklyDigestEnabled(str(fd, 'enabled') === 'on');
+  redirect('/admin/settings?saved=1');
 }

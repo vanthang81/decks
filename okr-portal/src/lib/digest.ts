@@ -2,8 +2,21 @@ import { query } from './db';
 import { sendMail } from './mail';
 import { currentReviewData, type ReviewData } from './review';
 import { STATUS_LABEL } from './kpi-values';
+import { getSetting, setSetting } from './settings';
+import { loadAccess, hasCap } from './access';
+import { notifEnabled } from './notifications';
+import type { OkrUser } from './users';
 
-// BẢN TIN ĐIỀU HÀNH TUẦN — email tóm tắt cho Ban lãnh đạo (role exec). Cron n8n gọi hằng tuần.
+// BẢN TIN ĐIỀU HÀNH TUẦN — email tóm tắt điều hành. Cron n8n gọi hằng tuần.
+// Người nhận = user có NĂNG LỰC 'digest.weekly' (mặc định nhóm Quản trị hệ thống + Quản trị OKR, cấu hình
+// ở Phân quyền), CÒN bật email + CHƯA tự tắt loại 'weekly_digest'. Bản tin có CÔNG TẮC TỔNG (mặc định TẮT).
+const DIGEST_ENABLED_KEY = 'weekly_digest_enabled';
+export async function getWeeklyDigestEnabled(): Promise<boolean> {
+  return (await getSetting<boolean>(DIGEST_ENABLED_KEY, false)) === true;
+}
+export async function setWeeklyDigestEnabled(on: boolean): Promise<void> {
+  await setSetting(DIGEST_ENABLED_KEY, !!on);
+}
 
 function esc(s: string): string {
   return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string);
@@ -57,20 +70,37 @@ export function digestHtml(d: ReviewData, appUrl: string): string {
   </div>`;
 }
 
-async function recipients(): Promise<{ email: string; name: string | null }[]> {
-  const rows = await query<{ email: string; name: string | null }>(
-    `SELECT email, display_name AS name FROM okr_users WHERE is_active AND role IN ('exec','ceo','cfo') ORDER BY email`,
+type DigestUser = {
+  email: string; name: string | null; role: string; perm_group: string | null;
+  notify_email: boolean; notif_prefs: Record<string, unknown> | null;
+};
+
+/** Người nhận bản tin = có năng lực 'digest.weekly' + bật email + chưa tự tắt loại 'weekly_digest'. */
+export async function digestRecipients(): Promise<{ email: string; name: string | null }[]> {
+  const access = await loadAccess();
+  const rows = await query<DigestUser>(
+    `SELECT email, display_name AS name, role, perm_group, notify_email, notif_prefs
+       FROM okr_users WHERE is_active = true ORDER BY email`,
   );
-  if (rows.length) return rows;
-  return [{ email: 'vanthang81@gmail.com', name: 'CFO' }];
+  const out: { email: string; name: string | null }[] = [];
+  for (const u of rows) {
+    if (!u.notify_email) continue;
+    if (!notifEnabled(u.notif_prefs, 'weekly_digest')) continue;
+    const user = { email: u.email, role: u.role, perm_group: u.perm_group } as OkrUser;
+    if (!hasCap(user, 'digest.weekly', access)) continue;
+    out.push({ email: u.email, name: u.name });
+  }
+  return out;
 }
 
-export async function sendWeeklyDigest(): Promise<{ sent: number; recipients: string[]; skipped?: string }> {
+export async function sendWeeklyDigest(opts?: { force?: boolean }): Promise<{ sent: number; recipients: string[]; skipped?: string }> {
+  // CÔNG TẮC TỔNG (mặc định TẮT) — cron sẽ bỏ qua; nút "Gửi thử" ở Quản trị dùng force để test.
+  if (!opts?.force && !(await getWeeklyDigestEnabled())) return { sent: 0, recipients: [], skipped: 'disabled' };
   const d = await currentReviewData();
   if (!d) return { sent: 0, recipients: [], skipped: 'no-period' };
   const appUrl = process.env.APP_URL || 'https://okr.consultx.vn';
   const html = digestHtml(d, appUrl);
-  const to = await recipients();
+  const to = await digestRecipients();
   let sent = 0;
   const done: string[] = [];
   for (const r of to) {
