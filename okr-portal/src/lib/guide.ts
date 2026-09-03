@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-03.124';
+export const GUIDE_VERSION = '2026-09-03.125';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/09/2026 (Dự án hiển thị theo khoảng ngày bắt đầu–hạn)',
+    items: [
+      'Dự án có ngày bắt đầu & hạn giờ hiển thị ở MỌI kỳ (tháng/quý/năm) nằm trong khoảng đó — không còn chỉ hiện đúng 1 tháng tạo. VD dự án 08→12 sẽ thấy ở T8, T9, T10, T11, T12.',
+      'Dự án chưa đặt ngày vẫn giữ như cũ (hiện ở kỳ đã gắn khi tạo).',
+    ],
+  },
   {
     date: '03/09/2026 (Sửa lỗi thêm người dùng vai trò "Quản lý chức năng")',
     items: [

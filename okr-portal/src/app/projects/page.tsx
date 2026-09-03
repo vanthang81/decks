@@ -16,7 +16,7 @@ import {
   PERIOD_KIND_LABEL,
 } from '@/lib/periods';
 import {
-  listProjectsByPeriod,
+  listProjectsInPeriodWindow,
   canCreateProject,
   PROJECT_STATUS_LABEL,
 } from '@/lib/projects';
@@ -83,7 +83,7 @@ export default async function ProjectsPage({
     ? await getPeriod(searchParams.period)
     : (await getCurrentPeriod()) ?? periods[0] ?? null;
 
-  const projects = period ? await listProjectsByPeriod(period.id) : [];
+  const projects = period ? await listProjectsInPeriodWindow(period) : [];
   const units = await listUnits();
   const users = await listUsers();
   const canCreate = canCreateProject(user, await loadAccess());
@@ -98,6 +98,7 @@ export default async function ProjectsPage({
             <div className="pagetitle">Dự án<HelpTip k="projects" /></div>
             <p className="subtitle">
               Dự án độc lập, xuyên nhiều OKR/khối. Gắn công việc từ các OKR vào một dự án để quản trị tập trung.
+              Dự án có <b>ngày bắt đầu–hạn</b> sẽ hiển thị ở <b>mọi kỳ (tháng/quý/năm)</b> nằm trong khoảng đó.
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', flex: '0 0 auto' }}>

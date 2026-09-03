@@ -73,6 +73,32 @@ export async function listProjectsByPeriod(periodId: string): Promise<ProjectRow
   );
 }
 
+/**
+ * Dự án hiển thị trong CỬA SỔ THỜI GIAN của kỳ đang chọn (CFO 03/09):
+ * dự án CÓ ngày bắt đầu/hạn → hiện ở MỌI kỳ mà [start_on, due_on] GIAO với [starts_on, ends_on]
+ * của kỳ (vd dự án Aug→Dec hiện cả T8, T9, T10… lẫn Quý/Năm bao trùm). Dự án CHƯA đặt ngày →
+ * giữ hành vi cũ: chỉ hiện ở đúng kỳ đã gắn (`period_id`). NULL 1 đầu = mở 1 phía
+ * (chỉ start → từ tháng bắt đầu trở đi; chỉ due → tới tháng hạn).
+ */
+export async function listProjectsInPeriodWindow(period: {
+  id: string;
+  starts_on: string;
+  ends_on: string;
+}): Promise<ProjectRow[]> {
+  return query<ProjectRow>(
+    `${SELECT}
+      WHERE (
+              (p.start_on IS NOT NULL OR p.due_on IS NOT NULL)
+              AND (p.start_on IS NULL OR p.start_on <= $3)
+              AND (p.due_on   IS NULL OR p.due_on   >= $2)
+            )
+         OR (p.start_on IS NULL AND p.due_on IS NULL AND p.period_id = $1)
+     ORDER BY CASE p.status WHEN 'active' THEN 0 WHEN 'paused' THEN 1 WHEN 'done' THEN 2 ELSE 3 END,
+              p.created_at`,
+    [period.id, period.starts_on, period.ends_on],
+  );
+}
+
 export async function getProject(id: string): Promise<ProjectRow | null> {
   return queryOne<ProjectRow>(`${SELECT} WHERE p.id = $1`, [id]);
 }
