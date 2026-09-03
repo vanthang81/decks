@@ -404,9 +404,13 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
     hiện ra ngoài là "An error occurred in the Server Components render". Fix: `db/570_role_function_lead.sql` nới
     constraint gồm `function_lead`. **GÁC TỰ ĐỘNG (khỏi phải nhớ)**: `scripts/check-role-constraint.mjs` chạy TRONG
     `npm run build` (nối sau check-page-tours ở package.json) — đọc `ROLES` (rbac.ts) + tập role trong CHECK ở
-    migration MỚI NHẤT; nếu có role gán được mà chưa vào constraint ⇒ **build FAIL** kèm hướng dẫn. ⇒ Thêm role mới:
-    (1) `ROLES` rbac.ts, (2) migration `db/NNN_*.sql` nới `okr_users_role_check` gồm role đó (idempotent: DROP IF
-    EXISTS + ADD). Deploy tự áp (glob mọi `db/*.sql` số ≥320).
+    migration MỚI NHẤT; nếu có role gán được mà chưa vào constraint ⇒ **build FAIL** kèm hướng dẫn.
+    - **⚠ CHECK role có DUY NHẤT 1 CHỦ = migration MỚI NHẤT (hiện `db/570_role_function_lead.sql`)** (CFO 03/09,
+      sau ca deploy vỡ): deploy re-run MỌI migration ≥320 mỗi lần, mà `ALTER TABLE ADD CONSTRAINT` re-validate TOÀN
+      bảng NGAY. Nếu có 2+ migration cùng ADD `okr_users_role_check` với tập role KHÁC nhau, file số nhỏ hơn (tập
+      cũ) sẽ vỡ khi bảng đã có dòng dùng role mới ("violated by some row") + DROP câu trước đã autocommit → MẤT
+      constraint. Vì vậy `db/320` KHÔNG còn đụng constraint; chỉ 570 sở hữu. ⇒ **Thêm role mới: (1) `ROLES` rbac.ts,
+      (2) SỬA CHÍNH `db/570` thêm role vào CHECK (KHÔNG tạo migration mới re-add).** Deploy tự áp (glob db/*.sql ≥320).
 - **ĐỔI EMAIL người dùng (CFO 30/08 — email là KHOÁ CHÍNH `okr_users.email`)**: sửa email nhập sai ở popup
   "Sửa" người dùng (ô "Email đăng nhập"). Vì email là PK + nhiều bảng tham chiếu, `changeUserEmail()` trong
   `src/lib/users.ts` chạy TRONG 1 GIAO DỊCH: INSERT bản ghi user email mới (copy hồ sơ) → dời MỌI tham chiếu
