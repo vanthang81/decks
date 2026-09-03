@@ -1,6 +1,6 @@
 import { query, queryOne } from './db';
 import type { OkrUser } from './users';
-import { manageScope, type Unit } from './org';
+import { manageScope, ancestorIds, type Unit } from './org';
 import { nextProjectCode } from './codes';
 import { hasCap, type Access } from './access';
 
@@ -246,6 +246,17 @@ export function canManageProject(
   const scope = manageScope(user, units);
   if (scope === null) return true;
   if (project.unit_id && scope.has(project.unit_id)) return true;
+  // Quản được dự án thuộc ĐƠN VỊ MÌNH LÀ THÀNH VIÊN hoặc ĐƠN VỊ CHA trong nhánh (CFO 03/09):
+  // vd người có quyền "Quản lý Dự án" ở 1 Phòng thuộc Khối Marketing → quản được dự án cấp KHỐI đó
+  // (manageScope của nhân viên chỉ gồm đúng đơn vị mình, không phủ đơn vị cha). TRỪ cấp CÔNG TY —
+  // dự án cấp công ty vẫn cần "Toàn phạm vi" (scope.all) hoặc là chủ trì/người tạo.
+  if (project.unit_id && user.unit_id) {
+    const chain = ancestorIds(units, user.unit_id); // gồm đơn vị mình + mọi đơn vị cha
+    if (chain.has(project.unit_id)) {
+      const pu = units.find((u) => u.id === project.unit_id);
+      if (pu && pu.type !== 'company') return true;
+    }
+  }
   return false;
 }
 

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-03.125';
+export const GUIDE_VERSION = '2026-09-03.126';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/09/2026 (Người "Quản lý Dự án" quản được dự án của Khối mình)',
+    items: [
+      'Người có quyền "Quản lý Dự án" (nhóm Quản lý) nay quản được dự án thuộc ĐƠN VỊ MÌNH hoặc ĐƠN VỊ CHA trong nhánh (vd nhân viên ở Phòng thuộc Khối Marketing → thêm việc/sửa/điều lệ cho dự án cấp Khối đó). Trước đây phạm vi chỉ gồm đúng đơn vị mình nên nút "Thêm việc vào dự án" bị ẩn.',
+      'Dự án cấp Công ty vẫn cần quyền "Toàn phạm vi" hoặc là chủ trì/người tạo.',
+    ],
+  },
   {
     date: '03/09/2026 (Dự án hiển thị theo khoảng ngày bắt đầu–hạn)',
     items: [
