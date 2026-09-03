@@ -398,6 +398,15 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   `PositionAutofill` tự điền role+perm_group+title (chỉ điền nhanh, KHÔNG đụng logic phân quyền). Thêm role cấp
   bậc mới ⇒ vẫn phải sửa `rbac.ts` + `manageScope` + `defaultGroupForRole` + Record<Role,*>; còn "chức danh" thì
   admin tự thêm qua Vị trí, không cần lập trình.
+  - **⚠ THÊM ROLE MỚI ⇒ PHẢI có MIGRATION NỚI `okr_users_role_check` (CFO 03/09 — bug function_lead)**: cột
+    `okr_users.role` có CHECK constraint (đặt ở `db/320_role_ceo_cfo.sql`). 30/08 thêm `function_lead` vào code
+    (`ROLES`) NHƯNG QUÊN nới constraint → lưu user "Quản lý chức năng" ném lỗi ràng buộc DB (staff vẫn lưu được),
+    hiện ra ngoài là "An error occurred in the Server Components render". Fix: `db/570_role_function_lead.sql` nới
+    constraint gồm `function_lead`. **GÁC TỰ ĐỘNG (khỏi phải nhớ)**: `scripts/check-role-constraint.mjs` chạy TRONG
+    `npm run build` (nối sau check-page-tours ở package.json) — đọc `ROLES` (rbac.ts) + tập role trong CHECK ở
+    migration MỚI NHẤT; nếu có role gán được mà chưa vào constraint ⇒ **build FAIL** kèm hướng dẫn. ⇒ Thêm role mới:
+    (1) `ROLES` rbac.ts, (2) migration `db/NNN_*.sql` nới `okr_users_role_check` gồm role đó (idempotent: DROP IF
+    EXISTS + ADD). Deploy tự áp (glob mọi `db/*.sql` số ≥320).
 - **ĐỔI EMAIL người dùng (CFO 30/08 — email là KHOÁ CHÍNH `okr_users.email`)**: sửa email nhập sai ở popup
   "Sửa" người dùng (ô "Email đăng nhập"). Vì email là PK + nhiều bảng tham chiếu, `changeUserEmail()` trong
   `src/lib/users.ts` chạy TRONG 1 GIAO DỊCH: INSERT bản ghi user email mới (copy hồ sơ) → dời MỌI tham chiếu
@@ -496,6 +505,10 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
 - **Deploy/redeploy = chạy tay workflow n8n "OKR Deploy — manual (SSH VPS)" (id `S2sxTDJOSjQ3Yd39`)**:
   node SSH (cred "SSH - VPS deploy") — fetch nhánh + `git reset --hard` worktree + `docker build` +
   chạy lại container + migrate (idempotent). Đổi command của node cho từng bước (build vs nginx).
+  **MIGRATE nay TỰ ĐỘNG (CFO 03/09)**: node lặp `ls db/*.sql | sort`, chạy MỌI file số ≥320 (bỏ baseline
+  001-31x đã seed lúc init) qua `psql -v ON_ERROR_STOP=1` superuser — **thêm migration mới KHÔNG cần sửa
+  workflow nữa** (trước là danh sách cứng, dễ quên → bug function_lead). Mọi migration ≥320 phải idempotent
+  (deploy re-run mỗi lần); non-idempotent sẽ FAIL sớm (đúng ý đồ).
   **⚠ Khi redeploy (build image mới) PHẢI recreate CẢ 3 container** `okr-portal` (:8640, env-file),
   `okr-portal-vt` (:8641, `-e AUTH_URL=https://okr.vanthang.io` + client vanthang) VÀ `okr-portal-btmh`
   (:8643, `-e AUTH_URL=https://okr.baotinmanhhai.vn` + client vanthang) — nếu chỉ recreate 1 thì container

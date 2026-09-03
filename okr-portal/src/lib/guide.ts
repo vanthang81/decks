@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-08-30.123';
+export const GUIDE_VERSION = '2026-09-03.124';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/09/2026 (Sửa lỗi thêm người dùng vai trò "Quản lý chức năng")',
+    items: [
+      'Sửa lỗi: thêm/sửa người dùng vai trò "Quản lý chức năng" báo lỗi (ràng buộc DB thiếu vai trò này) — nay đã lưu được như mọi vai trò khác.',
+      'Thêm cơ chế tự kiểm khi build: mọi vai trò gán được ở phần mềm đều phải có trong ràng buộc CSDL → chặn tái diễn lỗi loại này về sau.',
+    ],
+  },
   {
     date: '30/08/2026 (Bản tin điều hành tuần: công tắc + phân quyền + tự tắt)',
     items: [
