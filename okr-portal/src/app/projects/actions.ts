@@ -131,6 +131,42 @@ export async function deleteProjectAction(fd: FormData) {
   redirect('/projects');
 }
 
+// ---- Thư viện tài liệu dự án (list link) ----
+export async function addProjectDocAction(fd: FormData) {
+  const user = await requireUser();
+  const units = await listUnits();
+  const projectId = str(fd, 'project_id');
+  const p = await getProject(projectId);
+  if (!p) throw new Error('Không tìm thấy dự án.');
+  if (!canManageProject(user, p, units, await loadAccess()))
+    throw new Error('Bạn không có quyền thêm tài liệu cho dự án này.');
+  const title = str(fd, 'title');
+  let url = str(fd, 'url');
+  if (!title || !url) throw new Error('Cần nhập tên tài liệu và đường link.');
+  if (!/^https?:\/\//i.test(url)) url = `https://${url}`; // tự thêm scheme cho gọn
+  const { addProjectDoc } = await import('@/lib/project-docs');
+  await addProjectDoc({ project_id: projectId, title, url, note: orNull(str(fd, 'note')), created_by: user.email });
+  await logAudit({ actor: user.email, action: 'project.doc_add', entity: 'project', entityId: projectId, detail: { title } });
+  revalidatePath(`/projects/${projectId}`);
+}
+
+export async function deleteProjectDocAction(fd: FormData) {
+  const user = await requireUser();
+  const units = await listUnits();
+  const projectId = str(fd, 'project_id');
+  const p = await getProject(projectId);
+  if (!p) return;
+  if (!canManageProject(user, p, units, await loadAccess()))
+    throw new Error('Bạn không có quyền xoá tài liệu của dự án này.');
+  const { getProjectDoc, deleteProjectDoc } = await import('@/lib/project-docs');
+  const id = str(fd, 'id');
+  const doc = await getProjectDoc(id);
+  if (!doc || doc.project_id !== projectId) return; // chống xoá chéo dự án
+  await deleteProjectDoc(id);
+  await logAudit({ actor: user.email, action: 'project.doc_delete', entity: 'project', entityId: projectId, detail: { title: doc.title } });
+  revalidatePath(`/projects/${projectId}`);
+}
+
 // Modal edit task: tạo NHANH 1 dự án rồi gắn task vào (khi dự án chưa tồn tại).
 export async function createProjectForInitiativeAction(fd: FormData) {
   const user = await requireUser();

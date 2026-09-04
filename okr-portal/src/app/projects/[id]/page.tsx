@@ -9,7 +9,9 @@ import ActivityLogButton from '@/components/ActivityLogButton';
 import { loadEntityAuditAction } from '@/app/audit/actions';
 import AddTaskToProject from '@/components/AddTaskToProject';
 import ProjectReportView from '@/components/ProjectReport';
+import ProjectDocs from '@/components/ProjectDocs';
 import { buildProjectReport } from '@/lib/project-report';
+import { listProjectDocs } from '@/lib/project-docs';
 import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
 import { listObjectivesWithKrs } from '@/lib/okr';
@@ -34,7 +36,7 @@ import {
   createInitiativeAction,
   moveInitiativeAction,
 } from '../../objectives/actions';
-import { updateProjectAction, deleteProjectAction, createProjectForInitiativeAction, saveProjectCharterAction } from '../actions';
+import { updateProjectAction, deleteProjectAction, createProjectForInitiativeAction, saveProjectCharterAction, addProjectDocAction, deleteProjectDocAction } from '../actions';
 import EditModal from '@/components/EditModal';
 import NavIcon from '@/components/NavIcon';
 import { CHARTER_FIELDS, charterFilled, type Charter } from '@/lib/charter';
@@ -68,10 +70,11 @@ export default async function ProjectDetail({ params }: { params: { id: string }
   const p = await getProject(params.id);
   if (!p) notFound();
 
-  const [tasks, units, users] = await Promise.all([
+  const [tasks, units, users, docs] = await Promise.all([
     listInitiativesForProject(p.id),
     listUnits(),
     listUsers(),
+    listProjectDocs(p.id),
   ]);
   const canManage = canManageProject(user, p, units, await loadAccess());
   const projectOpts = p.period_id ? await listProjectOptions(p.period_id) : [];
@@ -260,6 +263,15 @@ export default async function ProjectDetail({ params }: { params: { id: string }
             </ExecutionTabs>
           )}
         </div>
+
+        {/* ---- Thư viện tài liệu dự án (list link) ---- */}
+        <ProjectDocs
+          projectId={p.id}
+          docs={docs}
+          canManage={canManage}
+          add={addProjectDocAction}
+          del={deleteProjectDocAction}
+        />
       </div>
     </>
   );

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-03.127';
+export const GUIDE_VERSION = '2026-09-04.128';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/09/2026 (Thư viện tài liệu dự án — lưu link)',
+    items: [
+      'Trang dự án có mục "Thư viện tài liệu": lưu các đường link tài liệu của dự án (kế hoạch, biên bản, sheet, thư mục Drive…). Người quản dự án thêm/xoá link; mọi người xem được dự án đều thấy. (Tạm thời lưu dạng link — chưa hỗ trợ tải file lên.)',
+    ],
+  },
   {
     date: '03/09/2026 (Báo cáo tiến độ trong trang dự án)',
     items: [
