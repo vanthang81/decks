@@ -8,6 +8,8 @@ import ProjectEditButton from '@/components/ProjectEditButton';
 import ActivityLogButton from '@/components/ActivityLogButton';
 import { loadEntityAuditAction } from '@/app/audit/actions';
 import AddTaskToProject from '@/components/AddTaskToProject';
+import ProjectReportView from '@/components/ProjectReport';
+import { buildProjectReport } from '@/lib/project-report';
 import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
 import { listObjectivesWithKrs } from '@/lib/okr';
@@ -82,12 +84,13 @@ export default async function ProjectDetail({ params }: { params: { id: string }
   const TS_C: Record<string, string> = { todo: '#94a3b8', in_progress: '#2563eb', blocked: '#dc2626', done: '#16a34a', canceled: '#cbd5e1' };
   const TS_L: Record<string, string> = { todo: 'Chưa làm', in_progress: 'Đang làm', blocked: 'Vướng', done: 'Xong', canceled: 'Huỷ' };
   const tsCount: Record<string, number> = {};
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
   let overdueCount = 0;
   for (const t of tasks) {
     tsCount[t.status] = (tsCount[t.status] ?? 0) + 1;
     if (t.due_on && t.due_on < todayStr && t.status !== 'done' && t.status !== 'canceled') overdueCount++;
   }
+  const report = buildProjectReport(tasks, todayStr);
 
   return (
     <>
@@ -155,6 +158,9 @@ export default async function ProjectDetail({ params }: { params: { id: string }
             </div>
           </div>
         </div>
+
+        {/* ---- Báo cáo tiến độ: (1) Tổng dự án · (2) Theo thời gian ---- */}
+        <ProjectReportView report={report} />
 
         {/* ---- Điều lệ dự án (Project Charter) ---- */}
         <div className="card">

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-03.126';
+export const GUIDE_VERSION = '2026-09-03.127';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '03/09/2026 (Báo cáo tiến độ trong trang dự án)',
+    items: [
+      'Trang dự án có mục "Báo cáo tiến độ" 2 góc nhìn: (1) Tổng dự án — số việc theo trạng thái, % hoàn thành, quá hạn, và bảng theo người phụ trách; (2) Theo thời gian — đến hạn/hoàn thành theo từng tháng, tỷ lệ đúng hạn, và nổi bật "Tháng này tới đâu".',
+    ],
+  },
   {
     date: '03/09/2026 (Người "Quản lý Dự án" quản được dự án của Khối mình)',
     items: [
