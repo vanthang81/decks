@@ -139,6 +139,21 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   canCreateProject). Trang `/projects` (list + tạo) & `/projects/[id]` (chi tiết + sửa/xoá + việc gom theo
   OKR). Gắn việc: popup sửa việc (ExecutionTabs) → tick "Thuộc dự án" + chọn/"＋ Dự án mới" (action
   `createProjectForInitiativeAction` tạo & gắn). Chỉ hiện tag 🗂 khi việc CÓ project_id. Nav "Dự án".
+  - **Dự án hiển thị theo cửa sổ kỳ (CFO 03/09)**: `/projects` lọc dự án CÓ ngày bắt đầu/hạn theo GIAO
+    [start_on,due_on]×[starts_on,ends_on] của kỳ chọn (`listProjectsInPeriodWindow`) → hiện ở MỌI tháng/quý/năm
+    trong khoảng; dự án chưa đặt ngày giữ theo `period_id`. (`listProjectsByPeriod` cũ vẫn dùng cho `/budget`.)
+  - **Quyền QUẢN dự án (`canManageProject`)**: scope.all/CEO/CFO · chủ trì · người tạo · HOẶC có cap
+    `project.manage` mà dự án thuộc phạm vi quản (manageScope, xuống) HOẶC thuộc đơn vị mình/đơn vị CHA trong
+    nhánh (ancestorIds, trừ cấp 'company') — CFO 03/09, để Quản lý ở Phòng quản được dự án cấp Khối.
+  - **Báo cáo tiến độ (CFO 03/09)**: `src/lib/project-report.ts` (`buildProjectReport`, thuần từ tasks:
+    done_on/due_on/progress) + `ProjectReport.tsx` (2 tab: Tổng dự án · Theo thời gian) trên `/projects/[id]`.
+  - **Thư viện tài liệu (CFO 04/09)**: `okr_project_docs` (db/580) = list LINK (chưa upload file);
+    `src/lib/project-docs.ts` + `ProjectDocs.tsx`; add/del action gác `canManageProject`, ai xem được dự án đều thấy.
+  - **PHÂN QUYỀN XEM dự án (CFO 04/09)**: `okr_project_members` (db/590) = danh sách thành viên TƯỜNG MINH.
+    `canViewProject` = `canManageProject` HOẶC thành viên HOẶC được giao việc (assignee). `/projects` LỌC theo
+    canView (dùng `memberProjectIds`+`assigneeProjectIds`); `/projects/[id]` `redirect('/projects')` nếu không được
+    xem. Quản lý thành viên ở card "Thành viên dự án" (`ProjectMembers.tsx`, actions gác canManageProject). Chủ
+    trì/người tạo/CEO/CFO/Quản trị luôn xem được.
 - `okr_checkins`: cập nhật tiến độ + `confidence`. `okr_audit_log`: nhật ký.
 - **MÃ UNIQUE (db/110, import/export)**: cột `code` ở objectives/key_results/initiatives — định dạng
   `<KHỐI>-O<n>` / `<obj>.KR<m>` / `<obj>.H<kk>` (prefix = mã đơn vị hoặc 'CTY'). Sinh tự động khi tạo

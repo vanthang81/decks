@@ -18,8 +18,10 @@ import {
 import {
   listProjectsInPeriodWindow,
   canCreateProject,
+  canViewProject,
   PROJECT_STATUS_LABEL,
 } from '@/lib/projects';
+import { memberProjectIds, assigneeProjectIds } from '@/lib/project-members';
 import { loadAccess } from '@/lib/access';
 import EditModal from '@/components/EditModal';
 import NavIcon from '@/components/NavIcon';
@@ -83,10 +85,19 @@ export default async function ProjectsPage({
     ? await getPeriod(searchParams.period)
     : (await getCurrentPeriod()) ?? periods[0] ?? null;
 
-  const projects = period ? await listProjectsInPeriodWindow(period) : [];
+  const access = await loadAccess();
+  const allProjects = period ? await listProjectsInPeriodWindow(period) : [];
+  // Phân quyền XEM (CFO 04/09): chỉ giữ dự án người này được xem (thành viên/assignee/quản lý/scope.all).
+  const [memberSet, assigneeSet] = await Promise.all([
+    memberProjectIds(user.email),
+    assigneeProjectIds(user.email),
+  ]);
   const units = await listUnits();
+  const projects = allProjects.filter((p) =>
+    canViewProject(user, p, units, access, { members: memberSet, assignees: assigneeSet }),
+  );
   const users = await listUsers();
-  const canCreate = canCreateProject(user, await loadAccess());
+  const canCreate = canCreateProject(user, access);
   const unitOptions = unitTreeOptions(units, { excludeCompany: true });
 
   return (

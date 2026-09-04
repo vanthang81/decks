@@ -167,6 +167,40 @@ export async function deleteProjectDocAction(fd: FormData) {
   revalidatePath(`/projects/${projectId}`);
 }
 
+// ---- Thành viên dự án (phân quyền xem) ----
+export async function addProjectMemberAction(fd: FormData) {
+  const user = await requireUser();
+  const units = await listUnits();
+  const projectId = str(fd, 'project_id');
+  const p = await getProject(projectId);
+  if (!p) throw new Error('Không tìm thấy dự án.');
+  if (!canManageProject(user, p, units, await loadAccess()))
+    throw new Error('Bạn không có quyền thêm thành viên cho dự án này.');
+  const email = str(fd, 'email');
+  if (!email) throw new Error('Chưa chọn người để thêm.');
+  const { addProjectMember } = await import('@/lib/project-members');
+  await addProjectMember(projectId, email, user.email);
+  await logAudit({ actor: user.email, action: 'project.member_add', entity: 'project', entityId: projectId, detail: { email } });
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath('/projects');
+}
+
+export async function removeProjectMemberAction(fd: FormData) {
+  const user = await requireUser();
+  const units = await listUnits();
+  const projectId = str(fd, 'project_id');
+  const p = await getProject(projectId);
+  if (!p) return;
+  if (!canManageProject(user, p, units, await loadAccess()))
+    throw new Error('Bạn không có quyền gỡ thành viên của dự án này.');
+  const email = str(fd, 'email');
+  const { removeProjectMember } = await import('@/lib/project-members');
+  await removeProjectMember(projectId, email);
+  await logAudit({ actor: user.email, action: 'project.member_remove', entity: 'project', entityId: projectId, detail: { email } });
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath('/projects');
+}
+
 // Modal edit task: tạo NHANH 1 dự án rồi gắn task vào (khi dự án chưa tồn tại).
 export async function createProjectForInitiativeAction(fd: FormData) {
   const user = await requireUser();

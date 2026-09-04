@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-04.128';
+export const GUIDE_VERSION = '2026-09-04.129';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/09/2026 (Phân quyền xem dự án theo thành viên)',
+    items: [
+      'Dự án nay CHỈ hiển thị cho thành viên: người xem không phải thành viên sẽ không thấy dự án trong danh sách và không mở được trang dự án.',
+      'Trang dự án có mục "Thành viên dự án" — người quản dự án thêm/gỡ thành viên. Ngoài danh sách này, hệ thống tự cho xem: chủ trì, người tạo, người được giao việc trong dự án, và Quản trị/CEO/CFO.',
+    ],
+  },
   {
     date: '04/09/2026 (Thư viện tài liệu dự án — lưu link)',
     items: [

@@ -264,3 +264,21 @@ export function canManageProject(
 export function canCreateProject(user: OkrUser, access: Access): boolean {
   return hasCap(user, 'project.manage', access);
 }
+
+/**
+ * Quyền XEM 1 dự án (CFO 04/09 — chỉ thành viên mới xem được):
+ *  - QUẢN được dự án (Quản trị/CEO/CFO scope.all · chủ trì · người tạo · quản lý trong nhánh đơn vị) → xem;
+ *  - HOẶC là THÀNH VIÊN tường minh của dự án;
+ *  - HOẶC được GIAO ít nhất 1 việc trong dự án (assignee).
+ * `sets` = 2 tập id (thành viên / assignee) của người xem, truyền sẵn để lọc danh sách không phải query từng dự án.
+ */
+export function canViewProject(
+  user: OkrUser,
+  project: Pick<Project, 'id' | 'owner_email' | 'created_by' | 'unit_id'>,
+  units: Unit[],
+  access: Access,
+  sets: { members: Set<string>; assignees: Set<string> },
+): boolean {
+  if (canManageProject(user, project, units, access)) return true;
+  return sets.members.has(project.id) || sets.assignees.has(project.id);
+}
