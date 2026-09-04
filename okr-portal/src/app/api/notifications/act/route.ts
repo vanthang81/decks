@@ -10,12 +10,12 @@ import {
 import { loadAccess, canApproveUsers, invalidateAccess } from '@/lib/access';
 import { getInvite, decideInvite } from '@/lib/invites';
 import { addComment, type EntityType } from '@/lib/comments';
-import { sendMail } from '@/lib/mail';
+import { sendMail, mailBaseUrl } from '@/lib/mail';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const APP_URL = process.env.AUTH_URL || 'https://okr.consultx.vn';
+const APP_URL = mailBaseUrl();
 const COMMENT_ENTITIES: EntityType[] = ['objective', 'key_result', 'initiative'];
 
 async function me() {

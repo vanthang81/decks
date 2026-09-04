@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-04.129';
+export const GUIDE_VERSION = '2026-09-04.130';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/09/2026 (Link trong email về đúng domain okr.baotinmanhhai.vn)',
+    items: [
+      'Mọi email (nhắc việc, nhắc check-in, bản tin tuần, thông báo, mời/duyệt người dùng) nay dẫn link về https://okr.baotinmanhhai.vn — bấm vào không còn phải đăng nhập lại do lệch tên miền.',
+    ],
+  },
   {
     date: '04/09/2026 (Phân quyền xem dự án theo thành viên)',
     items: [

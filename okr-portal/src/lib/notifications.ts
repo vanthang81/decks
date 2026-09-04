@@ -1,5 +1,5 @@
 import { query, queryOne } from './db';
-import { sendMail } from './mail';
+import { sendMail, mailBaseUrl } from './mail';
 
 export type Notification = {
   id: string;
@@ -182,7 +182,7 @@ export async function notify(input: {
   }
 
   // Email best-effort cho ai bật notify_email (qua webhook Deck Mail).
-  const appUrl = process.env.AUTH_URL || 'https://okr.consultx.vn';
+  const appUrl = mailBaseUrl();
   const verb = NOTIF_VERB[input.type];
   for (const u of wanted) {
     if (!u.notify_email) continue;

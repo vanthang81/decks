@@ -1,7 +1,7 @@
 import { query } from './db';
 import { getSetting } from './settings';
 import { getCurrentPeriod } from './periods';
-import { sendMail } from './mail';
+import { sendMail, mailBaseUrl } from './mail';
 import { roleAtLeast, type Role } from './rbac';
 
 // #4 Nhắc check-in — cấu hình được ở /admin/settings, gửi qua "Deck Mail".
@@ -86,7 +86,7 @@ export async function runCheckinReminders(opts: {
   if (!period) return { sent: 0, skipped: 'no-period', recipients: [] };
 
   const map = await computeStaleByOwner(period.id, cfg.stale_days, cfg.audience);
-  const appUrl = process.env.APP_URL || 'https://okr.consultx.vn';
+  const appUrl = mailBaseUrl();
   let sent = 0;
   const recipients: string[] = [];
   for (const [email, g] of map) {

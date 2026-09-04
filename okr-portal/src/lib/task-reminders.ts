@@ -1,5 +1,5 @@
 import { query } from './db';
-import { sendMail } from './mail';
+import { sendMail, mailBaseUrl } from './mail';
 import { notifEnabled } from './notifications';
 
 // NHẮC CÔNG VIỆC QUA EMAIL + CHUÔNG (CFO 30/08): (2) sắp đến hạn 1 ngày · (3) quá hạn ·
@@ -8,7 +8,7 @@ import { notifEnabled } from './notifications';
 // tự tắt trong Cài đặt cá nhân (notif_prefs: task_due_soon / task_overdue / task_overdue_weekly).
 // Idempotent: không gửi lại cùng một nhắc cho cùng công việc trong cửa sổ thời gian.
 
-const APP_URL = () => process.env.AUTH_URL || 'https://okr.consultx.vn';
+const APP_URL = () => mailBaseUrl();
 const SYS = 'he-thong@okr'; // actor hệ thống (không phải người thật)
 const OPEN = `status NOT IN ('done','canceled')`;
 

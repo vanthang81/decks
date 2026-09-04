@@ -1,5 +1,5 @@
 import { query } from './db';
-import { sendMail } from './mail';
+import { sendMail, mailBaseUrl } from './mail';
 import { currentReviewData, type ReviewData } from './review';
 import { STATUS_LABEL } from './kpi-values';
 import { getSetting, setSetting } from './settings';
@@ -98,7 +98,7 @@ export async function sendWeeklyDigest(opts?: { force?: boolean }): Promise<{ se
   if (!opts?.force && !(await getWeeklyDigestEnabled())) return { sent: 0, recipients: [], skipped: 'disabled' };
   const d = await currentReviewData();
   if (!d) return { sent: 0, recipients: [], skipped: 'no-period' };
-  const appUrl = process.env.APP_URL || 'https://okr.consultx.vn';
+  const appUrl = mailBaseUrl();
   const html = digestHtml(d, appUrl);
   const to = await digestRecipients();
   let sent = 0;

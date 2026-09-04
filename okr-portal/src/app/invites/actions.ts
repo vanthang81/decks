@@ -7,12 +7,12 @@ import {
   createInvite, decideInvite, getInvite, listApproverEmails,
 } from '@/lib/invites';
 import { notifySimple } from '@/lib/notifications';
-import { sendMail } from '@/lib/mail';
+import { sendMail, mailBaseUrl } from '@/lib/mail';
 
 function str(fd: FormData, k: string): string { return String(fd.get(k) ?? '').trim(); }
 function orNull(s: string): string | null { return s === '' ? null : s; }
 
-const APP_URL = process.env.AUTH_URL || 'https://okr.consultx.vn';
+const APP_URL = mailBaseUrl();
 
 /**
  * ĐỀ XUẤT thêm người dùng mới qua email (bất kỳ ai đăng nhập cũng đề xuất được — CFO 11/08).

@@ -3,6 +3,15 @@
 // (`N8N_MAIL_WEBHOOK`, giữ tương thích cũ). Chưa có cả hai → no-op (chỉ cảnh báo log).
 import nodemailer, { type Transporter } from 'nodemailer';
 
+/**
+ * Domain gốc cho MỌI link trong email (CFO 04/09). Mặc định **okr.baotinmanhhai.vn** — KHÔNG dùng
+ * AUTH_URL/APP_URL (khác nhau theo container: container chính đặt okr.consultx.vn) vì người nhận bấm
+ * link consultx sẽ lệch phiên đăng nhập → phải đăng nhập lại. Ghi đè bằng env MAIL_BASE_URL nếu cần.
+ */
+export function mailBaseUrl(): string {
+  return (process.env.MAIL_BASE_URL || 'https://okr.baotinmanhhai.vn').replace(/\/+$/, '');
+}
+
 let _tx: Transporter | null | undefined; // undefined = chưa khởi tạo; null = không có SMTP
 
 function transport(): Transporter | null {
