@@ -12,7 +12,7 @@ import MinutesEditor from '@/components/MinutesEditor';
 import UserLink from '@/components/UserLink';
 import ActivityLogButton from '@/components/ActivityLogButton';
 import { loadEntityAuditAction } from '@/app/audit/actions';
-import { sanitizeRichHtml } from '@/lib/sanitizeHtml';
+import { sanitizeRichHtml, linkifyHtml } from '@/lib/sanitizeHtml';
 import { meetingMinutesTaskStates, applyTaskDoneToMinutes, renderMinutesTasksView } from '@/lib/minutes-tasks';
 import { requireUser } from '@/lib/current-user';
 import { listUsers, personTitle } from '@/lib/users';
@@ -216,7 +216,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
               {m.decisions && (
                 <div style={{ marginTop: 12 }}>
                   <div className="charter-k">Quyết định chính</div>
-                  <div className="rte-view" dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(m.decisions) }} />
+                  <div className="rte-view" dangerouslySetInnerHTML={{ __html: linkifyHtml(sanitizeRichHtml(m.decisions)) }} />
                 </div>
               )}
             </>

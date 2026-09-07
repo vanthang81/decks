@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-04.130';
+export const GUIDE_VERSION = '2026-09-04.131';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '04/09/2026 (Biên bản họp tự tạo hyperlink)',
+    items: [
+      'Trong biên bản & quyết định cuộc họp, mọi đường link (http/https/www) tự thành hyperlink bấm được — mở tab mới. Không cần thao tác gì thêm, chỉ dán link vào là được.',
+    ],
+  },
   {
     date: '04/09/2026 (Link trong email về đúng domain okr.baotinmanhhai.vn)',
     items: [

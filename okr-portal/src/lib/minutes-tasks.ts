@@ -15,7 +15,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { query } from './db';
-import { sanitizeRichHtml } from './sanitizeHtml';
+import { sanitizeRichHtml, linkifyHtml } from './sanitizeHtml';
 import type { OkrUser } from './users';
 
 export type ParsedMinuteTask = {
@@ -304,5 +304,6 @@ export function renderMinutesTasksView(
     }
     segments[i] = seg;
   }
-  return segments.join('');
+  // Tự tạo hyperlink cho URL trần trong biên bản (mở tab mới) — chạy cuối, bỏ qua text trong <a>.
+  return linkifyHtml(segments.join(''));
 }

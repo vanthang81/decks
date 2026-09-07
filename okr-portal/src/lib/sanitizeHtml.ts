@@ -53,6 +53,41 @@ export function sanitizeRichHtml(input: string | null | undefined): string {
   return out.trim();
 }
 
+// URL trần trong văn bản (http(s):// hoặc www.). Dừng ở khoảng trắng hoặc dấu '<' (ranh giới thẻ).
+const BARE_URL_RE = /(?:https?:\/\/|www\.)[^\s<]+/gi;
+
+/**
+ * TỰ TẠO HYPERLINK: đổi URL trần trong văn bản thành <a target="_blank"> (mở tab mới).
+ * CHẠY SAU sanitizeRichHtml (an toàn): chỉ đụng phần TEXT ngoài thẻ, BỎ QUA text nằm trong <a>…</a>
+ * (tránh lồng link đôi). Dùng cho hiển thị biên bản/quyết định cuộc họp. KHÔNG đổi nội dung lưu DB —
+ * chỉ áp lúc render (soạn thảo vẫn giữ URL dạng text để sửa cho sạch).
+ */
+export function linkifyHtml(html: string | null | undefined): string {
+  if (!html) return '';
+  const parts = html.split(/(<[^>]+>)/g); // chỉ số LẺ = thẻ, CHẴN = text
+  let aDepth = 0;
+  for (let i = 0; i < parts.length; i++) {
+    if (i % 2 === 1) {
+      const t = parts[i].toLowerCase();
+      if (/^<a\b/.test(t)) aDepth++;
+      else if (/^<\/a>/.test(t)) aDepth = Math.max(0, aDepth - 1);
+      continue;
+    }
+    if (aDepth > 0 || !parts[i]) continue; // trong <a> hoặc rỗng → bỏ qua
+    parts[i] = parts[i].replace(BARE_URL_RE, (raw) => {
+      let url = raw;
+      let trail = '';
+      const punc = /[.,;:!?)\]}>"'»…]+$/.exec(url); // cắt dấu câu dính đuôi (không thuộc URL)
+      if (punc) { trail = url.slice(url.length - punc[0].length); url = url.slice(0, -punc[0].length); }
+      if (!url) return raw;
+      const href = /^www\./i.test(url) ? 'https://' + url : url;
+      const hrefEsc = href.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+      return `<a href="${hrefEsc}" target="_blank" rel="noopener noreferrer">${url}</a>${trail}`;
+    });
+  }
+  return parts.join('');
+}
+
 /** Nội dung rich-text có "thực sự rỗng" không (bỏ thẻ + khoảng trắng)? → để lưu NULL khi trống. */
 export function isRichEmpty(html: string | null | undefined): boolean {
   if (!html) return true;
