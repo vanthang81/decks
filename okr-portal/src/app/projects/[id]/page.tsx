@@ -11,6 +11,7 @@ import AddTaskToProject from '@/components/AddTaskToProject';
 import ProjectReportView from '@/components/ProjectReport';
 import ProjectDocs from '@/components/ProjectDocs';
 import ProjectMembers from '@/components/ProjectMembers';
+import CollapsibleSection from '@/components/CollapsibleSection';
 import { buildProjectReport } from '@/lib/project-report';
 import { listProjectDocs } from '@/lib/project-docs';
 import { listProjectMembers, isProjectMember } from '@/lib/project-members';
@@ -192,14 +193,16 @@ export default async function ProjectDetail({ params }: { params: { id: string }
             )}
           </div>
           {charterFilled(p.charter) ? (
-            <div className="charter-grid">
-              {CHARTER_FIELDS.filter((f) => (p.charter[f.key] ?? '').trim()).map((f) => (
-                <div key={f.key} className="charter-item">
-                  <div className="charter-k">{f.label}</div>
-                  <CharterValue value={p.charter[f.key]!.trim()} list={f.list} />
-                </div>
-              ))}
-            </div>
+            <CollapsibleSection storageKey={`charter-collapsed:${p.id}`} collapsedHeight={280}>
+              <div className="charter-grid">
+                {CHARTER_FIELDS.filter((f) => (p.charter[f.key] ?? '').trim()).map((f) => (
+                  <div key={f.key} className="charter-item">
+                    <div className="charter-k">{f.label}</div>
+                    <CharterValue value={p.charter[f.key]!.trim()} list={f.list} />
+                  </div>
+                ))}
+              </div>
+            </CollapsibleSection>
           ) : (
             <p className="muted" style={{ margin: 0 }}>
               Chưa khai báo điều lệ. {canManage ? 'Bấm "Khai báo điều lệ" ở góc phải-trên để nhập mục tiêu · phạm vi · sản phẩm bàn giao · cột mốc · các bên liên quan · rủi ro · tiêu chí thành công.' : 'Điều lệ dự án sẽ hiển thị tại đây khi được khai báo.'}

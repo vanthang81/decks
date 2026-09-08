@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-04.131';
+export const GUIDE_VERSION = '2026-09-08.132';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '08/09/2026 (Điều lệ dự án có nút Thu gọn / Mở rộng)',
+    items: [
+      'Điều lệ dự án dài giờ tự thu gọn (mờ dần ở đáy) kèm nút "Mở rộng toàn bộ / Thu gọn" cho đỡ vướng; hệ thống nhớ lựa chọn của bạn cho từng dự án. Nội dung ngắn thì không hiện nút.',
+    ],
+  },
   {
     date: '04/09/2026 (Biên bản họp tự tạo hyperlink)',
     items: [

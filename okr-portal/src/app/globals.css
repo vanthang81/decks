@@ -2178,3 +2178,18 @@ a.strat-bsc-cell:hover { text-decoration: none; box-shadow: 0 6px 18px rgba(0,0,
   color: var(--accent); font: inherit; cursor: pointer; flex: 0 0 auto; }
 .hdr-tour-btn:hover { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.5); }
 .hdr-tour-btn .nav-ic { width: 17px; height: 17px; color: var(--accent); }
+
+/* ── Khối thu gọn / mở rộng (CollapsibleSection) — vd Điều lệ dự án ── */
+.collapsible-fade {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 76px; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(255,255,255,0), var(--card) 92%);
+}
+.collapsible-toggle-row { display: flex; justify-content: center; margin-top: 10px; }
+.collapsible-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 16px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--card); color: var(--primary);
+  font-size: 13px; font-weight: 600; line-height: 1;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04); transition: background .15s ease, border-color .15s ease;
+}
+.collapsible-toggle:hover { background: var(--primary-tint); border-color: var(--primary); }
