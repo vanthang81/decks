@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-08.136';
+export const GUIDE_VERSION = '2026-09-08.137';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '08/09/2026 (Danh sách dự án: đánh dấu ⭐ yêu thích → ghim lên đầu)',
+    items: [
+      'Mỗi dự án có nút ngôi sao ⭐ ở góc phải — bấm để đánh dấu "yêu thích"; dự án yêu thích luôn được xếp lên đầu danh sách để dễ theo dõi khi có nhiều dự án. Lựa chọn nhớ theo trình duyệt của bạn.',
+    ],
+  },
   {
     date: '08/09/2026 (Trang dự án: thu gọn "Thư viện tài liệu" & "Thành viên dự án" + lưu việc nhanh hơn)',
     items: [

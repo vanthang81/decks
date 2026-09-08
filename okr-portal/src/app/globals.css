@@ -340,6 +340,15 @@ html:has(.mobile-menu[open]) .site-header { transform: none !important; }
 .cc-toggle { flex: 0 0 auto; }
 .cc-toggle .nav-ic { transition: transform .18s ease; }
 .cc-toggle.cc-collapsed .nav-ic { transform: rotate(-90deg); }
+/* Dự án yêu thích (⭐) — nút ghim ở góc phải-trên card dự án */
+.pj-card { position: relative; }
+.pj-fav { position: absolute; top: 10px; right: 12px; z-index: 2; width: 30px; height: 30px;
+  display: inline-flex; align-items: center; justify-content: center; padding: 0;
+  border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; transition: background .15s, color .15s; }
+.pj-fav:hover { background: var(--primary-tint); color: var(--accent); }
+.pj-fav.on { color: var(--accent); }
+.pj-fav .nav-ic { width: 19px; height: 19px; }
+.pj-fav.on .nav-ic { fill: var(--accent); }
 /* MultiSelect (chọn nhiều mục có tìm kiếm) */
 .ms { position: relative; }
 .ms-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
