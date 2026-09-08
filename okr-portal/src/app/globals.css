@@ -331,8 +331,10 @@ html:has(.mobile-menu[open]) .site-header { transform: none !important; }
 .ss-sub-inline { color: var(--muted); font-weight: 400; font-size: 12px; }
 .ss-check { color: var(--primary); font-weight: 800; flex: 0 0 auto; }
 .ss-empty { padding: 10px 11px; color: var(--muted); font-size: 13px; }
-/* Tiêu đề nhóm trong droplist (vd "Thành viên dự án" xếp trước "Thành viên khác") */
-.ss-group { padding: 7px 9px 3px; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); }
+/* Tiêu đề nhóm trong droplist (vd "Thành viên dự án" xếp trước "Thành viên khác") —
+   tô màu thương hiệu + nền nhạt để PHÂN BIỆT RÕ với tên người bên dưới. */
+.ss-group { display: flex; align-items: center; gap: 6px; margin: 4px 4px 2px; padding: 5px 9px; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--primary); background: var(--primary-tint); border-radius: 6px; }
+.ss-group::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex: 0 0 auto; }
 .ss-group + .ss-opt { margin-top: 1px; }
 /* MultiSelect (chọn nhiều mục có tìm kiếm) */
 .ms { position: relative; }
