@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-08.134';
+export const GUIDE_VERSION = '2026-09-08.135';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '08/09/2026 (Giao việc trong dự án: ưu tiên thành viên dự án lên đầu)',
+    items: [
+      'Khi thêm/sửa việc trong một dự án, ô "Giao cho (cá nhân)" nay xếp các thành viên của dự án LÊN ĐẦU (nhóm "Thành viên dự án"), người còn lại ở nhóm "Thành viên khác" — chọn nhanh, đỡ tìm.',
+    ],
+  },
   {
     date: '08/09/2026 (Bảng công việc: "Ẩn việc đã xong" mặc định TẮT + nhớ lựa chọn)',
     items: [

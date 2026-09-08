@@ -7,6 +7,7 @@ import Link from 'next/link';
 import CommentThread from '@/components/CommentThread';
 import ConfirmButton from '@/components/ConfirmButton';
 import SearchSelect from '@/components/SearchSelect';
+import { personSelectOptions } from '@/lib/person-options';
 import { unitTreeOptions } from '@/lib/unit-options';
 import NumberInput from '@/components/NumberInput';
 import UserLink from '@/components/UserLink';
@@ -223,6 +224,7 @@ export default function ExecutionTabs({
   objectives = [],
   manageStructure = true,
   context = 'objective',
+  priorityEmails,
   children,
 }: {
   initiatives: Card[];
@@ -241,6 +243,7 @@ export default function ExecutionTabs({
   objectives?: ObjOpt[];
   manageStructure?: boolean;
   context?: Ctx;
+  priorityEmails?: string[];  // email ưu tiên xếp trước ở droplist "Giao cho" (vd thành viên dự án)
   children: React.ReactNode;
 }) {
   const [view, setView] = useState<View>('list');
@@ -409,6 +412,7 @@ export default function ExecutionTabs({
           canEdit={canEdit(editing)}
           hasChildren={initiatives.some((i) => i.parent_id === editing.id)}
           users={users}
+          priorityEmails={priorityEmails}
           units={units}
           projects={projects}
           meetings={meetings}
@@ -433,6 +437,7 @@ function EditModal({
   canEdit,
   hasChildren,
   users,
+  priorityEmails,
   units,
   projects,
   meetings,
@@ -450,6 +455,7 @@ function EditModal({
   canEdit: boolean;
   hasChildren: boolean;
   users: PersonOpt[];
+  priorityEmails?: string[];
   units: UnitOpt[];
   projects: ProjectOpt[];
   meetings: MeetingOpt[];
@@ -630,7 +636,7 @@ function EditModal({
                 <div>
                   <label className="f">Giao cho (cá nhân)</label>
                   <SearchSelect name="owner_email" defaultValue={card.owner_email ?? ''} emptyLabel="— Chưa giao —"
-                    options={users.map((u) => ({ value: u.email, label: u.name, sub: u.title ?? undefined }))} />
+                    options={personSelectOptions(users, priorityEmails)} />
                 </div>
               </div>
             )}

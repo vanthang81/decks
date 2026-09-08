@@ -160,6 +160,14 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
     Modal "Thêm việc vào dự án" (`AddTaskToProject`) nay OKR **tuỳ chọn** → dùng action `createProjectTaskAction`
     (gác canManageProject; có chọn OKR thì thêm canEditObjective; việc chỉ thuộc dự án là hợp lệ nhờ
     okr_init_attach_ck có project_id). `createInitiativeAction` (bắt buộc OKR) vẫn dùng cho action-plan của OKR.
+  - **ƯU TIÊN THÀNH VIÊN DỰ ÁN Ở DROPLIST "GIAO CHO" (CFO 08/09 — áp cho MỌI chỗ giao việc TRONG dự án,
+    KHÔNG cần nhắc lại)**: khi thêm/sửa việc thuộc một dự án, ô "Giao cho (cá nhân)" xếp thành viên dự án
+    (+ chủ trì) LÊN ĐẦU (nhóm "Thành viên dự án") rồi mới tới "Thành viên khác". Cơ chế chung:
+    **`src/lib/person-options.ts` `personSelectOptions(users, priorityEmails?)`** trả `SSOption[]` có `group`
+    (không truyền priorityEmails → phẳng như cũ) + **`SearchSelect` render tiêu đề nhóm** khi option có `group`
+    (giữ nguyên thứ tự, CSS `.ss-group`). `/projects/[id]` tính `memberEmails` (thành viên + owner) truyền vào
+    `ExecutionTabs priorityEmails` VÀ `AddTaskToProject memberEmails`. **Thêm droplist chọn người trong ngữ cảnh
+    có nhóm ưu tiên (dự án/nhóm) ⇒ dùng `personSelectOptions` + truyền tập email ưu tiên.**
 - `okr_checkins`: cập nhật tiến độ + `confidence`. `okr_audit_log`: nhật ký.
 - **MÃ UNIQUE (db/110, import/export)**: cột `code` ở objectives/key_results/initiatives — định dạng
   `<KHỐI>-O<n>` / `<obj>.KR<m>` / `<obj>.H<kk>` (prefix = mã đơn vị hoặc 'CTY'). Sinh tự động khi tạo

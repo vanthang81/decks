@@ -331,6 +331,9 @@ html:has(.mobile-menu[open]) .site-header { transform: none !important; }
 .ss-sub-inline { color: var(--muted); font-weight: 400; font-size: 12px; }
 .ss-check { color: var(--primary); font-weight: 800; flex: 0 0 auto; }
 .ss-empty { padding: 10px 11px; color: var(--muted); font-size: 13px; }
+/* Tiêu đề nhóm trong droplist (vd "Thành viên dự án" xếp trước "Thành viên khác") */
+.ss-group { padding: 7px 9px 3px; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); }
+.ss-group + .ss-opt { margin-top: 1px; }
 /* MultiSelect (chọn nhiều mục có tìm kiếm) */
 .ms { position: relative; }
 .ms-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }

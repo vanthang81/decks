@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
 export type SSOption = { value: string; label: string; group?: string; sub?: string };
 
@@ -92,21 +92,28 @@ export default function SearchSelect({
             {filtered.length === 0 ? (
               <div className="ss-empty">Không tìm thấy</div>
             ) : (
-              filtered.map((o, i) => (
-                <button
-                  key={o.value || '__empty'}
-                  type="button"
-                  className={`ss-opt${i === active ? ' on' : ''}${o.value === value ? ' sel' : ''}`}
-                  onMouseEnter={() => setActive(i)}
-                  onMouseDown={(e) => { e.preventDefault(); pick(o); }}
-                >
-                  {o.value === value && <span className="ss-check">✓</span>}
-                  <span className={`ss-opt-txt${o.value ? '' : ' ss-ph'}`}>
-                    <span className="ss-opt-main">{o.label}</span>
-                    {o.sub ? <span className="ss-opt-sub">{o.sub}</span> : null}
-                  </span>
-                </button>
-              ))
+              filtered.map((o, i) => {
+                // Tiêu đề nhóm: hiện khi option có `group` và khác nhóm của option ngay trước
+                // (giữ nguyên thứ tự caller đưa vào — vd "Thành viên dự án" xếp trước "Thành viên khác").
+                const showHeader = !!o.group && o.group !== (i > 0 ? filtered[i - 1].group : undefined);
+                return (
+                  <Fragment key={o.value || '__empty'}>
+                    {showHeader && <div className="ss-group" role="presentation">{o.group}</div>}
+                    <button
+                      type="button"
+                      className={`ss-opt${i === active ? ' on' : ''}${o.value === value ? ' sel' : ''}`}
+                      onMouseEnter={() => setActive(i)}
+                      onMouseDown={(e) => { e.preventDefault(); pick(o); }}
+                    >
+                      {o.value === value && <span className="ss-check">✓</span>}
+                      <span className={`ss-opt-txt${o.value ? '' : ' ss-ph'}`}>
+                        <span className="ss-opt-main">{o.label}</span>
+                        {o.sub ? <span className="ss-opt-sub">{o.sub}</span> : null}
+                      </span>
+                    </button>
+                  </Fragment>
+                );
+              })
             )}
           </div>
         </div>

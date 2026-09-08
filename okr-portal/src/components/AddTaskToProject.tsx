@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import SearchSelect from '@/components/SearchSelect';
+import { personSelectOptions } from '@/lib/person-options';
 import { useToast } from '@/components/ToastProvider';
 import { unitTreeOptions } from '@/lib/unit-options';
 
@@ -19,12 +20,14 @@ export default function AddTaskToProject({
   users,
   units,
   create,
+  memberEmails,
 }: {
   projectId: string;
   objectives: ObjOpt[];
   users: PersonOpt[];
   units: UnitOpt[];
   create: (fd: FormData) => Promise<void>;
+  memberEmails?: string[];  // thành viên dự án — xếp trước ở droplist "Giao cho"
 }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -119,7 +122,7 @@ export default function AddTaskToProject({
                     name="owner_email"
                     defaultValue=""
                     emptyLabel="— Chưa giao —"
-                    options={users.map((u) => ({ value: u.email, label: u.name, sub: u.title ?? undefined }))}
+                    options={personSelectOptions(users, memberEmails)}
                   />
                 </div>
                 <div>

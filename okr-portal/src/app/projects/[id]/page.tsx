@@ -108,6 +108,11 @@ export default async function ProjectDetail({ params }: { params: { id: string }
   }
   const report = buildProjectReport(tasks, todayStr);
 
+  // Ưu tiên "Giao cho" theo THÀNH VIÊN dự án (+ chủ trì) — xếp trước, người khác sau (CFO 08/09).
+  const memberEmails = Array.from(
+    new Set([...members.map((m) => m.email), p.owner_email].filter(Boolean).map((e) => (e as string).toLowerCase())),
+  );
+
   return (
     <>
       <SiteHeader active="projects" />
@@ -233,6 +238,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
                 users={personOpts}
                 units={unitOpts}
                 create={createProjectTaskAction}
+                memberEmails={memberEmails}
               />
             )}
           </div>
@@ -276,6 +282,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
               createProjectForInit={createProjectForInitiativeAction}
               objectiveId=""
               users={personOpts}
+              priorityEmails={memberEmails}
               units={unitOpts}
               projects={projectOpts}
               meetings={meetingOpts}
