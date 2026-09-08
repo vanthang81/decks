@@ -502,8 +502,10 @@ function EditModal({
     startTransition(async () => {
       try {
         await fn();
-        router.refresh();
+        // Đóng popup NGAY khi lưu xong; làm mới dữ liệu nền (KHÔNG bắt người dùng chờ
+        // refetch cả trang dự án nặng mới đóng — trước đây khiến nút "Đang lưu…" treo lâu).
         onClose();
+        router.refresh();
       } catch (e2) {
         setErr(e2 instanceof Error ? e2.message : String(e2));
       }

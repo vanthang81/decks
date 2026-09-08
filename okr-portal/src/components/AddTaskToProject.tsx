@@ -57,9 +57,10 @@ export default function AddTaskToProject({
       try {
         await create(fd);
         toast('Đã thêm công việc', 'success');
-        router.refresh();
+        // Đóng popup ngay, làm mới nền (không chờ refetch trang dự án nặng).
         setOpen(false);
         setObjId('');
+        router.refresh();
       } catch (e2) {
         setErr(e2 instanceof Error ? e2.message : String(e2));
       }
