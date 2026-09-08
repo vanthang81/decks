@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-08.135';
+export const GUIDE_VERSION = '2026-09-08.136';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '08/09/2026 (Trang dự án: thu gọn "Thư viện tài liệu" & "Thành viên dự án" + lưu việc nhanh hơn)',
+    items: [
+      'Hai mục "Thư viện tài liệu" và "Thành viên dự án" nay có nút thu gọn/mở rộng ở góc phải — gọn trang, chỉ mở khi cần; hệ thống nhớ lựa chọn cho lần sau.',
+      'Bấm "Lưu" ở popup công việc nay đóng cửa sổ ngay khi lưu xong (làm mới dữ liệu chạy nền) — không còn treo "Đang lưu…" chờ tải lại cả trang.',
+    ],
+  },
   {
     date: '08/09/2026 (Giao việc trong dự án: ưu tiên thành viên dự án lên đầu)',
     items: [

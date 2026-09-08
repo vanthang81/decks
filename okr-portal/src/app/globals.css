@@ -336,6 +336,10 @@ html:has(.mobile-menu[open]) .site-header { transform: none !important; }
 .ss-group { display: flex; align-items: center; gap: 6px; margin: 4px 4px 2px; padding: 5px 9px; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--primary); background: var(--primary-tint); border-radius: 6px; }
 .ss-group::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex: 0 0 auto; }
 .ss-group + .ss-opt { margin-top: 1px; }
+/* Nút thu gọn/mở rộng của CollapsibleCard */
+.cc-toggle { flex: 0 0 auto; }
+.cc-toggle .nav-ic { transition: transform .18s ease; }
+.cc-toggle.cc-collapsed .nav-ic { transform: rotate(-90deg); }
 /* MultiSelect (chọn nhiều mục có tìm kiếm) */
 .ms { position: relative; }
 .ms-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }

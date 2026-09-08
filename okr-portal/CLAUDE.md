@@ -149,6 +149,15 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
     done_on/due_on/progress) + `ProjectReport.tsx` (2 tab: Tổng dự án · Theo thời gian) trên `/projects/[id]`.
   - **Thư viện tài liệu (CFO 04/09)**: `okr_project_docs` (db/580) = list LINK (chưa upload file);
     `src/lib/project-docs.ts` + `ProjectDocs.tsx`; add/del action gác `canManageProject`, ai xem được dự án đều thấy.
+  - **THU GỌN mục tham chiếu (CFO 08/09)**: "Thư viện tài liệu" + "Thành viên dự án" bọc trong
+    **`CollapsibleCard.tsx`** (client) — header (tiêu đề + số đếm) luôn hiện, nút chevron góc phải thu gọn/mở
+    rộng thân, **mặc định thu gọn**, nhớ theo trình duyệt (localStorage `proj-docs-collapsed:<id>` /
+    `proj-members-collapsed:<id>`). Icon `chevron` ở `NavIcon`, CSS `.cc-toggle`. Dùng lại cho MỌI mục tham
+    chiếu không cần luôn hiển thị.
+  - **LƯU CÔNG VIỆC NHANH (CFO 08/09)**: popup sửa việc (`ExecutionTabs` `run()`) + "Thêm việc vào dự án"
+    (`AddTaskToProject`) nay **đóng popup NGAY sau khi server action trả về** rồi mới `router.refresh()` nền —
+    KHÔNG chờ refetch cả trang dự án nặng mới đóng (trước đây nút "Đang lưu…" treo lâu). Mẫu: `await fn();
+    onClose(); router.refresh();` (đóng trước, refresh sau).
   - **PHÂN QUYỀN XEM dự án (CFO 04/09)**: `okr_project_members` (db/590) = danh sách thành viên TƯỜNG MINH.
     `canViewProject` = `canManageProject` HOẶC thành viên HOẶC được giao việc (assignee). `/projects` LỌC theo
     canView (dùng `memberProjectIds`+`assigneeProjectIds`); `/projects/[id]` `redirect('/projects')` nếu không được

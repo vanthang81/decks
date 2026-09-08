@@ -1,6 +1,7 @@
 import ToastForm from '@/components/ToastForm';
 import ConfirmButton from '@/components/ConfirmButton';
 import SearchSelect from '@/components/SearchSelect';
+import CollapsibleCard from '@/components/CollapsibleCard';
 import UserLink from '@/components/UserLink';
 import type { ProjectMember } from '@/lib/project-members';
 
@@ -25,8 +26,7 @@ export default function ProjectMembers({
 }) {
   const ownerLc = (owner.email ?? '').toLowerCase();
   return (
-    <div className="card">
-      <h3 style={{ marginTop: 0 }}>Thành viên dự án ({members.length})</h3>
+    <CollapsibleCard title="Thành viên dự án" count={members.length} storageKey={`proj-members-collapsed:${projectId}`}>
       <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
         Chỉ <b>thành viên dự án</b> mới xem được dự án này và nội dung bên trong. Ngoài danh sách dưới đây,
         hệ thống tự cho xem: <b>chủ trì</b>, <b>người tạo</b>, <b>người được giao việc</b> trong dự án, và <b>Quản trị / CEO / CFO</b>.
@@ -101,6 +101,6 @@ export default function ProjectMembers({
           </div>
         )}
       </div>
-    </div>
+    </CollapsibleCard>
   );
 }

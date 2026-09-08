@@ -1,5 +1,6 @@
 import ToastForm from '@/components/ToastForm';
 import ConfirmButton from '@/components/ConfirmButton';
+import CollapsibleCard from '@/components/CollapsibleCard';
 import { fmtDate } from '@/lib/format';
 import type { ProjectDoc } from '@/lib/project-docs';
 
@@ -19,8 +20,7 @@ export default function ProjectDocs({
   del: (fd: FormData) => Promise<void>;
 }) {
   return (
-    <div className="card">
-      <h3 style={{ marginTop: 0 }}>Thư viện tài liệu ({docs.length})</h3>
+    <CollapsibleCard title="Thư viện tài liệu" count={docs.length} storageKey={`proj-docs-collapsed:${projectId}`}>
       <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
         Nơi lưu link tài liệu của dự án (kế hoạch, biên bản, sheet, thư mục Drive…). Hiện lưu dạng <b>đường link</b> — chưa hỗ trợ tải file lên.
       </p>
@@ -97,6 +97,6 @@ export default function ProjectDocs({
           </table>
         </div>
       )}
-    </div>
+    </CollapsibleCard>
   );
 }

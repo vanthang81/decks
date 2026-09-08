@@ -104,6 +104,7 @@ const P: Record<string, ReactNode> = {
       <path d="M12 17.2h.01" />
     </>
   ),
+  chevron: <path d="M6 9l6 6 6-6" />,
 };
 
 export default function NavIcon({ name, className = 'nav-ic' }: { name: string; className?: string }) {
