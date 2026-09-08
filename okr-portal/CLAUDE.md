@@ -142,7 +142,9 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   - **DỰ ÁN YÊU THÍCH ⭐ (CFO 08/09)**: `ProjectsList.tsx` — mỗi card có nút sao (`NavIcon star`, CSS `.pj-fav`
     góc phải-trên, card `.pj-card` position relative; nút ĐẶT NGOÀI `<Link>` để tránh lồng anchor). Bấm =
     đánh dấu yêu thích, **ghim lên đầu** (sort ổn định, favourite trước). Nhớ theo trình duyệt (localStorage
-    `okr_proj_favs` = mảng project id). Thuần client, KHÔNG cần DB/migration.
+    `okr_proj_favs` = mảng project id). Thuần client, KHÔNG cần DB/migration. **Thứ tự ưu tiên (CFO 08/09)**:
+    `rank = (fav?2:0) + (mình CHỦ TRÌ?1:0)` → yêu thích trước; trong mỗi nhóm, dự án mình chủ trì
+    (`owner_email==currentEmail`) đứng đầu (sort ổn định giữ phần còn lại). Page truyền `currentEmail={user.email}`.
   - **Dự án hiển thị theo cửa sổ kỳ (CFO 03/09)**: `/projects` lọc dự án CÓ ngày bắt đầu/hạn theo GIAO
     [start_on,due_on]×[starts_on,ends_on] của kỳ chọn (`listProjectsInPeriodWindow`) → hiện ở MỌI tháng/quý/năm
     trong khoảng; dự án chưa đặt ngày giữ theo `period_id`. (`listProjectsByPeriod` cũ vẫn dùng cho `/budget`.)

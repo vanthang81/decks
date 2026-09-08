@@ -134,7 +134,7 @@ export default async function ProjectsPage({
           </div>
         </div>
 
-        {period && projects.length > 0 && <div data-tour="projects-list"><ProjectsList projects={projects} initialOwner={searchParams.owner} /></div>}
+        {period && projects.length > 0 && <div data-tour="projects-list"><ProjectsList projects={projects} initialOwner={searchParams.owner} currentEmail={user.email} /></div>}
 
         {period && projects.length === 0 && (
           <div className="card">

@@ -25,7 +25,8 @@ const PROJECT_STATUS_CLS: Record<ProjectStatus, string> = {
 };
 const STATUS_ORDER: ProjectStatus[] = ['active', 'done', 'paused', 'archived'];
 
-export default function ProjectsList({ projects, initialOwner }: { projects: ProjectRow[]; initialOwner?: string }) {
+export default function ProjectsList({ projects, initialOwner, currentEmail }: { projects: ProjectRow[]; initialOwner?: string; currentEmail?: string }) {
+  const meLc = (currentEmail ?? '').toLowerCase();
   const [q, setQ] = useState('');
   const [fStatus, setFStatus] = useState('');
   const [fUnit, setFUnit] = useState('');
@@ -76,12 +77,15 @@ export default function ProjectsList({ projects, initialOwner }: { projects: Pro
       }),
     [projects, fOwnerLc, fStatus, fUnit, qlc],
   );
-  // Ưu tiên dự án yêu thích lên đầu (giữ nguyên thứ tự tương đối trong mỗi nhóm — Array.sort ổn định).
+  // Thứ tự ưu tiên: (1) YÊU THÍCH lên đầu; (2) trong mỗi nhóm, dự án mình CHỦ TRÌ đứng trước.
+  // Giữ nguyên thứ tự tương đối phần còn lại (Array.sort ổn định).
   const ordered = useMemo(() => {
+    const rank = (p: ProjectRow) =>
+      (favs.has(p.id) ? 2 : 0) + (meLc && (p.owner_email ?? '').toLowerCase() === meLc ? 1 : 0);
     const arr = [...filtered];
-    arr.sort((a, b) => (favs.has(b.id) ? 1 : 0) - (favs.has(a.id) ? 1 : 0));
+    arr.sort((a, b) => rank(b) - rank(a));
     return arr;
-  }, [filtered, favs]);
+  }, [filtered, favs, meLc]);
   const clearFilter = () => {
     setQ('');
     setFStatus('');
