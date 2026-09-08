@@ -49,7 +49,6 @@ export default function AddTaskToProject({
     const fd = new FormData(e.currentTarget);
     fd.set('project_id', projectId);
     fd.set('kind', 'action');
-    if (!objId) { setErr('Vui lòng chọn OKR của bộ phận để gắn việc.'); return; }
     setErr(null);
     startTransition(async () => {
       try {
@@ -80,12 +79,12 @@ export default function AddTaskToProject({
               </button>
             </div>
             <form onSubmit={submit}>
-              <label className="f">Gắn vào OKR của bộ phận (bắt buộc)</label>
+              <label className="f">Gắn vào OKR của bộ phận (tuỳ chọn)</label>
               <SearchSelect
                 name="objective_id"
                 defaultValue=""
-                emptyLabel="— Chọn Objective —"
-                placeholder="— Chọn Objective —"
+                emptyLabel="— Không gắn (chỉ thuộc dự án) —"
+                placeholder="— Không gắn (chỉ thuộc dự án) —"
                 onChange={setObjId}
                 options={objectives.map((o) => ({
                   value: o.id,
@@ -93,7 +92,8 @@ export default function AddTaskToProject({
                 }))}
               />
               <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>
-                Việc sẽ hiện ở “Dự án &amp; Kế hoạch hành động” của OKR bộ phận đã chọn.
+                Không cần gắn OKR — việc thuộc dự án là đủ. OKR của dự án khai ở mục “OKR liên quan”.
+                Nếu muốn việc hiện thêm ở “Dự án &amp; Kế hoạch hành động” của một OKR bộ phận thì chọn OKR ở đây.
               </p>
 
               <label className="f">Gắn vào Key Result (tuỳ chọn)</label>

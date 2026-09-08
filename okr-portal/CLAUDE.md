@@ -154,6 +154,12 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
     canView (dùng `memberProjectIds`+`assigneeProjectIds`); `/projects/[id]` `redirect('/projects')` nếu không được
     xem. Quản lý thành viên ở card "Thành viên dự án" (`ProjectMembers.tsx`, actions gác canManageProject). Chủ
     trì/người tạo/CEO/CFO/Quản trị luôn xem được.
+  - **OKR gắn ở CẤP DỰ ÁN, việc KHÔNG bắt buộc OKR (CFO 08/09)**: `okr_project_objectives` (db/600) =
+    liên kết dự án↔nhiều objective; `src/lib/project-objectives.ts` + card "🎯 OKR liên quan"
+    (`ProjectObjectivesCard.tsx`, action `setProjectObjectivesAction` gác canManageProject) đặt TRÊN điều lệ.
+    Modal "Thêm việc vào dự án" (`AddTaskToProject`) nay OKR **tuỳ chọn** → dùng action `createProjectTaskAction`
+    (gác canManageProject; có chọn OKR thì thêm canEditObjective; việc chỉ thuộc dự án là hợp lệ nhờ
+    okr_init_attach_ck có project_id). `createInitiativeAction` (bắt buộc OKR) vẫn dùng cho action-plan của OKR.
 - `okr_checkins`: cập nhật tiến độ + `confidence`. `okr_audit_log`: nhật ký.
 - **MÃ UNIQUE (db/110, import/export)**: cột `code` ở objectives/key_results/initiatives — định dạng
   `<KHỐI>-O<n>` / `<obj>.KR<m>` / `<obj>.H<kk>` (prefix = mã đơn vị hoặc 'CTY'). Sinh tự động khi tạo

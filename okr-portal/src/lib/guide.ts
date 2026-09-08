@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-08.132';
+export const GUIDE_VERSION = '2026-09-08.133';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '08/09/2026 (OKR gắn ở cấp dự án; thêm việc không bắt buộc OKR)',
+    items: [
+      'Thêm mục "🎯 OKR liên quan" ở trang dự án: khai các OKR mà dự án đóng góp (chọn nhiều) — gắn 1 lần ở cấp dự án.',
+      'Khi "Thêm việc vào dự án", OKR nay là TUỲ CHỌN: việc chỉ cần thuộc dự án là đủ. Muốn việc hiện thêm ở kế hoạch hành động của một OKR bộ phận thì mới chọn OKR.',
+    ],
+  },
   {
     date: '08/09/2026 (Điều lệ dự án có nút Thu gọn / Mở rộng)',
     items: [

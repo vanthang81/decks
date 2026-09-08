@@ -2193,3 +2193,18 @@ a.strat-bsc-cell:hover { text-decoration: none; box-shadow: 0 6px 18px rgba(0,0,
   box-shadow: 0 1px 2px rgba(0,0,0,0.04); transition: background .15s ease, border-color .15s ease;
 }
 .collapsible-toggle:hover { background: var(--primary-tint); border-color: var(--primary); }
+
+/* ── OKR liên quan của dự án (ProjectObjectivesCard) ── */
+.okr-chip-link {
+  display: inline-flex; align-items: center; gap: 2px; max-width: 100%;
+  padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--ink); font-size: 13px; line-height: 1.3;
+  text-decoration: none; transition: border-color .15s ease, background .15s ease;
+}
+.okr-chip-link:hover { border-color: var(--primary); background: var(--primary-tint); text-decoration: none; }
+.okr-pick-row {
+  display: flex; align-items: flex-start; gap: 9px; padding: 9px 12px;
+  border-bottom: 1px solid var(--line); font-size: 13.5px; line-height: 1.4; cursor: pointer;
+}
+.okr-pick-row:last-child { border-bottom: 0; }
+.okr-pick-row:hover { background: var(--primary-tint); }

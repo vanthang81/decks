@@ -201,6 +201,56 @@ export async function removeProjectMemberAction(fd: FormData) {
   revalidatePath('/projects');
 }
 
+// ---- Thêm VIỆC vào dự án — OKR TUỲ CHỌN (CFO 08/09) ----
+// Việc chỉ cần thuộc DỰ ÁN; quyền dựa trên canManageProject. Nếu CÓ chọn OKR thì thêm điều kiện
+// quyền sửa OKR đó (để việc hiện cả ở action-plan của OKR). Không chọn OKR → việc thuần thuộc dự án.
+export async function createProjectTaskAction(fd: FormData) {
+  const user = await requireUser();
+  const [units, access] = await Promise.all([listUnits(), loadAccess()]);
+  const projectId = str(fd, 'project_id');
+  const p = await getProject(projectId);
+  if (!p) throw new Error('Không tìm thấy dự án.');
+  if (!canManageProject(user, p, units, access)) throw new Error('Bạn không có quyền thêm việc vào dự án này.');
+  const title = str(fd, 'title');
+  if (!title) throw new Error('Thiếu tên việc.');
+  const objectiveId = orNull(str(fd, 'objective_id'));
+  let keyResultId: string | null = null;
+  if (objectiveId) {
+    const obj = await getObjective(objectiveId);
+    if (!obj) throw new Error('Không tìm thấy OKR.');
+    if (!canEditObjective(user, obj, units, access)) throw new Error('Bạn không có quyền gắn việc vào OKR này.');
+    keyResultId = orNull(str(fd, 'key_result_id'));
+  }
+  const { createInitiative } = await import('@/lib/initiatives');
+  await createInitiative({
+    objective_id: objectiveId, key_result_id: keyResultId, parent_id: null, kind: 'action',
+    title, description: null, owner_email: orNull(str(fd, 'owner_email')), unit_id: orNull(str(fd, 'unit_id')),
+    project_id: projectId, status: 'todo', priority: (str(fd, 'priority') || 'medium') as 'low' | 'medium' | 'high',
+    start_on: null, due_on: orNull(str(fd, 'due_on')), budget_planned: 0, budget_actual: 0,
+    budget_source: null, expected_output: orNull(str(fd, 'expected_output')), created_by: user.email,
+  });
+  await logAudit({ actor: user.email, action: 'initiative.create', entity: 'project', entityId: projectId, detail: { title } });
+  if (objectiveId) revalidatePath(`/objectives/${objectiveId}`);
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath('/tasks');
+}
+
+// ---- OKR liên quan của dự án (đặt ở cấp dự án / điều lệ) ----
+export async function setProjectObjectivesAction(fd: FormData) {
+  const user = await requireUser();
+  const units = await listUnits();
+  const projectId = str(fd, 'project_id');
+  const p = await getProject(projectId);
+  if (!p) throw new Error('Không tìm thấy dự án.');
+  if (!canManageProject(user, p, units, await loadAccess()))
+    throw new Error('Bạn không có quyền sửa OKR liên quan của dự án này.');
+  const ids = fd.getAll('objective_ids').map((x) => String(x)).filter(Boolean);
+  const { setProjectObjectives } = await import('@/lib/project-objectives');
+  await setProjectObjectives(projectId, ids);
+  await logAudit({ actor: user.email, action: 'project.okr_link', entity: 'project', entityId: projectId, detail: { count: ids.length } });
+  revalidatePath(`/projects/${projectId}`);
+}
+
 // Modal edit task: tạo NHANH 1 dự án rồi gắn task vào (khi dự án chưa tồn tại).
 export async function createProjectForInitiativeAction(fd: FormData) {
   const user = await requireUser();

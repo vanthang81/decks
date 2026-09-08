@@ -15,6 +15,8 @@ import CollapsibleSection from '@/components/CollapsibleSection';
 import { buildProjectReport } from '@/lib/project-report';
 import { listProjectDocs } from '@/lib/project-docs';
 import { listProjectMembers, isProjectMember } from '@/lib/project-members';
+import ProjectObjectivesCard from '@/components/ProjectObjectivesCard';
+import { listProjectObjectives } from '@/lib/project-objectives';
 import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
 import { listObjectivesWithKrs } from '@/lib/okr';
@@ -39,7 +41,7 @@ import {
   createInitiativeAction,
   moveInitiativeAction,
 } from '../../objectives/actions';
-import { updateProjectAction, deleteProjectAction, createProjectForInitiativeAction, saveProjectCharterAction, addProjectDocAction, deleteProjectDocAction, addProjectMemberAction, removeProjectMemberAction } from '../actions';
+import { updateProjectAction, deleteProjectAction, createProjectForInitiativeAction, saveProjectCharterAction, addProjectDocAction, deleteProjectDocAction, addProjectMemberAction, removeProjectMemberAction, createProjectTaskAction, setProjectObjectivesAction } from '../actions';
 import EditModal from '@/components/EditModal';
 import NavIcon from '@/components/NavIcon';
 import { CHARTER_FIELDS, charterFilled, type Charter } from '@/lib/charter';
@@ -73,13 +75,14 @@ export default async function ProjectDetail({ params }: { params: { id: string }
   const p = await getProject(params.id);
   if (!p) notFound();
 
-  const [tasks, units, users, docs, members, access] = await Promise.all([
+  const [tasks, units, users, docs, members, access, linkedObjectives] = await Promise.all([
     listInitiativesForProject(p.id),
     listUnits(),
     listUsers(),
     listProjectDocs(p.id),
     listProjectMembers(p.id),
     loadAccess(),
+    listProjectObjectives(p.id),
   ]);
   const canManage = canManageProject(user, p, units, access);
   // Phân quyền XEM (CFO 04/09): chỉ thành viên/assignee/quản lý/scope.all mới vào được trang dự án.
@@ -175,6 +178,15 @@ export default async function ProjectDetail({ params }: { params: { id: string }
         {/* ---- Báo cáo tiến độ: (1) Tổng dự án · (2) Theo thời gian ---- */}
         <ProjectReportView report={report} />
 
+        {/* ---- OKR liên quan (gắn ở cấp dự án; việc không cần gắn OKR riêng) ---- */}
+        <ProjectObjectivesCard
+          projectId={p.id}
+          linked={linkedObjectives.map((o) => ({ id: o.id, code: o.code, title: o.title, unit_name: o.unit_name }))}
+          options={objectiveOpts.map((o) => ({ id: o.id, code: o.code, title: o.title, unit_name: o.unit_name }))}
+          canManage={canManage}
+          save={setProjectObjectivesAction}
+        />
+
         {/* ---- Điều lệ dự án (Project Charter) ---- */}
         <div className="card">
           <div className="flexbtw flexbtw-top">
@@ -220,7 +232,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
                 objectives={objectiveOpts}
                 users={personOpts}
                 units={unitOpts}
-                create={createInitiativeAction}
+                create={createProjectTaskAction}
               />
             )}
           </div>
