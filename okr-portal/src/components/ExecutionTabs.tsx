@@ -278,7 +278,15 @@ export default function ExecutionTabs({
   const [fPrio, setFPrio] = useState('');
   const [fOverdue, setFOverdue] = useState(false);
   const [fMine, setFMine] = useState(false);
-  const [hideDone, setHideDone] = useState(true); // mặc định ẩn việc đã xong cho gọn
+  // "Ẩn việc đã xong": MẶC ĐỊNH KHÔNG chọn (CFO 08/09); nhớ lựa chọn theo trình duyệt (localStorage).
+  const [hideDone, setHideDone] = useState(false);
+  useEffect(() => {
+    try { setHideDone(localStorage.getItem('okr_exec_hideDone') === '1'); } catch {}
+  }, []);
+  const toggleHideDone = (v: boolean) => {
+    setHideDone(v);
+    try { localStorage.setItem('okr_exec_hideDone', v ? '1' : '0'); } catch {}
+  };
 
   const owners = useMemo(() => {
     const m = new Map<string, string>();
@@ -369,7 +377,7 @@ export default function ExecutionTabs({
           <input type="checkbox" checked={fMine} onChange={(e) => setFMine(e.target.checked)} /> 👤 Việc của tôi
         </label>
         <label className="fb-chk">
-          <input type="checkbox" checked={hideDone} onChange={(e) => setHideDone(e.target.checked)} /> Ẩn việc đã xong
+          <input type="checkbox" checked={hideDone} onChange={(e) => toggleHideDone(e.target.checked)} /> Ẩn việc đã xong
         </label>
         {fActive && <ClearFiltersButton onClear={clearFilter} count={filtered.length} />}
       </div>

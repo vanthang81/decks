@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-08.133';
+export const GUIDE_VERSION = '2026-09-08.134';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '08/09/2026 (Bảng công việc: "Ẩn việc đã xong" mặc định TẮT + nhớ lựa chọn)',
+    items: [
+      'Ở bảng Công việc của dự án/OKR/cuộc họp, ô "Ẩn việc đã xong" nay mặc định KHÔNG chọn (hiện đủ mọi việc); bạn tick hay bỏ tick thì hệ thống nhớ lại cho lần sau.',
+    ],
+  },
   {
     date: '08/09/2026 (OKR gắn ở cấp dự án; thêm việc không bắt buộc OKR)',
     items: [
