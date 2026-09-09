@@ -12,7 +12,7 @@ const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/
 export default function SearchSelect({
   name, options, defaultValue = '', value: controlledValue, emptyLabel, placeholder = '— Chọn —', disabled, onChange,
 }: {
-  name: string;
+  name?: string;  // có → render input ẩn để submit theo form; không → chỉ controlled qua value/onChange
   options: SSOption[];
   defaultValue?: string;      // giá trị ban đầu (chế độ không kiểm soát)
   value?: string;             // truyền → chế độ KIỂM SOÁT (cha giữ giá trị, vd default động theo cấp)
@@ -62,7 +62,7 @@ export default function SearchSelect({
 
   return (
     <div className={`ss${disabled ? ' ss-dis' : ''}`} ref={boxRef}>
-      <input type="hidden" name={name} value={value} />
+      {name ? <input type="hidden" name={name} value={value} /> : null}
       <button
         type="button"
         className="ss-control i"

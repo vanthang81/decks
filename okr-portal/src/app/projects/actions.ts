@@ -235,6 +235,53 @@ export async function createProjectTaskAction(fd: FormData) {
   revalidatePath('/tasks');
 }
 
+// Thêm NHIỀU việc cùng lúc vào dự án (1 lần lưu). OKR/KR (nếu có) dùng chung cho cả loạt;
+// mỗi dòng có tên/người giao/ưu tiên/hạn riêng. Bỏ qua dòng trống tên.
+export async function createProjectTasksBulkAction(fd: FormData) {
+  const user = await requireUser();
+  const [units, access] = await Promise.all([listUnits(), loadAccess()]);
+  const projectId = str(fd, 'project_id');
+  const p = await getProject(projectId);
+  if (!p) throw new Error('Không tìm thấy dự án.');
+  if (!canManageProject(user, p, units, access)) throw new Error('Bạn không có quyền thêm việc vào dự án này.');
+
+  type Row = { title?: string; owner_email?: string; priority?: string; due_on?: string };
+  let rows: Row[] = [];
+  try { rows = JSON.parse(str(fd, 'rows') || '[]'); } catch { throw new Error('Dữ liệu danh sách việc không hợp lệ.'); }
+  const clean = rows
+    .map((r) => ({
+      title: (r.title ?? '').trim(),
+      owner_email: (r.owner_email ?? '').trim() || null,
+      priority: (['low', 'medium', 'high'].includes(r.priority ?? '') ? r.priority : 'medium') as 'low' | 'medium' | 'high',
+      due_on: (r.due_on ?? '').trim() || null,
+    }))
+    .filter((r) => r.title);
+  if (clean.length === 0) throw new Error('Chưa nhập việc nào (cần ít nhất 1 tên việc).');
+
+  const objectiveId = orNull(str(fd, 'objective_id'));
+  let keyResultId: string | null = null;
+  if (objectiveId) {
+    const obj = await getObjective(objectiveId);
+    if (!obj) throw new Error('Không tìm thấy OKR.');
+    if (!canEditObjective(user, obj, units, access)) throw new Error('Bạn không có quyền gắn việc vào OKR này.');
+    keyResultId = orNull(str(fd, 'key_result_id'));
+  }
+  const { createInitiative } = await import('@/lib/initiatives');
+  for (const r of clean) {
+    await createInitiative({
+      objective_id: objectiveId, key_result_id: keyResultId, parent_id: null, kind: 'action',
+      title: r.title, description: null, owner_email: r.owner_email, unit_id: null,
+      project_id: projectId, status: 'todo', priority: r.priority,
+      start_on: null, due_on: r.due_on, budget_planned: 0, budget_actual: 0,
+      budget_source: null, expected_output: null, created_by: user.email,
+    });
+  }
+  await logAudit({ actor: user.email, action: 'initiative.create', entity: 'project', entityId: projectId, detail: { bulk: clean.length } });
+  if (objectiveId) revalidatePath(`/objectives/${objectiveId}`);
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath('/tasks');
+}
+
 // ---- OKR liên quan của dự án (đặt ở cấp dự án / điều lệ) ----
 export async function setProjectObjectivesAction(fd: FormData) {
   const user = await requireUser();

@@ -175,6 +175,11 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
     Modal "Thêm việc vào dự án" (`AddTaskToProject`) nay OKR **tuỳ chọn** → dùng action `createProjectTaskAction`
     (gác canManageProject; có chọn OKR thì thêm canEditObjective; việc chỉ thuộc dự án là hợp lệ nhờ
     okr_init_attach_ck có project_id). `createInitiativeAction` (bắt buộc OKR) vẫn dùng cho action-plan của OKR.
+  - **THÊM NHIỀU VIỆC CÙNG LÚC (CFO 09/09)**: modal `AddTaskToProject` có công tắc "Một việc / Nhiều việc"
+    (`.seg`). Chế độ nhiều: OKR/KR khai 1 lần dùng chung + danh sách dòng-việc (tên · giao cho[ưu tiên thành
+    viên] · ưu tiên · hạn), Enter/dán-nhiều-dòng để thêm nhanh, gửi JSON field `rows` → action
+    `createProjectTasksBulkAction` (gác canManageProject 1 lần, lặp createInitiative, bỏ dòng trống). CSS
+    `.seg`/`.bulk-*`. `SearchSelect` nay `name?` tuỳ chọn (controlled không cần input ẩn).
   - **ƯU TIÊN THÀNH VIÊN DỰ ÁN Ở DROPLIST "GIAO CHO" (CFO 08/09 — áp cho MỌI chỗ giao việc TRONG dự án,
     KHÔNG cần nhắc lại)**: khi thêm/sửa việc thuộc một dự án, ô "Giao cho (cá nhân)" xếp thành viên dự án
     (+ chủ trì) LÊN ĐẦU (nhóm "Thành viên dự án") rồi mới tới "Thành viên khác". Cơ chế chung:

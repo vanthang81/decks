@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-08.138';
+export const GUIDE_VERSION = '2026-09-09.139';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '09/09/2026 (Thêm NHIỀU việc cùng lúc vào dự án)',
+    items: [
+      'Modal "Thêm việc vào dự án" có công tắc "Một việc / Nhiều việc". Chế độ Nhiều việc: khai OKR/KR một lần dùng chung, rồi nhập loạt — mỗi dòng gồm tên · người giao · ưu tiên · hạn; gõ Enter hoặc dán nhiều dòng để thêm nhanh; lưu 1 lần tạo tất cả.',
+    ],
+  },
   {
     date: '08/09/2026 (Danh sách dự án: đánh dấu ⭐ yêu thích → ghim lên đầu)',
     items: [

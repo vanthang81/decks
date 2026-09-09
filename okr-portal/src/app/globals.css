@@ -1286,6 +1286,18 @@ a.prof-row:hover { background: var(--primary-tint); border-radius: 6px; }
 /* Hàng tiêu đề có nút hành động ở GÓC PHẢI-TRÊN (nút canh đỉnh, không kéo giãn theo tiêu đề nhiều dòng) */
 .flexbtw-top { align-items: flex-start; }
 .okr-modal.okr-modal-wide { max-width: 760px; }
+/* Công tắc chế độ (segmented) + nhập nhiều việc trong 1 dự án */
+.seg { display: inline-flex; gap: 2px; background: var(--primary-tint); border: 1px solid var(--line); border-radius: 10px; padding: 3px; margin: 2px 0 12px; }
+.seg-btn { border: 0; background: none; color: var(--muted); font: inherit; font-size: 13px; font-weight: 600; padding: 6px 16px; border-radius: 8px; cursor: pointer; }
+.seg-btn.on { background: var(--card); color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.bulk-rows { display: flex; flex-direction: column; gap: 8px; }
+.bulk-row { border: 1px solid var(--line); border-radius: 10px; padding: 8px; background: var(--bg, #fff); }
+.bulk-row-top { display: flex; align-items: center; gap: 8px; }
+.bulk-row-top > .i { flex: 1; min-width: 0; }
+.bulk-idx { flex: 0 0 auto; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--primary); background: var(--primary-tint); border-radius: 6px; }
+.bulk-del { flex: 0 0 auto; }
+.bulk-row-sub { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 8px; margin-top: 8px; padding-left: 30px; }
+@media (max-width: 640px) { .bulk-row-sub { grid-template-columns: 1fr; padding-left: 0; } }
 /* Bấm TÊN KPI = nút phẳng như link (mở box chi tiết) */
 .kpi-name-btn {
   background: none; border: 0; padding: 0; margin: 0; cursor: pointer; text-align: left;

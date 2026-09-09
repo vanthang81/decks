@@ -41,7 +41,7 @@ import {
   createInitiativeAction,
   moveInitiativeAction,
 } from '../../objectives/actions';
-import { updateProjectAction, deleteProjectAction, createProjectForInitiativeAction, saveProjectCharterAction, addProjectDocAction, deleteProjectDocAction, addProjectMemberAction, removeProjectMemberAction, createProjectTaskAction, setProjectObjectivesAction } from '../actions';
+import { updateProjectAction, deleteProjectAction, createProjectForInitiativeAction, saveProjectCharterAction, addProjectDocAction, deleteProjectDocAction, addProjectMemberAction, removeProjectMemberAction, createProjectTaskAction, createProjectTasksBulkAction, setProjectObjectivesAction } from '../actions';
 import EditModal from '@/components/EditModal';
 import NavIcon from '@/components/NavIcon';
 import { CHARTER_FIELDS, charterFilled, type Charter } from '@/lib/charter';
@@ -238,6 +238,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
                 users={personOpts}
                 units={unitOpts}
                 create={createProjectTaskAction}
+                createMany={createProjectTasksBulkAction}
                 memberEmails={memberEmails}
               />
             )}
