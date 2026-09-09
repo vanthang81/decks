@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-09.146';
+export const GUIDE_VERSION = '2026-09-09.147';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '09/09/2026 (Bảng Công việc: vừa màn hình + kéo giãn cột)',
+    items: [
+      'Bảng danh sách Công việc nay tự vừa bề ngang màn hình — các cột tự xuống dòng, không còn tràn ngang phải kéo. Muốn rộng/hẹp cột nào thì kéo mép phải tiêu đề cột (bấm đúp để đặt lại); độ rộng được nhớ theo trình duyệt.',
+    ],
+  },
   {
     date: '09/09/2026 (Công việc: mã tự sinh cho MỌI việc)',
     items: [

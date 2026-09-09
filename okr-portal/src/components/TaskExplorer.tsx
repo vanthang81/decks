@@ -82,6 +82,12 @@ const COLS: { key: SortKey; label: string; style?: CSSProperties; hint?: string 
   { key: 'created', label: 'Tạo lúc', hint: 'Ngày tạo việc — bấm để sắp xếp mới/cũ' },
 ];
 
+// Độ rộng MẶC ĐỊNH mỗi cột (%) — table-layout:fixed nên tổng ~100 để vừa màn hình; cột nào cũng wrap.
+const DEFAULT_COLW: Record<string, string> = {
+  code: '9%', title: '19%', status: '7%', priority: '7%', progress: '9%', owner: '14%',
+  unit: '11%', objective: '7%', project: '7%', due: '8%', created: '7%',
+};
+
 // Cảnh báo hạn (đồng bộ ExecutionTabs): chỉ tính việc CÒN MỞ.
 type DlState = 'overdue' | 'today' | 'soon' | 'none';
 function deadlineInfo(t: TaskRow): { state: DlState; days: number } {
@@ -154,6 +160,30 @@ export default function TaskExplorer({
   initialOverdue?: boolean;
   initialOwner?: string;
 }) {
+  // Độ rộng cột kéo giãn được (nhớ theo trình duyệt). Cột chưa kéo → dùng % mặc định.
+  const [colW, setColW] = useState<Record<string, string>>({});
+  useEffect(() => {
+    try { const v = localStorage.getItem('okrTaskColW'); if (v) setColW(JSON.parse(v)); } catch {}
+  }, []);
+  const startColResize = (key: string, e: React.MouseEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    const th = (e.currentTarget as HTMLElement).parentElement as HTMLElement;
+    const startX = e.clientX; const startW = th.offsetWidth;
+    const onMove = (me: MouseEvent) => {
+      const w = Math.max(48, startW + (me.clientX - startX));
+      setColW((prev) => ({ ...prev, [key]: `${w}px` }));
+    };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      setColW((prev) => { try { localStorage.setItem('okrTaskColW', JSON.stringify(prev)); } catch {} return prev; });
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  };
+  const resetColW = (key: string) =>
+    setColW((prev) => { const n = { ...prev }; delete n[key]; try { localStorage.setItem('okrTaskColW', JSON.stringify(n)); } catch {} return n; });
+
   const manageSet = useMemo(() => new Set(manageIds), [manageIds]);
   const taskById = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks]);
   // Việc "đang chờ" = có việc-phải-xong-trước (predecessor) CHƯA Xong/Huỷ. Trả về tiêu đề các việc đó.
@@ -661,6 +691,10 @@ export default function TaskExplorer({
       )}
       <div className="table-sticky">
         <table className={`t task-table${canBulk ? ' has-check' : ''}`}>
+          <colgroup>
+            {canBulk && <col style={{ width: 34 }} />}
+            {COLS.map((c) => <col key={c.key} style={{ width: colW[c.key] ?? DEFAULT_COLW[c.key] }} />)}
+          </colgroup>
           <thead>
             <tr>
               {canBulk && (
@@ -686,6 +720,13 @@ export default function TaskExplorer({
                 >
                   {c.label}
                   {sortKey === c.key && <span className="sort-ar">{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                  <span
+                    className="col-rz"
+                    onMouseDown={(e) => startColResize(c.key, e)}
+                    onClick={(e) => e.stopPropagation()}
+                    onDoubleClick={(e) => { e.stopPropagation(); resetColW(c.key); }}
+                    title="Kéo để chỉnh độ rộng · bấm đúp để đặt lại"
+                  />
                 </th>
               ))}
             </tr>
@@ -783,16 +824,16 @@ export default function TaskExplorer({
                     </Link>
                   ) : <span className="muted">—</span>}
                 </td>
-                <td style={{ whiteSpace: 'nowrap' }}>
+                <td>
                   {t.due_on ? (
                     <span style={{ display: 'inline-flex', flexDirection: 'column', gap: 2 }}>
-                      <span style={{ fontSize: 12.5 }}>{fmtDate(t.due_on)}</span>
+                      <span style={{ fontSize: 12.5, whiteSpace: 'nowrap' }}>{fmtDate(t.due_on)}</span>
                       <DeadlineBadge t={t} />
                     </span>
                   ) : <span className="muted">—</span>}
                 </td>
-                <td style={{ whiteSpace: 'nowrap', fontSize: 12.5 }}>
-                  {t.created_at ? fmtCreated(t.created_at) : <span className="muted">—</span>}
+                <td style={{ fontSize: 12.5 }}>
+                  {t.created_at ? <span style={{ whiteSpace: 'nowrap' }}>{fmtCreated(t.created_at)}</span> : <span className="muted">—</span>}
                 </td>
               </tr>
             ))}

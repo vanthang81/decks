@@ -500,27 +500,30 @@ table.t th.sortable.active { color: var(--primary); }
   .table-sticky { overflow-x: auto; }
 }
 
-/* Bảng Công việc: cột hẹp GỌN 1 DÒNG (trạng thái/ưu tiên/dự án/OKR/phụ trách/mã/hạn),
-   riêng cột "Công việc" cho xuống nhiều dòng; "Đơn vị" wrap có giới hạn. */
-.task-table th, .task-table td { white-space: nowrap; }
-.task-table th:nth-child(2), .task-table td:nth-child(2) { white-space: normal; min-width: 260px; }
-.task-table th:nth-child(7), .task-table td:nth-child(7) { white-space: normal; min-width: 90px; max-width: 170px; }
-.task-table td:nth-child(2) b { font-weight: 600; }
+/* Bảng Công việc: BỐ CỤC CỐ ĐỊNH (table-layout:fixed) + width 100% → vừa màn hình, KHÔNG tràn ngang;
+   mọi cột TỰ XUỐNG DÒNG (wrap) trong độ rộng cột. Độ rộng cột theo <colgroup> (kéo giãn được). */
+.task-table { table-layout: fixed; width: 100%; }
+.task-table th, .task-table td {
+  white-space: normal; overflow-wrap: anywhere; word-break: break-word; vertical-align: top;
+}
+/* tiêu đề cột cũng cho xuống dòng (ghi đè .sortable nowrap) + chừa chỗ cho tay kéo */
+.task-table thead th.sortable { white-space: normal; padding-right: 12px; }
+.task-table td b { font-weight: 600; }
 .te-row { cursor: pointer; }
 .te-row:hover td { background: #FBF7F2; }
 .te-row.te-sel td { background: #eef2ff; }
 .te-row.te-sel:hover td { background: #e5eaff; }
 
 /* Cột chọn (checkbox) đầu bảng công việc — chỉ hiện khi có quyền quản lý */
-.task-table .tt-check { width: 34px; min-width: 34px; text-align: center; padding-left: 6px; padding-right: 6px; }
+.task-table .tt-check { text-align: center; padding-left: 6px; padding-right: 6px; }
 .task-table .tt-check input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary, #7C0312); }
 .task-table .tt-nocheck { color: #cbd5e1; font-size: 12px; }
-/* Khi có cột checkbox: mọi rule theo vị trí dịch sang phải 1 cột (giữ nguyên bề rộng cột nội dung) */
-.task-table.has-check th:nth-child(2), .task-table.has-check td:nth-child(2) { white-space: nowrap; min-width: 0; }
-.task-table.has-check th:nth-child(3), .task-table.has-check td:nth-child(3) { white-space: normal; min-width: 260px; }
-.task-table.has-check td:nth-child(3) b { font-weight: 600; }
-.task-table.has-check th:nth-child(7), .task-table.has-check td:nth-child(7) { white-space: nowrap; min-width: 0; max-width: none; }
-.task-table.has-check th:nth-child(8), .task-table.has-check td:nth-child(8) { white-space: normal; min-width: 90px; max-width: 170px; }
+
+/* Tay kéo giãn độ rộng cột (ở mép phải mỗi tiêu đề) */
+.task-table thead th { position: relative; }
+.col-rz { position: absolute; top: 0; right: 0; width: 9px; height: 100%; cursor: col-resize; user-select: none; touch-action: none; }
+.col-rz::after { content: ''; position: absolute; top: 20%; bottom: 20%; right: 3px; width: 2px; background: var(--line); border-radius: 2px; }
+.col-rz:hover::after, .col-rz:active::after { background: var(--primary); }
 
 /* Thanh thao tác hàng loạt (sticky trên danh sách) + dòng gợi ý */
 .bulk-hint { margin: 2px 0 8px; font-size: 12.5px; }
