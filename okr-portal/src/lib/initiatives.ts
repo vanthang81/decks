@@ -300,8 +300,10 @@ export async function createInitiative(input: {
   expected_output?: string | null;
   created_by: string;
 }): Promise<string> {
-  const code = await nextInitCode(input.objective_id);
   const unitId = await resolveTaskUnit(input.unit_id, input.owner_email);
+  const code = await nextInitCode({
+    objectiveId: input.objective_id, projectId: input.project_id, meetingId: input.meeting_id ?? null, unitId,
+  });
   const row = await queryOne<{ id: string }>(
     `INSERT INTO okr_initiatives (objective_id, key_result_id, parent_id, kind, title, description,
         owner_email, unit_id, project_id, meeting_id, status, priority, start_on, due_on, budget_planned, budget_actual, budget_source, expected_output, created_by, code)

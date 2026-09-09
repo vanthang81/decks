@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-09.145';
+export const GUIDE_VERSION = '2026-09-09.146';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '09/09/2026 (Công việc: mã tự sinh cho MỌI việc)',
+    items: [
+      'Mọi công việc nay đều có Mã tự sinh theo nguyên tắc: việc thuộc OKR = <mã OKR>.H##, việc thuộc dự án = <mã dự án>.H##, việc thuộc cuộc họp = <mã họp>.H##, việc rời = <mã đơn vị>-H##. Các việc cũ đang trống mã đã được bổ sung.',
+    ],
+  },
   {
     date: '09/09/2026 (Công việc: Đơn vị mặc định = phòng của người phụ trách)',
     items: [

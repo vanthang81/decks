@@ -202,6 +202,11 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
 - **MÃ UNIQUE (db/110, import/export)**: cột `code` ở objectives/key_results/initiatives — định dạng
   `<KHỐI>-O<n>` / `<obj>.KR<m>` / `<obj>.H<kk>` (prefix = mã đơn vị hoặc 'CTY'). Sinh tự động khi tạo
   (`src/lib/codes.ts`: nextObjectiveCode/nextKrCode/nextInitCode); unique index. Hiển thị badge `.okr-code`.
+  - **MÃ CÔNG VIỆC cho MỌI việc (CFO 09/09)**: `nextInitCode(opts)` nay LUÔN trả mã (không null). Parent theo
+    ưu tiên **OKR → Dự án → Cuộc họp** → `<parentCode>.H<kk>`; việc RỜI (không parent) → `<PREFIX>-H<kk>`
+    (PREFIX = mã đơn vị của việc/owner, hoặc CTY). `createInitiative` truyền `{objectiveId,projectId,meetingId,unitId}`.
+    Backfill việc cũ trống mã: route **`POST /api/admin/backfill-init-codes`** (gác x-sync-key/exec, idempotent —
+    chỉ đụng code NULL, tự self-heal bộ đếm). Bộ đếm `okr_code_seq` scope `H:<parent>` và `HU:<prefix>`.
 - **Import/Export Excel** (`src/lib/excel.ts` + xlsx, route `/api/export` GET mọi user · `/api/import`
   POST chỉ exec): xuất 3 sheet Objectives/KeyResults/Initiatives; nhập KHỚP THEO `code` để cập nhật
   (công việc trống code + có Mã Objective → tạo mới, sinh code). Nút ở trang OKR + Quản trị (`ImportOkr.tsx`).

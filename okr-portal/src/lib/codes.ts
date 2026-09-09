@@ -60,13 +60,36 @@ export async function nextKrCode(objectiveId: string): Promise<string | null> {
   return `${oc}.KR${m}`;
 }
 
-export async function nextInitCode(objectiveId: string | null): Promise<string | null> {
-  if (!objectiveId) return null;
-  const oc = await objCode(objectiveId);
-  if (!oc) return null;
-  const floor = await maxNum('okr_initiatives', `^${escRe(oc)}\\.H([0-9]+)$`);
-  const n = await bumpSeq(`H:${oc}`, floor);
-  return `${oc}.H${String(n).padStart(2, '0')}`;
+// Mã công việc theo NGUYÊN TẮC <parent>.H<kk> — parent lấy theo ưu tiên OKR → Dự án → Cuộc họp.
+// Việc KHÔNG có parent nào (việc cá nhân/rời) → theo đơn vị: <PREFIX>-H<kk> (PREFIX = mã đơn vị / CTY).
+// Luôn trả về MÃ (không còn null) để mọi việc đều có mã (CFO 09/09).
+async function projectCode(id: string): Promise<string | null> {
+  const r = await queryOne<{ code: string | null }>('SELECT code FROM okr_projects WHERE id=$1', [id]);
+  return r?.code ?? null;
+}
+async function meetingCode(id: string): Promise<string | null> {
+  const r = await queryOne<{ code: string | null }>('SELECT code FROM okr_meetings WHERE id=$1', [id]);
+  return r?.code ?? null;
+}
+export async function nextInitCode(opts: {
+  objectiveId?: string | null; projectId?: string | null; meetingId?: string | null; unitId?: string | null;
+} | string | null): Promise<string> {
+  // Tương thích ngược: gọi cũ nextInitCode(objectiveId).
+  const o = typeof opts === 'string' || opts === null ? { objectiveId: opts } : opts;
+  let parent: string | null = null;
+  if (o.objectiveId) parent = await objCode(o.objectiveId);
+  if (!parent && o.projectId) parent = await projectCode(o.projectId);
+  if (!parent && o.meetingId) parent = await meetingCode(o.meetingId);
+  if (parent) {
+    const floor = await maxNum('okr_initiatives', `^${escRe(parent)}\\.H([0-9]+)$`);
+    const n = await bumpSeq(`H:${parent}`, floor);
+    return `${parent}.H${String(n).padStart(2, '0')}`;
+  }
+  // Việc rời (owner-anchored) → theo đơn vị.
+  const p = await objPrefix(o.unitId ?? null);
+  const floor = await maxNum('okr_initiatives', `^${escRe(p)}-H([0-9]+)$`);
+  const n = await bumpSeq(`HU:${p}`, floor);
+  return `${p}-H${String(n).padStart(2, '0')}`;
 }
 
 export async function nextProjectCode(): Promise<string> {
