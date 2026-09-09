@@ -230,6 +230,9 @@ export default async function Dashboard({ searchParams }: { searchParams: { tour
                       </span>
                     )}
                   </h3>
+                  <p className="muted" style={{ margin: '0 0 6px', fontSize: 12 }}>
+                    Việc gắn OKR · kỳ {period?.name ?? 'hiện tại'}. Xem tất cả việc (mọi kỳ, cả dự án/cuộc họp) ở <Link href="/tasks">trang Công việc</Link>.
+                  </p>
                   <div className="insight-donut">
                     <Donut
                       segments={[

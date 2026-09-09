@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-09.140';
+export const GUIDE_VERSION = '2026-09-09.141';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '09/09/2026 (Làm rõ số liệu Công việc — hiển thị theo phạm vi)',
+    items: [
+      'Trang Công việc: danh sách nay ghi rõ "đang hiển thị X/TỔNG việc" khi có lọc/ẩn (vd "Ẩn việc đã xong") — không còn 2 con số tổng gây khó hiểu.',
+      'Dashboard "Công việc thực thi" ghi rõ phạm vi: việc gắn OKR trong kỳ hiện tại; muốn xem tất cả (mọi kỳ, cả dự án/cuộc họp) thì mở trang Công việc.',
+    ],
+  },
   {
     date: '09/09/2026 (Trang "Của tôi": danh sách việc theo nhóm + cập nhật nhanh tại chỗ)',
     items: [

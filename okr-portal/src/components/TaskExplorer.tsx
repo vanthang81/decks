@@ -516,11 +516,23 @@ export default function TaskExplorer({
 
       <div className="card task-summary" id="task-list-top" style={{ marginBottom: 14 }}>
         <div className="flexbtw" style={{ gap: 10, flexWrap: 'wrap', alignItems: 'baseline' }}>
-          <h3 style={{ margin: 0 }}>Tổng quan ({filtered.length} việc)</h3>
+          <h3 style={{ margin: 0 }}>
+            Danh sách công việc
+            <span className="muted" style={{ fontWeight: 400, fontSize: 14 }}>
+              {filtered.length === report.total
+                ? ` (${report.total} việc)`
+                : ` — đang hiển thị ${filtered.length}/${report.total} việc`}
+            </span>
+          </h3>
           {byStatus.overdue > 0 && (
             <span className="dl-badge dl-over">⚠ {byStatus.overdue} việc quá hạn</span>
           )}
         </div>
+        {filtered.length !== report.total && (
+          <p className="muted" style={{ margin: '2px 0 0', fontSize: 12 }}>
+            Đang lọc/ẩn bớt (vd “Ẩn việc đã xong”). Bấm “Xoá lọc” để xem đủ {report.total} việc.
+          </p>
+        )}
         {segments.length > 0 && <div style={{ marginTop: 10 }}><StackedBar segments={segments} /></div>}
         <div className="ts-legend">
           {COLUMNS.filter((s) => byStatus.c[s] > 0).map((s) => (
