@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-09.143';
+export const GUIDE_VERSION = '2026-09-09.144';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '09/09/2026 (Công việc: kế thừa Đơn vị & OKR từ dự án)',
+    items: [
+      'Ở bảng/Kanban Công việc, việc chỉ thuộc dự án (không gắn OKR/đơn vị riêng) nay hiển thị Đơn vị chủ trì và OKR liên quan LẤY TỪ DỰ ÁN (kèm nhãn "· dự án"), thay vì để trống "—" — nhìn là biết việc gắn với khối nào, phục vụ OKR nào.',
+    ],
+  },
   {
     date: '09/09/2026 (Làm rõ số liệu Công việc — hiển thị theo phạm vi)',
     items: [

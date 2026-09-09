@@ -175,6 +175,10 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
     Modal "Thêm việc vào dự án" (`AddTaskToProject`) nay OKR **tuỳ chọn** → dùng action `createProjectTaskAction`
     (gác canManageProject; có chọn OKR thì thêm canEditObjective; việc chỉ thuộc dự án là hợp lệ nhờ
     okr_init_attach_ck có project_id). `createInitiativeAction` (bắt buộc OKR) vẫn dùng cho action-plan của OKR.
+  - **KẾ THỪA Đơn vị & OKR TỪ DỰ ÁN ở bảng Công việc (CFO 09/09)**: việc chỉ thuộc dự án (không gắn
+    OKR/đơn vị riêng) hiển thị Đơn vị chủ trì + OKR liên quan LẤY TỪ DỰ ÁN (nhãn mờ "· dự án", class `.inh`)
+    thay vì "—". `projectMetaForIds(ids)` (project-objectives.ts) trả `{unit_id,unit_name,okrs[]}` theo lô;
+    `/tasks` page truyền `projectMeta` xuống `TaskExplorer` (list + `TasksKanban`). Nhiều OKR → hiện cái đầu + "+N".
   - **THÊM NHIỀU VIỆC CÙNG LÚC (CFO 09/09)**: modal `AddTaskToProject` có công tắc "Một việc / Nhiều việc"
     (`.seg`). Chế độ nhiều: OKR/KR khai 1 lần dùng chung + danh sách dòng-việc (tên · giao cho[ưu tiên thành
     viên] · ưu tiên · hạn), Enter/dán-nhiều-dòng để thêm nhanh, gửi JSON field `rows` → action

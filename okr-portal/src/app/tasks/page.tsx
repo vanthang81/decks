@@ -11,6 +11,7 @@ import { listObjectivesByPeriod } from '@/lib/okr';
 import { getCurrentPeriod } from '@/lib/periods';
 import { depsForTasks } from '@/lib/deps';
 import { loadAccess, buildTaskViewCtx, canViewInitiative, canEditObjective } from '@/lib/access';
+import { projectMetaForIds } from '@/lib/project-objectives';
 import { editInitiativeAction, deleteInitiativeAction, moveInitiativeAction, createTaskAction, bulkTasksAction } from '@/app/objectives/actions';
 
 export const dynamic = 'force-dynamic';
@@ -30,6 +31,10 @@ export default async function TasksPage({
   ]);
   const ctx = buildTaskViewCtx(user, all, units, access);
   const visible = all.filter((t) => canViewInitiative(user, t, ctx));
+  // Meta dự án (đơn vị chủ trì + OKR liên quan) để KẾ THỪA hiển thị cho việc chỉ thuộc dự án.
+  const projectMeta = await projectMetaForIds(
+    visible.filter((t) => t.project_id).map((t) => t.project_id as string),
+  );
 
   // Việc mà user có quyền QUẢN LÝ (sửa mọi trường + xoá) = quản OKR gốc HOẶC dự án HOẶC cuộc họp của việc.
   const emailLc = user.email.toLowerCase();
@@ -119,6 +124,7 @@ export default async function TasksPage({
           users={userOpts}
           units={unitOpts}
           projects={projects}
+          projectMeta={projectMeta}
           objectiveOpts={objOpts}
           editAction={editInitiativeAction}
           deleteAction={deleteInitiativeAction}

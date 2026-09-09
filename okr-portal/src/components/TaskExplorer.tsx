@@ -119,6 +119,7 @@ export default function TaskExplorer({
   users,
   units,
   projects,
+  projectMeta = {},
   objectiveOpts = [],
   editAction,
   deleteAction,
@@ -140,6 +141,8 @@ export default function TaskExplorer({
   users: PersonOpt[];
   units: UnitOpt[];
   projects: ProjectOpt[];
+  // Meta dự án (đơn vị + OKR liên quan) → kế thừa hiển thị cho việc chỉ thuộc dự án.
+  projectMeta?: Record<string, { unit_id: string | null; unit_name: string | null; okrs: { id: string; code: string | null; title: string }[] }>;
   objectiveOpts?: { id: string; label: string }[];   // OKR để gắn lại việc (form Sửa)
   editAction: (fd: FormData) => Promise<void>;
   deleteAction: (fd: FormData) => Promise<void>;
@@ -622,7 +625,7 @@ export default function TaskExplorer({
       </div>
 
       {view === 'kanban' && (
-        <TasksKanban tasks={sorted} canEditT={(t) => manageSet.has(t.id) || t.owner_email?.toLowerCase() === emailLc} move={move} onOpen={(t) => setEditing(t)} waiting={waitingTitles} titleByEmail={titleByEmail} />
+        <TasksKanban tasks={sorted} canEditT={(t) => manageSet.has(t.id) || t.owner_email?.toLowerCase() === emailLc} move={move} onOpen={(t) => setEditing(t)} waiting={waitingTitles} titleByEmail={titleByEmail} projectMeta={projectMeta} />
       )}
       {view === 'timeline' && (
         <TasksGantt tasks={sorted} onOpen={(t) => setEditing(t)} waiting={waitingTitles} />
@@ -741,12 +744,32 @@ export default function TaskExplorer({
                     </span>
                   ) : <span className="muted" style={{ fontSize: 12.5 }}>—</span>}
                 </td>
-                <td style={{ fontSize: 12.5 }}>{t.unit_name || <span className="muted">—</span>}</td>
+                <td style={{ fontSize: 12.5 }}>
+                  {t.unit_name
+                    ? t.unit_name
+                    : (t.project_id && projectMeta[t.project_id]?.unit_name)
+                      ? <span className="inh" title="Kế thừa từ dự án">{projectMeta[t.project_id]!.unit_name}<em> · dự án</em></span>
+                      : <span className="muted">—</span>}
+                </td>
                 <td>
                   {t.objective_id ? (
                     <Link href={`/objectives/${t.objective_id}`} style={{ fontSize: 12.5 }} onClick={(e) => e.stopPropagation()}>
                       {t.objective_code ? <span className="okr-code">{t.objective_code}</span> : 'Mở OKR'}
                     </Link>
+                  ) : (t.project_id && (projectMeta[t.project_id]?.okrs.length ?? 0) > 0) ? (
+                    (() => {
+                      const okrs = projectMeta[t.project_id]!.okrs;
+                      const first = okrs[0];
+                      return (
+                        <span className="inh" title={`Kế thừa từ dự án: ${okrs.map((o) => o.code || o.title).join(', ')}`}>
+                          <Link href={`/objectives/${first.id}`} style={{ fontSize: 12.5 }} onClick={(e) => e.stopPropagation()}>
+                            {first.code ? <span className="okr-code">{first.code}</span> : 'Mở OKR'}
+                          </Link>
+                          {okrs.length > 1 && <em> +{okrs.length - 1}</em>}
+                          <em> · dự án</em>
+                        </span>
+                      );
+                    })()
                   ) : t.meeting_id ? (
                     <Link href={`/meetings/${t.meeting_id}`} className="ctx-chip ctx-mtg" style={{ fontSize: 11 }} onClick={(e) => e.stopPropagation()} title="Việc thuần của cuộc họp">
                       🗓 {t.meeting_code || t.meeting_title}
@@ -823,7 +846,7 @@ function effKindT(t: TaskRow): 'project' | 'subproject' | 'action' {
   return t.kind !== 'action' && !t.has_children ? 'action' : t.kind;
 }
 function TasksKanban({
-  tasks, canEditT, move, onOpen, waiting, titleByEmail,
+  tasks, canEditT, move, onOpen, waiting, titleByEmail, projectMeta = {},
 }: {
   tasks: TaskRow[];
   canEditT: (t: TaskRow) => boolean;
@@ -831,6 +854,7 @@ function TasksKanban({
   onOpen: (t: TaskRow) => void;
   waiting: (id: string) => string[];
   titleByEmail: Map<string, string>;
+  projectMeta?: Record<string, { unit_id: string | null; unit_name: string | null; okrs: { id: string; code: string | null; title: string }[] }>;
 }) {
   const router = useRouter();
   const [cards, setCards] = useState<TaskRow[]>(tasks);
@@ -894,9 +918,15 @@ function TasksKanban({
                         {c.code && <span className="okr-code" style={{ fontSize: 10, marginRight: 4 }}>{c.code}</span>}{c.title}
                       </div>
                       {waiting(c.id).length > 0 && <div className="kb-card-wait"><WaitBadge titles={waiting(c.id)} /></div>}
-                      {c.unit_name && <div className="kb-card-unit">🏢 {c.unit_name}</div>}
+                      {(c.unit_name || (c.project_id && projectMeta[c.project_id]?.unit_name)) && (
+                        <div className="kb-card-unit">🏢 {c.unit_name || <span className="inh">{projectMeta[c.project_id!]!.unit_name}<em> · dự án</em></span>}</div>
+                      )}
                       <div className="kb-card-ctx">
-                        {c.objective_code && <span className="ctx-chip ctx-o">🎯 {c.objective_code}</span>}
+                        {c.objective_code
+                          ? <span className="ctx-chip ctx-o">🎯 {c.objective_code}</span>
+                          : (c.project_id && projectMeta[c.project_id]?.okrs[0]?.code)
+                            ? <span className="ctx-chip ctx-o inh" title="Kế thừa từ dự án">🎯 {projectMeta[c.project_id]!.okrs[0]!.code}{projectMeta[c.project_id]!.okrs.length > 1 ? ` +${projectMeta[c.project_id]!.okrs.length - 1}` : ''}<em> · dự án</em></span>
+                            : null}
                         {c.project_id && <span className="ctx-chip ctx-proj">🗂 {c.project_code || c.project_name}</span>}
                         {!c.objective_id && c.meeting_id && <span className="ctx-chip ctx-mtg">🗓 {c.meeting_code || c.meeting_title}</span>}
                       </div>
