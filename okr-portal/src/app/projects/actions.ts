@@ -245,12 +245,13 @@ export async function createProjectTasksBulkAction(fd: FormData) {
   if (!p) throw new Error('Không tìm thấy dự án.');
   if (!canManageProject(user, p, units, access)) throw new Error('Bạn không có quyền thêm việc vào dự án này.');
 
-  type Row = { title?: string; owner_email?: string; priority?: string; due_on?: string };
+  type Row = { title?: string; expected_output?: string; owner_email?: string; priority?: string; due_on?: string };
   let rows: Row[] = [];
   try { rows = JSON.parse(str(fd, 'rows') || '[]'); } catch { throw new Error('Dữ liệu danh sách việc không hợp lệ.'); }
   const clean = rows
     .map((r) => ({
       title: (r.title ?? '').trim(),
+      expected_output: (r.expected_output ?? '').trim() || null,
       owner_email: (r.owner_email ?? '').trim() || null,
       priority: (['low', 'medium', 'high'].includes(r.priority ?? '') ? r.priority : 'medium') as 'low' | 'medium' | 'high',
       due_on: (r.due_on ?? '').trim() || null,
@@ -273,7 +274,7 @@ export async function createProjectTasksBulkAction(fd: FormData) {
       title: r.title, description: null, owner_email: r.owner_email, unit_id: null,
       project_id: projectId, status: 'todo', priority: r.priority,
       start_on: null, due_on: r.due_on, budget_planned: 0, budget_actual: 0,
-      budget_source: null, expected_output: null, created_by: user.email,
+      budget_source: null, expected_output: r.expected_output, created_by: user.email,
     });
   }
   await logAudit({ actor: user.email, action: 'initiative.create', entity: 'project', entityId: projectId, detail: { bulk: clean.length } });

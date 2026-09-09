@@ -13,9 +13,9 @@ type PersonOpt = { email: string; name: string; title?: string | null };
 type UnitOpt = { id: string; name: string; type: 'company' | 'division' | 'department' };
 
 type Prio = 'low' | 'medium' | 'high';
-type BulkRow = { key: number; title: string; owner_email: string; priority: Prio; due_on: string };
+type BulkRow = { key: number; title: string; expected_output: string; owner_email: string; priority: Prio; due_on: string };
 let ROW_SEQ = 1;
-const emptyRow = (): BulkRow => ({ key: ROW_SEQ++, title: '', owner_email: '', priority: 'medium', due_on: '' });
+const emptyRow = (): BulkRow => ({ key: ROW_SEQ++, title: '', expected_output: '', owner_email: '', priority: 'medium', due_on: '' });
 
 // Thêm việc VÀO DỰ ÁN: chọn Objective (+ KR) của bộ phận → việc hiện cả ở action plan
 // của bộ phận đó (đúng O/KR đã chọn) VÀ trong dự án này.
@@ -111,7 +111,7 @@ export default function AddTaskToProject({
   const submitMany = () => {
     if (!createMany) return;
     const clean = rows
-      .map((r) => ({ title: r.title.trim(), owner_email: r.owner_email, priority: r.priority, due_on: r.due_on }))
+      .map((r) => ({ title: r.title.trim(), expected_output: r.expected_output.trim(), owner_email: r.owner_email, priority: r.priority, due_on: r.due_on }))
       .filter((r) => r.title);
     if (clean.length === 0) { setErr('Chưa nhập việc nào (cần ít nhất 1 tên việc).'); return; }
     const fd = new FormData();
@@ -269,6 +269,12 @@ export default function AddTaskToProject({
                         <button type="button" className="icon-btn bulk-del" title="Xoá dòng" aria-label="Xoá dòng"
                           onClick={() => removeRow(r.key)} disabled={rows.length <= 1}>✕</button>
                       </div>
+                      <input
+                        className="i bulk-eo"
+                        value={r.expected_output}
+                        placeholder="Kết quả đầu ra (tuỳ chọn) — xong là ra cái gì?"
+                        onChange={(e) => setRow(r.key, { expected_output: e.target.value })}
+                      />
                       <div className="bulk-row-sub">
                         <SearchSelect value={r.owner_email} onChange={(v) => setRow(r.key, { owner_email: v })}
                           emptyLabel="— Chưa giao —" placeholder="— Giao cho —" options={ownerOptions} />
