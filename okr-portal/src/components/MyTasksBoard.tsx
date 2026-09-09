@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import NavIcon from '@/components/NavIcon';
 import { ProgressBar } from '@/components/ui';
 import { fmtDate } from '@/lib/format';
 import type { Initiative } from '@/lib/initiatives';
@@ -41,10 +42,35 @@ export default function MyTasksBoard({
 }) {
   const today = todayISO();
   const [open, setOpen] = useState<Initiative | null>(null);
+  // Thu gọn nhóm — MẶC ĐỊNH thu gọn "Đã hoàn thành" (CFO 09/09); nhớ theo trình duyệt.
+  const [collapsed, setCollapsed] = useState<Record<Bucket, boolean>>({ overdue: false, doing: false, todo: false, done: true });
+  useEffect(() => {
+    setCollapsed((c) => {
+      const next = { ...c };
+      for (const b of BUCKETS) {
+        try {
+          const v = localStorage.getItem(`my_grp_col:${b.key}`);
+          if (v === '0' || v === '1') next[b.key] = v === '1';
+        } catch {}
+      }
+      return next;
+    });
+  }, []);
+  const toggle = (k: Bucket) =>
+    setCollapsed((c) => {
+      const next = { ...c, [k]: !c[k] };
+      try { localStorage.setItem(`my_grp_col:${k}`, next[k] ? '1' : '0'); } catch {}
+      return next;
+    });
 
   const groups = useMemo(() => {
     const m: Record<Bucket, Initiative[]> = { overdue: [], doing: [], todo: [], done: [] };
     for (const t of tasks) m[bucketOf(t, today)].push(t);
+    // Sắp xếp: nhóm mở việc theo HẠN gần nhất lên đầu (null xuống cuối);
+    // nhóm hoàn thành theo ngày hoàn thành mới nhất lên đầu.
+    const dueAsc = (a: Initiative, b: Initiative) => (a.due_on ?? '9999-12-31').localeCompare(b.due_on ?? '9999-12-31');
+    const doneDesc = (a: Initiative, b: Initiative) => (b.done_on ?? '').localeCompare(a.done_on ?? '');
+    m.overdue.sort(dueAsc); m.doing.sort(dueAsc); m.todo.sort(dueAsc); m.done.sort(doneDesc);
     return m;
   }, [tasks, today]);
 
@@ -57,43 +83,63 @@ export default function MyTasksBoard({
       {BUCKETS.map((b) => {
         const list = groups[b.key];
         if (list.length === 0) return null;
+        const isCol = collapsed[b.key];
         return (
           <section key={b.key} className="mytb-group">
-            <div className="mytb-ghead">
+            <button type="button" className={`mytb-ghead${isCol ? ' col' : ''}`} onClick={() => toggle(b.key)} aria-expanded={!isCol}>
+              <span className="mytb-chev"><NavIcon name="chevron" /></span>
               <span className="mytb-dot" style={{ background: b.color }} />
               <span className="mytb-gname">{b.label}</span>
               <span className="mytb-gcount">{list.length}</span>
-            </div>
-            <div className="mytb-list">
-              {list.map((t) => {
-                const overdue = b.key === 'overdue';
-                return (
-                  <button key={t.id} type="button" className="mytb-row" onClick={() => setOpen(t)}>
-                    <div className="mytb-row-main">
-                      <div className="mytb-title">
-                        {t.code && <span className="okr-code" style={{ marginRight: 6 }}>{t.code}</span>}
-                        {t.title}
-                        {t.priority === 'high' && <span className="badge red mytb-mini">Ưu tiên cao</span>}
+            </button>
+            {!isCol && (
+              <div className="mytb-list">
+                {list.map((t) => {
+                  const overdue = b.key === 'overdue';
+                  return (
+                    <div
+                      key={t.id}
+                      className="mytb-row"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setOpen(t)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(t); } }}
+                    >
+                      <div className="mytb-row-main">
+                        <div className="mytb-title">
+                          {t.code && <span className="okr-code" style={{ marginRight: 6 }}>{t.code}</span>}
+                          {t.title}
+                          {t.priority === 'high' && <span className="badge red mytb-mini">Ưu tiên cao</span>}
+                        </div>
+                        <div className="mytb-sub">
+                          <span className={`badge ${STATUS_CLS[t.status as Status]}`}>{STATUS_LABEL[t.status as Status]}</span>
+                          {t.objective_code && <span className="mytb-chip">🎯 {t.objective_code}</span>}
+                          {t.project_id && (
+                            <Link
+                              href={`/projects/${t.project_id}`}
+                              className="mytb-projlink"
+                              onClick={(e) => e.stopPropagation()}
+                              title={`Mở dự án: ${t.project_name || t.project_code}`}
+                            >
+                              🗂 {t.project_code ? `${t.project_code} · ` : ''}{t.project_name || t.project_code}
+                            </Link>
+                          )}
+                          {t.due_on && (
+                            <span className={overdue ? 'mytb-due over' : 'mytb-due'}>
+                              📅 {fmtDate(t.due_on)}{overdue ? ' · quá hạn' : ''}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="mytb-sub">
-                        <span className={`badge ${STATUS_CLS[t.status as Status]}`}>{STATUS_LABEL[t.status as Status]}</span>
-                        {t.objective_code && <span className="mytb-chip">🎯 {t.objective_code}</span>}
-                        {t.project_id && <span className="mytb-chip">🗂 {t.project_code || t.project_name}</span>}
-                        {t.due_on && (
-                          <span className={overdue ? 'mytb-due over' : 'mytb-due'}>
-                            📅 {fmtDate(t.due_on)}{overdue ? ' · quá hạn' : ''}
-                          </span>
-                        )}
+                      <div className="mytb-prog">
+                        <ProgressBar value={t.progress} />
+                        <span className="mono">{t.progress.toFixed(0)}%</span>
                       </div>
                     </div>
-                    <div className="mytb-prog">
-                      <ProgressBar value={t.progress} />
-                      <span className="mono">{t.progress.toFixed(0)}%</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </section>
         );
       })}

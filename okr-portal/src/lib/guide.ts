@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-09.141';
+export const GUIDE_VERSION = '2026-09-09.142';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -651,6 +651,7 @@ export const CHANGELOG: ChangeLog[] = [
     date: '09/09/2026 (Trang "Của tôi": danh sách việc theo nhóm + cập nhật nhanh tại chỗ)',
     items: [
       'Trang "OKR & việc của tôi" nay liệt kê công việc gom theo nhóm: Đã quá hạn · Đang làm · Chưa làm · Đã hoàn thành. Bấm một việc để mở chi tiết & cập nhật nhanh (trạng thái/tiến độ/minh chứng) ngay tại trang, ngoài đường mở sang trang lọc đầy đủ.',
+      'Nhóm "Đã hoàn thành" mặc định thu gọn (bấm tiêu đề để mở/đóng, nhớ lựa chọn); mỗi nhóm sắp xếp việc theo HẠN gần nhất lên đầu; việc thuộc dự án hiện tên dự án kèm link mở nhanh dự án.',
     ],
   },
   {
