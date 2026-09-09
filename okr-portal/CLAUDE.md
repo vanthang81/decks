@@ -175,6 +175,12 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
     Modal "Thêm việc vào dự án" (`AddTaskToProject`) nay OKR **tuỳ chọn** → dùng action `createProjectTaskAction`
     (gác canManageProject; có chọn OKR thì thêm canEditObjective; việc chỉ thuộc dự án là hợp lệ nhờ
     okr_init_attach_ck có project_id). `createInitiativeAction` (bắt buộc OKR) vẫn dùng cho action-plan của OKR.
+  - **⭐ ĐƠN VỊ CÔNG VIỆC = PHÒNG CỦA NGƯỜI ĐƯỢC GIAO (CFO 09/09 — mặc định VĨNH VIỄN, KHÔNG để trống,
+    không cần nhắc lại)**: khi tạo/sửa việc mà `unit_id` để trống nhưng có `owner_email` → tự lấy `unit_id`
+    của người đó. Điểm chốt DUY NHẤT = helper **`resolveTaskUnit(unitId, ownerEmail)`** trong `initiatives.ts`,
+    áp trong `createInitiative` + `editInitiative` + `updateInitiative` (mọi luồng tạo/sửa việc). Backfill dữ
+    liệu cũ: **`db/610_backfill_task_unit_from_owner.sql`** (idempotent, chỉ điền dòng unit_id NULL). ⇒ Thêm
+    luồng tạo/sửa việc mới PHẢI đi qua các hàm này (đừng INSERT/UPDATE unit_id thẳng bỏ qua resolve).
   - **KẾ THỪA Đơn vị & OKR TỪ DỰ ÁN ở bảng Công việc (CFO 09/09)**: việc chỉ thuộc dự án (không gắn
     OKR/đơn vị riêng) hiển thị Đơn vị chủ trì + OKR liên quan LẤY TỪ DỰ ÁN (nhãn mờ "· dự án", class `.inh`)
     thay vì "—". `projectMetaForIds(ids)` (project-objectives.ts) trả `{unit_id,unit_name,okrs[]}` theo lô;

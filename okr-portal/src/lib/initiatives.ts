@@ -268,6 +268,17 @@ export function buildInitiativeTree(flat: Initiative[]): InitiativeNode[] {
   return roots;
 }
 
+// ĐƠN VỊ MẶC ĐỊNH = phòng của NGƯỜI ĐƯỢC GIAO (CFO 09/09 — "luôn hiển thị đơn vị là bộ phận của
+// người được assign, không để trống"). Nếu chưa chọn đơn vị mà đã có người phụ trách → lấy unit của họ.
+async function resolveTaskUnit(unitId: string | null, ownerEmail: string | null): Promise<string | null> {
+  if (unitId || !ownerEmail) return unitId;
+  const r = await queryOne<{ unit_id: string | null }>(
+    'SELECT unit_id FROM okr_users WHERE lower(email)=lower($1)',
+    [ownerEmail],
+  );
+  return r?.unit_id ?? null;
+}
+
 export async function createInitiative(input: {
   objective_id: string | null;
   key_result_id: string | null;
@@ -290,6 +301,7 @@ export async function createInitiative(input: {
   created_by: string;
 }): Promise<string> {
   const code = await nextInitCode(input.objective_id);
+  const unitId = await resolveTaskUnit(input.unit_id, input.owner_email);
   const row = await queryOne<{ id: string }>(
     `INSERT INTO okr_initiatives (objective_id, key_result_id, parent_id, kind, title, description,
         owner_email, unit_id, project_id, meeting_id, status, priority, start_on, due_on, budget_planned, budget_actual, budget_source, expected_output, created_by, code)
@@ -302,7 +314,7 @@ export async function createInitiative(input: {
       input.title,
       input.description,
       input.owner_email,
-      input.unit_id,
+      unitId,
       input.project_id,
       input.meeting_id ?? null,
       input.status,
@@ -380,6 +392,7 @@ export async function updateInitiative(
   },
 ): Promise<void> {
   const prog = input.status === 'done' ? 100 : Math.max(0, Math.min(100, input.progress));
+  const unitId = await resolveTaskUnit(input.unit_id, input.owner_email);
   await query(
     `UPDATE okr_initiatives SET status=$2, progress=$3, owner_email=$4, priority=$5, due_on=$6,
         budget_planned=$7, budget_actual=$8, unit_id=$9,
@@ -387,7 +400,7 @@ export async function updateInitiative(
                        WHEN $2<>'done' THEN NULL ELSE done_on END,
         updated_at=now() WHERE id=$1`,
     [id, input.status, prog, input.owner_email, input.priority, input.due_on,
-     input.budget_planned, input.budget_actual, input.unit_id],
+     input.budget_planned, input.budget_actual, unitId],
   );
   await recomputeInitiativeUp(id);
 }
@@ -422,6 +435,7 @@ export async function editInitiative(
 ): Promise<void> {
   const prog = input.status === 'done' ? 100 : Math.max(0, Math.min(100, input.progress));
   const setEo = input.expected_output !== undefined;
+  const unitId = await resolveTaskUnit(input.unit_id, input.owner_email);
   await query(
     `UPDATE okr_initiatives SET title=$2, description=$3, unit_id=$4, owner_email=$5,
         status=$6, progress=$7, priority=$8, start_on=$9, due_on=$10,
@@ -429,7 +443,7 @@ export async function editInitiative(
         objective_id=$15, key_result_id=$16, evidence_url=$18,${setEo ? ' expected_output=$19,' : ''}
         done_on = CASE WHEN $6='done' THEN COALESCE($17::date, done_on, now()::date) ELSE NULL END,
         updated_at=now() WHERE id=$1`,
-    [id, input.title, input.description, input.unit_id, input.owner_email, input.status, prog,
+    [id, input.title, input.description, unitId, input.owner_email, input.status, prog,
      input.priority, input.start_on, input.due_on, input.budget_planned, input.budget_actual,
      input.project_id, input.meeting_id, input.objective_id, input.key_result_id, input.done_on ?? null, input.evidence_url ?? null,
      ...(setEo ? [input.expected_output ?? null] : [])],

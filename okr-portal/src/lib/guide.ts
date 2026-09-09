@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-09.144';
+export const GUIDE_VERSION = '2026-09-09.145';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '09/09/2026 (Công việc: Đơn vị mặc định = phòng của người phụ trách)',
+    items: [
+      'Đơn vị của công việc nay MẶC ĐỊNH lấy theo phòng/ban của người được giao — không còn để trống. Các việc đang trống đơn vị đã được tự điền theo người phụ trách; từ nay tạo/giao việc mà chưa chọn đơn vị thì hệ thống tự gán theo người được giao.',
+    ],
+  },
   {
     date: '09/09/2026 (Công việc: kế thừa Đơn vị & OKR từ dự án)',
     items: [
