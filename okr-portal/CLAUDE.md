@@ -474,6 +474,12 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
 - `/` dashboard (tiến độ công ty + OKR công ty/khối) · `/objectives` cây OKR toàn kỳ + tạo mới ·
   `/objectives/[id]` chi tiết (KR + check-in + initiatives + ngân sách + OKR con + lịch sử) ·
   `/my` OKR & việc của tôi · `/admin` + `/admin/{users,org,periods}` (chỉ exec) · `/login` Google.
+- **Trang `/my` — bảng CÔNG VIỆC CỦA TÔI theo nhóm (CFO 09/09)**: `listAllInitiativesForOwner` (mọi trạng thái
+  trừ canceled) → `MyTasksBoard.tsx` (client) gom 4 nhóm: Đã quá hạn (due<hôm nay & chưa done) · Đang làm
+  (in_progress/blocked) · Chưa làm (todo) · Đã hoàn thành (done) — mỗi việc 1 nhóm (quá hạn ưu tiên). Bấm việc →
+  modal chi tiết TẠI CHỖ + "Cập nhật nhanh" (trạng thái/tiến độ/minh chứng) qua **`updateOwnTaskProgressAction`**
+  (CHỈ owner/created_by, dùng `setInitiativeProgress` — an toàn, KHÔNG đụng field khác như nhánh manage của
+  editInitiativeAction) + link "Mở đầy đủ ↗" (/tasks?task=id). CSS `.mytb-*`. **`SearchSelect` name? tuỳ chọn.**
 - Server Actions ở `src/app/objectives/actions.ts` + `src/app/admin/actions.ts` (đều `requireUser`/
   `requireExec` + kiểm quyền trước khi ghi).
 - **Nút "+ Tạo OKR" ở /objectives = POPUP (CFO 10/08)**: `NewObjectiveModal` bọc `NewObjectiveForm`

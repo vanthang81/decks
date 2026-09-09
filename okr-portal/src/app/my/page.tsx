@@ -6,9 +6,9 @@ import { ProgressBar, StatusBadge } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
 import { getCurrentPeriod, listPeriods } from '@/lib/periods';
 import { listObjectivesForOwner } from '@/lib/okr';
-import { listInitiativesForOwner, taskCountsForOwner, INIT_STATUS_LABEL } from '@/lib/initiatives';
-import { createPersonalOkrAction } from '@/app/objectives/actions';
-import { fmtVnd, fmtDate } from '@/lib/format';
+import { listAllInitiativesForOwner, taskCountsForOwner } from '@/lib/initiatives';
+import MyTasksBoard from '@/components/MyTasksBoard';
+import { createPersonalOkrAction, updateOwnTaskProgressAction } from '@/app/objectives/actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +16,7 @@ export default async function MyPage() {
   const user = await requireUser();
   const period = (await getCurrentPeriod()) ?? (await listPeriods())[0] ?? null;
   const objectives = period ? await listObjectivesForOwner(user.email, period.id) : [];
-  const initiatives = await listInitiativesForOwner(user.email);
+  const initiatives = await listAllInitiativesForOwner(user.email);
   const tc = await taskCountsForOwner(user.email);
   const myTiles: { n: number; l: string; color?: string; href: string }[] = [
     { n: tc.total, l: 'Tổng công việc', href: '/tasks?mine=1' },
@@ -80,37 +80,14 @@ export default async function MyPage() {
         </div>
 
         <div className="card" data-tour="my-tasks">
-          <h3 style={{ marginTop: 0 }}>Việc đang mở của tôi</h3>
-          {initiatives.length === 0 && <p className="muted">Không có việc nào đang mở.</p>}
-          <div className="table-scroll">
-            <table className="t">
-              <tbody>
-                {initiatives.map((i) => (
-                  <tr key={i.id}>
-                    <td>
-                      <Link href={`/tasks?task=${i.id}`} className="tbl-link" title="Mở chi tiết công việc">
-                        {i.code && <span className="okr-code" style={{ marginRight: 6 }}>{i.code}</span>}
-                        {i.title}
-                      </Link>
-                    </td>
-                    <td>
-                      <span className="badge gray">{INIT_STATUS_LABEL[i.status]}</span>
-                    </td>
-                    <td className="right mono">{i.progress.toFixed(0)}%</td>
-                    <td className="right mono">{fmtVnd(i.budget_actual)}</td>
-                    <td>{fmtDate(i.due_on)}</td>
-                    <td>
-                      {i.objective_id && (
-                        <Link href={`/objectives/${i.objective_id}`}>
-                          {i.objective_code ? <span className="okr-code">{i.objective_code}</span> : 'Mở OKR'}
-                        </Link>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="flexbtw" style={{ alignItems: 'baseline', gap: 10 }}>
+            <h3 style={{ marginTop: 0 }}>Công việc của tôi</h3>
+            <Link href="/tasks?mine=1" className="btn ghost sm">Mở trang lọc đầy đủ ↗</Link>
           </div>
+          <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
+            Nhóm theo: Đã quá hạn · Đang làm · Chưa làm · Đã hoàn thành. Bấm một việc để xem chi tiết &amp; cập nhật nhanh ngay tại đây.
+          </p>
+          <MyTasksBoard tasks={initiatives} update={updateOwnTaskProgressAction} />
         </div>
       </div>
     </>

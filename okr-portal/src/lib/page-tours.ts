@@ -102,7 +102,7 @@ export const PAGE_TOURS: Record<string, TourStep[]> = {
     { target: 'my-new', title: 'OKR cá nhân', body: 'Bấm đây để tự đặt mục tiêu cho mình — mọi vai trò đều tạo được.' },
     { target: 'my-tiles', title: 'Tổng quan việc của tôi', body: 'Các ô số việc (đang mở/quá hạn/hôm nay…) — bấm một ô để mở trang Công việc đã lọc sẵn.' },
     { target: 'my-okr', title: 'OKR tôi chủ trì', body: 'Danh sách OKR bạn phụ trách kèm tiến độ — bấm để mở chi tiết & check-in.' },
-    { target: 'my-tasks', title: 'Việc đang mở của tôi', body: 'Việc được giao cho bạn; cập nhật trạng thái + tiến độ ngay tại đây.' },
+    { target: 'my-tasks', title: 'Công việc của tôi', body: 'Việc của bạn gom theo nhóm: Đã quá hạn · Đang làm · Chưa làm · Đã hoàn thành. Bấm một việc để xem chi tiết & cập nhật nhanh (trạng thái/tiến độ) ngay tại trang này.' },
     done('Đây là "bàn làm việc" cá nhân của bạn. Mở lại hướng dẫn từ nút "Hướng dẫn" trên header.'),
   ],
 

@@ -209,6 +209,15 @@ export async function listInitiativesForOwner(email: string): Promise<Initiative
   );
 }
 
+// TOÀN BỘ việc của 1 người (MỌI trạng thái, trừ 'canceled') — cho bảng nhóm ở trang "Của tôi".
+export async function listAllInitiativesForOwner(email: string): Promise<Initiative[]> {
+  return query<Initiative>(
+    `${SELECT} WHERE lower(i.owner_email)=lower($1) AND i.status <> 'canceled'
+     ORDER BY i.due_on NULLS LAST, i.sort`,
+    [email],
+  );
+}
+
 // Số liệu tổng quan công việc cá nhân (mọi trạng thái) — cho tiles ở trang "Của tôi".
 export type MyTaskCounts = { total: number; doing: number; todo: number; blocked: number; done: number; overdue: number };
 export async function taskCountsForOwner(email: string): Promise<MyTaskCounts> {

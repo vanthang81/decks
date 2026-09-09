@@ -1298,6 +1298,30 @@ a.prof-row:hover { background: var(--primary-tint); border-radius: 6px; }
 .bulk-del { flex: 0 0 auto; }
 .bulk-row-sub { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 8px; margin-top: 8px; padding-left: 30px; }
 @media (max-width: 640px) { .bulk-row-sub { grid-template-columns: 1fr; padding-left: 0; } }
+/* Bảng công việc theo nhóm ở trang "Của tôi" */
+.mytb { display: flex; flex-direction: column; gap: 14px; }
+.mytb-group { }
+.mytb-ghead { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.mytb-dot { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; }
+.mytb-gname { font-weight: 700; font-size: 14px; }
+.mytb-gcount { font-size: 12px; font-weight: 700; color: var(--muted); background: var(--primary-tint); border-radius: 999px; padding: 1px 9px; }
+.mytb-list { display: flex; flex-direction: column; gap: 6px; }
+.mytb-row { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 9px 12px; cursor: pointer; font: inherit; color: var(--ink); }
+.mytb-row:hover { border-color: var(--primary); background: var(--primary-tint); }
+.mytb-row-main { min-width: 0; flex: 1; }
+.mytb-title { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mytb-mini { font-size: 10.5px; }
+.mytb-sub { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px; font-size: 12px; color: var(--muted); }
+.mytb-chip { color: var(--muted); }
+.mytb-due.over { color: #dc2626; font-weight: 600; }
+.mytb-prog { flex: 0 0 auto; width: 130px; display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.mytb-prog .pbar { flex: 1; }
+.mytb-quick { margin-top: 12px; padding: 12px; border: 1px dashed var(--line); border-radius: 10px; background: var(--primary-tint); }
+.mytb-quick-h { font-weight: 700; font-size: 13px; margin-bottom: 6px; color: var(--primary); }
+@media (max-width: 640px) {
+  .mytb-row { flex-direction: column; align-items: stretch; gap: 8px; }
+  .mytb-prog { width: 100%; }
+}
 /* Bấm TÊN KPI = nút phẳng như link (mở box chi tiết) */
 .kpi-name-btn {
   background: none; border: 0; padding: 0; margin: 0; cursor: pointer; text-align: left;

@@ -865,6 +865,30 @@ export async function deleteInitiativeAction(fd: FormData) {
   revalidateTask(init);
 }
 
+// Cập nhật NHANH việc CỦA MÌNH (trang "Của tôi"): chỉ trạng thái/tiến độ/minh chứng — an toàn
+// bất kể quyền quản lý (KHÔNG đụng các trường khác như editInitiativeAction nhánh manage).
+export async function updateOwnTaskProgressAction(fd: FormData) {
+  const user = await requireUser();
+  const id = str(fd, 'id');
+  const init = await getInitiative(id);
+  if (!init) throw new Error('Không tìm thấy công việc.');
+  const e = user.email.toLowerCase();
+  const isOwner = (init.owner_email ?? '').toLowerCase() === e || (init.created_by ?? '').toLowerCase() === e;
+  if (!isOwner) throw new Error('Bạn chỉ cập nhật được việc của mình ở đây.');
+  const hasEvidence = fd.has('evidence_url');
+  const evidence = str(fd, 'evidence_url');
+  if (hasEvidence && evidence && !isValidUrl(evidence)) throw new Error('Link minh chứng không hợp lệ (phải là http/https).');
+  const { setInitiativeProgress } = await import('@/lib/initiatives');
+  await setInitiativeProgress(id, {
+    status: (str(fd, 'status') || 'todo') as InitStatus,
+    progress: num(fd, 'progress'),
+    evidence_url: hasEvidence ? orNull(evidence) : undefined,
+  });
+  await auditTask(user.email, 'initiative.update', init, { title: init.title });
+  revalidateTask(init);
+  revalidatePath('/my');
+}
+
 // Kéo-thả Kanban: đổi trạng thái 1 việc. Kiểm quyền (quản lý HOẶC người được giao).
 export async function moveInitiativeAction(id: string, status: InitStatus) {
   const user = await requireUser();
