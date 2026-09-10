@@ -12,6 +12,7 @@ import { getCurrentPeriod } from '@/lib/periods';
 import { depsForTasks } from '@/lib/deps';
 import { loadAccess, buildTaskViewCtx, canViewInitiative, canEditObjective } from '@/lib/access';
 import { projectMetaForIds } from '@/lib/project-objectives';
+import { memberProjectIds } from '@/lib/project-members';
 import { editInitiativeAction, deleteInitiativeAction, moveInitiativeAction, createTaskAction, bulkTasksAction } from '@/app/objectives/actions';
 
 export const dynamic = 'force-dynamic';
@@ -38,6 +39,8 @@ export default async function TasksPage({
 
   // Việc mà user có quyền QUẢN LÝ (sửa mọi trường + xoá) = quản OKR gốc HOẶC dự án HOẶC cuộc họp của việc.
   const emailLc = user.email.toLowerCase();
+  // MỨC 2 (CFO 10/09): thành viên dự án được quản (sửa đầy đủ + xoá) việc DO MÌNH phụ trách/tạo trong dự án đó.
+  const myMemberProjects = await memberProjectIds(user.email);
   const manageIds = visible
     .filter((t) =>
       canEditObjective(
@@ -47,6 +50,10 @@ export default async function TasksPage({
         access,
       ) ||
       (t.project_id && ctx.myProjects.has(t.project_id)) ||
+      // Thành viên dự án ↔ việc của mình trong dự án mình tham gia.
+      (t.project_id && myMemberProjects.has(t.project_id) &&
+        ((t.owner_email && t.owner_email.toLowerCase() === emailLc) ||
+          (t.created_by && t.created_by.toLowerCase() === emailLc))) ||
       (t.meeting_owner && t.meeting_owner.toLowerCase() === emailLc) ||
       (t.meeting_secretary && t.meeting_secretary.toLowerCase() === emailLc) ||
       // VIỆC CÁ NHÂN (không gắn OKR/dự án/cuộc họp) → chính chủ toàn quyền sửa/xoá.

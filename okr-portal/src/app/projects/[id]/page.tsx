@@ -88,8 +88,11 @@ export default async function ProjectDetail({ params }: { params: { id: string }
   // Phân quyền XEM (CFO 04/09): chỉ thành viên/assignee/quản lý/scope.all mới vào được trang dự án.
   const emailLc = user.email.toLowerCase();
   const isAssignee = tasks.some((t) => (t.owner_email ?? '').toLowerCase() === emailLc);
-  const canView = canManage || isAssignee || (await isProjectMember(p.id, user.email));
+  const isMember = await isProjectMember(p.id, user.email);
+  const canView = canManage || isAssignee || isMember;
   if (!canView) redirect('/projects');
+  // MỨC 2 (CFO 10/09): thành viên dự án được TỰ THÊM việc + sửa đầy đủ việc mình phụ trách/tạo.
+  const canAddTask = canManage || isMember;
   const projectOpts = p.period_id ? await listProjectOptions(p.period_id) : [];
   const meetingOpts = await listMeetingOptions(user);
   const objectiveOpts = p.period_id ? await listObjectivesWithKrs(p.period_id) : [];
@@ -231,7 +234,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
         <div className="card">
           <div className="flexbtw" style={{ alignItems: 'flex-start', gap: 10 }}>
             <h3 style={{ marginTop: 0 }}>Công việc thuộc dự án ({tasks.length})</h3>
-            {canManage && (
+            {canAddTask && (
               <AddTaskToProject
                 projectId={p.id}
                 objectives={objectiveOpts}
@@ -269,12 +272,15 @@ export default async function ProjectDetail({ params }: { params: { id: string }
           )}
           {tasks.length === 0 ? (
             <p className="muted">
-              Chưa có việc nào. Mở một OKR → mục “Dự án &amp; Kế hoạch hành động” → bấm việc → tick “🗂 Thuộc dự án” và chọn dự án này.
+              Chưa có việc nào. {canAddTask
+                ? 'Bấm “＋ Thêm việc” ở góc phải-trên để tạo việc cho dự án này.'
+                : 'Mở một OKR → mục “Dự án & Kế hoạch hành động” → bấm việc → tick “🗂 Thuộc dự án” và chọn dự án này.'}
             </p>
           ) : (
             <ExecutionTabs
               initiatives={tasks}
               canManage={isExec(user.role) || canManage}
+              memberOwnFullEdit={isMember && !canManage}
               currentEmail={user.email}
               move={moveInitiativeAction}
               save={editInitiativeAction}

@@ -179,6 +179,18 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
     Modal "Thêm việc vào dự án" (`AddTaskToProject`) nay OKR **tuỳ chọn** → dùng action `createProjectTaskAction`
     (gác canManageProject; có chọn OKR thì thêm canEditObjective; việc chỉ thuộc dự án là hợp lệ nhờ
     okr_init_attach_ck có project_id). `createInitiativeAction` (bắt buộc OKR) vẫn dùng cho action-plan của OKR.
+  - **⭐ THÀNH VIÊN DỰ ÁN TỰ THÊM & SỬA VIỆC CỦA MÌNH (mức 2 — CFO 10/09)**: thành viên tường minh
+    (`okr_project_members`) của dự án được **TỰ THÊM việc** (một/nhiều) vào dự án mình tham gia + **sửa đầy đủ
+    + xoá việc DO MÌNH phụ trách/tạo** (owner HOẶC created_by), việc người khác vẫn chỉ xem (hoặc cập nhật
+    trạng thái/tiến độ nếu là assignee). **Nguồn sự thật server**: `createProjectTaskAction`/
+    `createProjectTasksBulkAction`/`createTaskAction` (nhánh dự án) cho thêm nếu `canManageProject || isProjectMember`;
+    `canManageTaskLoose` (objectives/actions.ts) nhánh dự án trả true khi `isProjectMember && (owner|created_by===mình)`
+    → mở khoá `editInitiativeAction` (sửa đầy đủ) + `deleteInitiativeAction`. **UI**: `/projects/[id]` truyền
+    `canAddTask=canManage||isMember` (hiện nút "＋ Thêm việc") + `memberOwnFullEdit={isMember && !canManage}` xuống
+    `ExecutionTabs` (per-row `canManageRow` = canManage HOẶC việc-của-mình → EditModal mở form sửa đầy đủ). `/tasks`
+    thêm `memberProjectIds` vào `manageIds` (việc-của-mình trong dự án mình là thành viên) → `TaskExplorer`/`TaskEditModal`
+    đồng bộ. Card ExecutionTabs bổ sung field `created_by`. Muốn đổi sang "cộng tác đầy đủ" (thành viên sửa MỌI việc
+    trong dự án) thì bỏ điều kiện owner/created_by ở 2 chỗ trên.
   - **⭐ ĐƠN VỊ CÔNG VIỆC = PHÒNG CỦA NGƯỜI ĐƯỢC GIAO (CFO 09/09 — mặc định VĨNH VIỄN, KHÔNG để trống,
     không cần nhắc lại)**: khi tạo/sửa việc mà `unit_id` để trống nhưng có `owner_email` → tự lấy `unit_id`
     của người đó. Điểm chốt DUY NHẤT = helper **`resolveTaskUnit(unitId, ownerEmail)`** trong `initiatives.ts`,

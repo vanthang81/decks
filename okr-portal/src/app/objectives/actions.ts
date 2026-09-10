@@ -381,6 +381,17 @@ async function canManageTaskLoose(user: OkrUser, init: Initiative): Promise<bool
   if (init.project_id) {
     const pr = await getProject(init.project_id);
     if (pr && canManageProject(user, pr, units, access)) return true;
+    // MỨC 2 (CFO 10/09): THÀNH VIÊN dự án được QUẢN (sửa đầy đủ + xoá) việc DO MÌNH phụ trách/tạo
+    // trong dự án mình tham gia — không đụng việc của người khác trong dự án.
+    if (pr) {
+      const e = user.email.toLowerCase();
+      const mine =
+        (init.owner_email ?? '').toLowerCase() === e || (init.created_by ?? '').toLowerCase() === e;
+      if (mine) {
+        const { isProjectMember } = await import('@/lib/project-members');
+        if (await isProjectMember(init.project_id, user.email)) return true;
+      }
+    }
   }
   // VIỆC CÁ NHÂN (không gắn OKR/dự án/cuộc họp) → người phụ trách/người tạo toàn quyền sửa/xoá việc của mình.
   if (!init.objective_id && !init.key_result_id && !init.meeting_id && !init.project_id) {
@@ -707,7 +718,10 @@ export async function createTaskAction(fd: FormData) {
   if (projectId) {
     const pr = await getProject(projectId);
     if (!pr) throw new Error('Không tìm thấy dự án.');
-    if (!canManageProject(user, pr, units, access)) throw new Error('Bạn không có quyền gắn việc vào dự án này.');
+    // MỨC 2 (CFO 10/09): thành viên dự án được gắn việc vào dự án mình tham gia (không cần quyền quản lý).
+    const { isProjectMember } = await import('@/lib/project-members');
+    if (!canManageProject(user, pr, units, access) && !(await isProjectMember(projectId, user.email)))
+      throw new Error('Bạn không có quyền gắn việc vào dự án này.');
   }
   // Mọi việc phải có ÍT NHẤT một "điểm neo": OKR / dự án / người phụ trách (ràng buộc DB okr_init_attach_ck).
   if (!objectiveId && !projectId && !ownerEmail)

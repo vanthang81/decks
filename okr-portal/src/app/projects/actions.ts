@@ -210,7 +210,10 @@ export async function createProjectTaskAction(fd: FormData) {
   const projectId = str(fd, 'project_id');
   const p = await getProject(projectId);
   if (!p) throw new Error('Không tìm thấy dự án.');
-  if (!canManageProject(user, p, units, access)) throw new Error('Bạn không có quyền thêm việc vào dự án này.');
+  // MỨC 2 (CFO 10/09): thành viên dự án được TỰ THÊM việc vào dự án mình tham gia (không cần quyền quản lý).
+  const { isProjectMember } = await import('@/lib/project-members');
+  if (!canManageProject(user, p, units, access) && !(await isProjectMember(projectId, user.email)))
+    throw new Error('Bạn không có quyền thêm việc vào dự án này.');
   const title = str(fd, 'title');
   if (!title) throw new Error('Thiếu tên việc.');
   const objectiveId = orNull(str(fd, 'objective_id'));
@@ -243,7 +246,10 @@ export async function createProjectTasksBulkAction(fd: FormData) {
   const projectId = str(fd, 'project_id');
   const p = await getProject(projectId);
   if (!p) throw new Error('Không tìm thấy dự án.');
-  if (!canManageProject(user, p, units, access)) throw new Error('Bạn không có quyền thêm việc vào dự án này.');
+  // MỨC 2 (CFO 10/09): thành viên dự án được TỰ THÊM việc (kể cả thêm nhiều việc) vào dự án mình tham gia.
+  const { isProjectMember } = await import('@/lib/project-members');
+  if (!canManageProject(user, p, units, access) && !(await isProjectMember(projectId, user.email)))
+    throw new Error('Bạn không có quyền thêm việc vào dự án này.');
 
   type Row = { title?: string; expected_output?: string; owner_email?: string; priority?: string; due_on?: string };
   let rows: Row[] = [];

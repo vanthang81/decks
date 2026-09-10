@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-10.148';
+export const GUIDE_VERSION = '2026-09-10.149';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '10/09/2026 (Thành viên dự án tự thêm & sửa việc của mình)',
+    items: [
+      'Thành viên của một dự án nay TỰ THÊM được công việc vào dự án mình tham gia (kể cả thêm nhiều việc cùng lúc) — không cần là chủ trì/quản lý dự án.',
+      'Thành viên được SỬA ĐẦY ĐỦ (tên, hạn, người phụ trách, kết quả đầu ra…) và xoá những việc DO MÌNH phụ trách hoặc mình tạo trong dự án; việc của người khác vẫn chỉ xem (hoặc cập nhật trạng thái/tiến độ nếu được giao). Áp dụng nhất quán ở cả trang dự án lẫn trang Công việc.',
+    ],
+  },
   {
     date: '10/09/2026 (Sửa lỗi không thêm được công việc vào dự án)',
     items: [

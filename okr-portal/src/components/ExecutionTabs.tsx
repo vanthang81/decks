@@ -68,6 +68,7 @@ export type Card = {
   description: string | null;
   owner_email: string | null;
   owner_name: string | null;
+  created_by?: string | null;
   unit_id: string | null;
   unit_name: string | null;
   project_id: string | null;
@@ -225,6 +226,7 @@ export default function ExecutionTabs({
   manageStructure = true,
   context = 'objective',
   priorityEmails,
+  memberOwnFullEdit = false,
   children,
 }: {
   initiatives: Card[];
@@ -244,6 +246,9 @@ export default function ExecutionTabs({
   manageStructure?: boolean;
   context?: Ctx;
   priorityEmails?: string[];  // email ưu tiên xếp trước ở droplist "Giao cho" (vd thành viên dự án)
+  // MỨC 2 (CFO 10/09): người xem là THÀNH VIÊN dự án (không phải quản lý) → được sửa ĐẦY ĐỦ việc
+  // DO MÌNH phụ trách/tạo (owner/created_by), việc người khác chỉ xem. Khớp quyền server canManageTaskLoose.
+  memberOwnFullEdit?: boolean;
   children: React.ReactNode;
 }) {
   const [view, setView] = useState<View>('list');
@@ -258,8 +263,16 @@ export default function ExecutionTabs({
   };
 
   const emailLc = currentEmail.toLowerCase();
+  // Việc DO MÌNH phụ trách/tạo (dùng cho quyền của thành viên dự án — mức 2).
+  const isMine = (c: Card) =>
+    (!!c.owner_email && c.owner_email.toLowerCase() === emailLc) ||
+    (!!c.created_by && c.created_by.toLowerCase() === emailLc);
+  // Thành viên dự án được QUẢN đầy đủ (sửa mọi trường + xoá) việc của mình → hiện form sửa đầy đủ.
+  const canManageRow = (c: Card) => canManage || (memberOwnFullEdit && isMine(c));
   const canEdit = (c: Card) =>
-    canManage || (!!c.owner_email && c.owner_email.toLowerCase() === emailLc);
+    canManage ||
+    (!!c.owner_email && c.owner_email.toLowerCase() === emailLc) ||
+    (memberOwnFullEdit && isMine(c));
 
   const tabs: { key: View; label: string; icon: string }[] = [
     { key: 'list', label: 'Danh sách', icon: '📋' },
@@ -408,7 +421,7 @@ export default function ExecutionTabs({
       {editing && (
         <EditModal
           card={editing}
-          canManage={canManage}
+          canManage={canManageRow(editing)}
           canEdit={canEdit(editing)}
           hasChildren={initiatives.some((i) => i.parent_id === editing.id)}
           users={users}
