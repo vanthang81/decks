@@ -20,9 +20,10 @@ import { listProjectObjectives } from '@/lib/project-objectives';
 import ComplianceChecklist from '@/components/ComplianceChecklist';
 import ComplianceFunctions from '@/components/ComplianceFunctions';
 import ComplianceIssues from '@/components/ComplianceIssues';
-import { listChecklistItems, listIssues, listProjectFunctions, listReviewsForProject, projectFunctionsOf, issueIdsOwnedBy } from '@/lib/compliance';
-import type { ChecklistItem, ComplianceIssue, ReviewRow, ProjectFunctionRow, ProjectFn } from '@/lib/compliance';
-import { addProjectFunctionAction, removeProjectFunctionAction, submitIssueAction, reviewIssueAction } from '../compliance-actions';
+import ComplianceDashboard from '@/components/ComplianceDashboard';
+import { listChecklistItems, listIssues, listProjectFunctions, listReviewsForProject, projectFunctionsOf, issueIdsOwnedBy, listRemediationTasks } from '@/lib/compliance';
+import type { ChecklistItem, ComplianceIssue, ReviewRow, ProjectFunctionRow, ProjectFn, RemediationTask } from '@/lib/compliance';
+import { addProjectFunctionAction, removeProjectFunctionAction, submitIssueAction, reviewIssueAction, addRemediationTaskAction } from '../compliance-actions';
 import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
 import { listObjectivesWithKrs } from '@/lib/okr';
@@ -107,10 +108,12 @@ export default async function ProjectDetail({ params }: { params: { id: string }
   let compReviews: ReviewRow[] = [];
   let myFns = new Set<ProjectFn>();
   let myOwnedIssueIds: string[] = [];
+  let compTasks: RemediationTask[] = [];
   if (compOn) {
-    [checklistItems, compIssues, compFns, compReviews, myFns, myOwnedIssueIds] = await Promise.all([
+    [checklistItems, compIssues, compFns, compReviews, myFns, myOwnedIssueIds, compTasks] = await Promise.all([
       listChecklistItems(p.id), listIssues(p.id), listProjectFunctions(p.id),
       listReviewsForProject(p.id), projectFunctionsOf(p.id, user.email), issueIdsOwnedBy(p.id, user.email),
+      listRemediationTasks(p.id),
     ]);
   }
   const isAdmin = hasCap(user, 'scope.all', access);
@@ -120,6 +123,8 @@ export default async function ProjectDetail({ params }: { params: { id: string }
     canSubmitIssueIds: (canManage || myFns.has('qlda'))
       ? compIssues.map((i) => i.id)
       : myOwnedIssueIds,
+    // Được thêm hành động khắc phục: quản dự án / thành viên dự án / người giữ vai trò chức năng.
+    canAdd: canManage || isMember || myFns.size > 0,
   };
   const projectOpts = p.period_id ? await listProjectOptions(p.period_id) : [];
   const meetingOpts = await listMeetingOptions(user);
@@ -261,14 +266,17 @@ export default async function ProjectDetail({ params }: { params: { id: string }
         {/* ---- Bảng kiểm tuân thủ (module bật/tắt theo dự án — CFO 10/09) ---- */}
         {p.compliance_enabled ? (
           <>
+            <ComplianceDashboard items={checklistItems} issues={compIssues} tasks={compTasks} today={todayStr} />
             <ComplianceChecklist projectId={p.id} items={checklistItems} canImport={canManage} />
             <ComplianceIssues
               projectId={p.id}
               issues={compIssues}
               reviews={compReviews}
               perms={compPerms}
+              users={users.map((u) => ({ email: u.email, name: u.display_name || u.email }))}
               submit={submitIssueAction}
               review={reviewIssueAction}
+              addAction={addRemediationTaskAction}
             />
             {canManage && (
               <ComplianceFunctions

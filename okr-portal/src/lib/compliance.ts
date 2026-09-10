@@ -132,7 +132,7 @@ export async function listChecklistItems(projectId: string): Promise<ChecklistIt
             c.ket_luan, c.khkp_noi_dung, c.khkp_don_vi, c.khkp_pic, c.khkp_han::text, c.khkp_ket_qua,
             c.extra, c.sort,
             i.id AS issue_id, i.status AS issue_status,
-            COALESCE((SELECT count(*) FROM okr_initiatives t WHERE t.issue_id=i.id),0)::int AS task_total,
+            COALESCE((SELECT count(*) FROM okr_initiatives t WHERE t.issue_id=i.id AND t.status<>'canceled'),0)::int AS task_total,
             COALESCE((SELECT count(*) FROM okr_initiatives t WHERE t.issue_id=i.id AND t.status='done'),0)::int AS task_done
        FROM okr_checklist_items c
        LEFT JOIN okr_compliance_issues i ON i.checklist_item_id=c.id
@@ -142,10 +142,15 @@ export async function listChecklistItems(projectId: string): Promise<ChecklistIt
   );
 }
 
+// Cột issue (timestamp cast ::text — pg trả Date; app quy ước text để đồng nhất + serialize sạch sang client).
+const ISSUE_COLS = `i.id, i.project_id, i.checklist_item_id, i.title, i.severity, i.status,
+  i.submitted_by, i.submitted_at::text AS submitted_at, i.kstt_by, i.kstt_at::text AS kstt_at,
+  i.closed_by, i.closed_at::text AS closed_at`;
+
 export async function listIssues(projectId: string): Promise<ComplianceIssue[]> {
   return query<ComplianceIssue>(
-    `SELECT i.*, c.ma_tieu_chi,
-            COALESCE((SELECT count(*) FROM okr_initiatives t WHERE t.issue_id=i.id),0)::int AS task_total,
+    `SELECT ${ISSUE_COLS}, c.ma_tieu_chi,
+            COALESCE((SELECT count(*) FROM okr_initiatives t WHERE t.issue_id=i.id AND t.status<>'canceled'),0)::int AS task_total,
             COALESCE((SELECT count(*) FROM okr_initiatives t WHERE t.issue_id=i.id AND t.status='done'),0)::int AS task_done
        FROM okr_compliance_issues i
        JOIN okr_checklist_items c ON c.id=i.checklist_item_id
@@ -155,9 +160,20 @@ export async function listIssues(projectId: string): Promise<ComplianceIssue[]> 
   );
 }
 
+// Hành động khắc phục (Task) đang mở của dự án — để tính sắp/quá hạn cho dashboard tuân thủ.
+export type RemediationTask = { id: string; issue_id: string; title: string; due_on: string | null; status: string; owner_email: string | null };
+export async function listRemediationTasks(projectId: string): Promise<RemediationTask[]> {
+  return query<RemediationTask>(
+    `SELECT t.id, t.issue_id, t.title, t.due_on::text, t.status, t.owner_email
+       FROM okr_initiatives t JOIN okr_compliance_issues i ON i.id=t.issue_id
+      WHERE i.project_id=$1 AND t.issue_id IS NOT NULL`,
+    [projectId],
+  );
+}
+
 export async function getIssue(id: string): Promise<ComplianceIssue | null> {
   return queryOne<ComplianceIssue>(
-    `SELECT i.*, c.ma_tieu_chi FROM okr_compliance_issues i
+    `SELECT ${ISSUE_COLS}, c.ma_tieu_chi FROM okr_compliance_issues i
        JOIN okr_checklist_items c ON c.id=i.checklist_item_id WHERE i.id=$1`,
     [id],
   );
@@ -304,7 +320,8 @@ export async function submitIssue(issueId: string, actor: string): Promise<{ ok:
   if (issue.status === 'closed') return { ok: false, error: 'Vấn đề đã đóng.' };
   if (issue.status === 'pending_review' || issue.status === 'kstt_passed') return { ok: false, error: 'Vấn đề đang chờ thẩm định.' };
   const t = await queryOne<{ total: string; done: string }>(
-    `SELECT count(*) total, count(*) FILTER (WHERE status='done') done FROM okr_initiatives WHERE issue_id=$1`,
+    `SELECT count(*) FILTER (WHERE status<>'canceled') total, count(*) FILTER (WHERE status='done') done
+       FROM okr_initiatives WHERE issue_id=$1`,
     [issueId],
   );
   const total = Number(t?.total ?? 0), done = Number(t?.done ?? 0);
@@ -313,6 +330,31 @@ export async function submitIssue(issueId: string, actor: string): Promise<{ ok:
   await query("UPDATE okr_compliance_issues SET status='pending_review', submitted_by=$2, submitted_at=now(), updated_at=now() WHERE id=$1", [issueId, actor]);
   await logReview(issueId, actor, 'submit', 'pass', null);
   await logAudit({ actor, action: 'compliance.submit', entity: 'project', detail: { issueId } }).catch(() => {});
+  return { ok: true };
+}
+
+/** Thêm 1 hành động khắc phục (Task) vào 1 vấn đề (khi bảng kiểm chưa có KHKP, hoặc bổ sung thêm). */
+export async function addRemediationTask(
+  issueId: string, actor: string, input: { title: string; owner_email: string | null; due_on: string | null; expected_output: string | null },
+): Promise<{ ok: boolean; error?: string }> {
+  const issue = await queryOne<{ project_id: string; status: IssueStatus }>('SELECT project_id, status FROM okr_compliance_issues WHERE id=$1', [issueId]);
+  if (!issue) return { ok: false, error: 'Không tìm thấy vấn đề.' };
+  if (issue.status === 'closed') return { ok: false, error: 'Vấn đề đã đóng.' };
+  if (!s(input.title)) return { ok: false, error: 'Thiếu nội dung hành động khắc phục.' };
+  const taskId = await createInitiative({
+    objective_id: null, key_result_id: null, parent_id: null, kind: 'action',
+    title: s(input.title).slice(0, 500), description: null,
+    owner_email: input.owner_email, unit_id: null, project_id: issue.project_id,
+    status: 'todo', priority: 'medium', start_on: null, due_on: input.due_on,
+    budget_planned: 0, budget_actual: 0, budget_source: null,
+    expected_output: input.expected_output, created_by: actor,
+  });
+  await query('UPDATE okr_initiatives SET issue_id=$2 WHERE id=$1', [taskId, issueId]);
+  // Vấn đề đang no_plan/in_remediation → có hành động → in_remediation (giữ nguyên nếu đang thẩm định/đóng).
+  if (issue.status === 'no_plan') {
+    await query("UPDATE okr_compliance_issues SET status='in_remediation', updated_at=now() WHERE id=$1", [issueId]);
+  }
+  await logAudit({ actor, action: 'compliance.add_action', entity: 'project', entityId: issue.project_id, detail: { issueId } }).catch(() => {});
   return { ok: true };
 }
 
@@ -421,39 +463,46 @@ export async function importChecklistWorkbook(projectId: string, buf: Buffer, ac
   } catch (e) {
     return { ok: false, error: 'File không đọc được (.xlsx hợp lệ?). ' + String(e) };
   }
-  // Chọn sheet: sheet đầu tiên bóc được cột mã tiêu chí.
-  let chosen: { name: string; rows: Record<string, unknown>[]; map: Map<string, FieldKey> } | null = null;
+  // Chọn sheet + DÒNG TIÊU ĐỀ: đọc dạng mảng-2-chiều, quét tối đa 15 dòng đầu tìm dòng tiêu đề (có cột Mã
+  // + ≥1 cột khác) → chịu được file có dòng tiêu đề/ghi chú phía trên bảng. colMap = chỉ số cột → field.
+  let chosen: { name: string; aoa: string[][]; headerRow: number; colMap: Map<number, FieldKey>; headerNames: Map<number, string> } | null = null;
   for (const name of wb.SheetNames) {
     const ws = wb.Sheets[name];
-    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: '', raw: false });
-    if (!rows.length) continue;
-    const headers = Object.keys(rows[0]);
-    const map = new Map<string, FieldKey>();
-    for (const h of headers) {
-      const f = matchHeader(h);
-      if (f && ![...map.values()].includes(f)) map.set(h, f); // 1 field ↔ 1 cột (cột đầu thắng)
+    const aoaRaw = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, defval: '', raw: false, blankrows: false });
+    const aoa = aoaRaw.map((row) => (Array.isArray(row) ? row.map((c) => s(c)) : []));
+    for (let i = 0; i < Math.min(aoa.length, 15); i++) {
+      const cells = aoa[i];
+      const colMap = new Map<number, FieldKey>();
+      const headerNames = new Map<number, string>();
+      cells.forEach((cell, idx) => {
+        const f = matchHeader(cell);
+        if (f && ![...colMap.values()].includes(f)) colMap.set(idx, f);
+        if (cell) headerNames.set(idx, cell);
+      });
+      if ([...colMap.values()].includes('ma_tieu_chi') && colMap.size >= 2) {
+        chosen = { name, aoa, headerRow: i, colMap, headerNames };
+        break;
+      }
     }
-    if ([...map.values()].includes('ma_tieu_chi')) {
-      chosen = { name, rows, map };
-      break;
-    }
+    if (chosen) break;
   }
   if (!chosen) {
-    return { ok: false, error: 'Không tìm thấy sheet nào có cột "Mã/STT" tiêu chí. Kiểm tra lại tiêu đề cột.' };
+    return { ok: false, error: 'Không tìm thấy dòng tiêu đề có cột "Mã/STT" tiêu chí (đã quét 15 dòng đầu mỗi sheet). Kiểm tra lại tiêu đề cột.' };
   }
 
-  const { name, rows, map } = chosen;
+  const { name, aoa, headerRow, colMap, headerNames } = chosen;
   const headersMatched: Record<string, string> = {};
-  for (const [h, f] of map) headersMatched[h] = f;
+  for (const [idx, f] of colMap) headersMatched[headerNames.get(idx) || `cột ${idx + 1}`] = f;
 
   let created = 0, updated = 0, issuesCreated = 0, tasksCreated = 0, skipped = 0;
   const warnings: string[] = [];
   let sort = 0;
+  const dataRows = aoa.slice(headerRow + 1);
 
-  for (const r of rows) {
+  for (const row of dataRows) {
     sort += 10;
     const get = (f: FieldKey): string => {
-      for (const [h, ff] of map) if (ff === f) return s(r[h]);
+      for (const [idx, ff] of colMap) if (ff === f) return s(row[idx]);
       return '';
     };
     const ma = get('ma_tieu_chi');
@@ -461,10 +510,10 @@ export async function importChecklistWorkbook(projectId: string, buf: Buffer, ac
     if (!ma && !yeu_cau) { skipped++; continue; } // dòng trống
     if (!ma) { skipped++; warnings.push(`Bỏ 1 dòng thiếu Mã (yêu cầu: "${yeu_cau.slice(0, 40)}…")`); continue; }
 
-    // Cột lạ (không map được) → extra jsonb (không mất dữ liệu).
+    // Cột lạ (không map được nhưng có tiêu đề) → extra jsonb (không mất dữ liệu).
     const extra: Record<string, string> = {};
-    for (const h of Object.keys(r)) {
-      if (!map.has(h)) { const v = s(r[h]); if (v) extra[h] = v; }
+    for (const [idx, hname] of headerNames) {
+      if (!colMap.has(idx)) { const v = s(row[idx]); if (v) extra[hname] = v; }
     }
 
     const fields = {
@@ -525,8 +574,8 @@ export async function importChecklistWorkbook(projectId: string, buf: Buffer, ac
 
   await logAudit({
     actor, action: 'compliance.import', entity: 'project', entityId: projectId,
-    detail: { sheet: name, rows: rows.length, created, updated, issuesCreated, tasksCreated, skipped },
+    detail: { sheet: name, rows: dataRows.length, created, updated, issuesCreated, tasksCreated, skipped },
   }).catch(() => {});
 
-  return { ok: true, sheet: name, headersMatched, rows: rows.length, created, updated, issuesCreated, tasksCreated, skipped, warnings: warnings.slice(0, 20) };
+  return { ok: true, sheet: name, headersMatched, rows: dataRows.length, created, updated, issuesCreated, tasksCreated, skipped, warnings: warnings.slice(0, 20) };
 }

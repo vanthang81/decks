@@ -2312,3 +2312,23 @@ a.strat-bsc-cell:hover { text-decoration: none; box-shadow: 0 6px 18px rgba(0,0,
 .cmpl-hist { list-style: none; margin: 8px 0 0; padding: 8px 0 0; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: 6px; }
 .cmpl-hist li { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .cmpl-hist-note { flex-basis: 100%; font-size: 13px; color: var(--muted); padding-left: 2px; }
+
+/* ---- Compliance dashboard (Giai đoạn 3) ---- */
+.cmpl-dash { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 4px 0 12px; }
+.cmpl-dcell { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; border-left-width: 4px; background: #fff; }
+.cmpl-dcell.zero { opacity: .55; }
+.cmpl-dcell-n { font-size: 22px; font-weight: 700; line-height: 1.1; }
+.cmpl-dcell-l { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.cmpl-dcell.green { border-left-color: #16a34a; } .cmpl-dcell.amber { border-left-color: #d97706; }
+.cmpl-dcell.red { border-left-color: #dc2626; } .cmpl-dcell.blue { border-left-color: #2563eb; }
+.cmpl-dcell.slate { border-left-color: #64748b; }
+.cmpl-action { border: 1px solid #fca5a5; background: #fef2f2; border-radius: 10px; padding: 10px 12px; }
+.cmpl-action-h { font-weight: 700; color: #991b1b; }
+.cmpl-action-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 8px; }
+.cmpl-ag-h { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+.cmpl-ag-h.red { color: #991b1b; } .cmpl-ag-h.amber { color: #92400e; } .cmpl-ag-h.blue { color: #075985; }
+.cmpl-ag-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.cmpl-ag-list li { font-size: 13px; }
+.cmpl-ag-lbl { font-weight: 500; }
+.cmpl-addact { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.cmpl-addact-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }

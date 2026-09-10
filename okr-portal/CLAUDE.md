@@ -214,7 +214,15 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
       step `phap_che` (cần vai trò phap_che HOẶC scope.all) Đạt→`closed` / Không đạt→`in_remediation`. Reject BẮT
       BUỘC lý do. UI `ComplianceIssues.tsx` (card dưới bảng tiêu chí) hiện nút theo đúng quyền + lịch sử. PIC/KH&QLDA
       KHÔNG sửa được kết luận chuyên môn (chỉ vai trò kstt/phap_che duyệt bước tương ứng).
-    - **GIAI ĐOẠN 3 (dashboard tuân thủ + cảnh báo)**: đang triển khai tiếp — xem CHANGELOG.
+    - **GIAI ĐOẠN 3 (ĐÃ LIVE 10/09) — dashboard tuân thủ + cảnh báo**: `ComplianceDashboard.tsx` (đầu khu Bảng
+      kiểm) tính client từ items+issues+`listRemediationTasks`: chỉ số theo trạng thái tuân thủ (chờ rà soát/Pháp
+      chế/KSTT suy từ cột đã điền · tuân thủ · chưa tuân thủ/vi phạm · no_plan · in_remediation · pending · sắp/quá
+      hạn theo `han_ra_soat` + due_on task · closed) + khối “Vấn đề cần hành động ngay” (vi phạm chưa KHKP · quá hạn ·
+      chờ thẩm định >3 ngày · sắp đến hạn ≤3 ngày). **Thêm hành động khắc phục thủ công** cho vấn đề chưa có KHKP:
+      `addRemediationTask`/`addRemediationTaskAction` (gác canManage/thành viên/vai trò) → tạo Task gắn issue_id +
+      chuyển issue no_plan→in_remediation. **Lưu ý kỹ thuật**: cột timestamp của issue phải cast `::text` (const
+      `ISSUE_COLS`) — pg trả Date, tránh vỡ `.slice`/serialize; task_total loại `canceled`; import bóc theo DÒNG
+      TIÊU ĐỀ tự dò (mảng-2-chiều, quét 15 dòng đầu) nên chịu được file có dòng tiêu đề/ghi chú phía trên bảng.
   - **⭐ ĐƠN VỊ CÔNG VIỆC = PHÒNG CỦA NGƯỜI ĐƯỢC GIAO (CFO 09/09 — mặc định VĨNH VIỄN, KHÔNG để trống,
     không cần nhắc lại)**: khi tạo/sửa việc mà `unit_id` để trống nhưng có `owner_email` → tự lấy `unit_id`
     của người đó. Điểm chốt DUY NHẤT = helper **`resolveTaskUnit(unitId, ownerEmail)`** trong `initiatives.ts`,

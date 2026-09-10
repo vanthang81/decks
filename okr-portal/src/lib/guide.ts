@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-10.152';
+export const GUIDE_VERSION = '2026-09-10.153';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '10/09/2026 (Bảng kiểm tuân thủ — Giai đoạn 3: bảng điều khiển & cảnh báo tuân thủ)',
+    items: [
+      'Bảng điều khiển tuân thủ trong dự án: chỉ số theo trạng thái tuân thủ (tổng tiêu chí · chờ đơn vị rà soát · chờ Pháp chế · chờ KSTT · tuân thủ · chưa tuân thủ/vi phạm · chưa có KHKP · đang khắc phục · chờ thẩm định · sắp/quá hạn · đã đóng).',
+      'Khối “Vấn đề cần hành động ngay”: tự liệt kê vi phạm chưa có kế hoạch khắc phục · mục quá hạn · chờ thẩm định quá lâu · sắp đến hạn — không còn phải đối chiếu tay giữa Bảng kiểm và tiến độ.',
+      'Có thể thêm hành động khắc phục trực tiếp cho từng vấn đề (khi bảng kiểm chưa kèm kế hoạch) ngay trên hệ thống.',
+    ],
+  },
   {
     date: '10/09/2026 (Bảng kiểm tuân thủ — Giai đoạn 2: thẩm định 2 lớp KSTT → Pháp chế)',
     items: [

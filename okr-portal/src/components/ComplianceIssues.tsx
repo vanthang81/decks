@@ -5,17 +5,19 @@ import { useRouter } from 'next/navigation';
 import type { ComplianceIssue, ReviewRow } from '@/lib/compliance';
 import { ISSUE_STATUS_LABEL, ISSUE_STATUS_CLS, type IssueStatus } from '@/lib/compliance-shared';
 
-type Perms = { canSubmitIssueIds: string[]; isKstt: boolean; isPhapChe: boolean; isAdmin: boolean };
+type Perms = { canSubmitIssueIds: string[]; isKstt: boolean; isPhapChe: boolean; isAdmin: boolean; canAdd: boolean };
 
 export default function ComplianceIssues({
-  projectId, issues, reviews, perms, submit, review,
+  projectId, issues, reviews, perms, users, submit, review, addAction,
 }: {
   projectId: string;
   issues: ComplianceIssue[];
   reviews: ReviewRow[];
   perms: Perms;
+  users: { email: string; name: string }[];
   submit: (fd: FormData) => Promise<void>;
   review: (fd: FormData) => Promise<void>;
+  addAction: (fd: FormData) => Promise<void>;
 }) {
   const reviewsByIssue = useMemo(() => {
     const m = new Map<string, ReviewRow[]>();
@@ -46,8 +48,10 @@ export default function ComplianceIssues({
             reviews={reviewsByIssue.get(it.id) ?? []}
             canSubmit={canSubmit.has(it.id)}
             perms={perms}
+            users={users}
             submit={submit}
             review={review}
+            addAction={addAction}
           />
         ))}
       </div>
@@ -56,15 +60,17 @@ export default function ComplianceIssues({
 }
 
 function IssueRow({
-  projectId, issue, reviews, canSubmit, perms, submit, review,
+  projectId, issue, reviews, canSubmit, perms, users, submit, review, addAction,
 }: {
   projectId: string;
   issue: ComplianceIssue;
   reviews: ReviewRow[];
   canSubmit: boolean;
   perms: Perms;
+  users: { email: string; name: string }[];
   submit: (fd: FormData) => Promise<void>;
   review: (fd: FormData) => Promise<void>;
+  addAction: (fd: FormData) => Promise<void>;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -72,6 +78,10 @@ function IssueRow({
   const [rejecting, setRejecting] = useState<null | 'kstt' | 'phap_che'>(null);
   const [note, setNote] = useState('');
   const [showHist, setShowHist] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [aTitle, setATitle] = useState('');
+  const [aOwner, setAOwner] = useState('');
+  const [aDue, setADue] = useState('');
 
   const st = issue.status as IssueStatus;
   const total = issue.task_total ?? 0, done = issue.task_done ?? 0;
@@ -85,6 +95,16 @@ function IssueRow({
   }
   function doSubmit() {
     run(async () => { const fd = new FormData(); fd.set('project_id', projectId); fd.set('issue_id', issue.id); await submit(fd); });
+  }
+  function doAdd() {
+    if (!aTitle.trim()) { setErr('Nhập nội dung hành động khắc phục.'); return; }
+    run(async () => {
+      const fd = new FormData();
+      fd.set('project_id', projectId); fd.set('issue_id', issue.id);
+      fd.set('title', aTitle); fd.set('owner_email', aOwner); fd.set('due_on', aDue);
+      await addAction(fd);
+      setAdding(false); setATitle(''); setAOwner(''); setADue('');
+    });
   }
   function doReview(step: 'kstt' | 'phap_che', result: 'pass' | 'reject') {
     if (result === 'reject' && !note.trim()) { setErr('Cần ghi lý do khi trả lại.'); return; }
@@ -131,12 +151,31 @@ function IssueRow({
         )}
         {st === 'kstt_passed' && !(perms.isPhapChe || perms.isAdmin) && <span className="muted sm">Chờ Pháp chế đánh giá &amp; đóng.</span>}
 
+        {perms.canAdd && st !== 'closed' && !adding && (
+          <button className="btn ghost sm" type="button" onClick={() => { setAdding(true); setErr(null); }}>＋ Thêm hành động khắc phục</button>
+        )}
         {reviews.length > 0 && (
           <button className="btn ghost sm" type="button" onClick={() => setShowHist((v) => !v)}>
             {showHist ? 'Ẩn lịch sử' : `Lịch sử (${reviews.length})`}
           </button>
         )}
       </div>
+
+      {/* Thêm hành động khắc phục */}
+      {adding && (
+        <div className="cmpl-addact">
+          <input className="i" placeholder="Nội dung hành động khắc phục *" value={aTitle} onChange={(e) => setATitle(e.target.value)} />
+          <div className="cmpl-addact-row">
+            <select className="i" value={aOwner} onChange={(e) => setAOwner(e.target.value)}>
+              <option value="">— Giao cho (tuỳ chọn) —</option>
+              {users.map((u) => <option key={u.email} value={u.email}>{u.name}</option>)}
+            </select>
+            <input className="i" type="date" value={aDue} onChange={(e) => setADue(e.target.value)} title="Hạn khắc phục" />
+            <button className="btn sm" disabled={busy} onClick={doAdd}>Thêm</button>
+            <button className="btn ghost sm" type="button" onClick={() => { setAdding(false); setATitle(''); setAOwner(''); setADue(''); setErr(null); }}>Huỷ</button>
+          </div>
+        </div>
+      )}
 
       {/* Ô lý do khi trả lại */}
       {rejecting && (

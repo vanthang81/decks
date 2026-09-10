@@ -6,9 +6,10 @@ import { listUnits } from '@/lib/org';
 import { loadAccess, hasCap } from '@/lib/access';
 import { getProject, canManageProject } from '@/lib/projects';
 import { queryOne } from '@/lib/db';
+import { isProjectMember } from '@/lib/project-members';
 import {
   addProjectFunction, removeProjectFunction, hasProjectFunction,
-  submitIssue, reviewIssue, getIssue, type ProjectFn,
+  submitIssue, reviewIssue, getIssue, addRemediationTask, projectFunctionsOf, type ProjectFn,
 } from '@/lib/compliance';
 
 function str(fd: FormData, k: string): string {
@@ -64,6 +65,33 @@ export async function submitIssueAction(fd: FormData) {
   if (!allowed) throw new Error('Chỉ người phụ trách khắc phục (hoặc KH&QLDA/quản dự án) mới gửi thẩm định.');
   const r = await submitIssue(issueId, user.email);
   if (!r.ok) throw new Error(r.error || 'Không gửi được thẩm định.');
+  revalidatePath(`/projects/${projectId}`);
+}
+
+// Thêm hành động khắc phục vào 1 vấn đề — quản dự án / thành viên dự án / người giữ vai trò chức năng.
+export async function addRemediationTaskAction(fd: FormData) {
+  const user = await requireUser();
+  const projectId = str(fd, 'project_id');
+  const issueId = str(fd, 'issue_id');
+  const issue = await getIssue(issueId);
+  if (!issue || issue.project_id !== projectId) throw new Error('Không tìm thấy vấn đề.');
+  const [units, access] = await Promise.all([listUnits(), loadAccess()]);
+  const p = await getProject(projectId);
+  const fns = await projectFunctionsOf(projectId, user.email);
+  const allowed =
+    (p && canManageProject(user, p, units, access)) ||
+    (await isProjectMember(projectId, user.email)) ||
+    fns.size > 0;
+  if (!allowed) throw new Error('Bạn không có quyền thêm hành động khắc phục cho dự án này.');
+  const owner = str(fd, 'owner_email');
+  const due = str(fd, 'due_on');
+  const r = await addRemediationTask(issueId, user.email, {
+    title: str(fd, 'title'),
+    owner_email: owner || null,
+    due_on: due || null,
+    expected_output: str(fd, 'expected_output') || null,
+  });
+  if (!r.ok) throw new Error(r.error || 'Không thêm được hành động khắc phục.');
   revalidatePath(`/projects/${projectId}`);
 }
 
