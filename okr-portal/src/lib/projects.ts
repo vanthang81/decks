@@ -3,6 +3,7 @@ import type { OkrUser } from './users';
 import { manageScope, ancestorIds, type Unit } from './org';
 import { nextProjectCode } from './codes';
 import { hasCap, type Access } from './access';
+import { isExec } from './rbac';
 
 // DỰ ÁN độc lập, xuyên nhiều OKR. Task (okr_initiatives.project_id) trỏ vào 1 dự án.
 export type ProjectStatus = 'active' | 'done' | 'paused' | 'archived';
@@ -239,6 +240,7 @@ export function canManageProject(
   access: Access,
 ): boolean {
   if (hasCap(user, 'scope.all', access)) return true; // Quản trị hệ thống / OKR Admin
+  if (isExec(user.role)) return true; // CEO/CFO/Điều hành — quản mọi dự án (CFO 10/09, đồng bộ quyền exec toàn công ty)
   const email = user.email.toLowerCase();
   if (project.owner_email && project.owner_email.toLowerCase() === email) return true;
   if (project.created_by && project.created_by.toLowerCase() === email) return true;
