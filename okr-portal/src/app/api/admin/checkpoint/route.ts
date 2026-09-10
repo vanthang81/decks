@@ -20,12 +20,44 @@ async function guard(req: NextRequest): Promise<NextResponse | null> {
   return null;
 }
 
+// Đọc kết quả hạ tầng từ QUERY (cho cron n8n — tránh phải dựng JSON trong bash SSH):
+//   ?smoke=okr.consultx.vn:200,okr.vanthang.io:200  ?containers=okr-portal:true,okr-portal-vt:false
+//   ?hl=<HEAD local>  ?hr=<HEAD remote>
+function infraFromQuery(req: NextRequest): InfraInput | undefined {
+  const sp = req.nextUrl.searchParams;
+  const smokeRaw = sp.get('smoke');
+  const contRaw = sp.get('containers');
+  const hl = sp.get('hl') || undefined;
+  const hr = sp.get('hr') || undefined;
+  if (!smokeRaw && !contRaw && !hl && !hr) return undefined;
+  const infra: InfraInput = {};
+  if (smokeRaw) {
+    const smoke: Record<string, number> = {};
+    for (const part of smokeRaw.split(',')) {
+      const i = part.lastIndexOf(':');
+      if (i > 0) smoke[part.slice(0, i)] = Number(part.slice(i + 1)) || 0;
+    }
+    infra.smoke = smoke;
+  }
+  if (contRaw) {
+    infra.containers = contRaw.split(',').filter(Boolean).map((part) => {
+      const i = part.lastIndexOf(':');
+      const name = i > 0 ? part.slice(0, i) : part;
+      const v = i > 0 ? part.slice(i + 1).toLowerCase() : '';
+      return { name, up: v === 'true' || v === '1' || v === 'running' };
+    });
+  }
+  if (hl) infra.headLocal = hl;
+  if (hr) infra.headRemote = hr;
+  return infra;
+}
+
 function opts(req: NextRequest, infra?: InfraInput) {
   const sp = req.nextUrl.searchParams;
   return {
     dryRun: sp.get('dry') === '1' || sp.get('dry') === 'true',
     notify: sp.get('notify') !== '0',
-    infra,
+    infra: infra ?? infraFromQuery(req),
   };
 }
 
