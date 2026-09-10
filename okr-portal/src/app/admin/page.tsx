@@ -10,7 +10,8 @@ import { listUnits } from '@/lib/org';
 import { listPeriods, getCurrentPeriod } from '@/lib/periods';
 import { listKpiMetrics } from '@/lib/kpi';
 import { unresolvedErrorCount } from '@/lib/errlog';
-import { syncKpiAction, sendDigestAction } from './actions';
+import { listAudit } from '@/lib/audit';
+import { syncKpiAction, sendDigestAction, runCheckpointAction } from './actions';
 import ImportOkr from '@/components/ImportOkr';
 
 // Thẻ điều hướng có icon (trong Quản trị).
@@ -28,21 +29,30 @@ function NavCard({ href, icon, title, desc }: { href: string; icon: string; titl
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminHome({ searchParams }: { searchParams: { kpi?: string; digest?: string } }) {
+export default async function AdminHome({ searchParams }: { searchParams: { kpi?: string; digest?: string; chk?: string } }) {
   const user = await requireUser();
   const access = await loadAccess();
   if (!canManageSystem(user, access)) redirect('/');
 
-  const [users, units, periods, curPeriod, errCount] = await Promise.all([
+  const [users, units, periods, curPeriod, errCount, lastChkArr] = await Promise.all([
     listUsers(),
     listUnits(),
     listPeriods(),
     getCurrentPeriod(),
     unresolvedErrorCount().catch(() => 0),
+    listAudit({ q: 'system.checkpoint' }, 1, 0).catch(() => []),
   ]);
   const metrics = listKpiMetrics();
   const kpiMsg = searchParams.kpi;
   const digestMsg = searchParams.digest;
+  const chkMsg = searchParams.chk;
+  const lastChk = lastChkArr[0] ?? null;
+  const lastChkAt = lastChk
+    ? new Date(lastChk.created_at).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
+    : null;
+  const lastChkIssues = lastChk?.detail && Array.isArray((lastChk.detail as { issues?: unknown }).issues)
+    ? ((lastChk.detail as { issues: unknown[] }).issues).length
+    : null;
 
   return (
     <>
@@ -126,6 +136,41 @@ export default async function AdminHome({ searchParams }: { searchParams: { kpi?
                 ) : (
                   <span className="badge red">Lỗi: {digestMsg.replace(/^err:/, '')}</span>
                 )}
+              </p>
+            )}
+          </div>
+
+          <div className="card">
+            <h3 style={{ marginTop: 0 }}>Kiểm tra sức khỏe hệ thống (Checkpoint)</h3>
+            <p className="muted" style={{ marginTop: 0 }}>
+              Tự rà &amp; <b>tự sửa</b> dữ liệu (điền Đơn vị việc theo người phụ trách · sinh Mã việc còn
+              trống) + QC (mã trùng/trống · việc thiếu đơn vị · user thiếu phòng · dữ liệu mồ côi). Cron n8n
+              chạy tự động hằng ngày; <b>chỉ email CFO khi có vấn đề nghiêm trọng</b>. Bấm để kiểm tra ngay.
+            </p>
+            <form action={runCheckpointAction}>
+              <button className="btn" type="submit">Kiểm tra &amp; tự sửa ngay</button>
+            </form>
+            {chkMsg && (
+              <p className="muted" style={{ marginBottom: 0, marginTop: 8 }}>
+                {chkMsg.startsWith('ok:') ? (() => {
+                  const [fu, fc, iss, hi] = chkMsg.slice(3).split('.').map((x) => Number(x) || 0);
+                  return Number(iss) === 0 ? (
+                    <span className="badge green">✓ Sạch — đã tự sửa {fu} đơn vị · {fc} mã việc</span>
+                  ) : (
+                    <span className={Number(hi) > 0 ? 'badge red' : 'badge amber'}>
+                      {iss} vấn đề{Number(hi) > 0 ? ` · ${hi} nghiêm trọng` : ''} — đã tự sửa {fu} đơn vị · {fc} mã việc
+                    </span>
+                  );
+                })() : (
+                  <span className="badge red">Lỗi: {chkMsg.replace(/^err:/, '')}</span>
+                )}
+              </p>
+            )}
+            {lastChkAt && (
+              <p className="muted" style={{ marginBottom: 0, marginTop: 8, fontSize: 12.5 }}>
+                Lần chạy gần nhất: {lastChkAt}
+                {lastChkIssues !== null && (lastChkIssues === 0 ? ' · không có vấn đề' : ` · ${lastChkIssues} vấn đề`)}.
+                {' '}<Link href="/admin/activity">Xem nhật ký</Link>
               </p>
             )}
           </div>

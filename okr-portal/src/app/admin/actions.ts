@@ -328,6 +328,23 @@ export async function syncKpiAction() {
   redirect(`/admin?kpi=${encodeURIComponent(msg)}`);
 }
 
+// ---------- Checkpoint audit (kiểm tra sức khỏe hệ thống) ----------
+// Chạy tay từ /admin: auto-fix (điền đơn vị + sinh mã việc) + QC, KHÔNG gửi email (CFO đang xem trực tiếp).
+export async function runCheckpointAction() {
+  await requireExec();
+  let msg: string;
+  try {
+    const { runCheckpoint } = await import('@/lib/checkpoint');
+    const r = await runCheckpoint({ notify: false });
+    const high = r.issues.filter((i) => i.severity === 'high').length;
+    // ok:<fixUnit>.<fixCode>.<issues>.<high>
+    msg = `ok:${r.fixed.taskUnit}.${r.fixed.taskCode}.${r.issues.length}.${high}`;
+  } catch (e) {
+    msg = `err:${String(e).slice(0, 60)}`;
+  }
+  redirect(`/admin?chk=${encodeURIComponent(msg)}`);
+}
+
 // ---------- Bản tin điều hành tuần ----------
 // Gửi NGAY (bỏ qua công tắc tổng — dùng để thử/gửi thủ công). Người nhận vẫn theo năng lực + tuỳ chọn.
 export async function sendDigestAction() {

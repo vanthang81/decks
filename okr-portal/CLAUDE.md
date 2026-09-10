@@ -471,6 +471,19 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   Migration **`db/460_audit_activity.sql`** thêm index `(actor,created_at)`+`(action,created_at)` + **`GRANT DELETE
   ON okr_audit_log TO btmh_app`** (chạy SUPERUSER — app không tự grant được). Thêm hành động cần truy vết mới ⇒ gọi
   `logAudit()` + thêm nhãn vào `AUDIT_ACTION_LABEL` (+ tiền tố vào `AUDIT_GROUPS` nếu là nhóm mới).
+- **⭐ CHECKPOINT AUDIT định kỳ — tự audit + auto-fix + auto-QC + tự báo (CFO 10/09)**: `src/lib/checkpoint.ts`
+  `runCheckpoint({dryRun?,infra?,notify?})` — triết lý watchdog price-engine "phát hiện → tự sửa cái sửa được →
+  QC lại → CHỈ báo khi còn thứ cần người". **AUTO-FIX (idempotent)**: (1) điền `okr_initiatives.unit_id` theo phòng
+  người phụ trách (đồng bộ db/610); (2) sinh Mã việc còn trống (`nextInitCode`). **AUTO-QC (chỉ đọc)**: đếm bất
+  thường — mã việc/OKR/dự án trùng hoặc trống, việc thiếu đơn vị dù owner có phòng, user active thiếu phòng,
+  không còn exec, việc trỏ dự án đã xoá, thành viên dự án mồ côi. **Hạ tầng** (smoke domain · container up · lệch
+  HEAD deploy) do cron n8n đo (SSH) rồi POST vào route `infra`. Mỗi lần chạy **ghi nhật ký `system.checkpoint`**;
+  **chỉ gửi email** (qua `sendMail`, người nhận = `okr_settings.checkpoint_alert_emails` phẩy, mặc định exec active)
+  khi có vấn đề **severity 'high'** (tránh spam việc vệ sinh 'warn'). Route **`/api/admin/checkpoint`** (gác
+  `x-sync-key`/exec; `GET ?dry=1`/`?notify=0`; `POST {infra}`). UI: **Quản trị → "Kiểm tra sức khỏe hệ thống
+  (Checkpoint)"** (`runCheckpointAction`, notify=false vì CFO xem trực tiếp) + hiện lần chạy gần nhất từ nhật ký.
+  Cron n8n **"OKR Checkpoint Audit"** (daily) SSH: đo hạ tầng → đọc SYNC_KEY .env → POST route. Thêm kiểm tra mới ⇒
+  thêm 1 câu đếm + 1 dòng `add(...)` trong `runCheckpoint` (severity 'high' nếu cần người xử lý ngay).
 - **VAI TRÒ vs VỊ TRÍ (CFO 30/08)**: **Vai trò** (`rbac.ts` Role: ceo/cfo/division_lead/dept_lead/function_lead/staff)
   = CẤP QUYỀN HẠN → phạm vi quản lý (`manageScope`), lập trình cứng. **Vị trí/Chức danh** = preset TỰ PHỤC VỤ
   (`src/lib/positions.ts`, lưu okr_settings key `positions`, KHÔNG cần DDL): mỗi vị trí = nhãn + base_role +

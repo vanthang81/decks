@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-10.149';
+export const GUIDE_VERSION = '2026-09-10.150';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '10/09/2026 (Checkpoint audit — tự kiểm tra & tự sửa hệ thống định kỳ)',
+    items: [
+      'Hệ thống nay TỰ KIỂM TRA SỨC KHỎE định kỳ hằng ngày: tự rà và tự sửa dữ liệu (điền Đơn vị công việc theo người phụ trách, sinh Mã việc còn trống) + tự QC (mã trùng/thiếu, việc thiếu đơn vị, người dùng thiếu phòng, dữ liệu mồ côi) + kiểm tra hạ tầng (các tên miền, phiên bản đang chạy). Chỉ gửi email cho Ban điều hành khi CÒN vấn đề nghiêm trọng cần người xử lý — bình thường chạy im lặng.',
+      'Quản trị → mục "Kiểm tra sức khỏe hệ thống (Checkpoint)": bấm "Kiểm tra & tự sửa ngay" để chạy thủ công + xem lần chạy gần nhất; lịch sử ở Nhật ký hoạt động.',
+    ],
+  },
   {
     date: '10/09/2026 (Thành viên dự án tự thêm & sửa việc của mình)',
     items: [
