@@ -148,9 +148,13 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   - **Dự án hiển thị theo cửa sổ kỳ (CFO 03/09)**: `/projects` lọc dự án CÓ ngày bắt đầu/hạn theo GIAO
     [start_on,due_on]×[starts_on,ends_on] của kỳ chọn (`listProjectsInPeriodWindow`) → hiện ở MỌI tháng/quý/năm
     trong khoảng; dự án chưa đặt ngày giữ theo `period_id`. (`listProjectsByPeriod` cũ vẫn dùng cho `/budget`.)
-  - **Quyền QUẢN dự án (`canManageProject`)**: scope.all/CEO/CFO · chủ trì · người tạo · HOẶC có cap
-    `project.manage` mà dự án thuộc phạm vi quản (manageScope, xuống) HOẶC thuộc đơn vị mình/đơn vị CHA trong
-    nhánh (ancestorIds, trừ cấp 'company') — CFO 03/09, để Quản lý ở Phòng quản được dự án cấp Khối.
+  - **Quyền QUẢN dự án (`canManageProject`)**: cap `scope.all` · **vai trò điều hành `isExec` (exec/ceo/cfo)
+    quản MỌI dự án — CFO 10/09** · chủ trì · người tạo · HOẶC có cap `project.manage` mà dự án thuộc phạm vi
+    quản (manageScope, xuống) HOẶC thuộc đơn vị mình/đơn vị CHA trong nhánh (ancestorIds, trừ cấp 'company')
+    — CFO 03/09, để Quản lý ở Phòng quản được dự án cấp Khối. **LƯU Ý (bug 10/09): trước đây chỉ cap
+    `scope.all` mới quản được — tài khoản CFO thật (`nguyenvanthang@baotinmanhhai.vn`, role cfo, KHÔNG có cap
+    admin) tạo việc gắn dự án bị chặn → modal báo lỗi "Server Components render" chung, không thêm được việc.
+    Đã thêm `isExec(role) → true` ngay sau kiểm tra `scope.all` để điều hành luôn quản được dù thiếu cap.**
   - **Báo cáo tiến độ (CFO 03/09)**: `src/lib/project-report.ts` (`buildProjectReport`, thuần từ tasks:
     done_on/due_on/progress) + `ProjectReport.tsx` (2 tab: Tổng dự án · Theo thời gian) trên `/projects/[id]`.
   - **Thư viện tài liệu (CFO 04/09)**: `okr_project_docs` (db/580) = list LINK (chưa upload file);

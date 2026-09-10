@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-09.147';
+export const GUIDE_VERSION = '2026-09-10.148';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '10/09/2026 (Sửa lỗi không thêm được công việc vào dự án)',
+    items: [
+      'Khắc phục lỗi báo "An error occurred in the Server Components render" khi tạo/thêm công việc gắn vào dự án. Nguyên nhân: tài khoản điều hành (CEO/CFO/Điều hành) chưa được cấp quyền quản mọi dự án nếu không nằm trong nhóm quản trị hệ thống. Nay CEO/CFO/Điều hành quản được mọi dự án (tạo/thêm nhiều việc/sửa/tài liệu/thành viên) như thiết kế.',
+    ],
+  },
   {
     date: '09/09/2026 (Bảng Công việc: vừa màn hình + kéo giãn cột)',
     items: [
