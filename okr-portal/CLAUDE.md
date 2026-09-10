@@ -482,8 +482,11 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   khi có vấn đề **severity 'high'** (tránh spam việc vệ sinh 'warn'). Route **`/api/admin/checkpoint`** (gác
   `x-sync-key`/exec; `GET ?dry=1`/`?notify=0`; `POST {infra}`). UI: **Quản trị → "Kiểm tra sức khỏe hệ thống
   (Checkpoint)"** (`runCheckpointAction`, notify=false vì CFO xem trực tiếp) + hiện lần chạy gần nhất từ nhật ký.
-  Cron n8n **"OKR Checkpoint Audit"** (daily) SSH: đo hạ tầng → đọc SYNC_KEY .env → POST route. Thêm kiểm tra mới ⇒
-  thêm 1 câu đếm + 1 dòng `add(...)` trong `runCheckpoint` (severity 'high' nếu cần người xử lý ngay).
+  Cron n8n **"OKR Checkpoint Audit — kiểm tra & tự sửa hằng ngày" (id `5yDbflmR0PCkMwR5`, ACTIVE, `30 22 * * *`
+  UTC = 05:30 VN)**: SSH đo hạ tầng (smoke 3 domain · `docker inspect` container up · HEAD local vs origin) rồi
+  `curl POST 127.0.0.1:8640/api/admin/checkpoint?smoke=…&containers=…&hl=…&hr=…` (SYNC_KEY đọc từ .env). Thêm
+  kiểm tra mới ⇒ thêm 1 câu đếm + 1 dòng `add(...)` trong `runCheckpoint` (severity 'high' nếu cần người xử lý
+  ngay, 'warn' nếu chỉ vệ sinh). Verify 10/09: chạy tay sạch (ok:true, 0 issue, deploySynced:1, không gửi mail).
 - **VAI TRÒ vs VỊ TRÍ (CFO 30/08)**: **Vai trò** (`rbac.ts` Role: ceo/cfo/division_lead/dept_lead/function_lead/staff)
   = CẤP QUYỀN HẠN → phạm vi quản lý (`manageScope`), lập trình cứng. **Vị trí/Chức danh** = preset TỰ PHỤC VỤ
   (`src/lib/positions.ts`, lưu okr_settings key `positions`, KHÔNG cần DDL): mỗi vị trí = nhãn + base_role +
