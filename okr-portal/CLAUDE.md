@@ -206,7 +206,15 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
       ra), KHÔNG đè khi đã có task (giữ chỉnh sửa đơn vị); kết luận về tuân thủ mà issue còn `no_plan` chưa task →
       xoá (báo động sai đã sửa). UI `ComplianceChecklist.tsx` (card TRÊN "Công việc thuộc dự án") + thống kê nhanh
       theo trạng thái tuân thủ + bộ lọc. Vai trò chức năng theo dự án ở `okr_project_functions` (phap_che/kstt/qlda).
-    - **GIAI ĐOẠN 2 (workflow thẩm định) + 3 (dashboard tuân thủ)**: đang triển khai tiếp — xem CHANGELOG.
+    - **GIAI ĐOẠN 2 (ĐÃ LIVE 10/09) — workflow thẩm định 2 lớp**: vai trò chức năng gán ở
+      `okr_project_functions` (UI `ComplianceFunctions.tsx`, actions `add/removeProjectFunctionAction`, gác canManage).
+      Lib `submitIssue`/`reviewIssue` (compliance.ts) + `okr_compliance_reviews` (lịch sử). Luồng:
+      `submitIssueAction` (PIC=owner 1 task HOẶC canManage/qlda; yêu cầu ≥1 task & tất cả done) → `pending_review`;
+      `reviewIssueAction` step `kstt` (cần vai trò kstt HOẶC scope.all) Đạt→`kstt_passed` / Không đạt→`in_remediation`;
+      step `phap_che` (cần vai trò phap_che HOẶC scope.all) Đạt→`closed` / Không đạt→`in_remediation`. Reject BẮT
+      BUỘC lý do. UI `ComplianceIssues.tsx` (card dưới bảng tiêu chí) hiện nút theo đúng quyền + lịch sử. PIC/KH&QLDA
+      KHÔNG sửa được kết luận chuyên môn (chỉ vai trò kstt/phap_che duyệt bước tương ứng).
+    - **GIAI ĐOẠN 3 (dashboard tuân thủ + cảnh báo)**: đang triển khai tiếp — xem CHANGELOG.
   - **⭐ ĐƠN VỊ CÔNG VIỆC = PHÒNG CỦA NGƯỜI ĐƯỢC GIAO (CFO 09/09 — mặc định VĨNH VIỄN, KHÔNG để trống,
     không cần nhắc lại)**: khi tạo/sửa việc mà `unit_id` để trống nhưng có `owner_email` → tự lấy `unit_id`
     của người đó. Điểm chốt DUY NHẤT = helper **`resolveTaskUnit(unitId, ownerEmail)`** trong `initiatives.ts`,

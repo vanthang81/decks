@@ -18,7 +18,11 @@ import { listProjectMembers, isProjectMember } from '@/lib/project-members';
 import ProjectObjectivesCard from '@/components/ProjectObjectivesCard';
 import { listProjectObjectives } from '@/lib/project-objectives';
 import ComplianceChecklist from '@/components/ComplianceChecklist';
-import { listChecklistItems } from '@/lib/compliance';
+import ComplianceFunctions from '@/components/ComplianceFunctions';
+import ComplianceIssues from '@/components/ComplianceIssues';
+import { listChecklistItems, listIssues, listProjectFunctions, listReviewsForProject, projectFunctionsOf, issueIdsOwnedBy } from '@/lib/compliance';
+import type { ChecklistItem, ComplianceIssue, ReviewRow, ProjectFunctionRow, ProjectFn } from '@/lib/compliance';
+import { addProjectFunctionAction, removeProjectFunctionAction, submitIssueAction, reviewIssueAction } from '../compliance-actions';
 import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
 import { listObjectivesWithKrs } from '@/lib/okr';
@@ -35,7 +39,7 @@ import {
 import { listInitiativesForProject } from '@/lib/initiatives';
 import { listMeetingOptions } from '@/lib/meetings';
 import { StackedBar } from '@/components/charts';
-import { loadAccess } from '@/lib/access';
+import { loadAccess, hasCap } from '@/lib/access';
 import { fmtVnd, fmtDate } from '@/lib/format';
 import {
   editInitiativeAction,
@@ -96,7 +100,27 @@ export default async function ProjectDetail({ params }: { params: { id: string }
   // MỨC 2 (CFO 10/09): thành viên dự án được TỰ THÊM việc + sửa đầy đủ việc mình phụ trách/tạo.
   const canAddTask = canManage || isMember;
   // Bảng kiểm tuân thủ (CFO 10/09) — chỉ tải khi dự án đã bật module.
-  const checklistItems = p.compliance_enabled ? await listChecklistItems(p.id) : [];
+  const compOn = p.compliance_enabled;
+  let checklistItems: ChecklistItem[] = [];
+  let compIssues: ComplianceIssue[] = [];
+  let compFns: ProjectFunctionRow[] = [];
+  let compReviews: ReviewRow[] = [];
+  let myFns = new Set<ProjectFn>();
+  let myOwnedIssueIds: string[] = [];
+  if (compOn) {
+    [checklistItems, compIssues, compFns, compReviews, myFns, myOwnedIssueIds] = await Promise.all([
+      listChecklistItems(p.id), listIssues(p.id), listProjectFunctions(p.id),
+      listReviewsForProject(p.id), projectFunctionsOf(p.id, user.email), issueIdsOwnedBy(p.id, user.email),
+    ]);
+  }
+  const isAdmin = hasCap(user, 'scope.all', access);
+  const compPerms = {
+    isKstt: myFns.has('kstt'), isPhapChe: myFns.has('phap_che'), isAdmin,
+    // Được gửi thẩm định: PIC (phụ trách 1 hành động) HOẶC quản dự án / KH&QLDA (mọi vấn đề).
+    canSubmitIssueIds: (canManage || myFns.has('qlda'))
+      ? compIssues.map((i) => i.id)
+      : myOwnedIssueIds,
+  };
   const projectOpts = p.period_id ? await listProjectOptions(p.period_id) : [];
   const meetingOpts = await listMeetingOptions(user);
   const objectiveOpts = p.period_id ? await listObjectivesWithKrs(p.period_id) : [];
@@ -238,6 +262,23 @@ export default async function ProjectDetail({ params }: { params: { id: string }
         {p.compliance_enabled ? (
           <>
             <ComplianceChecklist projectId={p.id} items={checklistItems} canImport={canManage} />
+            <ComplianceIssues
+              projectId={p.id}
+              issues={compIssues}
+              reviews={compReviews}
+              perms={compPerms}
+              submit={submitIssueAction}
+              review={reviewIssueAction}
+            />
+            {canManage && (
+              <ComplianceFunctions
+                projectId={p.id}
+                rows={compFns}
+                users={users.map((u) => ({ email: u.email, name: u.display_name || u.email }))}
+                add={addProjectFunctionAction}
+                remove={removeProjectFunctionAction}
+              />
+            )}
             {canManage && (
               <form action={setComplianceEnabledAction} style={{ margin: '-6px 0 6px' }}>
                 <input type="hidden" name="project_id" value={p.id} />

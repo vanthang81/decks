@@ -163,14 +163,35 @@ export async function getIssue(id: string): Promise<ComplianceIssue | null> {
   );
 }
 
-export type ReviewRow = { id: string; actor: string; actor_name: string | null; step: string; result: string; note: string | null; created_at: string };
+export type ReviewRow = { id: string; issue_id: string; actor: string; actor_name: string | null; step: string; result: string; note: string | null; created_at: string };
 export async function listReviews(issueId: string): Promise<ReviewRow[]> {
   return query<ReviewRow>(
-    `SELECT r.id, r.actor, u.display_name AS actor_name, r.step, r.result, r.note, r.created_at::text
+    `SELECT r.id, r.issue_id, r.actor, u.display_name AS actor_name, r.step, r.result, r.note, r.created_at::text
        FROM okr_compliance_reviews r LEFT JOIN okr_users u ON lower(u.email)=lower(r.actor)
       WHERE r.issue_id=$1 ORDER BY r.created_at`,
     [issueId],
   );
+}
+/** Toàn bộ lịch sử thẩm định của 1 dự án (để hiển thị theo từng vấn đề, tránh N query). */
+export async function listReviewsForProject(projectId: string): Promise<ReviewRow[]> {
+  return query<ReviewRow>(
+    `SELECT r.id, r.issue_id, r.actor, u.display_name AS actor_name, r.step, r.result, r.note, r.created_at::text
+       FROM okr_compliance_reviews r
+       JOIN okr_compliance_issues i ON i.id=r.issue_id
+       LEFT JOIN okr_users u ON lower(u.email)=lower(r.actor)
+      WHERE i.project_id=$1 ORDER BY r.created_at`,
+    [projectId],
+  );
+}
+/** Tập id vấn đề mà `email` đang phụ trách ≥1 hành động khắc phục (để hiện nút "Gửi thẩm định"). */
+export async function issueIdsOwnedBy(projectId: string, email: string): Promise<string[]> {
+  const rows = await query<{ issue_id: string }>(
+    `SELECT DISTINCT t.issue_id FROM okr_initiatives t
+       JOIN okr_compliance_issues i ON i.id=t.issue_id
+      WHERE i.project_id=$1 AND t.issue_id IS NOT NULL AND lower(t.owner_email)=lower($2)`,
+    [projectId, email],
+  );
+  return rows.map((r) => r.issue_id);
 }
 
 // ---------------- Giải email PIC (email hoặc tên → email trong hệ thống) ----------------
@@ -264,6 +285,63 @@ export async function syncIssueForItem(itemId: string, actor: string): Promise<{
     await query('UPDATE okr_compliance_issues SET status=$2, updated_at=now() WHERE id=$1', [issueId, newStatus]);
   }
   return { createdIssue, createdTask };
+}
+
+// ---------------- Workflow thẩm định (Giai đoạn 2) ----------------
+// Vòng đời: no_plan/in_remediation → (PIC gửi) pending_review → (KSTT đạt) kstt_passed
+//           → (Pháp chế đạt) closed. Không đạt ở bất kỳ bước nào → quay lại in_remediation.
+async function logReview(issueId: string, actor: string, step: string, result: string, note: string | null): Promise<void> {
+  await query(
+    'INSERT INTO okr_compliance_reviews (issue_id, actor, step, result, note) VALUES ($1,$2,$3,$4,$5)',
+    [issueId, actor, step, result, orNull(s(note ?? ''))],
+  );
+}
+
+/** Người phụ trách gửi thẩm định hoàn thành. Yêu cầu: có ≥1 hành động khắc phục và TẤT CẢ đã xong. */
+export async function submitIssue(issueId: string, actor: string): Promise<{ ok: boolean; error?: string }> {
+  const issue = await queryOne<{ status: IssueStatus }>('SELECT status FROM okr_compliance_issues WHERE id=$1', [issueId]);
+  if (!issue) return { ok: false, error: 'Không tìm thấy vấn đề.' };
+  if (issue.status === 'closed') return { ok: false, error: 'Vấn đề đã đóng.' };
+  if (issue.status === 'pending_review' || issue.status === 'kstt_passed') return { ok: false, error: 'Vấn đề đang chờ thẩm định.' };
+  const t = await queryOne<{ total: string; done: string }>(
+    `SELECT count(*) total, count(*) FILTER (WHERE status='done') done FROM okr_initiatives WHERE issue_id=$1`,
+    [issueId],
+  );
+  const total = Number(t?.total ?? 0), done = Number(t?.done ?? 0);
+  if (total === 0) return { ok: false, error: 'Chưa có hành động khắc phục nào để thẩm định.' };
+  if (done < total) return { ok: false, error: `Còn ${total - done}/${total} hành động khắc phục chưa hoàn thành.` };
+  await query("UPDATE okr_compliance_issues SET status='pending_review', submitted_by=$2, submitted_at=now(), updated_at=now() WHERE id=$1", [issueId, actor]);
+  await logReview(issueId, actor, 'submit', 'pass', null);
+  await logAudit({ actor, action: 'compliance.submit', entity: 'project', detail: { issueId } }).catch(() => {});
+  return { ok: true };
+}
+
+/** KSTT / Pháp chế thẩm định. step='kstt' cần đang pending_review; step='phap_che' cần đang kstt_passed. */
+export async function reviewIssue(
+  issueId: string, actor: string, step: 'kstt' | 'phap_che', result: 'pass' | 'reject', note: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const issue = await queryOne<{ status: IssueStatus }>('SELECT status FROM okr_compliance_issues WHERE id=$1', [issueId]);
+  if (!issue) return { ok: false, error: 'Không tìm thấy vấn đề.' };
+  if (result === 'reject' && !s(note)) return { ok: false, error: 'Cần ghi lý do khi trả lại.' };
+
+  if (step === 'kstt') {
+    if (issue.status !== 'pending_review') return { ok: false, error: 'Vấn đề không ở bước chờ KSTT kiểm tra.' };
+    if (result === 'pass') {
+      await query("UPDATE okr_compliance_issues SET status='kstt_passed', kstt_by=$2, kstt_at=now(), updated_at=now() WHERE id=$1", [issueId, actor]);
+    } else {
+      await query("UPDATE okr_compliance_issues SET status='in_remediation', submitted_by=NULL, submitted_at=NULL, updated_at=now() WHERE id=$1", [issueId]);
+    }
+  } else {
+    if (issue.status !== 'kstt_passed') return { ok: false, error: 'Vấn đề chưa qua bước KSTT.' };
+    if (result === 'pass') {
+      await query("UPDATE okr_compliance_issues SET status='closed', closed_by=$2, closed_at=now(), updated_at=now() WHERE id=$1", [issueId, actor]);
+    } else {
+      await query("UPDATE okr_compliance_issues SET status='in_remediation', submitted_by=NULL, submitted_at=NULL, kstt_by=NULL, kstt_at=NULL, updated_at=now() WHERE id=$1", [issueId]);
+    }
+  }
+  await logReview(issueId, actor, step, result, note);
+  await logAudit({ actor, action: 'compliance.review', entity: 'project', detail: { issueId, step, result } }).catch(() => {});
+  return { ok: true };
 }
 
 // ---------------- Import Excel (upsert theo mã) ----------------

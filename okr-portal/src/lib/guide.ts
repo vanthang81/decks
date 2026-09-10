@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-10.151';
+export const GUIDE_VERSION = '2026-09-10.152';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '10/09/2026 (Bảng kiểm tuân thủ — Giai đoạn 2: thẩm định 2 lớp KSTT → Pháp chế)',
+    items: [
+      'Gán vai trò thẩm định theo từng dự án: Pháp chế · KSTT · KH&QLDA (mục “Vai trò thẩm định của dự án”).',
+      'Vấn đề tuân thủ có luồng đóng chuẩn: người phụ trách hoàn tất khắc phục → bấm “Gửi thẩm định hoàn thành” (không tự đóng được) → KSTT kiểm tra thực tế (Đạt/Không đạt) → Pháp chế đánh giá pháp lý & Đóng. Không đạt ở bất kỳ bước nào sẽ trả lại “Đang khắc phục” kèm lý do bắt buộc; toàn bộ lịch sử được lưu để truy vết.',
+    ],
+  },
   {
     date: '10/09/2026 (Bảng kiểm tuân thủ — Giai đoạn 1: import Excel + tự sinh vấn đề/việc)',
     items: [

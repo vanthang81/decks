@@ -2292,3 +2292,23 @@ a.strat-bsc-cell:hover { text-decoration: none; box-shadow: 0 6px 18px rgba(0,0,
 .cmpl-tbl td.cmpl-req { min-width: 240px; }
 .cmpl-tbl .sm { font-size: 12.5px; }
 .cmpl-tbl .nowrap { white-space: nowrap; }
+
+/* ---- Compliance: vai trò thẩm định + vấn đề tuân thủ (CFO 10/09) ---- */
+.cmpl-fns { display: flex; flex-wrap: wrap; gap: 12px; margin: 4px 0 10px; }
+.cmpl-fn-col { flex: 1 1 200px; min-width: 180px; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+.cmpl-fn-h { font-weight: 600; font-size: 13px; margin-bottom: 6px; color: var(--primary); }
+.cmpl-fn-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--primary-tint); border-radius: 999px; padding: 2px 6px 2px 10px; font-size: 13px; margin: 0 4px 4px 0; }
+.cmpl-fn-x { border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 15px; line-height: 1; padding: 0 2px; }
+.cmpl-fn-x:hover { color: #dc2626; }
+.cmpl-fn-add { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+.cmpl-issues { display: flex; flex-direction: column; gap: 10px; }
+.cmpl-issue { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.cmpl-issue-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cmpl-issue-title { font-weight: 600; flex: 1 1 240px; min-width: 200px; }
+.cmpl-issue-act { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.cmpl-reject { margin-top: 8px; }
+.cmpl-reject textarea { width: 100%; }
+.btn.sm.danger { background: #dc2626; border-color: #dc2626; color: #fff; }
+.cmpl-hist { list-style: none; margin: 8px 0 0; padding: 8px 0 0; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: 6px; }
+.cmpl-hist li { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.cmpl-hist-note { flex-basis: 100%; font-size: 13px; color: var(--muted); padding-left: 2px; }
