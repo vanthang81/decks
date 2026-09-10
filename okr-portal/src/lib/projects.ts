@@ -35,6 +35,7 @@ export type Project = {
   budget_planned: number;
   budget_actual: number;
   created_by: string | null;
+  compliance_enabled: boolean;
 };
 
 export type ProjectRow = Project & {
@@ -52,7 +53,7 @@ const SELECT = `
   SELECT p.id, p.code, p.period_id, p.name, p.description, p.owner_email, p.unit_id, p.status,
          p.start_on::text, p.due_on::text,
          p.budget_planned::float8 AS budget_planned, p.budget_actual::float8 AS budget_actual,
-         p.created_by,
+         p.created_by, COALESCE(p.compliance_enabled, false) AS compliance_enabled,
          ou.display_name AS owner_name, un.name AS unit_name,
          (SELECT count(*) FROM okr_initiatives i WHERE i.project_id = p.id)::int AS task_count,
          (SELECT count(*) FROM okr_initiatives i WHERE i.project_id = p.id AND i.status='done')::int AS done_count,

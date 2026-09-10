@@ -191,6 +191,22 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
     thêm `memberProjectIds` vào `manageIds` (việc-của-mình trong dự án mình là thành viên) → `TaskExplorer`/`TaskEditModal`
     đồng bộ. Card ExecutionTabs bổ sung field `created_by`. Muốn đổi sang "cộng tác đầy đủ" (thành viên sửa MỌI việc
     trong dự án) thì bỏ điều kiện owner/created_by ở 2 chỗ trên.
+  - **⭐ PHÂN HỆ BẢNG KIỂM TUÂN THỦ (Compliance — CFO 10/09, yêu cầu Phòng Pháp chế)**: module BẬT/TẮT theo
+    từng dự án (`okr_projects.compliance_enabled`, action `setComplianceEnabledAction`, chỉ canManage). Mô hình
+    **3 lớp** (db/620): **TIÊU CHÍ rà soát** (`okr_checklist_items`, nguồn gốc, KHÔNG phải Task, khoá tự nhiên
+    `(project_id, lower(ma_tieu_chi))`) → **VẤN ĐỀ tuân thủ** (`okr_compliance_issues`, tự sinh khi kết luận
+    `chua_tuan_thu|vi_pham`) → **HÀNH ĐỘNG khắc phục = Task** (`okr_initiatives.issue_id`). Lib `src/lib/compliance.ts`
+    (server) + `compliance-shared.ts` (nhãn/màu CLIENT-SAFE — component KHÔNG import compliance.ts vì kéo xlsx/db
+    vào client). Vòng đời issue: `no_plan → in_remediation → pending_review → kstt_passed → closed`.
+    - **GIAI ĐOẠN 1 (ĐÃ LIVE 10/09)**: import Excel `POST /api/compliance/import` (gác canManage HOẶC vai trò
+      `phap_che`/`qlda`) → `importChecklistWorkbook`: chọn sheet đầu có cột "Mã", **nhận diện cột linh hoạt**
+      (`HEADER_ALIASES` chuẩn hoá bỏ dấu + khớp "chứa"), cột lạ → `extra jsonb` (không mất dữ liệu), **upsert theo
+      mã** (không trùng). `syncIssueForItem` (idempotent): vi phạm → tạo issue; có KHKP trong bảng kiểm mà issue
+      CHƯA có task → tự tạo 1 Task kế thừa (nội dung/PIC→owner qua `resolveEmail` email-hoặc-tên/hạn/kết quả đầu
+      ra), KHÔNG đè khi đã có task (giữ chỉnh sửa đơn vị); kết luận về tuân thủ mà issue còn `no_plan` chưa task →
+      xoá (báo động sai đã sửa). UI `ComplianceChecklist.tsx` (card TRÊN "Công việc thuộc dự án") + thống kê nhanh
+      theo trạng thái tuân thủ + bộ lọc. Vai trò chức năng theo dự án ở `okr_project_functions` (phap_che/kstt/qlda).
+    - **GIAI ĐOẠN 2 (workflow thẩm định) + 3 (dashboard tuân thủ)**: đang triển khai tiếp — xem CHANGELOG.
   - **⭐ ĐƠN VỊ CÔNG VIỆC = PHÒNG CỦA NGƯỜI ĐƯỢC GIAO (CFO 09/09 — mặc định VĨNH VIỄN, KHÔNG để trống,
     không cần nhắc lại)**: khi tạo/sửa việc mà `unit_id` để trống nhưng có `owner_email` → tự lấy `unit_id`
     của người đó. Điểm chốt DUY NHẤT = helper **`resolveTaskUnit(unitId, ownerEmail)`** trong `initiatives.ts`,

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-10.150';
+export const GUIDE_VERSION = '2026-09-10.151';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '10/09/2026 (Bảng kiểm tuân thủ — Giai đoạn 1: import Excel + tự sinh vấn đề/việc)',
+    items: [
+      'Dự án nay có thể BẬT “Bảng kiểm tuân thủ” (dành cho dự án kiểm tra/tuân thủ). Khi bật: import toàn bộ Bảng kiểm từ Excel — mỗi dòng là một TIÊU CHÍ rà soát (không phải công việc), nhận diện cột linh hoạt theo tiêu đề, import lại theo cùng Mã sẽ cập nhật (không tạo trùng).',
+      'Khi kết luận “Chưa tuân thủ/Vi phạm”, hệ thống TỰ TẠO “Vấn đề tuân thủ” và tự kế thừa kế hoạch khắc phục có sẵn trong Bảng kiểm thành công việc ở mục “Công việc thuộc dự án” — không phải nhập tay lại từng dòng.',
+      'Có bảng tiêu chí kèm bộ lọc + thống kê nhanh theo trạng thái tuân thủ (tuân thủ / chưa tuân thủ / vi phạm / chưa có KHKP / đang khắc phục…).',
+    ],
+  },
   {
     date: '10/09/2026 (Checkpoint audit — tự kiểm tra & tự sửa hệ thống định kỳ)',
     items: [

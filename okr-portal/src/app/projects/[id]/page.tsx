@@ -17,6 +17,8 @@ import { listProjectDocs } from '@/lib/project-docs';
 import { listProjectMembers, isProjectMember } from '@/lib/project-members';
 import ProjectObjectivesCard from '@/components/ProjectObjectivesCard';
 import { listProjectObjectives } from '@/lib/project-objectives';
+import ComplianceChecklist from '@/components/ComplianceChecklist';
+import { listChecklistItems } from '@/lib/compliance';
 import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
 import { listObjectivesWithKrs } from '@/lib/okr';
@@ -41,7 +43,7 @@ import {
   createInitiativeAction,
   moveInitiativeAction,
 } from '../../objectives/actions';
-import { updateProjectAction, deleteProjectAction, createProjectForInitiativeAction, saveProjectCharterAction, addProjectDocAction, deleteProjectDocAction, addProjectMemberAction, removeProjectMemberAction, createProjectTaskAction, createProjectTasksBulkAction, setProjectObjectivesAction } from '../actions';
+import { updateProjectAction, deleteProjectAction, createProjectForInitiativeAction, saveProjectCharterAction, addProjectDocAction, deleteProjectDocAction, addProjectMemberAction, removeProjectMemberAction, createProjectTaskAction, createProjectTasksBulkAction, setProjectObjectivesAction, setComplianceEnabledAction } from '../actions';
 import EditModal from '@/components/EditModal';
 import NavIcon from '@/components/NavIcon';
 import { CHARTER_FIELDS, charterFilled, type Charter } from '@/lib/charter';
@@ -93,6 +95,8 @@ export default async function ProjectDetail({ params }: { params: { id: string }
   if (!canView) redirect('/projects');
   // MỨC 2 (CFO 10/09): thành viên dự án được TỰ THÊM việc + sửa đầy đủ việc mình phụ trách/tạo.
   const canAddTask = canManage || isMember;
+  // Bảng kiểm tuân thủ (CFO 10/09) — chỉ tải khi dự án đã bật module.
+  const checklistItems = p.compliance_enabled ? await listChecklistItems(p.id) : [];
   const projectOpts = p.period_id ? await listProjectOptions(p.period_id) : [];
   const meetingOpts = await listMeetingOptions(user);
   const objectiveOpts = p.period_id ? await listObjectivesWithKrs(p.period_id) : [];
@@ -229,6 +233,37 @@ export default async function ProjectDetail({ params }: { params: { id: string }
             </p>
           )}
         </div>
+
+        {/* ---- Bảng kiểm tuân thủ (module bật/tắt theo dự án — CFO 10/09) ---- */}
+        {p.compliance_enabled ? (
+          <>
+            <ComplianceChecklist projectId={p.id} items={checklistItems} canImport={canManage} />
+            {canManage && (
+              <form action={setComplianceEnabledAction} style={{ margin: '-6px 0 6px' }}>
+                <input type="hidden" name="project_id" value={p.id} />
+                <input type="hidden" name="on" value="0" />
+                <button className="btn ghost sm" type="submit">Tắt Bảng kiểm tuân thủ cho dự án này</button>
+              </form>
+            )}
+          </>
+        ) : canManage ? (
+          <div className="card">
+            <div className="flexbtw" style={{ alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' }}>
+              <div>
+                <h3 style={{ marginTop: 0 }}>Bảng kiểm tuân thủ</h3>
+                <p className="muted" style={{ margin: 0, fontSize: 13, maxWidth: 620 }}>
+                  Bật để quản lý dự án theo <b>Bảng kiểm</b>: import tiêu chí rà soát từ Excel (không nhập tay từng dòng),
+                  tự sinh <b>Vấn đề tuân thủ</b> + công việc khắc phục khi phát hiện vi phạm. Dành cho dự án kiểm tra/tuân thủ.
+                </p>
+              </div>
+              <form action={setComplianceEnabledAction}>
+                <input type="hidden" name="project_id" value={p.id} />
+                <input type="hidden" name="on" value="1" />
+                <button className="btn" type="submit">Bật Bảng kiểm tuân thủ</button>
+              </form>
+            </div>
+          </div>
+        ) : null}
 
         {/* ---- Việc thuộc dự án: List / Kanban / Dòng thời gian + bấm để sửa ---- */}
         <div className="card">

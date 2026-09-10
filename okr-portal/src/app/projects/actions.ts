@@ -289,6 +289,21 @@ export async function createProjectTasksBulkAction(fd: FormData) {
   revalidatePath('/tasks');
 }
 
+// ---- Bảng kiểm tuân thủ: bật/tắt module theo dự án ----
+export async function setComplianceEnabledAction(fd: FormData) {
+  const user = await requireUser();
+  const [units, access] = await Promise.all([listUnits(), loadAccess()]);
+  const projectId = str(fd, 'project_id');
+  const p = await getProject(projectId);
+  if (!p) throw new Error('Không tìm thấy dự án.');
+  if (!canManageProject(user, p, units, access)) throw new Error('Bạn không có quyền cấu hình dự án này.');
+  const on = str(fd, 'on') === '1';
+  const { setComplianceEnabled } = await import('@/lib/compliance');
+  await setComplianceEnabled(projectId, on);
+  await logAudit({ actor: user.email, action: 'compliance.toggle', entity: 'project', entityId: projectId, detail: { on } });
+  revalidatePath(`/projects/${projectId}`);
+}
+
 // ---- OKR liên quan của dự án (đặt ở cấp dự án / điều lệ) ----
 export async function setProjectObjectivesAction(fd: FormData) {
   const user = await requireUser();
