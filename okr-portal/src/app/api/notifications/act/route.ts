@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { auth } from '@/auth';
 import { getUser } from '@/lib/users';
 import {
-  getNotification, markRead, markSiblingNotifsRead, notifySimple,
+  getNotification, markHandled, markSiblingNotifsRead, notifySimple,
 } from '@/lib/notifications';
 import {
   decideAccessRequest, getAccessRequestById, getMeeting, isMeetingEditor,
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
         body: text,
         mentions: [],
       });
-      await markRead(u.email, id);
+      await markHandled(u.email, id, 'replied');
       return NextResponse.json({ ok: true, outcome: 'commented' });
     }
 
@@ -100,6 +100,7 @@ export async function POST(req: NextRequest) {
         }
       }
       await markSiblingNotifsRead('meeting_access_request', n.entity_id);
+      await markHandled(u.email, id, approve ? 'approved' : 'denied');
       return NextResponse.json({ ok: true, outcome: approve ? 'approved' : 'denied' });
     }
 
@@ -141,6 +142,7 @@ export async function POST(req: NextRequest) {
         }
       }
       await markSiblingNotifsRead('user_invite_pending', n.entity_id);
+      await markHandled(u.email, id, approve ? 'approved' : 'denied');
       return NextResponse.json({ ok: true, outcome: approve ? 'approved' : 'denied' });
     }
 

@@ -16,6 +16,8 @@ export type Notif = {
   preview: string | null;
   link: string | null;
   is_read: boolean;
+  handled_at: string | null;
+  handled_kind: string | null; // 'replied' | 'approved' | 'denied'
   created_at: string;
 };
 
@@ -54,10 +56,12 @@ export default function NotifItems({
   items,
   onReload,
   onNavigate,
+  emptyText = 'Chưa có thông báo nào.',
 }: {
   items: Notif[];
   onReload: () => void;
   onNavigate?: () => void;
+  emptyText?: string;
 }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -80,6 +84,22 @@ export default function NotifItems({
       onReload();
     }
   };
+
+  // Đánh dấu ĐÃ ĐỌC riêng 1 thông báo (không mở) → biến mất khỏi hộp "Chưa đọc".
+  const markReadOne = async (n: Notif) => {
+    if (n.is_read) return;
+    setItem(n.id, { busy: true });
+    await post({ action: 'read', id: n.id }).catch(() => {});
+    onReload();
+  };
+
+  // Nhãn bền vững "đã xử lý" suy từ DB (handled_kind) hoặc kết quả vừa thao tác (st.outcome).
+  const outcomeOf = (n: Notif, st: UIState): UIState['outcome'] =>
+    st.outcome ??
+    (n.handled_kind === 'replied' ? 'commented'
+      : n.handled_kind === 'approved' ? 'approved'
+      : n.handled_kind === 'denied' ? 'denied'
+      : undefined);
 
   const act = async (n: Notif, action: 'approve' | 'deny' | 'comment') => {
     const st = ui[n.id] ?? {};
@@ -113,16 +133,22 @@ export default function NotifItems({
     }
   };
 
-  if (items.length === 0) return <p className="muted" style={{ padding: '8px 2px' }}>Chưa có thông báo nào.</p>;
+  if (items.length === 0) return <p className="ntf-empty">{emptyText}</p>;
 
   return (
     <div className="ntf-list">
       {items.map((n) => {
         const st = ui[n.id] ?? {};
-        const canApprove = APPROVE_TYPES.has(n.type) && !!n.entity_id && !st.outcome;
-        const canComment = !!n.entity_type && COMMENT_ENTITIES.has(n.entity_type) && !!n.entity_id && !st.outcome;
+        const outcome = outcomeOf(n, st);
+        const canApprove = APPROVE_TYPES.has(n.type) && !!n.entity_id && !outcome;
+        const canComment = !!n.entity_type && COMMENT_ENTITIES.has(n.entity_type) && !!n.entity_id && !outcome;
         return (
-          <div key={n.id} className={`ntf-item ${n.is_read ? '' : 'unread'}`}>
+          <div key={n.id} className={`ntf-item ${n.is_read ? 'read' : 'unread'}`}>
+            {/* Đánh dấu đã đọc riêng từng thông báo → ẩn khỏi hộp "Chưa đọc" */}
+            {!n.is_read && (
+              <button type="button" className="ntf-mark" title="Đánh dấu đã đọc" aria-label="Đánh dấu đã đọc"
+                disabled={st.busy} onClick={() => markReadOne(n)}>✓</button>
+            )}
             <div className="ntf-main" role="button" tabIndex={0}
               onClick={() => openItem(n)}
               onKeyDown={(e) => { if (e.key === 'Enter') openItem(n); }}>
@@ -140,18 +166,18 @@ export default function NotifItems({
                   <b>{n.actor_name || n.actor_email}</b> {TYPE_LABEL[n.type] ?? 'có hoạt động'}
                 </span>
                 {n.preview && <span className="ntf-preview">“{n.preview}”</span>}
-                <span className="ntf-time">{fmtTime(n.created_at)}</span>
+                <span className="ntf-time">
+                  {fmtTime(n.created_at)}
+                  {outcome ? (
+                    <span className={`ntf-tag ${outcome === 'denied' ? 'is-deny' : 'is-done'}`}>
+                      {outcome === 'approved' ? '✓ Đã duyệt' : outcome === 'denied' ? '✕ Đã từ chối' : '✓ Đã trả lời'}
+                    </span>
+                  ) : n.is_read ? (
+                    <span className="ntf-tag is-read">✓ Đã đọc</span>
+                  ) : null}
+                </span>
               </span>
             </div>
-
-            {/* Kết quả đã xử lý */}
-            {st.outcome && (
-              <div className="ntf-actions">
-                <span className={`badge ${st.outcome === 'denied' ? 'amber' : 'green'}`}>
-                  {st.outcome === 'approved' ? '✓ Đã duyệt' : st.outcome === 'denied' ? '✕ Đã từ chối' : '✓ Đã gửi bình luận'}
-                </span>
-              </div>
-            )}
 
             {/* Thao tác inline */}
             {(canApprove || canComment) && (

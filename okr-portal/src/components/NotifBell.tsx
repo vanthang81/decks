@@ -9,6 +9,7 @@ import NotifItems, { type Notif } from '@/components/NotifItems';
 export default function NotifBell({ initialCount }: { initialCount: number }) {
   const [count, setCount] = useState(initialCount);
   const [open, setOpen] = useState(false);
+  const [box, setBox] = useState<'unread' | 'all'>('unread'); // mặc định chỉ hiện CHƯA ĐỌC
   const [items, setItems] = useState<Notif[]>([]);
   const [loaded, setLoaded] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -21,11 +22,11 @@ export default function NotifBell({ initialCount }: { initialCount: number }) {
   }, []);
 
   const loadList = useCallback(async () => {
-    const r = await fetch('/api/notifications');
+    const r = await fetch(`/api/notifications?box=${box}`);
     if (r.ok) { const j = await r.json(); setItems(j.items ?? []); }
     setLoaded(true);
     refreshCount();
-  }, [refreshCount]);
+  }, [refreshCount, box]);
 
   // Đếm chưa đọc: định kỳ + khi quay lại tab.
   useEffect(() => {
@@ -55,8 +56,6 @@ export default function NotifBell({ initialCount }: { initialCount: number }) {
     loadList();
   };
 
-  const unread = items.filter((i) => !i.is_read).length;
-
   return (
     <div className="notif-wrap" ref={ref}>
       <button
@@ -81,14 +80,27 @@ export default function NotifBell({ initialCount }: { initialCount: number }) {
         <div className="notif-pop" role="dialog" aria-label="Thông báo">
           <div className="notif-pop-hd">
             <b>Thông báo</b>
-            <button className="ntf-link" type="button" onClick={readAll} disabled={unread === 0}>
-              Đánh dấu đã đọc
-            </button>
+            <div className="ntf-seg" role="tablist" aria-label="Lọc thông báo">
+              <button type="button" role="tab" aria-selected={box === 'unread'}
+                className={box === 'unread' ? 'on' : ''} onClick={() => setBox('unread')}>
+                Chưa đọc{count > 0 ? ` (${count > 99 ? '99+' : count})` : ''}
+              </button>
+              <button type="button" role="tab" aria-selected={box === 'all'}
+                className={box === 'all' ? 'on' : ''} onClick={() => setBox('all')}>
+                Tất cả
+              </button>
+            </div>
           </div>
           <div className="notif-pop-body">
             {!loaded
               ? <p className="muted" style={{ padding: '10px 2px' }}>Đang tải…</p>
-              : <NotifItems items={items} onReload={loadList} onNavigate={() => setOpen(false)} />}
+              : <NotifItems items={items} onReload={loadList} onNavigate={() => setOpen(false)}
+                  emptyText={box === 'unread' ? 'Bạn đã đọc hết thông báo. 🎉' : 'Chưa có thông báo nào.'} />}
+          </div>
+          <div className="notif-pop-sub">
+            <button className="ntf-link" type="button" onClick={readAll} disabled={count === 0}>
+              ✓ Đánh dấu tất cả đã đọc
+            </button>
           </div>
           <div className="notif-pop-ft">
             <Link href="/notifications" onClick={() => setOpen(false)}>Xem tất cả</Link>

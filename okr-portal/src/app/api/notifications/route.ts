@@ -15,10 +15,11 @@ async function me() {
   return u && u.is_active ? u : null;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const u = await me();
   if (!u) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const items = await listNotifications(u.email);
+  const unreadOnly = req.nextUrl.searchParams.get('box') === 'unread';
+  const items = await listNotifications(u.email, { unreadOnly });
   return NextResponse.json({ items, notifyEmail: u.notify_email });
 }
 

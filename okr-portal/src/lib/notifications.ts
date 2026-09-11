@@ -14,6 +14,8 @@ export type Notification = {
   preview: string | null;
   link: string | null;
   is_read: boolean;
+  handled_at: string | null;
+  handled_kind: string | null; // 'replied' | 'approved' | 'denied'
   created_at: string;
 };
 
@@ -79,7 +81,8 @@ export async function notifySimple(input: {
 export async function getNotification(id: string, recipient: string): Promise<Notification | null> {
   return queryOne<Notification>(
     `SELECT n.id, n.type, n.entity_type, n.entity_id, n.comment_id, n.actor_email, n.actor_name,
-            au.avatar_url AS actor_avatar, n.preview, n.link, n.is_read, n.created_at::text
+            au.avatar_url AS actor_avatar, n.preview, n.link, n.is_read,
+            n.handled_at::text, n.handled_kind, n.created_at::text
        FROM okr_notifications n
        LEFT JOIN okr_users au ON au.email = n.actor_email
       WHERE n.id=$1 AND n.recipient_email=$2`,
@@ -101,13 +104,18 @@ export async function unreadCount(email: string): Promise<number> {
   return r?.n ?? 0;
 }
 
-export async function listNotifications(email: string, limit = 50): Promise<Notification[]> {
+export async function listNotifications(
+  email: string,
+  opts: { limit?: number; unreadOnly?: boolean } = {},
+): Promise<Notification[]> {
+  const { limit = 50, unreadOnly = false } = opts;
   return query<Notification>(
     `SELECT n.id, n.type, n.entity_type, n.entity_id, n.comment_id, n.actor_email, n.actor_name,
-            au.avatar_url AS actor_avatar, n.preview, n.link, n.is_read, n.created_at::text
+            au.avatar_url AS actor_avatar, n.preview, n.link, n.is_read,
+            n.handled_at::text, n.handled_kind, n.created_at::text
        FROM okr_notifications n
        LEFT JOIN okr_users au ON au.email = n.actor_email
-      WHERE n.recipient_email=$1
+      WHERE n.recipient_email=$1 ${unreadOnly ? 'AND n.is_read=false' : ''}
       ORDER BY n.created_at DESC LIMIT $2`,
     [email, limit],
   );
@@ -115,6 +123,18 @@ export async function listNotifications(email: string, limit = 50): Promise<Noti
 
 export async function markRead(email: string, id: string): Promise<void> {
   await query('UPDATE okr_notifications SET is_read=true WHERE id=$1 AND recipient_email=$2', [id, email]);
+}
+
+/** Đánh dấu thông báo ĐÃ XỬ LÝ (trả lời/duyệt/từ chối) + đã đọc — nhãn bền vững cho người nhận. */
+export async function markHandled(
+  email: string, id: string, kind: 'replied' | 'approved' | 'denied',
+): Promise<void> {
+  await query(
+    `UPDATE okr_notifications
+        SET is_read=true, handled_at=now(), handled_kind=$3
+      WHERE id=$1 AND recipient_email=$2`,
+    [id, email, kind],
+  );
 }
 
 export async function markAllRead(email: string): Promise<void> {

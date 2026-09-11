@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-11.159';
+export const GUIDE_VERSION = '2026-09-11.160';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '11/09/2026 (Thông báo — dấu hiệu đã đọc/đã trả lời + đánh dấu từng cái)',
+    items: [
+      'Chuông thông báo có bộ lọc “Chưa đọc / Tất cả” (mặc định Chưa đọc) → xem gọn việc còn phải xử lý; xem lại lịch sử ở “Tất cả”.',
+      'Mỗi thông báo hiện rõ trạng thái: chưa đọc (chấm đỏ + nền hồng), đã đọc (nhãn “✓ Đã đọc”), và “✓ Đã trả lời / ✓ Đã duyệt / ✕ Đã từ chối” — nhãn giữ nguyên sau khi tải lại.',
+      'Có nút “✓” đánh dấu ĐÃ ĐỌC riêng từng thông báo (không cần mở) → thông báo đó biến khỏi hộp “Chưa đọc”; vẫn giữ nút “Đánh dấu tất cả đã đọc”.',
+    ],
+  },
   {
     date: '11/09/2026 (Bảng điều khiển — giao diện mở đầu cân đối, chuyên nghiệp hơn)',
     items: [
