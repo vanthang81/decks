@@ -1,5 +1,6 @@
 import { query } from './db';
 import { sendMail, mailBaseUrl } from './mail';
+import { brandedEmail, emailSection } from './mail-layout';
 import { currentReviewData, type ReviewData } from './review';
 import { STATUS_LABEL } from './kpi-values';
 import { getSetting, setSetting } from './settings';
@@ -40,12 +41,9 @@ export function digestHtml(d: ReviewData, appUrl: string): string {
     .join('');
   const slow = d.units.slice(0, 3).map((u) => `${esc(u.name)} (${u.progress}%)`).join(' · ');
 
-  return `
-  <div style="font-family:system-ui,Segoe UI,Arial,sans-serif;max-width:640px;color:#222">
-    <h2 style="color:#7C0312;margin:0 0 4px">📊 Bản tin điều hành tuần — ${esc(d.periodName)}</h2>
-    <p style="margin:0 0 14px;color:#666">Tiến độ công ty <b style="color:#7C0312">${d.companyProg}%</b> · nhịp thời gian ${d.elapsed}% · <b>${esc(d.paceVerdict.txt)}</b></p>
-
-    <table style="border-collapse:collapse;margin-bottom:14px">
+  const body = `
+    <p style="margin:0 0 14px;color:#555;font-size:14px">Tiến độ công ty <b style="color:#7C0312">${d.companyProg}%</b> · nhịp thời gian ${d.elapsed}% · <b>${esc(d.paceVerdict.txt)}</b></p>
+    <table role="presentation" style="border-collapse:collapse;margin-bottom:14px">
       <tr>
         <td style="padding:6px 14px;background:#FAF6F0;border-radius:8px;text-align:center"><b style="font-size:18px">${Math.round(d.checkinCoverage * 100)}%</b><br><span style="font-size:11px;color:#777">KR check-in</span></td>
         <td style="width:8px"></td>
@@ -56,18 +54,20 @@ export function digestHtml(d: ReviewData, appUrl: string): string {
         <td style="padding:6px 14px;background:#FAF6F0;border-radius:8px;text-align:center"><b style="font-size:18px">${d.health.avg}</b><br><span style="font-size:11px;color:#777">sức khỏe OKR</span></td>
       </tr>
     </table>
+    ${emailSection('Nhận định &amp; Khuyến nghị')}
+    <ul style="margin:0 0 14px;padding-left:18px;line-height:1.5;font-size:14px">${insights}</ul>
+    ${d.kpiAlerts.length ? `${emailSection('KPI cần can thiệp')}
+    <table role="presentation" style="border-collapse:collapse;font-size:13px;margin-bottom:14px"><tr style="background:#f3f3f3"><th style="padding:3px 8px;text-align:left">KPI</th><th style="padding:3px 8px;text-align:left">Đơn vị</th><th style="padding:3px 8px">Thực hiện</th><th style="padding:3px 8px">Mức</th></tr>${kpiRows}</table>` : ''}
+    <p style="margin:0;font-size:14px"><b>Khối tiến độ thấp nhất:</b> ${slow || '—'}</p>`;
 
-    <h3 style="margin:0 0 6px">Nhận định &amp; Khuyến nghị</h3>
-    <ul style="margin:0 0 14px;padding-left:18px;line-height:1.5">${insights}</ul>
-
-    ${d.kpiAlerts.length ? `<h3 style="margin:0 0 6px">KPI cần can thiệp</h3>
-    <table style="border-collapse:collapse;font-size:13px;margin-bottom:14px"><tr style="background:#f3f3f3"><th style="padding:3px 8px;text-align:left">KPI</th><th style="padding:3px 8px;text-align:left">Đơn vị</th><th style="padding:3px 8px">Thực hiện</th><th style="padding:3px 8px">Mức</th></tr>${kpiRows}</table>` : ''}
-
-    <p style="margin:0 0 14px"><b>Khối tiến độ thấp nhất:</b> ${slow || '—'}</p>
-
-    <p style="margin:16px 0"><a href="${appUrl}/review" style="background:#7C0312;color:#fff;padding:9px 16px;border-radius:8px;text-decoration:none">Mở trang Họp điều hành →</a></p>
-    <p style="color:#999;font-size:12px">BTMH OKR Portal — bản tin tự động hằng tuần.</p>
-  </div>`;
+  return brandedEmail({
+    kicker: '📊 Bản tin điều hành tuần',
+    title: esc(`Tuần — ${d.periodName}`),
+    titleUrl: `${appUrl}/review`,
+    bodyHtml: body,
+    button: { label: 'Mở trang Họp điều hành →', url: `${appUrl}/review` },
+    preheader: `Tiến độ công ty ${d.companyProg}% · ${d.overdue.length} việc quá hạn`,
+  });
 }
 
 type DigestUser = {

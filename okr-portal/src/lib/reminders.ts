@@ -2,6 +2,7 @@ import { query } from './db';
 import { getSetting } from './settings';
 import { getCurrentPeriod } from './periods';
 import { sendMail, mailBaseUrl } from './mail';
+import { brandedEmail } from './mail-layout';
 import { roleAtLeast, type Role } from './rbac';
 
 // #4 Nhắc check-in — cấu hình được ở /admin/settings, gửi qua "Deck Mail".
@@ -93,11 +94,14 @@ export async function runCheckinReminders(opts: {
     const list = g.items
       .map((i) => `<li><b>${esc(i.kr)}</b> — ${esc(i.obj)}</li>`)
       .join('');
-    const html = `<p>Chào ${esc(g.name || email)},</p>
-      <p>Bạn có <b>${g.items.length}</b> kết quả then chốt (KR) chưa check-in trong ${cfg.stale_days} ngày. Vui lòng cập nhật tiến độ:</p>
-      <ul>${list}</ul>
-      <p><a href="${appUrl}/my">Mở OKR của tôi →</a></p>
-      <p style="color:#888;font-size:12px">BTMH OKR Portal — email nhắc tự động.</p>`;
+    const body = `<p style="margin:0 0 6px;font-size:14px">Chào ${esc(g.name || email)},</p>
+      <p style="margin:0 0 10px;font-size:14px">Bạn có <b>${g.items.length}</b> kết quả then chốt (KR) chưa check-in trong ${cfg.stale_days} ngày. Vui lòng cập nhật tiến độ:</p>
+      <ul style="font-size:14px;line-height:1.6">${list}</ul>`;
+    const html = brandedEmail({
+      kicker: 'Nhắc check-in OKR', title: 'Bạn có KR chưa check-in',
+      bodyHtml: body, button: { label: 'Mở OKR của tôi →', url: `${appUrl}/my` },
+      preheader: `${g.items.length} KR chưa check-in`,
+    });
     const ok = await sendMail({ to: email, subject: 'Nhắc check-in OKR', html, kind: 'link' });
     if (ok) {
       sent++;

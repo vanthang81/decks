@@ -27,6 +27,11 @@ function transport(): Transporter | null {
     port,
     secure: port === 465, // 465 = SSL/TLS ngầm; 587 = STARTTLS (secure=false rồi nâng cấp)
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    // POOL kết nối (CFO 11/09): tái dùng kết nối SMTP thay vì bắt tay lại mỗi email →
+    // gửi nhiều email (thông báo/nhắc/biên bản) nhanh hơn nhiều + gửi song song được.
+    pool: true,
+    maxConnections: 4,
+    maxMessages: 100,
   });
   return _tx;
 }

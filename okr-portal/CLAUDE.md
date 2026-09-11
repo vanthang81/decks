@@ -229,6 +229,14 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
       `requireChecklistEdit`) — sửa/thêm gọi `syncIssueForItem` (đổi kết luận → tạo/dọn Vấn đề); xoá tiêu chí CASCADE
       xoá Vấn đề (task khắc phục giữ lại, issue_id→NULL). UI: `ComplianceChecklist` có nút Sửa/🗑 mỗi dòng + "＋ Thêm
       tiêu chí" + modal `ItemEditor` (đủ 15 trường). Prop đổi `canImport`→`canEdit` (= canManage||phap_che||qlda).
+  - **KHUNG EMAIL THƯƠNG HIỆU DÙNG CHUNG + GỬI NỀN (CFO 11/09)**: `src/lib/mail-layout.ts` `brandedEmail({kicker,
+    title, titleUrl, bodyHtml, button, footerNote, preheader})` = khung email BTMH (logo hosted `/icons/icon-192.png`
+    vì Gmail chặn data-URI · header maroon + tiêu đề link tới đúng nội dung · bố cục TABLE căn trái · nút CTA + URL ·
+    chân trang) + `emailSection()`. MỌI builder email dùng chung: `notifications.notify` (thông báo/mention),
+    `reminders` (check-in), `task-reminders` (đến hạn/quá hạn/tổng hợp), `digest` (bản tin tuần), `meeting-mail`
+    (biên bản). **GỬI NỀN**: `notify` fire-and-forget (`void Promise.allSettled` — KHÔNG await SMTP → đăng bình luận
+    trả về ngay); `sendMail` transport bật `pool:true,maxConnections:4` → gửi nhiều email nhanh + song song
+    (`sendMinutesEmail` gửi `Promise.all`). **Phím tắt**: Composer trong `CommentThread.tsx` nhận Ctrl/⌘+Enter = gửi.
   - **GỬI BIÊN BẢN HỌP QUA EMAIL (CFO 11/09)**: mục "Biên bản & Quyết định" ở `/meetings/[id]` có nút "✉ Gửi biên
     bản" (chỉ canManage + đã có biên bản/quyết định). `src/lib/meeting-mail.ts` `sendMinutesEmail` dựng HTML email
     chuyên nghiệp (tiêu đề + meta loại/thời gian/địa điểm/chủ trì + biên bản (sanitize, bỏ `#Tn`, đổi `[x]`→☑) +

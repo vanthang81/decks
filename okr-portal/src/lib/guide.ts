@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-11.155';
+export const GUIDE_VERSION = '2026-09-11.156';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,15 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '11/09/2026 (Email đẹp & gửi nhanh + phím tắt gửi)',
+    items: [
+      'Toàn bộ email hệ thống (thông báo · nhắc việc/check-in · bản tin tuần · biên bản họp) nay dùng chung khung thương hiệu BTMH: có logo, tiêu đề dẫn thẳng tới đúng nội dung trên okr.baotinmanhhai.vn, bố cục căn trái gọn gàng, nút mở nhanh — hiển thị đẹp trên Gmail/Outlook/điện thoại.',
+      'Gửi nhanh hơn hẳn: đăng bình luận/thông báo không còn phải chờ email (gửi ở chế độ nền), và email gửi nhiều người chạy song song qua kết nối SMTP tái sử dụng.',
+      'Phím tắt: nhấn Ctrl + Enter (⌘ + Enter trên Mac) để gửi bình luận nhanh.',
+      'Email biên bản họp bổ sung cột “Mã” trong bảng Hành động.',
+    ],
+  },
   {
     date: '11/09/2026 (Cuộc họp: gửi biên bản qua email cho thành viên)',
     items: [

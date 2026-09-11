@@ -118,6 +118,13 @@ function Composer({
           value={body}
           autoFocus={autoFocus}
           onChange={onChange}
+          onKeyDown={(e) => {
+            // Ctrl+Enter (Windows) / ⌘+Enter (Mac) = gửi nhanh — giống app phổ biến.
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+              e.preventDefault();
+              if (!busy && body.trim()) void submit();
+            }
+          }}
           onBlur={() => setTimeout(() => setQ(null), 150)}
         />
         {q !== null && matches.length > 0 && (
@@ -151,6 +158,7 @@ function Composer({
             Huỷ
           </button>
         )}
+        <span className="cmt-kbd-hint">Ctrl + Enter để gửi</span>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { query } from './db';
 import { sendMail, mailBaseUrl } from './mail';
+import { brandedEmail } from './mail-layout';
 import { notifEnabled } from './notifications';
 
 // NHẮC CÔNG VIỆC QUA EMAIL + CHUÔNG (CFO 30/08): (2) sắp đến hạn 1 ngày · (3) quá hạn ·
@@ -63,9 +64,11 @@ export async function remindTasksDueSoon(): Promise<number> {
   let n = 0;
   for (const t of rows) {
     const subject = `[OKR BTMH] Công việc đến hạn ngày mai: ${t.title}`;
-    const html =
-      `<p>Công việc <b>${escapeHtml(t.title)}</b> của bạn <b>đến hạn vào NGÀY MAI</b>${t.due_on ? ` (${fmt(t.due_on)})` : ''}.</p>` +
-      `<p><a href="${APP_URL()}${taskLink(t)}">Mở công việc để cập nhật →</a></p>`;
+    const html = brandedEmail({
+      kicker: 'Nhắc công việc', title: 'Công việc đến hạn ngày mai',
+      bodyHtml: `<p style="margin:0;font-size:14px">Công việc <b>${escapeHtml(t.title)}</b> của bạn <b>đến hạn vào NGÀY MAI</b>${t.due_on ? ` (${fmt(t.due_on)})` : ''}. Vui lòng cập nhật tiến độ.</p>`,
+      button: { label: 'Mở công việc để cập nhật →', url: `${APP_URL()}${taskLink(t)}` },
+    });
     if (await pushReminder(t, 'task_due_soon', subject, html, 20)) n++;
   }
   return n;
@@ -77,10 +80,11 @@ export async function remindTasksOverdue(): Promise<number> {
   let n = 0;
   for (const t of rows) {
     const subject = `[OKR BTMH] Công việc QUÁ HẠN: ${t.title}`;
-    const html =
-      `<p>Công việc <b>${escapeHtml(t.title)}</b> của bạn <b style="color:#dc2626">đã QUÁ HẠN</b>${t.due_on ? ` (hạn ${fmt(t.due_on)})` : ''}.</p>` +
-      `<p>Vui lòng cập nhật tiến độ hoặc dời hạn.</p>` +
-      `<p><a href="${APP_URL()}${taskLink(t)}">Mở công việc →</a></p>`;
+    const html = brandedEmail({
+      kicker: 'Nhắc công việc', title: 'Công việc đã quá hạn',
+      bodyHtml: `<p style="margin:0;font-size:14px">Công việc <b>${escapeHtml(t.title)}</b> của bạn <b style="color:#dc2626">đã QUÁ HẠN</b>${t.due_on ? ` (hạn ${fmt(t.due_on)})` : ''}. Vui lòng cập nhật tiến độ hoặc dời hạn.</p>`,
+      button: { label: 'Mở công việc →', url: `${APP_URL()}${taskLink(t)}` },
+    });
     if (await pushReminder(t, 'task_overdue', subject, html, 20 * 24)) n++;
   }
   return n;
@@ -103,11 +107,15 @@ export async function weeklyOverdueDigest(): Promise<number> {
     const items = tasks.map((t) =>
       `<li><a href="${APP_URL()}${taskLink(t)}">${escapeHtml(t.title)}</a>${t.due_on ? ` — hạn <b style="color:#dc2626">${fmt(t.due_on)}</b>` : ''}</li>`,
     ).join('');
-    const html =
-      `<p>Chào bạn, bạn đang có <b>${tasks.length}</b> công việc <b style="color:#dc2626">quá hạn</b> chưa hoàn thành:</p>` +
-      `<ul>${items}</ul>` +
-      `<p>Vui lòng cập nhật tiến độ, hoàn thành hoặc dời hạn để bảng điều hành phản ánh đúng.</p>` +
-      `<p><a href="${APP_URL()}/tasks?overdue=1&mine=1">Mở danh sách việc quá hạn của tôi →</a></p>`;
+    const html = brandedEmail({
+      kicker: 'Tổng hợp công việc quá hạn',
+      title: `${tasks.length} công việc quá hạn của bạn`,
+      bodyHtml:
+        `<p style="margin:0 0 10px;font-size:14px">Bạn đang có <b>${tasks.length}</b> công việc <b style="color:#dc2626">quá hạn</b> chưa hoàn thành:</p>` +
+        `<ul style="font-size:14px;line-height:1.7">${items}</ul>` +
+        `<p style="font-size:14px;color:#555">Vui lòng cập nhật tiến độ, hoàn thành hoặc dời hạn để bảng điều hành phản ánh đúng.</p>`,
+      button: { label: 'Mở danh sách việc quá hạn của tôi →', url: `${APP_URL()}/tasks?overdue=1&mine=1` },
+    });
     const ok = await sendMail({ to: email, subject: `[OKR BTMH] Tổng hợp ${tasks.length} công việc quá hạn của bạn`, html });
     if (ok) sent++;
   }

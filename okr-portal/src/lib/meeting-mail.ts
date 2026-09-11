@@ -2,6 +2,7 @@
 import { getMeeting, listParticipants, listActionItems, MEETING_TYPE_LABEL } from './meetings';
 import { sendMail, mailBaseUrl } from './mail';
 import { sanitizeRichHtml, linkifyHtml } from './sanitizeHtml';
+import { brandedEmail, emailSection } from './mail-layout';
 import { logAudit } from './audit';
 
 function esc(s: string): string {
@@ -41,12 +42,15 @@ function buildHtml(m: NonNullable<MailMeeting>, actions: Awaited<ReturnType<type
   const minutesHtml = m.minutes ? cbSymbols(linkifyHtml(sanitizeRichHtml(m.minutes))).replace(/#T\d+\b/g, '') : '';
   const decisionsHtml = m.decisions ? linkifyHtml(sanitizeRichHtml(m.decisions)) : '';
 
+  const th = 'padding:7px 10px;border-bottom:2px solid #e2e8f0';
+  const td = 'padding:7px 10px;border-bottom:1px solid #eee';
   const actionRows = actions.map((a) =>
     `<tr>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee">${esc(a.title)}</td>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;white-space:nowrap">${esc(a.owner_name || '—')}</td>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;white-space:nowrap">${a.due_on ? fmtD(a.due_on) : '—'}</td>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;white-space:nowrap">${TASK_STATUS_VI[a.status] || a.status}</td>
+      <td style="${td};white-space:nowrap;font-family:monospace;color:#475569">${esc(a.code || '—')}</td>
+      <td style="${td}">${esc(a.title)}</td>
+      <td style="${td};white-space:nowrap">${esc(a.owner_name || '—')}</td>
+      <td style="${td};white-space:nowrap">${a.due_on ? fmtD(a.due_on) : '—'}</td>
+      <td style="${td};white-space:nowrap">${TASK_STATUS_VI[a.status] || a.status}</td>
     </tr>`,
   ).join('');
 
@@ -54,39 +58,26 @@ function buildHtml(m: NonNullable<MailMeeting>, actions: Awaited<ReturnType<type
     ? `<div style="background:#f8fafc;border-left:3px solid #3595D5;padding:10px 14px;margin:0 0 18px;border-radius:0 6px 6px 0;color:#334155;font-size:14px;white-space:pre-wrap">${esc(note.trim())}</div>`
     : '';
 
-  return `<!doctype html><html><body style="margin:0;background:#f1f5f9;padding:24px 0">
-  <div style="max-width:680px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#161A21;box-shadow:0 1px 4px rgba(0,0,0,.08)">
-    <div style="background:#7C0312;padding:18px 26px;color:#fff">
-      <div style="font-size:12px;letter-spacing:.5px;opacity:.85;text-transform:uppercase">Biên bản cuộc họp${m.code ? ` · ${esc(m.code)}` : ''}</div>
-      <div style="font-size:20px;font-weight:700;margin-top:2px">${esc(m.title)}</div>
-    </div>
-    <div style="padding:22px 26px">
-      ${noteBlock}
-      <table style="border-collapse:collapse;font-size:14px;margin-bottom:18px">${meta}</table>
+  const body =
+    noteBlock +
+    `<table role="presentation" style="border-collapse:collapse;font-size:14px;margin-bottom:4px">${meta}</table>` +
+    (minutesHtml ? `${emailSection('Nội dung biên bản')}<div style="font-size:14px;line-height:1.6;color:#161A21">${minutesHtml}</div>` : '') +
+    (decisionsHtml ? `${emailSection('Quyết định chính')}<div style="font-size:14px;line-height:1.6;color:#161A21">${decisionsHtml}</div>` : '') +
+    (actions.length ? `${emailSection(`Hành động (${actions.length})`)}
+      <table role="presentation" style="border-collapse:collapse;width:100%;font-size:13.5px">
+        <thead><tr style="text-align:left;color:#64748b">
+          <th style="${th}">Mã</th><th style="${th}">Công việc</th><th style="${th}">Phụ trách</th><th style="${th}">Hạn</th><th style="${th}">Trạng thái</th>
+        </tr></thead><tbody>${actionRows}</tbody></table>` : '');
 
-      ${minutesHtml ? `<div style="font-weight:700;font-size:15px;margin:0 0 6px;color:#7C0312">Nội dung biên bản</div>
-        <div style="font-size:14px;line-height:1.6;color:#161A21">${minutesHtml}</div>` : ''}
-
-      ${decisionsHtml ? `<div style="font-weight:700;font-size:15px;margin:18px 0 6px;color:#7C0312">Quyết định chính</div>
-        <div style="font-size:14px;line-height:1.6;color:#161A21">${decisionsHtml}</div>` : ''}
-
-      ${actions.length ? `<div style="font-weight:700;font-size:15px;margin:18px 0 6px;color:#7C0312">Hành động (${actions.length})</div>
-        <table style="border-collapse:collapse;width:100%;font-size:13.5px">
-          <thead><tr style="text-align:left;color:#64748b">
-            <th style="padding:6px 10px;border-bottom:2px solid #e2e8f0">Công việc</th>
-            <th style="padding:6px 10px;border-bottom:2px solid #e2e8f0">Phụ trách</th>
-            <th style="padding:6px 10px;border-bottom:2px solid #e2e8f0">Hạn</th>
-            <th style="padding:6px 10px;border-bottom:2px solid #e2e8f0">Trạng thái</th>
-          </tr></thead><tbody>${actionRows}</tbody></table>` : ''}
-
-      <div style="margin-top:24px">
-        <a href="${url}" style="background:#3595D5;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px">Mở cuộc họp trên hệ thống</a>
-      </div>
-      <div style="margin-top:20px;padding-top:14px;border-top:1px solid #eee;color:#94a3b8;font-size:12px">
-        Email tự động từ Hệ thống Quản trị Hiệu suất BTMH${senderName ? ` · gửi bởi ${esc(senderName)}` : ''}. Vui lòng không trả lời email này.
-      </div>
-    </div>
-  </div></body></html>`;
+  return brandedEmail({
+    kicker: `Biên bản cuộc họp${m.code ? ` · ${esc(m.code)}` : ''}`,
+    title: esc(m.title),
+    titleUrl: url,
+    bodyHtml: body,
+    button: { label: 'Mở cuộc họp trên hệ thống →', url },
+    footerNote: senderName ? `gửi bởi ${esc(senderName)}` : undefined,
+    preheader: `Biên bản họp: ${m.title}`,
+  });
 }
 
 export type SendMinutesResult = { ok: boolean; error?: string; sent?: number; total?: number; recipients?: string[]; failed?: string[] };
@@ -107,13 +98,13 @@ export async function sendMinutesEmail(meetingId: string, actor: string, note: s
 
   const html = buildHtml(m, actions, note, senderName);
   const subject = `📋 Biên bản họp: ${m.title}`;
-  let sent = 0;
-  const done: string[] = [];
-  const failed: string[] = [];
-  for (const email of recips) {
-    const ok = await sendMail({ to: email, subject, html }).catch(() => false);
-    if (ok) { sent++; done.push(email); } else failed.push(email);
-  }
+  // Gửi SONG SONG (pool SMTP) — nhanh hơn nhiều so với tuần tự.
+  const results = await Promise.all(
+    recips.map(async (email) => ({ email, ok: await sendMail({ to: email, subject, html }).catch(() => false) })),
+  );
+  const done = results.filter((r) => r.ok).map((r) => r.email);
+  const failed = results.filter((r) => !r.ok).map((r) => r.email);
+  const sent = done.length;
   await logAudit({ actor, action: 'meeting.send_minutes', entity: 'meeting', entityId: meetingId, detail: { sent, total: recips.length, failed: failed.length } }).catch(() => {});
   return { ok: true, sent, total: recips.length, recipients: done, failed };
 }

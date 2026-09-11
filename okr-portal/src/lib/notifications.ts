@@ -1,5 +1,6 @@
 import { query, queryOne } from './db';
 import { sendMail, mailBaseUrl } from './mail';
+import { brandedEmail, emailEsc } from './mail-layout';
 
 export type Notification = {
   id: string;
@@ -181,18 +182,23 @@ export async function notify(input: {
     );
   }
 
-  // Email best-effort cho ai bật notify_email (qua webhook Deck Mail).
+  // Email GỬI NỀN (fire-and-forget) — KHÔNG chặn phản hồi (CFO 11/09: gửi comment không phải chờ SMTP).
+  // Container chạy dài nên promise vẫn hoàn tất sau khi action đã trả về. Best-effort, tự nuốt lỗi.
   const appUrl = mailBaseUrl();
   const verb = NOTIF_VERB[input.type];
-  for (const u of wanted) {
-    if (!u.notify_email) continue;
-    const subject = `[OKR BTMH] ${input.actorName || input.actorEmail} ${verb}`;
-    const html =
-      `<p><b>${input.actorName || input.actorEmail}</b> ${verb} tại <b>${input.entityLabel}</b>:</p>` +
-      `<blockquote style="border-left:3px solid #7C0312;padding-left:10px;color:#333">${input.preview}</blockquote>` +
-      `<p><a href="${appUrl}${input.link}">Mở để xem &amp; phản hồi →</a></p>`;
-    await sendMail({ to: u.email, subject, html }); // best-effort, tự nuốt lỗi
-  }
+  const who = input.actorName || input.actorEmail;
+  const fullLink = `${appUrl}${input.link}`;
+  const subject = `[OKR BTMH] ${who} ${verb}`;
+  const body =
+    `<p style="margin:0 0 10px;font-size:14px"><b>${emailEsc(who)}</b> ${emailEsc(verb)} tại <b>${emailEsc(input.entityLabel)}</b>:</p>` +
+    `<blockquote style="border-left:3px solid #7C0312;padding:8px 12px;margin:0;color:#334155;background:#faf6f0;border-radius:0 6px 6px 0;font-size:14px">${emailEsc(input.preview)}</blockquote>`;
+  const html = brandedEmail({
+    kicker: 'Thông báo', title: emailEsc(`${who} ${verb}`), titleUrl: fullLink,
+    bodyHtml: body, button: { label: 'Mở để xem & phản hồi →', url: fullLink },
+    preheader: `${who} ${verb} tại ${input.entityLabel}`,
+  });
+  const jobs = wanted.filter((u) => u.notify_email).map((u) => sendMail({ to: u.email, subject, html }));
+  void Promise.allSettled(jobs);
 }
 
 /**
