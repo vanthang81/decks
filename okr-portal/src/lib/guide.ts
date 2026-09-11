@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-11.154';
+export const GUIDE_VERSION = '2026-09-11.155';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '11/09/2026 (Cuộc họp: gửi biên bản qua email cho thành viên)',
+    items: [
+      'Sau khi ghi biên bản, mục “Biên bản & Quyết định” có nút “✉ Gửi biên bản” — gửi email nội dung biên bản + quyết định + danh sách hành động tới toàn bộ thành viên cuộc họp (chủ trì, thư ký, người tham gia).',
+      'Trước khi gửi có cửa sổ xem trước người nhận + ô lời nhắn kèm theo; email trình bày chuyên nghiệp, có nút mở nhanh cuộc họp trên hệ thống.',
+    ],
+  },
   {
     date: '11/09/2026 (Bảng kiểm tuân thủ — form mẫu + sửa/xoá/thêm tay tiêu chí)',
     items: [

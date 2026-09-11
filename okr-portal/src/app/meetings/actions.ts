@@ -9,6 +9,7 @@ import {
   getMeeting, isMeetingEditor, requestAccess, decideAccessRequest,
   type MeetingInput, type MeetingType, type MeetingStatus, type MeetingVisibility, MEETING_TYPES,
 } from '@/lib/meetings';
+import { sendMinutesEmail, type SendMinutesResult } from '@/lib/meeting-mail';
 import { notifySimple } from '@/lib/notifications';
 import { logAudit } from '@/lib/audit';
 import { createInitiative } from '@/lib/initiatives';
@@ -150,6 +151,14 @@ export async function autosaveMinutesAction(fd: FormData) {
   await syncMeetingMinutesTasks({ meetingId: id, minutesHtml: minutes, users, actor: user.email, todayYear: new Date().getFullYear() });
   revalidatePath(`/meetings/${id}`);
   revalidatePath('/tasks');
+}
+
+// Gửi biên bản họp qua email cho toàn bộ thành viên (chủ trì/thư ký/tham gia). Trả kết quả cho UI.
+export async function sendMinutesEmailAction(fd: FormData): Promise<SendMinutesResult> {
+  const id = str(fd, 'id');
+  const { user } = await guardManage(id);
+  const note = str(fd, 'note');
+  return sendMinutesEmail(id, user.email, note, user.display_name || user.email);
 }
 
 export async function deleteMeetingAction(fd: FormData) {

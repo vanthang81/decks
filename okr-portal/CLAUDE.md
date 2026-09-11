@@ -229,6 +229,12 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
       `requireChecklistEdit`) — sửa/thêm gọi `syncIssueForItem` (đổi kết luận → tạo/dọn Vấn đề); xoá tiêu chí CASCADE
       xoá Vấn đề (task khắc phục giữ lại, issue_id→NULL). UI: `ComplianceChecklist` có nút Sửa/🗑 mỗi dòng + "＋ Thêm
       tiêu chí" + modal `ItemEditor` (đủ 15 trường). Prop đổi `canImport`→`canEdit` (= canManage||phap_che||qlda).
+  - **GỬI BIÊN BẢN HỌP QUA EMAIL (CFO 11/09)**: mục "Biên bản & Quyết định" ở `/meetings/[id]` có nút "✉ Gửi biên
+    bản" (chỉ canManage + đã có biên bản/quyết định). `src/lib/meeting-mail.ts` `sendMinutesEmail` dựng HTML email
+    chuyên nghiệp (tiêu đề + meta loại/thời gian/địa điểm/chủ trì + biên bản (sanitize, bỏ `#Tn`, đổi `[x]`→☑) +
+    quyết định + bảng Hành động + nút mở cuộc họp) rồi `sendMail` (SMTP) tới **chủ trì + mọi thành viên** (dedup,
+    email hợp lệ). Action `sendMinutesEmailAction` (gác `guardManage`, TRẢ VỀ kết quả cho UI). Component
+    `SendMinutesButton.tsx`: popup xem trước người nhận + ô lời nhắn + báo đã gửi X/Y. Nhật ký `meeting.send_minutes`.
   - **⭐ ĐƠN VỊ CÔNG VIỆC = PHÒNG CỦA NGƯỜI ĐƯỢC GIAO (CFO 09/09 — mặc định VĨNH VIỄN, KHÔNG để trống,
     không cần nhắc lại)**: khi tạo/sửa việc mà `unit_id` để trống nhưng có `owner_email` → tự lấy `unit_id`
     của người đó. Điểm chốt DUY NHẤT = helper **`resolveTaskUnit(unitId, ownerEmail)`** trong `initiatives.ts`,

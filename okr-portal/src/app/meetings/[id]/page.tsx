@@ -9,6 +9,7 @@ import MeetingFields from '@/components/MeetingFields';
 import ExecutionTabs from '@/components/ExecutionTabs';
 import AddTaskToMeeting from '@/components/AddTaskToMeeting';
 import MinutesEditor from '@/components/MinutesEditor';
+import SendMinutesButton from '@/components/SendMinutesButton';
 import UserLink from '@/components/UserLink';
 import ActivityLogButton from '@/components/ActivityLogButton';
 import { loadEntityAuditAction } from '@/app/audit/actions';
@@ -30,7 +31,7 @@ import { listInitiativesForMeeting } from '@/lib/initiatives';
 import { fmtDateTime } from '@/lib/format';
 import {
   updateMeetingAction, saveMinutesAction, autosaveMinutesAction, deleteMeetingAction,
-  requestMeetingAccessAction, decideMeetingAccessAction, createMeetingTaskAction,
+  requestMeetingAccessAction, decideMeetingAccessAction, createMeetingTaskAction, sendMinutesEmailAction,
 } from '../actions';
 import {
   editInitiativeAction, deleteInitiativeAction, createInitiativeAction, moveInitiativeAction,
@@ -97,6 +98,17 @@ export default async function MeetingDetail({ params }: { params: { id: string }
   const secretaryText = participants.filter((p) => p.role === 'secretary').map((p) => p.email).join(', ');
   const cohostList = participants.filter((p) => p.role === 'host' && p.email.toLowerCase() !== ownerLc);
   const secretaryList = participants.filter((p) => p.role === 'secretary');
+  // Người nhận email biên bản = chủ trì + mọi thành viên (dedup, email hợp lệ).
+  const mailRecipients = (() => {
+    const map = new Map<string, { email: string; name: string | null }>();
+    const addR = (email: string | null, name: string | null) => {
+      const e = (email || '').trim().toLowerCase();
+      if (e && e.includes('@') && !map.has(e)) map.set(e, { email: email as string, name });
+    };
+    addR(m.owner_email, m.owner_name);
+    for (const p of participants) addR(p.email, p.name);
+    return [...map.values()];
+  })();
   // Chuỗi tên → link hồ sơ user (mỗi tên bấm được). Ngăn cách bằng dấu phẩy.
   const nameLinks = (list: { email: string; name: string | null }[]) =>
     list.map((p, i) => (
@@ -188,19 +200,24 @@ export default async function MeetingDetail({ params }: { params: { id: string }
           <div className="flexbtw flexbtw-top">
             <h3 style={{ marginTop: 0 }}>Biên bản &amp; Quyết định</h3>
             {canManage && (
-              <EditModal title="Ghi biên bản cuộc họp" label={m.minutes || m.decisions ? 'Sửa biên bản' : 'Ghi biên bản'} icon={<NavIcon name="pencil" />} submitLabel="Lưu &amp; đóng" action={saveMinutesAction} wide>
-                <input type="hidden" name="id" value={m.id} />
-                <MinutesEditor
-                  meetingId={m.id}
-                  initialMinutes={displayMinutes}
-                  initialDecisions={m.decisions ?? ''}
-                  action={autosaveMinutesAction}
-                  savedByName={m.minutes_updated_by_name || m.minutes_updated_by || ''}
-                  savedAtLabel={m.minutes_updated_at ? fmtDateTime(m.minutes_updated_at) : ''}
-                  currentUserName={user.display_name || user.email}
-                  people={personOpts.map((p) => ({ email: p.email, name: p.name }))}
-                />
-              </EditModal>
+              <div className="md-minutes-actions">
+                {(m.minutes || m.decisions) && (
+                  <SendMinutesButton meetingId={m.id} recipients={mailRecipients} send={sendMinutesEmailAction} />
+                )}
+                <EditModal title="Ghi biên bản cuộc họp" label={m.minutes || m.decisions ? 'Sửa biên bản' : 'Ghi biên bản'} icon={<NavIcon name="pencil" />} submitLabel="Lưu &amp; đóng" action={saveMinutesAction} wide>
+                  <input type="hidden" name="id" value={m.id} />
+                  <MinutesEditor
+                    meetingId={m.id}
+                    initialMinutes={displayMinutes}
+                    initialDecisions={m.decisions ?? ''}
+                    action={autosaveMinutesAction}
+                    savedByName={m.minutes_updated_by_name || m.minutes_updated_by || ''}
+                    savedAtLabel={m.minutes_updated_at ? fmtDateTime(m.minutes_updated_at) : ''}
+                    currentUserName={user.display_name || user.email}
+                    people={personOpts.map((p) => ({ email: p.email, name: p.name }))}
+                  />
+                </EditModal>
+              </div>
             )}
           </div>
           {(m.minutes || m.decisions) && m.minutes_updated_at && (
