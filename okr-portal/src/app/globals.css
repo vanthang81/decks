@@ -1073,6 +1073,33 @@ textarea.i { min-height: 70px; resize: vertical; }
 .stat { display: flex; gap: 26px; flex-wrap: wrap; }
 .stat .n { font-size: 26px; font-weight: 700; }
 .stat .l { color: var(--muted); font-size: 13px; }
+
+/* ── KPI strip Bảng điều khiển (cân đối & chuyên nghiệp): 4 cột desktop → 2×2 mobile,
+   vách ngăn hairline, ô chính có thanh tiến độ. Dùng grid gap 1px + nền --line = kẻ mảnh. ── */
+.kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.kpi-cell { background: var(--card); padding: 18px 18px 16px; display: flex; flex-direction: column;
+  gap: 6px; min-width: 0; position: relative; }
+.kpi-cell .kpi-top { display: flex; align-items: center; gap: 7px; color: var(--muted); }
+.kpi-cell .kpi-ic { width: 15px; height: 15px; flex: 0 0 auto; color: var(--accent); }
+.kpi-cell .kpi-l { font-size: 12.5px; font-weight: 600; color: var(--muted); letter-spacing: .01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kpi-cell .kpi-n { font-size: 30px; font-weight: 800; color: var(--ink); line-height: 1.05;
+  font-variant-numeric: tabular-nums; }
+.kpi-cell.primary { background: linear-gradient(180deg, var(--primary-tint) 0%, var(--card) 60%); }
+.kpi-cell.primary .kpi-ic { color: var(--primary); }
+.kpi-cell.primary .kpi-n { color: var(--primary); font-size: 34px; }
+.dash-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex: 0 0 auto; }
+@media (max-width: 640px) { .dash-actions { width: 100%; } .dash-actions .btn { flex: 1; justify-content: center; text-align: center; } }
+.kpi-bar { height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; margin-top: 2px; }
+.kpi-bar > i { display: block; height: 100%; border-radius: 999px; background: var(--primary); }
+.kpi-cell .kpi-sub { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+@media (max-width: 640px) {
+  .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+  .kpi-cell { padding: 15px 14px 13px; }
+  .kpi-cell .kpi-n { font-size: 26px; }
+  .kpi-cell.primary .kpi-n { font-size: 30px; }
+}
 hr.sep { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
 /* Link trong ô bảng (tiêu đề OKR/việc/KPI) → bấm vào chi tiết; giữ dáng chữ, hover mới nổi */
 .tbl-link { color: var(--ink); font-weight: 600; text-decoration: none; }

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-11.158';
+export const GUIDE_VERSION = '2026-09-11.159';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '11/09/2026 (Bảng điều khiển — giao diện mở đầu cân đối, chuyên nghiệp hơn)',
+    items: [
+      'Khối chỉ số đầu trang (Tiến độ công ty · OKR khối · phòng ban · cá nhân) thiết kế lại thành dải KPI cân đối: 4 ô đều nhau trên máy tính, xếp gọn 2×2 trên điện thoại (hết cảnh 3 ô + 1 ô lệch), có vách ngăn mảnh + biểu tượng cho từng chỉ số.',
+      'Ô “Tiến độ công ty” nổi bật hơn (nền chuyển sắc + thanh tiến độ trực quan).',
+      'Nút “Xem toàn bộ OKR” trên điện thoại trải đủ chiều ngang, gọn gàng thay vì trôi giữa màn.',
+    ],
+  },
   {
     date: '11/09/2026 (Rà soát tương phản toàn app — chữ luôn dễ đọc)',
     items: [

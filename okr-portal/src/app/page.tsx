@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import HelpTip from '@/components/HelpTip';
 import SiteHeader from '@/components/SiteHeader';
+import NavIcon from '@/components/NavIcon';
 import UserLink from '@/components/UserLink';
 import { ProgressBar } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
@@ -108,7 +109,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { tour
               )}
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="dash-actions">
             <Link className="btn" href="/objectives" data-tour="tour-all-okr">
               Xem toàn bộ OKR
             </Link>
@@ -126,26 +127,37 @@ export default async function Dashboard({ searchParams }: { searchParams: { tour
 
         {period && (
           <>
-            <div className="card">
-              <div className="stat">
-                <div>
-                  <div className="n" style={{ color: 'var(--primary)' }}>
-                    {fmtNumber(avg(company), 0)}%
-                  </div>
-                  <div className="l">Tiến độ công ty</div>
+            <div className="kpi-strip">
+              <div className="kpi-cell primary">
+                <div className="kpi-top">
+                  <NavIcon name="target" className="kpi-ic" />
+                  <span className="kpi-l">Tiến độ công ty</span>
                 </div>
-                <div>
-                  <div className="n">{divisions.length}</div>
-                  <div className="l">OKR khối</div>
+                <div className="kpi-n">{fmtNumber(avg(company), 0)}%</div>
+                <div className="kpi-bar">
+                  <i style={{ width: `${Math.min(100, Math.max(0, Math.round(avg(company))))}%` }} />
                 </div>
-                <div>
-                  <div className="n">{departments.length}</div>
-                  <div className="l">OKR phòng ban</div>
+              </div>
+              <div className="kpi-cell">
+                <div className="kpi-top">
+                  <NavIcon name="folder" className="kpi-ic" />
+                  <span className="kpi-l">OKR khối</span>
                 </div>
-                <div>
-                  <div className="n">{individuals.length}</div>
-                  <div className="l">OKR cá nhân</div>
+                <div className="kpi-n">{divisions.length}</div>
+              </div>
+              <div className="kpi-cell">
+                <div className="kpi-top">
+                  <NavIcon name="users" className="kpi-ic" />
+                  <span className="kpi-l">OKR phòng ban</span>
                 </div>
+                <div className="kpi-n">{departments.length}</div>
+              </div>
+              <div className="kpi-cell">
+                <div className="kpi-top">
+                  <NavIcon name="user" className="kpi-ic" />
+                  <span className="kpi-l">OKR cá nhân</span>
+                </div>
+                <div className="kpi-n">{individuals.length}</div>
               </div>
             </div>
 
