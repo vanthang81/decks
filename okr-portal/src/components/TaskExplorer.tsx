@@ -484,7 +484,7 @@ export default function TaskExplorer({
                   <span className="rep-tile-n" style={{ color: '#dc2626' }}>{report.overdue}</span><span className="rep-tile-l">Quá hạn</span>
                 </button>
                 <button type="button" className="rep-tile" onClick={() => { clearFilter(); setFStatus('done'); setHideDone(false); scrollToList(); }}>
-                  <span className="rep-tile-n" style={{ color: '#16a34a' }}>{report.done}</span><span className="rep-tile-l">Hoàn thành · {donePct}%</span>
+                  <span className="rep-tile-n" style={{ color: '#15803d' }}>{report.done}</span><span className="rep-tile-l">Hoàn thành · {donePct}%</span>
                 </button>
               </div>
 

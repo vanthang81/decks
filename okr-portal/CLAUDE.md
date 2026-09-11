@@ -26,6 +26,14 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   trôi giữa màn); breakpoint dùng `@media (max-width:640px)` (và 760px cho lưới/row đã có sẵn);
   `.row > *` tự full-width ≤760px; bảng bọc `.table-scroll`; nút đủ lớn để bấm; header thu gọn hamburger.
 - **Tự chủ động rà UI/UX (desktop + mobile) mỗi lần đụng màn hình** — CFO không phải nhắc lại.
+- **TƯƠNG PHẢN MÀU CHỮ — CHUẨN WCAG AA (CFO 11/09, "không bao giờ để chữ khó đọc")**: mọi chữ phải đạt
+  tương phản ≥ 4.5:1 (chữ thường) / ≥ 3:1 (chữ lớn ≥18.66px đậm hoặc ≥24px, và biểu tượng/thanh/chấm đồ
+  hoạ). TUYỆT ĐỐI KHÔNG: chữ trắng trên nền sáng (chỉ dùng trắng trên nền maroon `--primary`/đỏ/tối);
+  chữ **vàng `--accent` (#C8A951) làm CHỮ trên nền sáng** (vàng chỉ dùng trên nền maroon, hoặc làm
+  icon/chấm/viền — không làm chữ đọc trên trắng); màu xanh "hoàn thành" khi làm CHỮ/SỐ phải dùng
+  `#15803d` (green-700, đạt AA) — KHÔNG dùng `#16a34a` (green-600) cho chữ thường (chỉ hợp làm chấm/
+  thanh/số lớn). Nút ghost/link trên popup nền sáng của header phải override lại `.btn.ghost` (mặc định
+  là trắng cho thanh maroon). Khi thêm/sửa màu chữ ⇒ tự nhẩm tương phản trước khi giao.
 - **Desktop và mobile KHÔNG bắt buộc giống hệt** (CFO 01/08): được phép bố trí KHÁC nhau cho mỗi
   kích thước, miễn MỖI bên đều đẹp/chuyên nghiệp/tối ưu. Vd bảng/bar nhiều cột: desktop xếp 1 dòng
   (nhãn · thanh · số); mobile tách nhãn xuống dòng riêng đầy đủ + thanh/số dòng dưới (không cắt cụt).

@@ -21,7 +21,7 @@ const BUCKETS: { key: Bucket; label: string; color: string }[] = [
   { key: 'overdue', label: 'Đã quá hạn', color: '#dc2626' },
   { key: 'doing', label: 'Đang làm', color: '#2563eb' },
   { key: 'todo', label: 'Chưa làm', color: '#94a3b8' },
-  { key: 'done', label: 'Đã hoàn thành', color: '#16a34a' },
+  { key: 'done', label: 'Đã hoàn thành', color: '#15803d' },
 ];
 
 const todayISO = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });

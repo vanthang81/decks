@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-11.157';
+export const GUIDE_VERSION = '2026-09-11.158';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '11/09/2026 (Rà soát tương phản toàn app — chữ luôn dễ đọc)',
+    items: [
+      'Rà soát tương phản màu chữ trên toàn hệ thống theo chuẩn WCAG AA: mọi chữ (nút, nhãn, số liệu, badge, popup) đều đạt độ tương phản đủ để đọc rõ trên cả máy tính lẫn điện thoại.',
+      'Sửa nhãn bước hướng dẫn (walkthrough) từ tông vàng nhạt (khó đọc trên nền trắng) sang tông maroon rõ nét.',
+      'Chuẩn hoá màu xanh “hoàn thành/đã xong” ở các số liệu & báo cáo sang tông đậm hơn (đạt tương phản chuẩn) — nhìn vẫn là màu xanh nhưng rõ hơn.',
+    ],
+  },
   {
     date: '11/09/2026 (Sửa chữ nút khó đọc ở popup Thông báo)',
     items: [

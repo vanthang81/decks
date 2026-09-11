@@ -99,7 +99,7 @@ export default async function BudgetPage({ searchParams }: { searchParams: { per
               <div className="stat">
                 <div><div className="n" style={{ color: 'var(--primary)' }}>{fmtVnd(d.totalPlanned)}</div><div className="l">Ngân sách kế hoạch</div></div>
                 <div><div className="n">{fmtVnd(d.totalActual)}</div><div className="l">Đã chi (gom việc)</div></div>
-                <div><div className="n" style={{ color: remaining < 0 ? '#dc2626' : '#16a34a' }}>{fmtVnd(remaining)}</div><div className="l">Còn lại</div></div>
+                <div><div className="n" style={{ color: remaining < 0 ? '#dc2626' : '#15803d' }}>{fmtVnd(remaining)}</div><div className="l">Còn lại</div></div>
                 <div><div className="n" style={{ color: progressColor(100 - usedPct) }}>{usedPct}%</div><div className="l">Đã dùng</div></div>
               </div>
             </div>

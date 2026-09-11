@@ -117,7 +117,7 @@ export default function ProjectReportView({ report }: { report: ProjectReport })
                     <tr key={o.email ?? '__none__'}>
                       <td>{o.name}</td>
                       <td style={{ textAlign: 'right' }}>{o.total}</td>
-                      <td style={{ textAlign: 'right', color: '#16a34a' }}>{o.done}</td>
+                      <td style={{ textAlign: 'right', color: '#15803d' }}>{o.done}</td>
                       <td style={{ textAlign: 'right' }}>{o.active}</td>
                       <td style={{ textAlign: 'right', color: o.overdue ? '#dc2626' : undefined }}>{o.overdue || '—'}</td>
                       <td style={{ textAlign: 'right' }}>{o.progress}%</td>
@@ -146,7 +146,7 @@ export default function ProjectReportView({ report }: { report: ProjectReport })
                   <div style={{ fontWeight: 700, marginBottom: 4 }}>Tháng này · {r.current.label}</div>
                   <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', fontSize: 13.5 }}>
                     <span>Đến hạn: <b>{r.current.due}</b></span>
-                    <span>Đã xong (đến hạn): <b style={{ color: '#16a34a' }}>{r.current.dueDone}</b>
+                    <span>Đã xong (đến hạn): <b style={{ color: '#15803d' }}>{r.current.dueDone}</b>
                       {r.current.due > 0 ? ` (${Math.round((r.current.dueDone / r.current.due) * 100)}%)` : ''}</span>
                     <span>Hoàn thành trong tháng: <b style={{ color: '#2563eb' }}>{r.current.completed}</b></span>
                     <span>Quá hạn (toàn dự án): <b style={{ color: r.current.overdue ? '#dc2626' : 'inherit' }}>{r.current.overdue}</b></span>
@@ -180,7 +180,7 @@ export default function ProjectReportView({ report }: { report: ProjectReport })
                 </table>
               </div>
               <p className="muted" style={{ fontSize: 12.5, marginTop: 8 }}>
-                <b style={{ color: '#b45309' }}>Đến hạn</b>: số việc có hạn trong tháng. <b style={{ color: '#16a34a' }}>Hoàn thành</b>: số việc đánh dấu Xong trong tháng.
+                <b style={{ color: '#b45309' }}>Đến hạn</b>: số việc có hạn trong tháng. <b style={{ color: '#15803d' }}>Hoàn thành</b>: số việc đánh dấu Xong trong tháng.
                 <b> Đúng hạn</b>: trong số việc đến hạn đã xong, bao nhiêu xong trước/đúng hạn.
               </p>
             </>

@@ -22,7 +22,7 @@ export default async function MyPage() {
     { n: tc.total, l: 'Tổng công việc', href: '/tasks?mine=1' },
     { n: tc.doing, l: 'Đang làm', color: '#2563eb', href: '/tasks?mine=1&status=in_progress' },
     { n: tc.overdue, l: 'Quá hạn', color: tc.overdue > 0 ? '#dc2626' : undefined, href: '/tasks?mine=1&overdue=1' },
-    { n: tc.done, l: 'Đã hoàn thành', color: '#16a34a', href: '/tasks?mine=1&status=done' },
+    { n: tc.done, l: 'Đã hoàn thành', color: '#15803d', href: '/tasks?mine=1&status=done' },
   ];
 
   return (
