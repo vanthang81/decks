@@ -16,17 +16,21 @@ type ImportResult = {
 };
 
 export default function ComplianceChecklist({
-  projectId, items, canImport,
+  projectId, items, canEdit, create, update, del,
 }: {
   projectId: string;
   items: ChecklistItem[];
-  canImport: boolean;
+  canEdit: boolean;
+  create: (fd: FormData) => Promise<void>;
+  update: (fd: FormData) => Promise<void>;
+  del: (fd: FormData) => Promise<void>;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState<ImportResult | null>(null);
   const [q, setQ] = useState('');
   const [fConc, setFConc] = useState<Conclusion | ''>('');
+  const [editing, setEditing] = useState<ChecklistItem | 'new' | null>(null);
 
   const counts = useMemo(() => {
     const c = { total: items.length, tuan_thu: 0, chua_tuan_thu: 0, vi_pham: 0, chua_ra_soat: 0, khong_ap_dung: 0, no_plan: 0, in_remediation: 0, pending: 0, closed: 0 };
@@ -55,7 +59,7 @@ export default function ComplianceChecklist({
     });
   }, [items, q, fConc]);
 
-  async function submit(e: React.FormEvent<HTMLFormElement>) {
+  async function submitImport(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
     const input = form.elements.namedItem('file') as HTMLInputElement;
@@ -77,10 +81,21 @@ export default function ComplianceChecklist({
     }
   }
 
+  async function doDelete(it: ChecklistItem) {
+    if (!confirm(`Xoá tiêu chí "${it.ma_tieu_chi}"? Vấn đề tuân thủ gắn với tiêu chí này (nếu có) cũng bị xoá. Không thể hoàn tác.`)) return;
+    const fd = new FormData();
+    fd.set('project_id', projectId); fd.set('id', it.id);
+    await del(fd);
+    router.refresh();
+  }
+
   return (
     <div className="card">
       <div className="flexbtw" style={{ alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' }}>
         <h3 style={{ marginTop: 0 }}>Bảng kiểm tuân thủ ({counts.total})</h3>
+        {canEdit && (
+          <button className="btn sm" type="button" onClick={() => setEditing('new')}>＋ Thêm tiêu chí</button>
+        )}
       </div>
       <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
         Nguồn dữ liệu gốc: mỗi dòng là <b>một tiêu chí rà soát</b> (không phải công việc). Khi kết luận
@@ -88,7 +103,6 @@ export default function ComplianceChecklist({
         (nếu có) thành công việc ở mục “Công việc thuộc dự án”. Import lại theo cùng <b>Mã</b> sẽ cập nhật, không tạo trùng.
       </p>
 
-      {/* Thống kê nhanh theo trạng thái tuân thủ */}
       {counts.total > 0 && (
         <div className="cmpl-stats">
           <Stat label="Tổng tiêu chí" n={counts.total} cls="slate" />
@@ -103,11 +117,11 @@ export default function ComplianceChecklist({
         </div>
       )}
 
-      {/* Import */}
-      {canImport && (
-        <form onSubmit={submit} className="cmpl-import">
-          <input className="i" type="file" name="file" accept=".xlsx" style={{ maxWidth: 320 }} />
+      {canEdit && (
+        <form onSubmit={submitImport} className="cmpl-import">
+          <input className="i" type="file" name="file" accept=".xlsx" style={{ maxWidth: 300 }} />
           <button className="btn" type="submit" disabled={busy}>{busy ? 'Đang nhập…' : '⬆ Import Bảng kiểm (.xlsx)'}</button>
+          <a className="btn ghost sm" href="/api/compliance/template">⬇ Tải form mẫu</a>
           <span className="muted" style={{ fontSize: 12 }}>Nhận diện cột linh hoạt theo tiêu đề; cột lạ được giữ nguyên.</span>
         </form>
       )}
@@ -131,7 +145,6 @@ export default function ComplianceChecklist({
         </div>
       )}
 
-      {/* Bộ lọc */}
       {counts.total > 0 && (
         <div className="cmpl-filter">
           <input className="i" placeholder="Tìm mã / yêu cầu / đơn vị / cơ sở pháp lý…" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 340 }} />
@@ -145,9 +158,8 @@ export default function ComplianceChecklist({
         </div>
       )}
 
-      {/* Bảng tiêu chí */}
       {counts.total === 0 ? (
-        <p className="muted">Chưa có tiêu chí nào. {canImport ? 'Dùng nút “Import Bảng kiểm” để đưa toàn bộ bảng kiểm từ Excel lên.' : 'Bảng kiểm sẽ hiển thị tại đây khi được import.'}</p>
+        <p className="muted">Chưa có tiêu chí nào. {canEdit ? 'Dùng nút “Import Bảng kiểm” để đưa toàn bộ bảng kiểm từ Excel lên, hoặc “＋ Thêm tiêu chí” để nhập tay.' : 'Bảng kiểm sẽ hiển thị tại đây khi được import.'}</p>
       ) : (
         <div className="table-scroll wide-x">
           <table className="t cmpl-tbl">
@@ -161,6 +173,7 @@ export default function ComplianceChecklist({
                 <th>Kết luận</th>
                 <th>Kế hoạch khắc phục</th>
                 <th>Trạng thái xử lý</th>
+                {canEdit && <th></th>}
               </tr>
             </thead>
             <tbody>
@@ -187,6 +200,12 @@ export default function ComplianceChecklist({
                         <span className="muted sm">—</span>
                       )}
                     </td>
+                    {canEdit && (
+                      <td className="nowrap cmpl-rowact">
+                        <button className="btn ghost sm" type="button" onClick={() => setEditing(it)}>Sửa</button>
+                        <button className="btn ghost sm" type="button" onClick={() => doDelete(it)} title="Xoá tiêu chí">🗑</button>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
@@ -200,6 +219,133 @@ export default function ComplianceChecklist({
           {' '}<Link href={`/projects/${projectId}`}>“Công việc thuộc dự án”</Link> bên dưới.
         </p>
       )}
+
+      {editing && (
+        <ItemEditor
+          projectId={projectId}
+          item={editing === 'new' ? null : editing}
+          create={create}
+          update={update}
+          onClose={() => setEditing(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function ItemEditor({
+  projectId, item, create, update, onClose,
+}: {
+  projectId: string;
+  item: ChecklistItem | null;
+  create: (fd: FormData) => Promise<void>;
+  update: (fd: FormData) => Promise<void>;
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const isNew = !item;
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setBusy(true); setErr(null);
+    try {
+      const fd = new FormData(e.currentTarget);
+      fd.set('project_id', projectId);
+      if (item) fd.set('id', item.id);
+      await (isNew ? create(fd) : update(fd));
+      onClose();
+      router.refresh();
+    } catch (e2) {
+      setErr(e2 instanceof Error ? e2.message : String(e2));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="okr-modal-backdrop" onMouseDown={onClose}>
+      <div className="okr-modal cmpl-modal" onMouseDown={(e) => e.stopPropagation()}>
+        <div className="flexbtw">
+          <h3 style={{ margin: 0 }}>{isNew ? 'Thêm tiêu chí' : `Sửa tiêu chí ${item?.ma_tieu_chi ?? ''}`}</h3>
+          <button type="button" className="okr-modal-x" onClick={onClose} aria-label="Đóng">×</button>
+        </div>
+        <form onSubmit={onSubmit} className="cmpl-form">
+          <div className="row">
+            <div style={{ maxWidth: 140 }}>
+              <label className="f">Mã *</label>
+              <input className="i" name="ma_tieu_chi" defaultValue={item?.ma_tieu_chi ?? ''} required />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label className="f">Kết luận</label>
+              <select className="i" name="ket_luan" defaultValue={item?.ket_luan ?? 'chua_ra_soat'}>
+                {(Object.keys(CONCLUSION_LABEL) as Conclusion[]).map((k) => <option key={k} value={k}>{CONCLUSION_LABEL[k]}</option>)}
+              </select>
+            </div>
+          </div>
+          <label className="f">Yêu cầu tuân thủ</label>
+          <textarea className="i" name="yeu_cau" rows={2} defaultValue={item?.yeu_cau ?? ''} />
+          <div className="row">
+            <div style={{ flex: 1 }}>
+              <label className="f">Cơ sở pháp lý</label>
+              <input className="i" name="co_so_phap_ly" defaultValue={item?.co_so_phap_ly ?? ''} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label className="f">Đơn vị rà soát</label>
+              <input className="i" name="don_vi_ra_soat" defaultValue={item?.don_vi_ra_soat ?? ''} />
+            </div>
+            <div style={{ maxWidth: 170 }}>
+              <label className="f">Hạn rà soát</label>
+              <input className="i" type="date" name="han_ra_soat" defaultValue={item?.han_ra_soat ?? ''} />
+            </div>
+          </div>
+          <label className="f">Kết quả &amp; bằng chứng của đơn vị</label>
+          <textarea className="i" name="ket_qua_don_vi" rows={2} defaultValue={item?.ket_qua_don_vi ?? ''} />
+          <div className="row">
+            <div style={{ flex: 1 }}>
+              <label className="f">Bằng chứng (link/mô tả)</label>
+              <input className="i" name="bang_chung" defaultValue={item?.bang_chung ?? ''} />
+            </div>
+          </div>
+          <div className="row">
+            <div style={{ flex: 1 }}>
+              <label className="f">Thẩm định Pháp chế</label>
+              <textarea className="i" name="tham_dinh_phap_che" rows={2} defaultValue={item?.tham_dinh_phap_che ?? ''} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label className="f">Kết quả kiểm tra KSTT</label>
+              <textarea className="i" name="ket_qua_kstt" rows={2} defaultValue={item?.ket_qua_kstt ?? ''} />
+            </div>
+          </div>
+          <div className="cmpl-form-sec">Kế hoạch khắc phục (nếu tiêu chí chưa tuân thủ/vi phạm)</div>
+          <label className="f">Nội dung khắc phục</label>
+          <textarea className="i" name="khkp_noi_dung" rows={2} defaultValue={item?.khkp_noi_dung ?? ''} />
+          <div className="row">
+            <div style={{ flex: 1 }}>
+              <label className="f">Đơn vị khắc phục</label>
+              <input className="i" name="khkp_don_vi" defaultValue={item?.khkp_don_vi ?? ''} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label className="f">PIC (email/tên)</label>
+              <input className="i" name="khkp_pic" defaultValue={item?.khkp_pic ?? ''} />
+            </div>
+            <div style={{ maxWidth: 170 }}>
+              <label className="f">Hạn khắc phục</label>
+              <input className="i" type="date" name="khkp_han" defaultValue={item?.khkp_han ?? ''} />
+            </div>
+          </div>
+          <label className="f">Kết quả đầu ra khắc phục</label>
+          <textarea className="i" name="khkp_ket_qua" rows={2} defaultValue={item?.khkp_ket_qua ?? ''} />
+          {err && <div className="cmpl-note err" style={{ marginTop: 8 }}>{err}</div>}
+          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+            <button className="btn" type="submit" disabled={busy}>{busy ? 'Đang lưu…' : isNew ? 'Thêm tiêu chí' : 'Lưu thay đổi'}</button>
+            <button className="btn ghost" type="button" onClick={onClose} disabled={busy}>Huỷ</button>
+          </div>
+          <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>
+            Đổi Kết luận sang “Chưa tuân thủ/Vi phạm” sẽ tự tạo Vấn đề tuân thủ; có Kế hoạch khắc phục sẽ tự tạo công việc (nếu chưa có).
+          </p>
+        </form>
+      </div>
     </div>
   );
 }

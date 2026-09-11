@@ -223,6 +223,12 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
       chuyển issue no_plan→in_remediation. **Lưu ý kỹ thuật**: cột timestamp của issue phải cast `::text` (const
       `ISSUE_COLS`) — pg trả Date, tránh vỡ `.slice`/serialize; task_total loại `canceled`; import bóc theo DÒNG
       TIÊU ĐỀ tự dò (mảng-2-chiều, quét 15 dòng đầu) nên chịu được file có dòng tiêu đề/ghi chú phía trên bảng.
+    - **FORM MẪU + SỬA/XOÁ/THÊM TAY tiêu chí (CFO 11/09)**: route `/api/compliance/template` (gác requireUser) sinh
+      .xlsx form mẫu (sheet Bảng kiểm + Hướng dẫn) — nút "⬇ Tải form mẫu" cạnh Import. Lib
+      `createChecklistItem`/`updateChecklistItem`/`deleteChecklistItem` + actions tương ứng (gác canManage/phap_che/qlda,
+      `requireChecklistEdit`) — sửa/thêm gọi `syncIssueForItem` (đổi kết luận → tạo/dọn Vấn đề); xoá tiêu chí CASCADE
+      xoá Vấn đề (task khắc phục giữ lại, issue_id→NULL). UI: `ComplianceChecklist` có nút Sửa/🗑 mỗi dòng + "＋ Thêm
+      tiêu chí" + modal `ItemEditor` (đủ 15 trường). Prop đổi `canImport`→`canEdit` (= canManage||phap_che||qlda).
   - **⭐ ĐƠN VỊ CÔNG VIỆC = PHÒNG CỦA NGƯỜI ĐƯỢC GIAO (CFO 09/09 — mặc định VĨNH VIỄN, KHÔNG để trống,
     không cần nhắc lại)**: khi tạo/sửa việc mà `unit_id` để trống nhưng có `owner_email` → tự lấy `unit_id`
     của người đó. Điểm chốt DUY NHẤT = helper **`resolveTaskUnit(unitId, ownerEmail)`** trong `initiatives.ts`,

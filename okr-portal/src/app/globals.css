@@ -2332,3 +2332,7 @@ a.strat-bsc-cell:hover { text-decoration: none; box-shadow: 0 6px 18px rgba(0,0,
 .cmpl-ag-lbl { font-weight: 500; }
 .cmpl-addact { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
 .cmpl-addact-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.cmpl-modal { max-width: 760px; width: 96%; }
+.cmpl-form .f { margin-top: 8px; }
+.cmpl-form-sec { margin-top: 14px; font-weight: 600; color: var(--primary); border-top: 1px dashed var(--line); padding-top: 10px; }
+.cmpl-rowact { display: flex; gap: 4px; }

@@ -23,7 +23,7 @@ import ComplianceIssues from '@/components/ComplianceIssues';
 import ComplianceDashboard from '@/components/ComplianceDashboard';
 import { listChecklistItems, listIssues, listProjectFunctions, listReviewsForProject, projectFunctionsOf, issueIdsOwnedBy, listRemediationTasks } from '@/lib/compliance';
 import type { ChecklistItem, ComplianceIssue, ReviewRow, ProjectFunctionRow, ProjectFn, RemediationTask } from '@/lib/compliance';
-import { addProjectFunctionAction, removeProjectFunctionAction, submitIssueAction, reviewIssueAction, addRemediationTaskAction } from '../compliance-actions';
+import { addProjectFunctionAction, removeProjectFunctionAction, submitIssueAction, reviewIssueAction, addRemediationTaskAction, createChecklistItemAction, updateChecklistItemAction, deleteChecklistItemAction } from '../compliance-actions';
 import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
 import { listObjectivesWithKrs } from '@/lib/okr';
@@ -267,7 +267,14 @@ export default async function ProjectDetail({ params }: { params: { id: string }
         {p.compliance_enabled ? (
           <>
             <ComplianceDashboard items={checklistItems} issues={compIssues} tasks={compTasks} today={todayStr} />
-            <ComplianceChecklist projectId={p.id} items={checklistItems} canImport={canManage} />
+            <ComplianceChecklist
+              projectId={p.id}
+              items={checklistItems}
+              canEdit={canManage || myFns.has('phap_che') || myFns.has('qlda')}
+              create={createChecklistItemAction}
+              update={updateChecklistItemAction}
+              del={deleteChecklistItemAction}
+            />
             <ComplianceIssues
               projectId={p.id}
               issues={compIssues}

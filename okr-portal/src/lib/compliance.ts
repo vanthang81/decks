@@ -142,6 +142,67 @@ export async function listChecklistItems(projectId: string): Promise<ChecklistIt
   );
 }
 
+// ---------------- Sửa / Xoá / Thêm tay 1 tiêu chí ----------------
+export type ChecklistWrite = {
+  ma_tieu_chi: string;
+  yeu_cau: string | null; co_so_phap_ly: string | null; don_vi_ra_soat: string | null; han_ra_soat: string | null;
+  ket_qua_don_vi: string | null; bang_chung: string | null; tham_dinh_phap_che: string | null; ket_qua_kstt: string | null;
+  ket_luan: Conclusion;
+  khkp_noi_dung: string | null; khkp_don_vi: string | null; khkp_pic: string | null; khkp_han: string | null; khkp_ket_qua: string | null;
+};
+
+function normDate(v: string | null): string | null {
+  const x = s(v || '');
+  return x ? (parseDateCell(x) ?? null) : null;
+}
+
+export async function createChecklistItem(projectId: string, w: ChecklistWrite, actor: string): Promise<string> {
+  const dup = await queryOne<{ id: string }>('SELECT id FROM okr_checklist_items WHERE project_id=$1 AND lower(ma_tieu_chi)=lower($2)', [projectId, w.ma_tieu_chi]);
+  if (dup) throw new Error(`Mã "${w.ma_tieu_chi}" đã tồn tại trong dự án.`);
+  const maxSort = await queryOne<{ m: number }>('SELECT COALESCE(max(sort),0)+10 m FROM okr_checklist_items WHERE project_id=$1', [projectId]);
+  const row = await queryOne<{ id: string }>(
+    `INSERT INTO okr_checklist_items (project_id, ma_tieu_chi, yeu_cau, co_so_phap_ly, don_vi_ra_soat, han_ra_soat,
+        ket_qua_don_vi, bang_chung, tham_dinh_phap_che, ket_qua_kstt, ket_luan,
+        khkp_noi_dung, khkp_don_vi, khkp_pic, khkp_han, khkp_ket_qua, sort)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) RETURNING id`,
+    [projectId, w.ma_tieu_chi, w.yeu_cau, w.co_so_phap_ly, w.don_vi_ra_soat, normDate(w.han_ra_soat),
+     w.ket_qua_don_vi, w.bang_chung, w.tham_dinh_phap_che, w.ket_qua_kstt, w.ket_luan,
+     w.khkp_noi_dung, w.khkp_don_vi, w.khkp_pic, normDate(w.khkp_han), w.khkp_ket_qua, maxSort?.m ?? 10],
+  );
+  await syncIssueForItem(row!.id, actor);
+  await logAudit({ actor, action: 'compliance.item_create', entity: 'project', entityId: projectId, detail: { ma: w.ma_tieu_chi } }).catch(() => {});
+  return row!.id;
+}
+
+export async function updateChecklistItem(id: string, w: ChecklistWrite, actor: string): Promise<{ ok: boolean; error?: string }> {
+  const cur = await queryOne<{ project_id: string }>('SELECT project_id FROM okr_checklist_items WHERE id=$1', [id]);
+  if (!cur) return { ok: false, error: 'Không tìm thấy tiêu chí.' };
+  const dup = await queryOne<{ id: string }>(
+    'SELECT id FROM okr_checklist_items WHERE project_id=$1 AND lower(ma_tieu_chi)=lower($2) AND id<>$3',
+    [cur.project_id, w.ma_tieu_chi, id],
+  );
+  if (dup) return { ok: false, error: `Mã "${w.ma_tieu_chi}" đã dùng cho tiêu chí khác.` };
+  await query(
+    `UPDATE okr_checklist_items SET ma_tieu_chi=$2, yeu_cau=$3, co_so_phap_ly=$4, don_vi_ra_soat=$5, han_ra_soat=$6,
+        ket_qua_don_vi=$7, bang_chung=$8, tham_dinh_phap_che=$9, ket_qua_kstt=$10, ket_luan=$11,
+        khkp_noi_dung=$12, khkp_don_vi=$13, khkp_pic=$14, khkp_han=$15, khkp_ket_qua=$16, updated_at=now()
+      WHERE id=$1`,
+    [id, w.ma_tieu_chi, w.yeu_cau, w.co_so_phap_ly, w.don_vi_ra_soat, normDate(w.han_ra_soat),
+     w.ket_qua_don_vi, w.bang_chung, w.tham_dinh_phap_che, w.ket_qua_kstt, w.ket_luan,
+     w.khkp_noi_dung, w.khkp_don_vi, w.khkp_pic, normDate(w.khkp_han), w.khkp_ket_qua],
+  );
+  await syncIssueForItem(id, actor); // đổi kết luận → tạo/dọn Vấn đề tương ứng
+  await logAudit({ actor, action: 'compliance.item_update', entity: 'project', entityId: cur.project_id, detail: { id, ma: w.ma_tieu_chi } }).catch(() => {});
+  return { ok: true };
+}
+
+export async function deleteChecklistItem(id: string, actor: string): Promise<void> {
+  const cur = await queryOne<{ project_id: string }>('SELECT project_id FROM okr_checklist_items WHERE id=$1', [id]);
+  // FK: xoá tiêu chí → cascade xoá Vấn đề của nó; Task khắc phục giữ lại (issue_id → NULL) trong dự án.
+  await query('DELETE FROM okr_checklist_items WHERE id=$1', [id]);
+  if (cur) await logAudit({ actor, action: 'compliance.item_delete', entity: 'project', entityId: cur.project_id, detail: { id } }).catch(() => {});
+}
+
 // Cột issue (timestamp cast ::text — pg trả Date; app quy ước text để đồng nhất + serialize sạch sang client).
 const ISSUE_COLS = `i.id, i.project_id, i.checklist_item_id, i.title, i.severity, i.status,
   i.submitted_by, i.submitted_at::text AS submitted_at, i.kstt_by, i.kstt_at::text AS kstt_at,

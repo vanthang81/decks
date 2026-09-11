@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-10.153';
+export const GUIDE_VERSION = '2026-09-11.154';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '11/09/2026 (Bảng kiểm tuân thủ — form mẫu + sửa/xoá/thêm tay tiêu chí)',
+    items: [
+      'Có nút “⬇ Tải form mẫu” (.xlsx) kèm sheet Hướng dẫn — điền theo mẫu rồi Import cho chắc khớp.',
+      'Mỗi tiêu chí nay sửa/xoá được trực tiếp trên hệ thống (nút Sửa/🗑 ở cuối dòng) + nút “＋ Thêm tiêu chí” để nhập tay không cần Excel. Sửa Kết luận sang Chưa tuân thủ/Vi phạm sẽ tự tạo Vấn đề; xoá tiêu chí cũng gỡ Vấn đề gắn với nó.',
+    ],
+  },
   {
     date: '10/09/2026 (Bảng kiểm tuân thủ — Giai đoạn 3: bảng điều khiển & cảnh báo tuân thủ)',
     items: [

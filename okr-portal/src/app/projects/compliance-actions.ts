@@ -9,7 +9,9 @@ import { queryOne } from '@/lib/db';
 import { isProjectMember } from '@/lib/project-members';
 import {
   addProjectFunction, removeProjectFunction, hasProjectFunction,
-  submitIssue, reviewIssue, getIssue, addRemediationTask, projectFunctionsOf, type ProjectFn,
+  submitIssue, reviewIssue, getIssue, addRemediationTask, projectFunctionsOf,
+  createChecklistItem, updateChecklistItem, deleteChecklistItem, parseConclusion,
+  type ProjectFn, type ChecklistWrite,
 } from '@/lib/compliance';
 
 function str(fd: FormData, k: string): string {
@@ -41,6 +43,56 @@ export async function removeProjectFunctionAction(fd: FormData) {
   const projectId = str(fd, 'project_id');
   await requireManage(projectId);
   await removeProjectFunction(str(fd, 'id'));
+  revalidatePath(`/projects/${projectId}`);
+}
+
+// ---- Sửa / Xoá / Thêm tay tiêu chí (quản dự án / Pháp chế / KH&QLDA) ----
+async function requireChecklistEdit(projectId: string) {
+  const user = await requireUser();
+  const [units, access] = await Promise.all([listUnits(), loadAccess()]);
+  const p = await getProject(projectId);
+  if (!p) throw new Error('Không tìm thấy dự án.');
+  const fns = await projectFunctionsOf(projectId, user.email);
+  const ok = canManageProject(user, p, units, access) || fns.has('phap_che') || fns.has('qlda');
+  if (!ok) throw new Error('Chỉ quản dự án / Pháp chế / KH&QLDA mới sửa được Bảng kiểm.');
+  return user;
+}
+
+function readWrite(fd: FormData): ChecklistWrite {
+  const g = (k: string) => { const v = str(fd, k); return v === '' ? null : v; };
+  return {
+    ma_tieu_chi: str(fd, 'ma_tieu_chi'),
+    yeu_cau: g('yeu_cau'), co_so_phap_ly: g('co_so_phap_ly'), don_vi_ra_soat: g('don_vi_ra_soat'), han_ra_soat: g('han_ra_soat'),
+    ket_qua_don_vi: g('ket_qua_don_vi'), bang_chung: g('bang_chung'), tham_dinh_phap_che: g('tham_dinh_phap_che'), ket_qua_kstt: g('ket_qua_kstt'),
+    ket_luan: parseConclusion(str(fd, 'ket_luan')),
+    khkp_noi_dung: g('khkp_noi_dung'), khkp_don_vi: g('khkp_don_vi'), khkp_pic: g('khkp_pic'), khkp_han: g('khkp_han'), khkp_ket_qua: g('khkp_ket_qua'),
+  };
+}
+
+export async function createChecklistItemAction(fd: FormData) {
+  const projectId = str(fd, 'project_id');
+  const user = await requireChecklistEdit(projectId);
+  const w = readWrite(fd);
+  if (!w.ma_tieu_chi) throw new Error('Thiếu Mã tiêu chí.');
+  await createChecklistItem(projectId, w, user.email);
+  revalidatePath(`/projects/${projectId}`);
+}
+
+export async function updateChecklistItemAction(fd: FormData) {
+  const projectId = str(fd, 'project_id');
+  const user = await requireChecklistEdit(projectId);
+  const id = str(fd, 'id');
+  const w = readWrite(fd);
+  if (!w.ma_tieu_chi) throw new Error('Thiếu Mã tiêu chí.');
+  const r = await updateChecklistItem(id, w, user.email);
+  if (!r.ok) throw new Error(r.error || 'Không sửa được tiêu chí.');
+  revalidatePath(`/projects/${projectId}`);
+}
+
+export async function deleteChecklistItemAction(fd: FormData) {
+  const projectId = str(fd, 'project_id');
+  const user = await requireChecklistEdit(projectId);
+  await deleteChecklistItem(str(fd, 'id'), user.email);
   revalidatePath(`/projects/${projectId}`);
 }
 
