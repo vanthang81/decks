@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-11.156';
+export const GUIDE_VERSION = '2026-09-11.157';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '11/09/2026 (Sửa chữ nút khó đọc ở popup Thông báo)',
+    items: [
+      'Nút “↩ Trả lời”/“Mở” trong popup Thông báo trước đây bị chữ trắng trên nền trắng (rất khó nhìn) — nay hiển thị đúng màu, rõ ràng. Đã rà chung để nút trong các popup nền sáng của thanh trên cùng không còn bị lỗi tương phản này.',
+    ],
+  },
   {
     date: '11/09/2026 (Email đẹp & gửi nhanh + phím tắt gửi)',
     items: [

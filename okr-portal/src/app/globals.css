@@ -138,6 +138,15 @@ img.cmt-avatar, img.cmt-mm-av, img.ntf-av { object-fit: cover; }
   background: transparent; color: #fff; border-color: rgba(255,255,255,.5);
 }
 .site-header .btn.ghost:hover { background: rgba(255,255,255,.15); color: #fff; }
+/* KHÔI PHỤC nút ghost bình thường TRONG các popup nền trắng của header (thông báo…) —
+   style trắng ở trên chỉ dành cho thanh header maroon, KHÔNG được rớt vào popup (CFO 11/09:
+   chữ "Trả lời" trắng trên nền trắng). Áp cho mọi popup header có nền sáng. */
+.site-header .notif-pop .btn.ghost,
+.site-header .nav-menu .btn.ghost {
+  background: #fff; color: var(--primary); border-color: var(--primary);
+}
+.site-header .notif-pop .btn.ghost:hover,
+.site-header .nav-menu .btn.ghost:hover { background: var(--primary-tint); color: var(--primary); }
 
 /* Mobile menu (hamburger + panel) — ẩn trên desktop */
 .mobile-menu { display: none; }
