@@ -349,6 +349,7 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   (`okr_settings`, mặc định TẮT) bật ở **Quản trị → Cài đặt · Email tự động** (`saveDailyDigestSettingsAction`
   + `sendDailyDigestTestAction` "Gửi thử cho tôi"). Cron n8n **"OKR Daily Digest — 8h T2–T7"** (`0 8 * * 1-6` VN,
   SSH đọc SYNC_KEY → curl `127.0.0.1:8640/api/digest/daily`). Định dạng dùng chung `brandedEmail`.
+- **THÔNG BÁO MỞ ĐÚNG NỘI DUNG + ĐÚNG BÌNH LUẬN (CFO 12/09)**: link thông báo bình luận/nhắc tên ghép neo `#comment-<id>` (helper `linkWithComment` trong `comments.ts`); bình luận VIỆC dẫn tới `/tasks?task=<id>#comment-<id>` (mở popup chi tiết việc — có khung bình luận `defaultOpen`), bình luận OKR/KR dẫn tới `/objectives/<id>#comment-<id>`. Mỗi bình luận có `id="comment-<id>"` (CommentThread) → `HashScroller` (mount ở layout) cuộn tới + nháy sáng (`hash-flash`), retry 3s chờ modal/nội dung render. Thêm loại thông báo mới gắn nội dung ⇒ đặt link kèm neo tương tự để bấm vào là thấy ngay.
 - **XỬ LÝ NGAY TẠI CHUÔNG — duyệt/từ chối/bình luận không cần mở trang (CFO 30/08)**: chuông 🔔 (`NotifBell.tsx`)
   nay là **BẢNG THẢ XUỐNG** (popover, đóng khi bấm ngoài/Esc) render `NotifItems.tsx` (dùng CHUNG với trang
   `/notifications` qua `NotifList.tsx`). Mỗi thông báo có thao tác inline: **Duyệt/Từ chối** cho `meeting_access_request`

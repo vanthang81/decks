@@ -49,10 +49,10 @@ export function brandedEmail(opts: {
     .em-bd{padding:14px 12px !important}
   }
 </style></head>
-<body style="margin:0;padding:0;background:#f1f5f9">${pre}
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9">
+<body style="margin:0;padding:0;background:transparent">${pre}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:transparent">
   <tr><td align="left" class="em-outer" style="padding:4px">
-    <table role="presentation" cellpadding="0" cellspacing="0" width="680" style="width:680px;max-width:680px;background:#ffffff;border-radius:12px;overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#161A21;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="680" style="width:680px;max-width:680px;background:#ffffff;border:1px solid #EDE7E0;border-radius:12px;overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#161A21;box-shadow:0 1px 4px rgba(0,0,0,.06)">
       <tr><td class="em-hd" bgcolor="#7C0312" style="background-color:#7C0312;padding:14px 14px">
         <table role="presentation" cellpadding="0" cellspacing="0"><tr>
           <td style="padding-right:14px;vertical-align:middle">

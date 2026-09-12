@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-12.162';
+export const GUIDE_VERSION = '2026-09-12.163';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '12/09/2026 (Email nền trong suốt + Thông báo mở đúng bình luận)',
+    items: [
+      'Email: nền ngoài chuyển trong suốt (hết mảng trắng/xám lệch bên cạnh), khung nội dung có viền nhẹ — gọn, chuyên nghiệp trên mọi ứng dụng email.',
+      'Bấm thông báo bình luận/nhắc tên → mở THẲNG đúng nội dung và cuộn tới ĐÚNG bình luận đó (nháy sáng để thấy ngay): bình luận trong công việc mở popup chi tiết việc; bình luận OKR/KR mở trang OKR đúng chỗ — không phải tự đi tìm.',
+    ],
+  },
   {
     date: '12/09/2026 (Email: hiện chắc chắn banner + logo BTMH, lề sát mép hơn)',
     items: [

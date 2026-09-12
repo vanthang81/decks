@@ -68,8 +68,16 @@ export async function resolveEntity(
   if (!i) return null;
   return {
     label: `Việc ${i.code ? i.code + ' · ' : ''}${i.title}`,
-    link: i.objective_id ? `/objectives/${i.objective_id}` : '/',
+    // Mở THẲNG popup chi tiết việc (có sẵn khung bình luận) thay vì trang OKR → thấy ngay nội dung.
+    link: `/tasks?task=${entityId}`,
   };
+}
+
+/** Ghép neo tới ĐÚNG bình luận (#comment-<id>) → click thông báo cuộn & nháy đúng comment đó.
+ * Bỏ hash cũ (vd #kr-…) vì mục tiêu là chính bình luận. */
+export function linkWithComment(link: string, commentId: string): string {
+  const base = link.split('#')[0];
+  return `${base}#comment-${commentId}`;
 }
 
 /** Người PHỤ TRÁCH thực thể (chủ trì OKR / người được giao việc) — để báo "có bình luận ở mục của bạn". */
@@ -152,7 +160,7 @@ export async function addComment(input: {
       entityId: input.entityId,
       commentId: id,
       preview,
-      link: ent?.link ?? '/',
+      link: ent?.link ? linkWithComment(ent.link, id) : '/',
       entityLabel: ent?.label ?? 'OKR',
     };
     // 1) Nhắc tên / trả lời trực tiếp.

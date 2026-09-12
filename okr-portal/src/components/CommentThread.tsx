@@ -268,7 +268,7 @@ export default function CommentThread({
     const canEditThis = canModerate || (mine && withinWindow(c.created_at));
     const canDeleteThis = canModerate;
     return (
-      <div key={c.id} className={`cmt ${isReply ? 'cmt-reply' : ''}`}>
+      <div key={c.id} id={`comment-${c.id}`} className={`cmt ${isReply ? 'cmt-reply' : ''}`}>
         <Avatar url={c.author_avatar} name={c.author_name ?? c.author_email ?? '?'} cls="cmt-avatar" />
         <div className="cmt-main">
           <div className="cmt-head">
