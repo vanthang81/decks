@@ -212,6 +212,19 @@ export default function CommentThread({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Mở SẴN luồng chứa bình luận được trỏ tới từ link thông báo (#comment-<id>) → HashScroller cuộn
+  // + nháy đúng bình luận (nếu luồng đang thu gọn thì phần tử chưa render, sẽ không cuộn tới được).
+  useEffect(() => {
+    const openIfTargeted = () => {
+      if (typeof window === 'undefined') return;
+      const h = window.location.hash;
+      if (h.startsWith('#comment-') && comments.some((c) => c.id === h.slice(9))) setOpen(true);
+    };
+    openIfTargeted();
+    window.addEventListener('hashchange', openIfTargeted);
+    return () => window.removeEventListener('hashchange', openIfTargeted);
+  }, [comments]);
+
   const count = comments.length;
   const roots = comments.filter((c) => !c.parent_id);
   const repliesOf = (id: string) => comments.filter((c) => c.parent_id === id);

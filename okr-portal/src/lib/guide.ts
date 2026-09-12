@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-12.163';
+export const GUIDE_VERSION = '2026-09-12.164';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '12/09/2026 (Thông báo bình luận — mở đúng chỗ cho CẢ thông báo cũ)',
+    items: [
+      'Bấm thông báo bình luận/nhắc tên nay LUÔN mở đúng nội dung + cuộn tới đúng bình luận, kể cả các thông báo CŨ (trước đây mở nhầm sang trang OKR). Luồng thảo luận tự bung ra để thấy ngay bình luận được nhắc.',
+    ],
+  },
   {
     date: '12/09/2026 (Email nền trong suốt + Thông báo mở đúng bình luận)',
     items: [

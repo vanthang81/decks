@@ -75,11 +75,27 @@ export default function NotifItems({
       method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload),
     });
 
+  // Dựng link ĐÚNG NỘI DUNG + ĐÚNG BÌNH LUẬN ngay lúc bấm (từ entity_type/entity_id/comment_id) →
+  // áp cho CẢ thông báo CŨ (link lưu trước đây chưa có neo #comment). Bình luận việc → mở popup
+  // chi tiết việc; bình luận OKR/KR → mở trang OKR đúng chỗ; đều cuộn + nháy tới đúng bình luận.
+  const targetLink = (n: Notif): string | null => {
+    if (n.comment_id && n.entity_id) {
+      if (n.entity_type === 'initiative') return `/tasks?task=${n.entity_id}#comment-${n.comment_id}`;
+      if (n.entity_type === 'objective') return `/objectives/${n.entity_id}#comment-${n.comment_id}`;
+      if (n.entity_type === 'key_result') {
+        const base = (n.link ?? '').split('#')[0]; // objId nằm trong link đã lưu
+        if (base.startsWith('/objectives/')) return `${base}#comment-${n.comment_id}`;
+      }
+    }
+    return n.link;
+  };
+
   const openItem = async (n: Notif) => {
     if (!n.is_read) await post({ action: 'read', id: n.id });
-    if (n.link) {
+    const link = targetLink(n);
+    if (link) {
       onNavigate?.();
-      router.push(n.link);
+      router.push(link);
     } else {
       onReload();
     }
