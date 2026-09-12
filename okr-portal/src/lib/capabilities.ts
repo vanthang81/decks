@@ -13,6 +13,7 @@ export type CapKey =
   | 'user.approve'
   | 'user.view360'
   | 'scope.all'
+  | 'task.viewall'
   | 'strategy.manage'
   | 'okr.create'
   | 'okr.edit'
@@ -33,9 +34,12 @@ export const GROUP_KEYS = ['super_admin', 'system_admin', 'okr_admin', 'kpi_admi
 
 // Năng lực CHỈ Super Admin có (không nhóm nào khác được cấp) — bảo vệ đỉnh quyền lực.
 export const SUPER_ONLY_CAPS = ['super.admin'] as const;
-// Năng lực Quản trị hệ thống KHÔNG được có (bảo vệ riêng tư — không xem việc/hồ sơ cá nhân người khác).
-// CFO 12/09: system_admin "ít quyền hơn" — mất Toàn phạm vi + Hồ sơ 360°.
-export const SYSADMIN_DENY_CAPS = ['scope.all', 'user.view360', 'super.admin'] as const;
+// Năng lực Quản trị hệ thống KHÔNG được có (bảo vệ RIÊNG TƯ CÁ NHÂN — không xem việc/hồ sơ chi tiết của
+// người khác). CFO 12/09: system_admin "ít quyền hơn" = mất quyền xem toàn bộ công việc cá nhân + Hồ sơ 360°.
+// LƯU Ý (fix 12/09): system_admin VẪN có 'scope.all' (quản OKR/dự án/KPI MỌI đơn vị — đây là quyền QUẢN LÝ,
+// không phải riêng tư). Cái bị chặn là 'task.viewall' (xem chi tiết MỌI công việc cá nhân) — tách riêng để
+// việc siết riêng tư KHÔNG cắt nhầm quyền quản OKR các khối/phòng (regression đã gặp).
+export const SYSADMIN_DENY_CAPS = ['task.viewall', 'user.view360', 'super.admin'] as const;
 export type GroupKey = (typeof GROUP_KEYS)[number];
 
 export type Capability = { key: CapKey; label: string; desc: string; cat: string; suggest: GroupKey[] };
@@ -58,11 +62,12 @@ export const CAPABILITIES: Capability[] = [
   { key: 'system.permissions', cat: 'system', label: 'Phân quyền người dùng', desc: 'Gán Nhóm quyền cho người khác và chỉnh Nhóm quyền.', suggest: ['system_admin'] },
   { key: 'user.approve', cat: 'system', label: 'Duyệt người dùng', desc: 'Duyệt/từ chối lời mời thêm người dùng mới (qua email) do người khác đề xuất.', suggest: ['system_admin', 'okr_admin'] },
   { key: 'user.view360', cat: 'system', label: 'Xem hồ sơ 360° người dùng', desc: 'Xem ĐẦY ĐỦ hồ sơ 1 người: định danh, số liệu, chi tiết OKR/dự án/công việc/check-in/cuộc họp, lịch sử đăng nhập & hoạt động. Không có quyền này chỉ xem định danh + số lượng.', suggest: ['system_admin', 'okr_admin'] },
-  { key: 'scope.all', cat: 'system', label: 'Toàn phạm vi (mọi đơn vị)', desc: 'Bỏ qua giới hạn phạm vi tổ chức — thao tác được MỌI OKR/đơn vị VÀ xem TẤT CẢ công việc ở trang "Công việc" (không có quyền này chỉ thấy việc liên quan tới mình + phạm vi đơn vị mình quản).', suggest: ['system_admin', 'okr_admin', 'kpi_admin'] },
+  { key: 'scope.all', cat: 'system', label: 'Toàn phạm vi quản lý (mọi đơn vị)', desc: 'Bỏ qua giới hạn phạm vi tổ chức khi QUẢN LÝ — thao tác được MỌI OKR/KR, dự án, KPI của mọi khối/phòng (không giới hạn ở đơn vị mình). KHÔNG tự động cho xem chi tiết công việc cá nhân của người khác (việc đó là "Xem toàn bộ công việc").', suggest: ['system_admin', 'okr_admin', 'kpi_admin'] },
   { key: 'strategy.manage', cat: 'strategy', label: 'Quản lý Chiến lược công ty', desc: 'Khai báo / sửa Tầm nhìn – Sứ mệnh – Giá trị – Khát vọng và sắp xếp trụ cột chiến lược ở trang "Chiến lược".', suggest: ['system_admin', 'okr_admin'] },
   { key: 'okr.create', cat: 'okr', label: 'Tạo OKR', desc: 'Tạo Objective mới (trong phạm vi, trừ khi có "Toàn phạm vi").', suggest: ['system_admin', 'okr_admin', 'manager'] },
   { key: 'okr.edit', cat: 'okr', label: 'Sửa OKR / KR / check-in', desc: 'Sửa Objective, Key Result, ghi & sửa check-in, quản việc thực thi; duyệt bình luận.', suggest: ['system_admin', 'okr_admin', 'manager'] },
   { key: 'okr.delete', cat: 'okr', label: 'Xoá OKR', desc: 'Xoá Objective vĩnh viễn (trong phạm vi, trừ khi có "Toàn phạm vi").', suggest: ['system_admin', 'okr_admin'] },
+  { key: 'task.viewall', cat: 'exec', label: 'Xem toàn bộ công việc (mọi người)', desc: 'Xem TẤT CẢ công việc ở trang "Công việc" — kể cả việc riêng của người khác / đơn vị khác. KHÔNG có quyền này = chỉ thấy việc liên quan tới mình (được giao / mình giao / chủ trì OKR / thành viên dự án / được @tag) + việc trong phạm vi đơn vị mình quản (cần-mới-biết). Đây là quyền RIÊNG TƯ — Quản trị hệ thống KHÔNG có.', suggest: ['okr_admin', 'kpi_admin'] },
   { key: 'project.manage', cat: 'exec', label: 'Quản lý Dự án', desc: 'Tạo / sửa / xoá dự án và gắn việc vào dự án.', suggest: ['system_admin', 'okr_admin', 'manager'] },
   { key: 'meeting.manage', cat: 'exec', label: 'Quản lý mọi cuộc họp', desc: 'Sửa / xoá / chốt biên bản MỌI cuộc họp (kể cả khi không phải chủ trì / thư ký). Ai cũng tạo được cuộc họp của mình — quyền này là quyền quản trị họp toàn công ty.', suggest: ['system_admin', 'okr_admin'] },
   { key: 'budget.manage', cat: 'fin', label: 'Quản lý Ngân sách', desc: 'Nhập ngân sách/cấu trúc chi phí từ CSV, đồng bộ thực chi và XUẤT ngân sách (trang "Ngân sách").', suggest: ['system_admin', 'okr_admin'] },

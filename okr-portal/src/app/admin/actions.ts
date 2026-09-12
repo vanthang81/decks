@@ -320,7 +320,11 @@ export async function savePermissionsAction(fd: FormData) {
   // ── BẤT BIẾN bảo mật (khớp loadAccess) ──
   out['super_admin'] = allCaps;                                            // Super Admin toàn quyền
   for (const k of Object.keys(out)) if (k !== 'super_admin') out[k] = out[k].filter((c) => c !== 'super.admin');
-  out['system_admin'] = (out['system_admin'] ?? []).filter((c) => !deny.has(c)); // bỏ cap riêng tư
+  // system_admin: LUÔN có 'scope.all' (quản toàn phạm vi) + bỏ cap RIÊNG TƯ (DENY: task.viewall/360°).
+  out['system_admin'] = [...new Set<CapKey>([
+    ...(out['system_admin'] ?? []).filter((c) => !deny.has(c)),
+    'scope.all' as CapKey,
+  ])];
   await setSetting(PERM_GROUPS_KEY, out);
   invalidateAccess();
   redirect('/admin/permissions?saved=1');

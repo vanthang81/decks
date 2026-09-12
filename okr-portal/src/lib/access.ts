@@ -59,7 +59,11 @@ export async function loadAccess(): Promise<Access> {
     if (k === 'super_admin') continue;
     for (const c of SUPER_ONLY_CAPS) groups[k]?.delete(c as CapKey);
   }
-  // 3) system_admin KHÔNG bao giờ có các cap riêng tư (xem toàn bộ việc / hồ sơ 360°).
+  // 3) system_admin LUÔN có 'scope.all' = quyền QUẢN LÝ toàn phạm vi (OKR/KR/dự án/KPI mọi khối/phòng).
+  //    Ép dương ở đây (bất kể dữ liệu lưu cũ / lần lưu tay trước) để KHÔNG tái diễn lỗi 12/09: siết riêng
+  //    tư đã vô tình bỏ scope.all → quản trị hệ thống không sửa được OKR các khối/phòng.
+  groups['system_admin']?.add('scope.all');
+  // 4) system_admin KHÔNG bao giờ có các cap RIÊNG TƯ (xem toàn bộ công việc cá nhân / hồ sơ 360°).
   for (const c of SYSADMIN_DENY_CAPS) groups['system_admin']?.delete(c as CapKey);
   const access = { groups };
   _cache = { at: Date.now(), access };
@@ -159,13 +163,14 @@ export function canEditObjective(user: OkrUser, obj: ObjScope, units: Unit[], ac
   // Chủ nhân OKR CÁ NHÂN tự cập nhật (check-in / sửa KR / nội dung) OKR của chính mình — kể cả nhân viên
   // (CFO 10/08). Vẫn KHÔNG đổi được cấp/đơn vị/liên kết cha (khoá ở editObjectiveAction cho nhân viên).
   if (obj.level === 'individual' && ownerOrCreator(user, obj)) return true;
-  if (user.role === 'staff') return false; // Nhân viên = CHỈ XEM OKR ĐƠN VỊ/CÔNG TY — không sửa
+  // Nhân viên = CHỈ XEM OKR đơn vị/công ty — TRỪ KHI được cấp năng lực 'okr.edit' (vd gán nhóm Quản trị).
+  if (user.role === 'staff' && !hasCap(user, 'okr.edit', access)) return false;
   if (ownerOrCreator(user, obj)) return true; // chủ trì/người tạo luôn sửa OKR của mình
   if (!hasCap(user, 'okr.edit', access)) return false;
   return inScope(user, obj.unit_id, units, access);
 }
 export function canDeleteObjective(user: OkrUser, obj: ObjScope, units: Unit[], access: Access): boolean {
-  if (user.role === 'staff') return false; // Nhân viên = chỉ xem
+  // Nhân viên chỉ xem — trừ khi được cấp 'okr.delete'. (Kiểm cap ngay dưới cũng chặn, để rõ ý.)
   if (!hasCap(user, 'okr.delete', access)) return false;
   return inScope(user, obj.unit_id, units, access);
 }
@@ -177,7 +182,7 @@ export function canCreateObjective(
   access: Access,
 ): boolean {
   if (level === 'individual') return true; // OKR CÁ NHÂN: ai cũng tạo cho mình (kể cả nhân viên)
-  if (user.role === 'staff') return false; // Nhân viên KHÔNG tạo OKR đơn vị/công ty
+  // Nhân viên KHÔNG tạo OKR đơn vị/công ty — trừ khi được cấp 'okr.create' (cap dưới chặn nếu thiếu).
   if (!hasCap(user, 'okr.create', access)) return false;
   return inScope(user, unitId, units, access);
 }
@@ -186,7 +191,7 @@ export function canCreateObjective(
 // Cây OKR vẫn minh bạch (mọi người xem); nhưng danh sách công việc tổng hợp áp
 // nguyên tắc "cần-mới-biết": chỉ hiện việc bạn có liên quan (được giao / giao /
 // chủ trì OKR / thành viên dự án) hoặc trong phạm vi quản lý của bạn. Nhóm có
-// năng lực "Toàn phạm vi" (scope.all) và CEO/CFO xem TẤT CẢ.
+// năng lực "Xem toàn bộ công việc" (task.viewall) và CEO/CFO xem TẤT CẢ.
 type TaskView = {
   id: string;
   owner_email: string | null;
@@ -208,10 +213,11 @@ export function buildTaskViewCtx(
   access: Access,
   mentioned: Set<string> = new Set(),
 ): TaskViewCtx {
-  // NHÂN VIÊN (staff) = phạm vi XEM theo VAI TRÒ (đơn vị mình + hậu duệ + tổ tiên), BỎ QUA cap
-  // 'scope.all' để nhất quán với trang OKR (objectiveViewScope). Vai trò khác giữ theo năng lực.
+  // NHÂN VIÊN (staff) = phạm vi XEM theo VAI TRÒ (đơn vị mình + hậu duệ + tổ tiên). Vai trò khác:
+  // xem TẤT CẢ công việc chỉ khi có cap RIÊNG TƯ 'task.viewall' (KHÁC 'scope.all' = quyền quản lý).
+  // → Quản trị hệ thống (có scope.all nhưng KHÔNG có task.viewall) chỉ thấy việc cần-mới-biết (CFO 12/09).
   const staff = user.role === 'staff';
-  const seeAll = staff ? false : hasCap(user, 'scope.all', access);
+  const seeAll = staff ? false : hasCap(user, 'task.viewall', access);
   const scope = staff ? objectiveViewScope(user, units) : manageScope(user, units); // null = exec (không giới hạn)
   const e = user.email.toLowerCase();
   const myProjects = new Set<string>();
@@ -229,7 +235,7 @@ export function buildTaskViewCtx(
 
 /**
  * Ai được XEM 1 công việc (need-to-know):
- *  - "Toàn phạm vi" (scope.all) hoặc CEO/CFO (scope=null): xem tất cả;
+ *  - "Xem toàn bộ công việc" (task.viewall) hoặc CEO/CFO (scope=null): xem tất cả;
  *  - người ĐƯỢC GIAO (owner_email) hoặc người GIAO/TẠO (created_by);
  *  - CHỦ TRÌ OKR gốc của việc (objective_owner);
  *  - THÀNH VIÊN dự án (chủ trì dự án, hoặc có việc được giao trong dự án đó);

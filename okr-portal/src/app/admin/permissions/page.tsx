@@ -124,8 +124,9 @@ export default async function AdminPermissions({
                             </td>
                             {groups.map((g) => {
                               const isSuperCol = g.key === 'super_admin';
-                              // Bất biến: super_admin luôn đủ; super.admin chỉ ở super_admin; system_admin bỏ cap riêng tư.
-                              const invOn = isSuperCol;
+                              // Bất biến: super_admin luôn đủ; super.admin chỉ ở super_admin; system_admin LUÔN có
+                              // 'scope.all' (quản toàn phạm vi) nhưng bỏ các cap RIÊNG TƯ (DENY: task.viewall/360°).
+                              const invOn = isSuperCol || (g.key === 'system_admin' && c.key === 'scope.all');
                               const invOff = (c.key === 'super.admin' && !isSuperCol) || (g.key === 'system_admin' && DENY.has(c.key));
                               const locked =
                                 !editable || invOn || invOff ||
@@ -158,9 +159,10 @@ export default async function AdminPermissions({
             </div>
             <p className="muted" style={{ fontSize: 12.5, marginBottom: 0, marginTop: 10 }}>
               <b>👑 Super Admin</b> là đỉnh quyền lực (toàn quyền cố định, chỉ 2 tài khoản tối cao) — chỉ Super Admin
-              chỉnh được cột này &amp; gán quyền Super Admin. <b>🛡️ Quản trị hệ thống</b> KHÔNG có “Toàn phạm vi” &amp;
-              “Hồ sơ 360°” (không xem việc/hồ sơ riêng tư của cá nhân). Trừ Super Admin, không ai tự chỉnh được
-              quyền của <b>chính nhóm mình</b> (ô bị khoá).
+              chỉnh được cột này &amp; gán quyền Super Admin. <b>🛡️ Quản trị hệ thống</b> LUÔN có “Toàn phạm vi
+              quản lý” (quản OKR/KR · dự án · KPI mọi khối/phòng) nhưng KHÔNG có “Xem toàn bộ công việc” &amp;
+              “Hồ sơ 360°” — tức chỉ thấy việc cần-mới-biết, không xem chi tiết việc/hồ sơ riêng tư của cá nhân.
+              Trừ Super Admin, không ai tự chỉnh được quyền của <b>chính nhóm mình</b> (ô bị khoá).
             </p>
             {editable && (
               <div style={{ marginTop: 12, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>

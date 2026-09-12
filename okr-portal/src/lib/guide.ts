@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-12.169';
+export const GUIDE_VERSION = '2026-09-12.170';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -149,6 +149,34 @@ export const METHODOLOGY: GuideSection[] = [
     blocks: [
       {
         p: 'Mọi người đăng nhập đều XEM được toàn bộ OKR (minh bạch). Quyền SỬA giới hạn theo vai trò & đơn vị: lãnh đạo quản OKR trong phạm vi đơn vị mình (gồm cấp dưới); ai cũng tạo/sửa OKR cá nhân của mình. Quản trị hệ thống (người dùng, tổ chức, kỳ) chỉ CEO/CFO.',
+      },
+      {
+        p: 'Phân quyền có 2 TRỤC ĐỘC LẬP — khi thêm/sửa người dùng cần hiểu rõ để set đúng: (1) VAI TRÒ = vị trí trong cây tổ chức → quyết định PHẠM VI (được quản OKR/KR/công việc của ĐƠN VỊ NÀO); (2) NHÓM QUYỀN = bộ NĂNG LỰC → quyết định ĐƯỢC LÀM GÌ (tạo/sửa/xoá OKR, quản trị hệ thống, phân quyền, quản dự án/họp/ngân sách…). Một người = 1 Vai trò × 1 Nhóm quyền. Ví dụ: "Trưởng phòng" (phạm vi = phòng mình) + nhóm "Quản lý" (được tạo/sửa OKR) → tạo/sửa OKR trong phòng mình.',
+      },
+      {
+        p: 'VAI TRÒ (phạm vi tổ chức):',
+        list: [
+          'Chủ tịch · CEO · CFO — cấp điều hành cao nhất: phạm vi TOÀN công ty (mọi khối/phòng); mặc định là Quản trị hệ thống.',
+          'Giám đốc khối — quản phạm vi cả KHỐI mình + các phòng trực thuộc.',
+          'Trưởng phòng — quản phạm vi PHÒNG mình.',
+          'Quản lý chức năng — cùng cấp Trưởng phòng, phụ trách 1 nhóm CBNV (phạm vi nhóm/đơn vị mình).',
+          'Nhân viên — chỉ XEM OKR đơn vị/công ty; chỉ tạo/sửa OKR & công việc CÁ NHÂN của mình.',
+        ],
+      },
+      {
+        p: 'NHÓM QUYỀN (năng lực) — cấu hình chi tiết ở Quản trị → Phân quyền:',
+        list: [
+          '👑 Super Admin — đỉnh quyền lực, toàn quyền tuyệt đối; là người DUY NHẤT chỉnh được nhóm Super Admin. Chỉ dành cho tài khoản tối cao.',
+          '🛡️ Quản trị hệ thống — quản người dùng/tổ chức/kỳ + quản OKR/KR·dự án·KPI MỌI khối/phòng (Toàn phạm vi quản lý). Vì bảo vệ RIÊNG TƯ: KHÔNG xem được chi tiết toàn bộ công việc cá nhân của người khác & Hồ sơ 360° (chỉ thấy việc cần-mới-biết); không tự chỉnh quyền của chính mình.',
+          '⭐ Quản trị OKR — tạo/sửa/xoá MỌI OKR (toàn phạm vi) + chiến lược/dự án/họp/ngân sách/KPI/báo cáo; không quản trị hệ thống.',
+          '📊 Quản trị KPI — quản Thư viện KPI + nhập/đồng bộ KPI toàn công ty; không tạo/sửa/xoá OKR.',
+          '👔 Quản lý — tạo & sửa OKR + quản dự án TRONG phạm vi đơn vị mình; xem báo cáo & lịch.',
+          '✍️ Cộng tác — xem toàn bộ + báo cáo; check-in & bình luận của mình; tạo/sửa OKR cá nhân.',
+          '👁️ Người xem — chỉ xem, không chỉnh sửa.',
+        ],
+      },
+      {
+        note: 'Chưa gán Nhóm quyền → hệ thống suy MẶC ĐỊNH theo Vai trò (điều hành→Quản trị hệ thống · lãnh đạo→Quản lý · còn lại→Cộng tác). "Toàn phạm vi quản lý" (bỏ giới hạn đơn vị khi QUẢN LÝ) KHÁC "Xem toàn bộ công việc" (xem chi tiết việc cá nhân mọi người) — tách riêng để siết riêng tư mà không cắt nhầm quyền quản OKR.',
       },
     ],
   },
@@ -640,6 +668,15 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '12/09/2026 (Sửa lỗi phân quyền Quản trị hệ thống + giải thích Vai trò/Nhóm quyền)',
+    items: [
+      'SỬA LỖI: "Quản trị hệ thống" không sửa được OKR/KR của các khối/phòng (do bản siết quyền hôm nay lỡ cắt cả quyền quản lý). Nay Quản trị hệ thống LUÔN có "Toàn phạm vi quản lý" → sửa được OKR/KR mọi đơn vị.',
+      'Vẫn giữ đúng ý bảo mật: Quản trị hệ thống KHÔNG xem được chi tiết toàn bộ công việc cá nhân của người khác & Hồ sơ 360° (tách năng lực "Xem toàn bộ công việc" riêng khỏi "Toàn phạm vi quản lý").',
+      'Người được cấp nhóm Quản trị (dù vai trò tổ chức là Nhân viên) nay cũng thao tác OKR được theo năng lực đã cấp — không bị chặn cứng bởi vai trò.',
+      'Hướng dẫn: bổ sung mục giải thích rõ VAI TRÒ (phạm vi tổ chức) và NHÓM QUYỀN (năng lực) để set up cho đúng.',
+    ],
+  },
   {
     date: '12/09/2026 (Công việc: thêm cột "Người giao" cạnh "Phụ trách")',
     items: [
