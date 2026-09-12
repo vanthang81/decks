@@ -367,3 +367,26 @@ export async function saveDigestSettingsAction(fd: FormData) {
   await setWeeklyDigestEnabled(str(fd, 'enabled') === 'on');
   redirect('/admin/settings?saved=1');
 }
+
+// ---------- Tóm tắt công việc buổi sáng (daily digest) ----------
+/** Bật/tắt CÔNG TẮC TỔNG "Tóm tắt công việc buổi sáng" (mặc định TẮT). */
+export async function saveDailyDigestSettingsAction(fd: FormData) {
+  await requireExec();
+  const { setDailyDigestEnabled } = await import('@/lib/daily-digest');
+  await setDailyDigestEnabled(str(fd, 'enabled') === 'on');
+  redirect('/admin/settings?saved=1');
+}
+
+/** "Gửi thử cho tôi" — gửi 1 bản tóm tắt tới chính admin đang đăng nhập (bỏ qua công tắc tổng). */
+export async function sendDailyDigestTestAction() {
+  const me = await requireExec();
+  let msg: string;
+  try {
+    const { sendDailyDigests } = await import('@/lib/daily-digest');
+    const r = await sendDailyDigests({ force: true, onlyEmail: me.email });
+    msg = `sent:${r.sent}`;
+  } catch (e) {
+    msg = `err:${String(e).slice(0, 60)}`;
+  }
+  redirect(`/admin/settings?test=${encodeURIComponent(msg)}`);
+}

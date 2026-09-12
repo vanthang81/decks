@@ -340,6 +340,15 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   daily (đến hạn + quá hạn)" (id `IeYNzbjs1jsig9vA`, `0 8 * * *` VN → `?kind=daily`) + "OKR Task Overdue —
   weekly (tổng hợp quá hạn)" (id `OXOeqKGsHz1uQAtf`, `30 7 * * 1` = Thứ 2 07:30 VN → `?kind=weekly`), SSH
   đọc SYNC_KEY từ .env rồi curl `127.0.0.1:8640`. Email gửi qua `sendMail` (SMTP okr@baotinmanhhai.vn).
+- **Tóm tắt công việc buổi sáng (daily digest, CFO 12/09)**: `src/lib/daily-digest.ts` (`buildAllDigests`/
+  `renderDigestHtml`/`sendDailyDigests`) — 8:00 sáng **Thứ 2–Thứ 7** gửi mỗi user CÓ việc tồn đọng: KPI công việc +
+  việc **quá hạn / đến hạn ≤3 ngày / đang làm** (owner=user) + **việc mình GIAO cho người khác** đang chờ
+  (`created_by`=user, owner khác, còn hoạt động). BỎ QUA user không còn việc (tránh spam). Loại thông báo
+  `daily_digest` trong `NOTIF_TYPE_META` (user tự tắt ở Cài đặt). Route **`GET/POST /api/digest/daily`** (gác
+  `x-sync-key`/admin; `?test=1` = gửi thử cho chính admin, bỏ công tắc tổng). CÔNG TẮC TỔNG `daily_digest_enabled`
+  (`okr_settings`, mặc định TẮT) bật ở **Quản trị → Cài đặt · Email tự động** (`saveDailyDigestSettingsAction`
+  + `sendDailyDigestTestAction` "Gửi thử cho tôi"). Cron n8n **"OKR Daily Digest — 8h T2–T7"** (`0 8 * * 1-6` VN,
+  SSH đọc SYNC_KEY → curl `127.0.0.1:8640/api/digest/daily`). Định dạng dùng chung `brandedEmail`.
 - **XỬ LÝ NGAY TẠI CHUÔNG — duyệt/từ chối/bình luận không cần mở trang (CFO 30/08)**: chuông 🔔 (`NotifBell.tsx`)
   nay là **BẢNG THẢ XUỐNG** (popover, đóng khi bấm ngoài/Esc) render `NotifItems.tsx` (dùng CHUNG với trang
   `/notifications` qua `NotifList.tsx`). Mỗi thông báo có thao tác inline: **Duyệt/Từ chối** cho `meeting_access_request`

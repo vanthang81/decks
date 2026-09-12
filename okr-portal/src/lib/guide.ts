@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-11.160';
+export const GUIDE_VERSION = '2026-09-12.161';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '12/09/2026 (Email "Tóm tắt công việc buổi sáng" + trang Cấu hình Email)',
+    items: [
+      'Thêm email "Tóm tắt công việc buổi sáng" tự động: 8:00 sáng Thứ 2–Thứ 7, gửi cho mỗi người đang có việc tồn đọng — gồm KPI công việc, việc quá hạn, đến hạn ≤3 ngày, đang làm, và việc bạn giao cho người khác đang chờ. Người không còn việc tồn đọng sẽ không nhận (tránh làm phiền).',
+      'Trang Quản trị → "Cài đặt · Email tự động" bổ sung công tắc bật/tắt + nút "Gửi thử cho tôi" cho email tóm tắt buổi sáng. Mỗi người có thể tự tắt loại email này ở Cài đặt cá nhân.',
+      'Toàn bộ email hệ thống thu gọn lề trái/phải (sát mép hơn) → nội dung rộng & dễ đọc hơn, nhất là trên điện thoại.',
+    ],
+  },
   {
     date: '11/09/2026 (Thông báo — dấu hiệu đã đọc/đã trả lời + đánh dấu từng cái)',
     items: [

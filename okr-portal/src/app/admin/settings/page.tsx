@@ -5,7 +5,11 @@ import { requireUser } from '@/lib/current-user';
 import { loadAccess, canManageSystem } from '@/lib/access';
 import { getReminderConfig, WEEKDAY_LABEL } from '@/lib/reminders';
 import { getWeeklyDigestEnabled, digestRecipients } from '@/lib/digest';
-import { saveReminderAction, testReminderAction, saveDigestSettingsAction, sendDigestAction } from '../actions';
+import { getDailyDigestEnabled } from '@/lib/daily-digest';
+import {
+  saveReminderAction, testReminderAction, saveDigestSettingsAction, sendDigestAction,
+  saveDailyDigestSettingsAction, sendDailyDigestTestAction,
+} from '../actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,8 +20,8 @@ export default async function AdminSettings({
 }) {
   const me = await requireUser();
   if (!canManageSystem(me, await loadAccess())) redirect('/');
-  const [cfg, digestOn, digestTo] = await Promise.all([
-    getReminderConfig(), getWeeklyDigestEnabled(), digestRecipients(),
+  const [cfg, digestOn, digestTo, dailyOn] = await Promise.all([
+    getReminderConfig(), getWeeklyDigestEnabled(), digestRecipients(), getDailyDigestEnabled(),
   ]);
 
   return (
@@ -29,7 +33,7 @@ export default async function AdminSettings({
         </p>
         <div className="pagetitle">Cài đặt · Email tự động</div>
         <p className="subtitle">
-          Nhắc check-in &amp; Bản tin điều hành tuần — gửi qua hệ thống mail BTMH.
+          Nhắc check-in · Tóm tắt công việc buổi sáng · Bản tin điều hành tuần — gửi qua hệ thống mail BTMH.
         </p>
 
         {searchParams.saved && <p className="badge green">Đã lưu cấu hình.</p>}
@@ -131,6 +135,30 @@ export default async function AdminSettings({
           <hr className="sep" />
           <form action={sendDigestAction}>
             <button className="btn ghost" type="submit">Gửi thử ngay (không cần bật công tắc)</button>
+          </form>
+        </div>
+
+        {/* Tóm tắt công việc buổi sáng (daily digest) */}
+        <div className="card" style={{ maxWidth: 640 }}>
+          <h3 style={{ marginTop: 0 }}>🗓️ Tóm tắt công việc buổi sáng</h3>
+          <form action={saveDailyDigestSettingsAction}>
+            <label className="f" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input type="checkbox" name="enabled" defaultChecked={dailyOn} style={{ width: 'auto' }} />
+              Bật gửi Tóm tắt công việc buổi sáng {dailyOn ? '' : '(đang TẮT)'}
+            </label>
+            <p className="muted" style={{ fontSize: 13, marginTop: 6 }}>
+              Mặc định TẮT. Khi bật, cron gửi <b>8:00 sáng Thứ 2–Thứ 7 (giờ VN)</b> cho <b>mỗi người</b> đang có
+              việc tồn đọng: KPI công việc + việc <b>quá hạn / đến hạn ≤3 ngày / đang làm</b> + việc <b>mình giao
+              cho người khác</b> đang chờ. Người không còn việc tồn đọng sẽ <b>không nhận</b> (tránh làm phiền).
+              Mỗi người có thể tự tắt ở <b>Cài đặt cá nhân</b>.
+            </p>
+            <div style={{ marginTop: 12, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button className="btn" type="submit">Lưu</button>
+            </div>
+          </form>
+          <hr className="sep" />
+          <form action={sendDailyDigestTestAction}>
+            <button className="btn ghost" type="submit">✉ Gửi thử cho tôi (xem trước ngay)</button>
           </form>
         </div>
       </div>
