@@ -467,7 +467,17 @@ html:has(.mobile-menu[open]) .site-header { transform: none !important; }
 .badge {
   display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px;
   font-weight: 600; background: var(--primary-tint); color: var(--primary);
+  white-space: nowrap; /* badge trạng thái KHÔNG bao giờ xuống 2 dòng (CFO 12/09) — áp mọi bảng */
 }
+/* Cột trạng thái/hành động trong bảng luôn giữ 1 dòng, không bị cột khác ép vỡ chữ. */
+.t th.right, .t td.right, .t .col-status { white-space: nowrap; }
+/* Dòng phụ (mô tả/đơn vị…) trong ô bảng: rút gọn 1 dòng + "…" để không kéo giãn cột.
+   Cần đặt max-width ở phần tử/cột cha để ellipsis có tác dụng. */
+.cell-sub-1 { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Cột tên cuộc họp: giới hạn bề rộng để dòng đơn vị (dài) rút gọn "…" thay vì kéo giãn cột,
+   nhường chỗ cho cột Trạng thái/Người dự/Hành động hiển thị đủ trên 1 dòng. */
+.t td.mtg-name { max-width: 380px; }
+@media (min-width: 1200px) { .t td.mtg-name { max-width: 560px; } }
 .badge.gray { background: #f1f5f9; color: var(--muted); }
 .badge.green { background: #dcfce7; color: #166534; }
 .badge.amber { background: #fef3c7; color: #92400e; }

@@ -77,14 +77,17 @@ export default async function MeetingsPage() {
                     <tr key={m.id}
                       data-s={norm([m.code, m.title, m.related_units, m.related_projects, m.owner_name, m.owner_email, MEETING_TYPE_LABEL[m.type]].filter(Boolean).join(' '))}
                       data-type={m.type} data-status={m.status} data-host={m.owner_email ?? ''}>
-                      <td>
+                      <td className="mtg-name">
                         <Link href={`/meetings/${m.id}`} className="tbl-link">
                           {m.code && <span className="okr-code" style={{ marginRight: 6 }}>{m.code}</span>}{m.title}
                         </Link>
                         {m.pending_requests > 0 && (m.owner_email === user.email || m.secretary_email === user.email) && (
                           <span className="badge amber" style={{ marginLeft: 6, fontSize: 10.5 }}>{m.pending_requests} chờ duyệt</span>
                         )}
-                        {(m.related_units || m.related_projects) && <div className="muted" style={{ fontSize: 11 }}>{[m.related_units, m.related_projects].filter(Boolean).join(' · ')}</div>}
+                        {(m.related_units || m.related_projects) && (() => {
+                          const sub = [m.related_units, m.related_projects].filter(Boolean).join(' · ');
+                          return <div className="muted cell-sub-1" style={{ fontSize: 11 }} title={sub}>{sub}</div>;
+                        })()}
                       </td>
                       <td style={{ fontSize: 12.5 }}>{MEETING_TYPE_LABEL[m.type]}</td>
                       <td style={{ fontSize: 12.5 }}>{m.meeting_at ? fmtDateTime(m.meeting_at) : <span className="muted">—</span>}</td>

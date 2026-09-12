@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-12.165';
+export const GUIDE_VERSION = '2026-09-12.166';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '12/09/2026 (Bảng gọn hơn: trạng thái không bị xuống 2 dòng)',
+    items: [
+      'Bảng Cuộc họp: rút gọn dòng đơn vị dài (hiện 1 dòng + “…”, di chuột xem đầy đủ) và giới hạn bề rộng cột tên → cột Trạng thái/Người dự/Hành động hiển thị đủ trên 1 dòng, không còn bị cắt/xuống dòng.',
+      'Áp chung toàn app: badge trạng thái luôn nằm gọn 1 dòng ở mọi bảng.',
+    ],
+  },
   {
     date: '12/09/2026 (Biên bản họp: nhật ký gửi email cạnh nút Gửi biên bản)',
     items: [
