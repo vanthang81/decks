@@ -56,7 +56,7 @@ export default async function AdminUsers() {
       <div className="wrap">
         <div className="pagetitle">Người dùng & phân quyền</div>
         <p className="subtitle">
-          Thêm bằng email Google. Vai trò: CEO · CFO (toàn quyền) · GĐ khối · Trưởng phòng · Quản lý chức năng · Nhân viên.
+          Thêm bằng email Google. Vai trò: Chủ tịch · CEO · CFO (toàn quyền) · GĐ khối · Trưởng phòng · Quản lý chức năng · Nhân viên.
         </p>
 
         <div className="card" data-tour="admin-users-add">

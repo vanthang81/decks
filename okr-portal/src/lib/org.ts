@@ -212,6 +212,7 @@ export async function listUnitVersions(unitId: string): Promise<Array<UnitVersio
 
 
 export const ROLE_CAN_MANAGE_ROLE: Record<Role, boolean> = {
+  chairman: true,
   exec: true,
   ceo: true,
   cfo: true,

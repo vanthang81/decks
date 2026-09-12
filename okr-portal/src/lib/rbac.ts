@@ -1,10 +1,12 @@
 // Vai trò theo cây tổ chức BTMH.
-// CEO/CFO (đồng cấp điều hành, toàn quyền) > division_lead (Giám đốc khối) > dept_lead (Trưởng phòng)
-//   ≈ function_lead (Quản lý chức năng — cùng cấp Trưởng phòng, phụ trách 1 nhóm CBNV) > staff.
+// Chủ tịch (chairman — cao nhất, HĐQT) ≥ CEO/CFO (đồng cấp điều hành, toàn quyền) > division_lead
+//   (Giám đốc khối) > dept_lead (Trưởng phòng) ≈ function_lead (Quản lý chức năng — cùng cấp Trưởng
+//   phòng, phụ trách 1 nhóm CBNV) > staff.
 // 'exec' = giá trị CŨ (gộp CEO/CFO) — GIỮ để tương thích dữ liệu cũ; coi như cấp điều hành qua isExec().
-export type Role = 'exec' | 'ceo' | 'cfo' | 'division_lead' | 'dept_lead' | 'function_lead' | 'staff';
+export type Role = 'exec' | 'chairman' | 'ceo' | 'cfo' | 'division_lead' | 'dept_lead' | 'function_lead' | 'staff';
 
 export const ROLE_ORDER: Record<Role, number> = {
+  chairman: 5, // Chủ tịch — cao nhất
   exec: 4,
   ceo: 4,
   cfo: 4,
@@ -16,6 +18,7 @@ export const ROLE_ORDER: Record<Role, number> = {
 
 export const ROLE_LABEL: Record<Role, string> = {
   exec: 'CEO/CFO',
+  chairman: 'Chủ tịch',
   ceo: 'CEO',
   cfo: 'CFO',
   division_lead: 'Giám đốc khối',
@@ -24,16 +27,16 @@ export const ROLE_LABEL: Record<Role, string> = {
   staff: 'Nhân viên',
 };
 
-// Danh sách CHỌN được ở dropdown (tách riêng CEO & CFO; 'exec' cũ không còn cho chọn mới).
-export const ROLES: Role[] = ['ceo', 'cfo', 'division_lead', 'dept_lead', 'function_lead', 'staff'];
+// Danh sách CHỌN được ở dropdown (Chủ tịch trên cùng; tách riêng CEO & CFO; 'exec' cũ không còn cho chọn mới).
+export const ROLES: Role[] = ['chairman', 'ceo', 'cfo', 'division_lead', 'dept_lead', 'function_lead', 'staff'];
 
 export function isRole(x: unknown): x is Role {
   return typeof x === 'string' && x in ROLE_ORDER;
 }
 
-/** Cấp ĐIỀU HÀNH (toàn quyền): CEO, CFO, hoặc 'exec' cũ. */
+/** Cấp ĐIỀU HÀNH (toàn quyền): Chủ tịch, CEO, CFO, hoặc 'exec' cũ. */
 export function isExec(role: Role | string | undefined): boolean {
-  return role === 'exec' || role === 'ceo' || role === 'cfo';
+  return role === 'exec' || role === 'chairman' || role === 'ceo' || role === 'cfo';
 }
 
 /** Vai trò a có "cao hơn hoặc bằng" b không. */

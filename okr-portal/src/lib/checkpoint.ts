@@ -50,7 +50,7 @@ async function alertRecipients(): Promise<{ email: string; name: string | null }
   }
   return query<{ email: string; name: string | null }>(
     `SELECT email, display_name AS name FROM okr_users
-      WHERE is_active = true AND role IN ('exec','ceo','cfo') ORDER BY email`,
+      WHERE is_active = true AND role IN ('exec','chairman','ceo','cfo') ORDER BY email`,
   );
 }
 
@@ -114,7 +114,7 @@ export async function runCheckpoint(opts?: {
   const objNullCode = await num(`SELECT count(*) n FROM okr_objectives WHERE code IS NULL`);
   const projNullCode = await num(`SELECT count(*) n FROM okr_projects WHERE code IS NULL`);
   const activeUserNoUnit = await num(`SELECT count(*) n FROM okr_users WHERE is_active=true AND unit_id IS NULL`);
-  const activeExec = await num(`SELECT count(*) n FROM okr_users WHERE is_active=true AND role IN ('exec','ceo','cfo')`);
+  const activeExec = await num(`SELECT count(*) n FROM okr_users WHERE is_active=true AND role IN ('exec','chairman','ceo','cfo')`);
   const orphanProjTask = await num(
     `SELECT count(*) n FROM okr_initiatives i WHERE i.project_id IS NOT NULL
        AND NOT EXISTS (SELECT 1 FROM okr_projects p WHERE p.id = i.project_id)`,
