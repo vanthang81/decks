@@ -698,7 +698,8 @@ function EditModal({
                               : []),
                             ...objectives.map((o) => ({
                               value: o.id,
-                              label: `${o.code ? o.code + ' · ' : ''}${o.unit_name ? `[${o.unit_name}] ` : ''}${o.title}`,
+                              label: o.title, // tên OKR = dòng chính
+                              sub: [o.code, o.unit_name].filter(Boolean).join(' · ') || undefined, // mã · đơn vị = dòng phụ
                             })),
                           ]}
                         />

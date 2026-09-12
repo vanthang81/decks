@@ -87,14 +87,15 @@ export default async function TasksPage({
   // cho mình (form gọn, ép owner=mình) → dùng `personalTask`. Quản lý dùng form đầy đủ: ô "Thuộc OKR"
   // chỉ liệt kê OKR kỳ hiện tại mà người này có quyền quản (để gắn việc hợp lệ).
   const personalTask = user.role === 'staff';
-  let objOpts: { id: string; label: string }[] = [];
+  let objOpts: { id: string; label: string; sub?: string }[] = [];
   if (!personalTask) {
     const period = await getCurrentPeriod();
     if (period) {
       const objs = await listObjectivesByPeriod(period.id);
       objOpts = objs
         .filter((o) => canEditObjective(user, { unit_id: o.unit_id, owner_email: o.owner_email, created_by: o.created_by }, units, access))
-        .map((o) => ({ id: o.id, label: `${o.code ? o.code + ' · ' : ''}${o.unit_name ? '[' + o.unit_name + '] ' : ''}${o.title}` }));
+        // TÊN OKR = dòng chính (dễ nhận biết); mã · đơn vị = dòng phụ mờ → dropdown đọc rõ, không cắt cụt.
+        .map((o) => ({ id: o.id, label: o.title, sub: [o.code, o.unit_name].filter(Boolean).join(' · ') || undefined }));
     }
   }
 

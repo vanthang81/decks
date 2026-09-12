@@ -152,7 +152,7 @@ export default function TaskExplorer({
   projects: ProjectOpt[];
   // Meta dự án (đơn vị + OKR liên quan) → kế thừa hiển thị cho việc chỉ thuộc dự án.
   projectMeta?: Record<string, { unit_id: string | null; unit_name: string | null; okrs: { id: string; code: string | null; title: string }[] }>;
-  objectiveOpts?: { id: string; label: string }[];   // OKR để gắn lại việc (form Sửa)
+  objectiveOpts?: { id: string; label: string; sub?: string }[];   // OKR để gắn lại việc (form Sửa)
   editAction: (fd: FormData) => Promise<void>;
   deleteAction: (fd: FormData) => Promise<void>;
   move: (id: string, status: Status) => Promise<void>;

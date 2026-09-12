@@ -36,6 +36,13 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   `EditModal` toast sẵn `toastMsg` → mọi modal bọc EditModal tự có toast). **TUYỆT ĐỐI KHÔNG dùng `alert()`
   cho kết quả** (dùng toast). Thêm nút/form/tab mới ⇒ tự gắn 1 trong 3 cơ chế trên; đừng để `<form action=>`
   trơ hay handler client không toast.
+- **DROPDOWN/Ô CHỌN PHẢI LUÔN ĐỌC ĐƯỢC (BẮT BUỘC — CFO 12/09, "không bao giờ nhắc lại")**: mọi ô chọn
+  dùng `SearchSelect` (`src/components/SearchSelect.tsx`) — danh sách xổ TỰ RỘNG theo nội dung (panel
+  `min-width:100%` → `max-width:min(560px,92vw)`) và mỗi mục **XUỐNG DÒNG, KHÔNG cắt cụt "..."**
+  (`.ss-opt-main/.ss-opt-sub` white-space:normal, globals.css) → tên dài (OKR, đơn vị) đọc đủ. Với thực
+  thể có MÃ/đơn vị (OKR, KR, dự án…): đặt **TÊN làm dòng chính (`label`)** + **`mã · đơn vị` làm dòng phụ
+  mờ (`sub`)** thay vì nhồi hết vào 1 chuỗi — SearchSelect render 2 dòng sẵn. Tra cứu tìm được cả `label`
+  lẫn `sub`. Thêm ô chọn mới ⇒ theo mẫu này (đừng nhồi mã+đơn vị+tên vào 1 `label` dài rồi để bị cắt).
 - **CÔNG VIỆC: LUÔN hiện CẢ "Phụ trách" (assignee) LẪN "Người giao" (assigner) — CFO 12/09**: mọi màn hình
   liệt kê công việc phải cho thấy người được giao VÀ người giao việc. Nguồn = `owner_email`→`owner_name`
   (phụ trách) và `created_by`→`creator_name`/`creator_avatar` (người giao) — đã có sẵn trong `TaskRow`

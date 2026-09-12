@@ -7,7 +7,7 @@ import NumberInput from '@/components/NumberInput';
 import { unitTreeOptions } from '@/lib/unit-options';
 import type { PersonOpt, UnitOpt, ProjectOpt } from '@/components/ExecutionTabs';
 
-export type ObjOptLite = { id: string; label: string };
+export type ObjOptLite = { id: string; label: string; sub?: string };
 
 // Nút "+ Tạo công việc" ở trang Công việc (/tasks) — mở popup form tạo 1 việc lẻ.
 // Hiện cho MỌI người: quản lý dùng form đầy đủ (giao cho ai, gắn OKR/dự án…);
@@ -109,7 +109,7 @@ export default function NewTaskModal({
             <div>
               <label className="f">Thuộc OKR <span className="muted" style={{ fontWeight: 400 }}>— tuỳ chọn</span></label>
               <SearchSelect name="objective_id" emptyLabel="— Không gắn OKR —"
-                options={objectives.map((o) => ({ value: o.id, label: o.label }))} />
+                options={objectives.map((o) => ({ value: o.id, label: o.label, sub: o.sub }))} />
             </div>
             <div>
               <label className="f">Thuộc dự án <span className="muted" style={{ fontWeight: 400 }}>— tuỳ chọn</span></label>

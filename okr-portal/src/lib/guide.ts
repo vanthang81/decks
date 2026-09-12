@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-12.170';
+export const GUIDE_VERSION = '2026-09-12.171';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -668,6 +668,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '12/09/2026 (Ô chọn dễ đọc — tên OKR/đơn vị không còn bị cắt cụt)',
+    items: [
+      'Danh sách xổ (chọn OKR, đơn vị, người…) nay TỰ RỘNG theo nội dung và mỗi dòng XUỐNG DÒNG đầy đủ — hết cảnh chỉ thấy mã + "..." không biết đang chọn OKR nào.',
+      'Ô chọn OKR/KR/dự án hiển thị 2 dòng: TÊN (dòng chính) + mã · đơn vị (dòng phụ mờ) — nhìn phát biết ngay.',
+    ],
+  },
   {
     date: '12/09/2026 (Sửa lỗi phân quyền Quản trị hệ thống + giải thích Vai trò/Nhóm quyền)',
     items: [

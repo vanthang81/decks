@@ -93,7 +93,8 @@ export default function AddTaskToMeeting({
                 onChange={setObjId}
                 options={objectives.map((o) => ({
                   value: o.id,
-                  label: `${o.code ? o.code + ' · ' : ''}${o.unit_name ? `[${o.unit_name}] ` : ''}${o.title}`,
+                  label: o.title, // TÊN OKR làm dòng chính (dễ nhận biết) …
+                  sub: [o.code, o.unit_name].filter(Boolean).join(' · ') || undefined, // … mã · đơn vị = dòng phụ mờ
                 }))}
               />
               <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>

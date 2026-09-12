@@ -45,7 +45,7 @@ export default function TaskEditModal({
   users: PersonOpt[];
   units: UnitOpt[];
   projects: ProjectOpt[];
-  objectiveOpts?: { id: string; label: string }[];  // OKR để gắn lại việc
+  objectiveOpts?: { id: string; label: string; sub?: string }[];  // OKR để gắn lại việc
   editAction: (fd: FormData) => Promise<void>;
   deleteAction: (fd: FormData) => Promise<void>;
   onClose: () => void;
@@ -293,7 +293,7 @@ export default function TaskEditModal({
                 <div>
                   <label className="f">Thuộc OKR <span className="muted" style={{ fontWeight: 400 }}>(tuỳ chọn)</span></label>
                   <SearchSelect name="objective_id" defaultValue={task.objective_id ?? ''} emptyLabel="— Không gắn OKR —"
-                    options={objectiveOpts.map((o) => ({ value: o.id, label: o.label }))} />
+                    options={objectiveOpts.map((o) => ({ value: o.id, label: o.label, sub: o.sub }))} />
                 </div>
                 <div>
                   <label className="f">Thuộc dự án <span className="muted" style={{ fontWeight: 400 }}>(tuỳ chọn)</span></label>

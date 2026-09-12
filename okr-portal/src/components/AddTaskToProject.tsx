@@ -153,7 +153,8 @@ export default function AddTaskToProject({
         placeholder="— Không gắn (chỉ thuộc dự án) —"
         options={objectives.map((o) => ({
           value: o.id,
-          label: `${o.code ? o.code + ' · ' : ''}${o.unit_name ? `[${o.unit_name}] ` : ''}${o.title}`,
+          label: o.title,
+          sub: [o.code, o.unit_name].filter(Boolean).join(' · ') || undefined,
         }))}
       />
       <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>
