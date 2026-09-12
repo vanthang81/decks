@@ -21,7 +21,7 @@ export type Notification = {
 
 // ── Loại thông báo + tuỳ chọn chi tiết (per-user, lưu okr_users.notif_prefs) ──
 export type NotifType =
-  | 'mention' | 'reply' | 'comment_mine' | 'assignment'
+  | 'mention' | 'reply' | 'comment_mine' | 'assignment' | 'task_change'
   | 'task_due_soon' | 'task_overdue' | 'task_overdue_weekly'
   | 'daily_digest' | 'weekly_digest';
 export const NOTIF_TYPE_META: { key: NotifType; label: string; desc: string }[] = [
@@ -40,6 +40,7 @@ const NOTIF_VERB: Record<NotifType, string> = {
   reply: 'đã trả lời bình luận của bạn',
   comment_mine: 'đã bình luận ở mục bạn phụ trách',
   assignment: 'đã giao việc cho bạn',
+  task_change: 'cập nhật thay đổi công việc',
   task_due_soon: 'nhắc: công việc sắp đến hạn',
   task_overdue: 'nhắc: công việc quá hạn',
   task_overdue_weekly: 'tổng hợp việc quá hạn tuần',

@@ -417,3 +417,26 @@ export async function sendDailyDigestTestAction() {
   }
   redirect(`/admin/settings?test=${encodeURIComponent(msg)}`);
 }
+
+// ---------- Thông báo thay đổi công việc ----------
+/** Bật/tắt CÔNG TẮC TỔNG "Thông báo thay đổi công việc" (mặc định TẮT). */
+export async function saveTaskChangeSettingsAction(fd: FormData) {
+  await requireExec();
+  const { setTaskChangeEnabled } = await import('@/lib/task-changes');
+  await setTaskChangeEnabled(str(fd, 'enabled') === 'on');
+  redirect('/admin/settings?saved=1');
+}
+
+/** "Gửi thử cho tôi" — gom thay đổi 3 ngày gần nhất gửi tới chính admin (bỏ qua lịch + công tắc tổng). */
+export async function sendTaskChangeTestAction() {
+  const me = await requireExec();
+  let msg: string;
+  try {
+    const { dispatchTaskChangeDigests } = await import('@/lib/task-changes');
+    const r = await dispatchTaskChangeDigests({ force: true, onlyEmail: me.email });
+    msg = `sent:${r.sent}`;
+  } catch (e) {
+    msg = `err:${String(e).slice(0, 60)}`;
+  }
+  redirect(`/admin/settings?test=${encodeURIComponent(msg)}`);
+}

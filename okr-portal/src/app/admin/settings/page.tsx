@@ -6,9 +6,11 @@ import { loadAccess, canManageSystem } from '@/lib/access';
 import { getReminderConfig, WEEKDAY_LABEL } from '@/lib/reminders';
 import { getWeeklyDigestEnabled, digestRecipients } from '@/lib/digest';
 import { getDailyDigestEnabled } from '@/lib/daily-digest';
+import { getTaskChangeEnabled } from '@/lib/task-changes';
 import {
   saveReminderAction, testReminderAction, saveDigestSettingsAction, sendDigestAction,
   saveDailyDigestSettingsAction, sendDailyDigestTestAction,
+  saveTaskChangeSettingsAction, sendTaskChangeTestAction,
 } from '../actions';
 
 export const dynamic = 'force-dynamic';
@@ -20,8 +22,8 @@ export default async function AdminSettings({
 }) {
   const me = await requireUser();
   if (!canManageSystem(me, await loadAccess())) redirect('/');
-  const [cfg, digestOn, digestTo, dailyOn] = await Promise.all([
-    getReminderConfig(), getWeeklyDigestEnabled(), digestRecipients(), getDailyDigestEnabled(),
+  const [cfg, digestOn, digestTo, dailyOn, taskChangeOn] = await Promise.all([
+    getReminderConfig(), getWeeklyDigestEnabled(), digestRecipients(), getDailyDigestEnabled(), getTaskChangeEnabled(),
   ]);
 
   return (
@@ -158,6 +160,30 @@ export default async function AdminSettings({
           </form>
           <hr className="sep" />
           <form action={sendDailyDigestTestAction}>
+            <button className="btn ghost" type="submit">✉ Gửi thử cho tôi (xem trước ngay)</button>
+          </form>
+        </div>
+
+        {/* Thông báo thay đổi công việc */}
+        <div className="card" style={{ maxWidth: 640 }}>
+          <h3 style={{ marginTop: 0 }}>🔔 Thông báo thay đổi công việc</h3>
+          <form action={saveTaskChangeSettingsAction}>
+            <label className="f" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input type="checkbox" name="enabled" defaultChecked={taskChangeOn} style={{ width: 'auto' }} />
+              Bật thông báo thay đổi công việc {taskChangeOn ? '' : '(đang TẮT)'}
+            </label>
+            <p className="muted" style={{ fontSize: 13, marginTop: 6 }}>
+              Mặc định TẮT. Khi bật, hệ thống gom mọi thay đổi <b>trạng thái/nội dung</b> công việc rồi gửi cho
+              <b> Người giao việc</b> &amp; <b>Chủ trì OKR</b> (loại người vừa thay đổi) theo <b>kênh &amp; giờ</b> mỗi
+              người tự chọn ở <Link href="/settings">Cài đặt cá nhân</Link> (mặc định <b>8:00 Thứ 2–Thứ 7</b>, cả app + email).
+              Super Admin sửa/xoá/huỷ → không báo ai; Quản trị hệ thống/OKR huỷ việc → không báo ai.
+            </p>
+            <div style={{ marginTop: 12 }}>
+              <button className="btn" type="submit">Lưu</button>
+            </div>
+          </form>
+          <hr className="sep" />
+          <form action={sendTaskChangeTestAction}>
             <button className="btn ghost" type="submit">✉ Gửi thử cho tôi (xem trước ngay)</button>
           </form>
         </div>

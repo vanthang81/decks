@@ -60,6 +60,7 @@ import type { Initiative } from '@/lib/initiatives';
 import type { OkrUser } from '@/lib/users';
 import { canManageObjectiveId, withinEditWindow } from '@/lib/moderation';
 import { notifyTaskAssigned } from '@/lib/notifications';
+import { recordTaskChange } from '@/lib/task-changes';
 import {
   loadAccess,
   canEditObjective,
@@ -783,6 +784,10 @@ export async function updateInitiativeAction(fd: FormData) {
       progress: num(fd, 'progress'),
     });
   }
+  await recordTaskChange(user.email, init, {
+    status: (str(fd, 'status') || 'todo') as InitStatus, progress: num(fd, 'progress'),
+    ...(perm.manage ? { owner_email: orNull(str(fd, 'owner_email')), priority: (str(fd, 'priority') || 'medium') as Priority, due_on: orNull(str(fd, 'due_on')) } : {}),
+  });
   await auditTask(user.email, 'initiative.update', init, { title: init.title });  revalidatePath(`/objectives/${obj.id}`);
   revalidatePath('/tasks');
 }
@@ -859,6 +864,19 @@ export async function editInitiativeAction(fd: FormData) {
       evidence_url: evidenceVal,
     });
   }
+  await recordTaskChange(user.email, init, perm.manage ? {
+    title: str(fd, 'title') || init.title,
+    description: orNull(str(fd, 'description')),
+    status: (str(fd, 'status') || 'todo') as InitStatus,
+    progress: num(fd, 'progress'),
+    priority: (str(fd, 'priority') || 'medium') as Priority,
+    due_on: fd.has('due_on') ? orNull(str(fd, 'due_on')) : init.due_on,
+    owner_email: orNull(str(fd, 'owner_email')),
+    ...(fd.has('expected_output') ? { expected_output: orNull(str(fd, 'expected_output')) } : {}),
+  } : {
+    status: (str(fd, 'status') || 'todo') as InitStatus,
+    progress: num(fd, 'progress'),
+  });
   await auditTask(user.email, 'initiative.update', init, { title: str(fd, 'title') || init.title });  revalidateTask(init);
   // meeting_id / objective_id có thể vừa đổi → revalidate cả mục mới chọn.
   const newMeeting = orNull(str(fd, 'meeting_id'));
@@ -898,6 +916,9 @@ export async function updateOwnTaskProgressAction(fd: FormData) {
     progress: num(fd, 'progress'),
     evidence_url: hasEvidence ? orNull(evidence) : undefined,
   });
+  await recordTaskChange(user.email, init, {
+    status: (str(fd, 'status') || 'todo') as InitStatus, progress: num(fd, 'progress'),
+  });
   await auditTask(user.email, 'initiative.update', init, { title: init.title });
   revalidateTask(init);
   revalidatePath('/my');
@@ -912,6 +933,7 @@ export async function moveInitiativeAction(id: string, status: InitStatus) {
   const perm = canUpdateInitiative(user, init, manage);
   if (!perm.manage && !perm.assignee) throw new Error('Bạn không có quyền cập nhật việc này.');
   await setInitiativeStatus(id, status);
+  await recordTaskChange(user.email, init, { status });
   await auditTask(user.email, 'initiative.status', init, { title: init.title, status });  revalidateTask(init);
 }
 
@@ -952,6 +974,7 @@ export async function bulkTasksAction(
         continue;
       }
       await setInitiativeStatus(id, op);
+      await recordTaskChange(user.email, init, { status: op });
       await auditTask(user.email, 'initiative.status', init, { title: init.title, status: op, bulk: true });
     }
     if (init.objective_id) objIds.add(init.objective_id);

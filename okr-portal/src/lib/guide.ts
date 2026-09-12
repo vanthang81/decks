@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-12.171';
+export const GUIDE_VERSION = '2026-09-12.172';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -668,6 +668,15 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '12/09/2026 (Thông báo thay đổi công việc — tuỳ chọn kênh & giờ nhận)',
+    items: [
+      'Khi công việc đổi trạng thái/nội dung, hệ thống báo cho NGƯỜI GIAO việc + CHỦ TRÌ OKR (loại người vừa thay đổi).',
+      'Bạn tự chọn ở Cài đặt cá nhân: kênh (app / email / cả hai / tắt) · các mốc GIỜ gửi trong ngày (= số lần/ngày) · ngày trong tuần. Mặc định 8:00 Thứ 2–Thứ 7, gom mọi thay đổi kể từ lần gửi trước.',
+      'Bảo mật: Super Admin sửa/xoá/huỷ việc → không báo ai; Quản trị hệ thống/OKR huỷ việc → không báo ai.',
+      'Quản trị bật/tắt tính năng + gửi thử ở Quản trị → Cài đặt · Email tự động.',
+    ],
+  },
   {
     date: '12/09/2026 (Ô chọn dễ đọc — tên OKR/đơn vị không còn bị cắt cụt)',
     items: [

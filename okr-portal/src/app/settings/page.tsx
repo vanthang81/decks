@@ -2,18 +2,20 @@ import Link from 'next/link';
 import SiteHeader from '@/components/SiteHeader';
 import HelpTip from '@/components/HelpTip';
 import NotifSettingsForm from '@/components/NotifSettingsForm';
+import TaskChangeSettingsForm from '@/components/TaskChangeSettingsForm';
 import { requireUser } from '@/lib/current-user';
 import { getNotifSettings, NOTIF_TYPE_META } from '@/lib/notifications';
+import { getTaskChangePrefs, TASK_CHANGE_TIME_CHOICES, TASK_CHANGE_DAY_LABEL } from '@/lib/task-changes';
 import { listUnits } from '@/lib/org';
 import { ROLE_LABEL, type Role } from '@/lib/rbac';
-import { saveNotifSettingsAction } from './actions';
+import { saveNotifSettingsAction, saveTaskChangePrefsAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Cài đặt cá nhân · BTMH OKR' };
 
 export default async function SettingsPage() {
   const user = await requireUser();
-  const [settings, units] = await Promise.all([getNotifSettings(user.email), listUnits()]);
+  const [settings, units, tcPrefs] = await Promise.all([getNotifSettings(user.email), listUnits(), getTaskChangePrefs(user.email)]);
   const unitName = user.unit_id ? units.find((u) => u.id === user.unit_id)?.name ?? null : null;
   const roleLabel = ROLE_LABEL[user.role as Role] ?? user.role;
 
@@ -59,6 +61,21 @@ export default async function SettingsPage() {
             initial={settings.prefs}
             initialEmail={settings.notifyEmail}
             action={saveNotifSettingsAction}
+          />
+        </div>
+
+        {/* Thông báo thay đổi công việc (digest theo giờ/ngày) */}
+        <div className="card">
+          <h3 style={{ marginTop: 0 }}>Thông báo thay đổi công việc</h3>
+          <p className="subtitle" style={{ marginTop: 0 }}>
+            Nhận tổng hợp khi công việc bạn <b>giao</b> hoặc <b>chủ trì OKR</b> đổi trạng thái/nội dung.
+            Chọn kênh, các mốc giờ trong ngày và ngày trong tuần bạn muốn nhận.
+          </p>
+          <TaskChangeSettingsForm
+            initial={tcPrefs}
+            timeChoices={TASK_CHANGE_TIME_CHOICES}
+            dayLabel={TASK_CHANGE_DAY_LABEL}
+            action={saveTaskChangePrefsAction}
           />
         </div>
       </div>

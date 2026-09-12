@@ -26,6 +26,7 @@ const TYPE_LABEL: Record<string, string> = {
   reply: 'đã trả lời bạn',
   comment_mine: 'đã bình luận ở mục bạn phụ trách',
   assignment: 'đã giao việc cho bạn',
+  task_change: 'cập nhật thay đổi công việc',
   task_due_soon: 'nhắc: công việc sắp đến hạn',
   task_overdue: 'nhắc: công việc quá hạn',
   user_invite_pending: '',

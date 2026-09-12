@@ -372,6 +372,21 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   (`okr_settings`, mặc định TẮT) bật ở **Quản trị → Cài đặt · Email tự động** (`saveDailyDigestSettingsAction`
   + `sendDailyDigestTestAction` "Gửi thử cho tôi"). Cron n8n **"OKR Daily Digest — 8h T2–T7"** (`0 8 * * 1-6` VN,
   SSH đọc SYNC_KEY → curl `127.0.0.1:8640/api/digest/daily`). Định dạng dùng chung `brandedEmail`.
+- **THÔNG BÁO THAY ĐỔI CÔNG VIỆC (CFO 12/09)**: `src/lib/task-changes.ts`. Khi task đổi trạng thái/nội dung
+  (hook `recordTaskChange` trong các action `update/edit/move/updateOwnProgress/bulk` của `objectives/actions.ts`)
+  → ghi 1 dòng `okr_task_events` (db/660: task_id/title snapshot/actor/kind/summary). Digest gom & gửi cho
+  **NGƯỜI GIAO (`created_by`) + CHỦ TRÌ OKR (`objective.owner_email`)** — loại actor. **LOẠI TRỪ** (trong
+  recordTaskChange): actor là **super_admin** → mọi thay đổi KHÔNG ghi/báo; actor là **system_admin/okr_admin**
+  + status→'canceled' (huỷ) → KHÔNG ghi/báo (xoá vốn không sinh event). Tuỳ chọn per-user cột
+  `okr_users.task_change_prefs` `{channel:'both'|'app'|'email'|'off', times:['08:00',…], days:[1..6]}` (mặc định
+  8:00 T2–T7, cả 2 kênh) + `task_change_last_sent`; UI ở **Cài đặt cá nhân** (`TaskChangeSettingsForm` chip
+  kênh/giờ/ngày → `saveTaskChangePrefsAction`). Dispatch: **`GET/POST /api/task-changes/dispatch`** (gác
+  `x-sync-key`/admin; `?test=1`=gửi thử cho admin, bỏ lịch+công tắc) → `dispatchTaskChangeDigests`: mỗi user
+  chỉ gửi vào ĐÚNG mốc `times` đã tới (so `last_sent`), gom event kể từ `last_sent`, gửi app-notif (type
+  `task_change`) + email `brandedEmail` gom theo việc; luôn advance `last_sent` (tránh lặp). CÔNG TẮC TỔNG
+  `task_change_enabled` (mặc định TẮT) ở **Quản trị → Cài đặt** (`saveTaskChangeSettingsAction` +
+  `sendTaskChangeTestAction`). Cron n8n **"OKR Task-Change Dispatch — mỗi 30′"** (`MdBJFJaUBBOtYNHi`, ACTIVE,
+  `*/30 5-22 * * *` VN, SSH→curl dispatch). Dọn event >30 ngày trong dispatch. Retention chống phình.
 - **SUPER ADMIN + siết Quản trị hệ thống (CFO 12/09)**: thêm nhóm quyền `super_admin` (đỉnh, icon 👑) đứng đầu `GROUP_KEYS`. `isSuperAdmin(user)` = email ∈ `SUPER_ADMIN_EMAILS` (vanthang81@gmail.com, nguyenvanthang@baotinmanhhai.vn — hardcode chống khoá nhầm) HOẶC `perm_group='super_admin'`. `userCaps`: Super Admin → mọi cap (thay cho shortcut isExec cũ). Cap mới `super.admin` (SUPER_ONLY) chỉ nhóm super_admin có. `loadAccess` áp BẤT BIẾN: super_admin=đủ; bóc `super.admin` khỏi nhóm khác; bóc `SYSADMIN_DENY_CAPS` (scope.all, user.view360) khỏi `system_admin` → Quản trị hệ thống KHÔNG xem được mọi việc/hồ sơ 360° cá nhân. `savePermissionsAction`+`saveUserAction`: trừ Super Admin, không sửa được nhóm super_admin, không sửa nhóm CỦA CHÍNH MÌNH, không tự đổi perm_group của mình, không gán/hạ super_admin. UI phân quyền + form user khoá tương ứng. **Need-to-know việc**: `canViewInitiative` thêm nhánh `ctx.mentioned` (được @tag trong bình luận việc → xem được); `initiativeIdsMentioning(email)` trong comments.ts, truyền qua `buildTaskViewCtx`. LƯU Ý: vai trò tổ chức `exec` (CEO/CFO) vẫn có PHẠM VI role = null (không giới hạn) → siết quyền xem việc của 'Quản trị hệ thống' áp cho user NON-exec (đúng đối tượng vị trí IT/admin).
 - **BẢNG GỌN — TRẠNG THÁI KHÔNG XUỐNG DÒNG (CFO 12/09, áp mọi bảng)**: `.badge` có `white-space:nowrap` (badge trạng thái luôn 1 dòng); cột `.right` nowrap. Dòng phụ dài trong ô (đơn vị/mô tả) bọc `cell-sub-1` (ellipsis 1 dòng) + đặt `max-width` ở td (vd `.t td.mtg-name`) để rút gọn thay vì kéo giãn cột, kèm `title` xem đầy đủ khi hover. Bảng mới có cột trạng thái + dòng phụ dài ⇒ theo mẫu này.
 - **NHẬT KÝ GỬI BIÊN BẢN HỌP (CFO 12/09)**: mỗi lần bấm "Gửi biên bản" ghi 1 dòng vào `okr_meeting_minutes_sends` (db/640: meeting_id, sent_at, sent_by(_name), recipients, ok_count, fail_count, note) trong `sendMinutesEmail` (best-effort). Trang cuộc họp hiện note nhỏ dưới mục Biên bản (`MinutesSendLog`, mọi người xem): đã gửi mấy lần · gần nhất khi nào/ai · ok/total người · thành công/một phần/thất bại (chấm màu) + bấm Lịch sử xem tất cả. `listMinutesSends()` trong `meeting-mail.ts`; SendMinutesButton `router.refresh()` sau khi gửi để cập nhật note.
