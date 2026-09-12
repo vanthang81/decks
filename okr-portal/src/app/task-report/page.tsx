@@ -6,6 +6,7 @@ import { requireUser } from '@/lib/current-user';
 import { loadAccess, isSuperAdmin, userGroupKey } from '@/lib/access';
 import { listUnits } from '@/lib/org';
 import { buildExecReport, type ReportPeriod } from '@/lib/exec-report';
+import { moveInitiativeAction } from '@/app/objectives/actions';
 import { saveLateGraceAction } from './actions';
 
 export const dynamic = 'force-dynamic';
@@ -34,7 +35,7 @@ export default async function TaskReportPage({
         </p>
 
         {/* Cấu hình ân hạn deadline (chỉ Super Admin / QT hệ thống / QT OKR) */}
-        <div className="card er-grace">
+        <div className="card er-grace" data-tour="er-grace">
           <div className="er-grace-info">
             <b>Ân hạn deadline: {report.graceDays} ngày</b>
             <span className="muted" style={{ fontSize: 12.5 }}>
@@ -51,7 +52,7 @@ export default async function TaskReportPage({
           )}
         </div>
 
-        <ExecReportView report={report} navBase="/task-report" />
+        <ExecReportView report={report} navBase="/task-report" isSuper={isSuperAdmin(user)} moveAction={moveInitiativeAction} />
       </div>
     </>
   );

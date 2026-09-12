@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-12.173';
+export const GUIDE_VERSION = '2026-09-12.174';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -220,6 +220,8 @@ export const FEATURES: Feature[] = [
       'Mỗi việc được phân loại: Hoàn thành đúng hạn · Hoàn thành TRỄ hạn · Quá hạn (chưa xong) · Đang làm/đúng tiến độ. "CHẬM DEADLINE" = việc hoàn thành trễ + việc quá hạn chưa xong. Việc chuyển "Xong" SAU hạn cộng số ngày ân hạn cấu hình vẫn bị tính là chậm.',
       'Số ngày ÂN HẠN deadline chỉnh ở đầu trang (chỉ Super Admin / Quản trị hệ thống / Quản trị OKR sửa được). Bảng xem theo Đơn vị → bấm để xổ theo từng Cá nhân, kèm % hoàn thành & % đúng hạn.',
       'Quyền xem: Super Admin, Quản trị hệ thống, Quản trị OKR, Quản trị KPI xem TOÀN công ty; lãnh đạo (GĐ khối/Trưởng phòng/Quản lý chức năng) xem đơn vị mình & cấp dưới; nhân viên xem công việc của mình.',
+      'Bảng theo CÂY TỔ CHỨC (Khối → Phòng → Cá nhân) với số liệu cuộn lên (roll-up), hoặc chuyển sang DANH SÁCH cá nhân có tìm kiếm + sắp xếp theo từng cột. Có biểu đồ cơ cấu thực hiện + % hoàn thành theo đơn vị, và bảng VINH DANH cá nhân / đội nhóm xuất sắc (đúng hạn).',
+      'Bấm vào BẤT KỲ CON SỐ (trên tiles, bảng, hay ranking) để mở popup danh sách việc cấu thành — kèm NHẬT KÝ THAY ĐỔI từng việc (evidence để audit, không "cãi" được). Super Admin đổi được trạng thái bất kỳ việc nào ngay trong popup. Mỗi tên người là link mở hồ sơ 360°. Việc rơi Chủ nhật tự được ân hạn thêm 1 ngày.',
     ],
   },
   {
@@ -680,6 +682,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '12/09/2026 (Báo cáo thực hiện — hierarchy, drill-down evidence, charts, vinh danh)',
+    items: [
+      'Bảng báo cáo theo CÂY TỔ CHỨC (Khối → Phòng → Cá nhân) roll-up số liệu, hoặc chế độ Danh sách có tìm kiếm + sắp xếp theo cột.',
+      'Bấm bất kỳ CON SỐ → popup danh sách việc + NHẬT KÝ THAY ĐỔI từng việc (evidence audit). Super Admin đổi trạng thái ngay trong popup. Tên người là link hồ sơ 360°.',
+      'Thêm biểu đồ cơ cấu thực hiện + % theo đơn vị, bảng VINH DANH cá nhân/đội nhóm xuất sắc. Header bảng float khi cuộn. Số liệu căn lề phải. Việc rơi Chủ nhật tự ân hạn +1 ngày.',
+    ],
+  },
   {
     date: '12/09/2026 (Báo cáo thực hiện công việc tuần/tháng)',
     items: [

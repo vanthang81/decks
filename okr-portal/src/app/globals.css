@@ -364,11 +364,51 @@ html:has(.mobile-menu[open]) .site-header { transform: none !important; }
 .er-table .er-unit:hover { filter: brightness(0.98); }
 .er-caret { display: inline-block; width: 14px; color: var(--muted); transition: transform .12s; }
 .er-caret.open { transform: rotate(90deg); }
-.er-person td:first-child { padding-left: 26px; }
 .er-person-name { color: #334155; }
 .er-total { border-top: 2px solid var(--line); background: #FBF7F1; }
 .er-grace { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
 .er-grace-form { display: inline-flex; align-items: flex-end; gap: 8px; }
+/* Thụt cấp theo độ sâu cây (--d gắn inline ở từng dòng); list-view person không có --d → 0. */
+.er-table .er-unit > td:first-child { padding-left: calc(10px + var(--d, 0) * 18px); }
+.er-table .er-person > td:first-child { padding-left: calc(26px + var(--d, 0) * 18px); }
+.er-unit-toggle { display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; padding: 0; cursor: pointer; font: inherit; color: var(--ink); text-align: left; }
+.er-person-cell { color: #334155; }
+/* Ô số bấm được → mở popup chi tiết + nhật ký (evidence). */
+.er-num { border: 0; background: none; padding: 0; cursor: pointer; font: inherit; font-weight: 700; color: var(--primary); text-decoration: none; }
+.er-num:hover { text-decoration: underline; }
+.er-tile-btn { cursor: pointer; text-align: left; transition: box-shadow .12s, transform .12s; font-family: inherit; }
+.er-tile-btn:hover { box-shadow: 0 4px 14px rgba(0,0,0,.08); transform: translateY(-1px); }
+.er-tile-btn:disabled { cursor: default; }
+button.er-tile { width: 100%; }
+/* Biểu đồ */
+.er-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.er-chart { padding: 14px 16px; }
+.er-chart-h { font-size: 13.5px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
+.er-donut { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+@media (max-width: 760px) { .er-charts { grid-template-columns: 1fr; } }
+/* Ranking vinh danh */
+.er-rank { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.er-rank-card { padding: 14px 16px; }
+.er-rank-row { display: flex; align-items: center; gap: 9px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.er-rank-row:last-child { border-bottom: 0; }
+.er-medal { flex: 0 0 auto; width: 22px; text-align: center; font-weight: 800; color: var(--muted); }
+.er-rank-name { font-weight: 600; color: var(--ink); }
+.er-rank-sub { flex: 1 1 auto; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.er-rank-val { flex: 0 0 auto; margin-left: auto; font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+@media (max-width: 760px) {
+  .er-rank { grid-template-columns: 1fr; }
+  /* Hẹp: giữ huy chương+tên+chỉ số trên 1 dòng (chỉ số căn phải), đơn vị xuống dòng đầy đủ bên dưới. */
+  .er-rank-row { flex-wrap: wrap; }
+  .er-rank-name { flex: 1 1 auto; }
+  .er-rank-val { order: 2; }
+  .er-rank-sub { order: 3; flex: 1 1 100%; margin-left: 31px; white-space: normal; }
+}
+/* Thanh công cụ bảng */
+.er-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-bottom: 8px; }
+.er-check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink); cursor: pointer; }
+/* Khung cuộn bảng — header + hàng đầu dính khi cuộn dọc (evidence dài). */
+.er-scroll { overflow: auto; max-height: 78vh; }
+.er-scroll table.t thead th { position: sticky; top: 0; z-index: 2; background: #F6F1EA; box-shadow: inset 0 -1px 0 var(--line); }
 .ss-check { color: var(--primary); font-weight: 800; flex: 0 0 auto; }
 .ss-empty { padding: 10px 11px; color: var(--muted); font-size: 13px; }
 /* Tiêu đề nhóm trong droplist (vd "Thành viên dự án" xếp trước "Thành viên khác") —
@@ -502,6 +542,9 @@ html:has(.mobile-menu[open]) .site-header { transform: none !important; }
 }
 /* Cột trạng thái/hành động trong bảng luôn giữ 1 dòng, không bị cột khác ép vỡ chữ. */
 .t th.right, .t td.right, .t .col-status { white-space: nowrap; }
+/* Cột SỐ LIỆU luôn căn lề PHẢI (CFO 12/09 — "vì là số liệu, nên căn lề phải"): base rule
+   `table.t th/td` để left; class .right nhiều hơn 1 class nên thắng specificity → an toàn. */
+.t th.right, .t td.right { text-align: right; }
 /* Dòng phụ (mô tả/đơn vị…) trong ô bảng: rút gọn 1 dòng + "…" để không kéo giãn cột.
    Cần đặt max-width ở phần tử/cột cha để ellipsis có tác dụng. */
 .cell-sub-1 { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1366,6 +1409,16 @@ a.prof-row:hover { background: var(--primary-tint); border-radius: 6px; }
 /* Hàng tiêu đề có nút hành động ở GÓC PHẢI-TRÊN (nút canh đỉnh, không kéo giãn theo tiêu đề nhiều dòng) */
 .flexbtw-top { align-items: flex-start; }
 .okr-modal.okr-modal-wide { max-width: 760px; }
+/* Popup chi tiết công việc (Báo cáo thực hiện) — bảng evidence + nhật ký thay đổi */
+.okr-modal.tdm { max-width: 1040px; }
+.tdm-scroll { overflow: auto; max-height: 72vh; margin-top: 6px; }
+.tdm-scroll table.tdm-table thead th { position: sticky; top: 0; z-index: 2; background: #F6F1EA; box-shadow: inset 0 -1px 0 var(--line); }
+.tdm-table { min-width: 860px; }
+.tdm-table td, .tdm-table th { font-size: 13px; }
+.tdm-table td:first-child, .tdm-table th:first-child { min-width: 260px; }
+.tdm-log { margin-top: 6px; padding: 8px 10px; background: var(--primary-tint); border-radius: 8px; display: flex; flex-direction: column; gap: 5px; max-width: 360px; }
+.tdm-log-row { display: flex; flex-direction: column; gap: 1px; font-size: 12px; line-height: 1.35; }
+.tdm-log-when { color: var(--muted); font-size: 11px; }
 /* Công tắc chế độ (segmented) + nhập nhiều việc trong 1 dự án */
 .seg { display: inline-flex; gap: 2px; background: var(--primary-tint); border: 1px solid var(--line); border-radius: 10px; padding: 3px; margin: 2px 0 12px; }
 .seg-btn { border: 0; background: none; color: var(--muted); font: inherit; font-size: 13px; font-weight: 600; padding: 6px 16px; border-radius: 8px; cursor: pointer; }

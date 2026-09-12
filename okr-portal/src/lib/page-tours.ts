@@ -73,6 +73,17 @@ export const PAGE_TOURS: Record<string, TourStep[]> = {
     done('Đó là cách ghi biên bản và quản hành động sau họp. Mở lại từ nút "Hướng dẫn" trên header.'),
   ],
 
+  'task-report': [
+    { title: '📊 Báo cáo thực hiện công việc', body: 'Review tiến độ thực hiện của toàn công ty theo tuần/tháng — theo phòng ban & cá nhân. Đi nhanh một vòng.' },
+    { target: 'er-grace', title: 'Ân hạn deadline', body: 'Việc hoàn thành trong vòng "X" ngày sau hạn vẫn tính đúng hạn; trễ hơn = chậm deadline (deadline rơi Chủ nhật tự +1 ngày). Chỉ Super Admin / Quản trị hệ thống / Quản trị OKR sửa số ngày này.' },
+    { target: 'er-period', title: 'Chọn kỳ báo cáo', body: 'Chuyển Tuần ⇄ Tháng và dùng mũi tên ‹ › để xem kỳ trước/sau. Phạm vi dữ liệu tự giới hạn theo quyền của bạn.' },
+    { target: 'er-tiles', title: 'Chỉ số tổng quan', body: 'Tổng việc, hoàn thành, đúng hạn, trễ/quá hạn, % hoàn thành, ⚠ chậm deadline. Bấm mỗi ô để mở danh sách việc cấu thành + nhật ký thay đổi (evidence).' },
+    { target: 'er-charts', title: 'Biểu đồ trực quan', body: 'Cơ cấu thực hiện (đúng hạn/trễ/quá hạn/đang làm) và % hoàn thành theo đơn vị cấp cao nhất.' },
+    { target: 'er-rank', title: 'Vinh danh khích lệ', body: 'Bảng xếp hạng cá nhân & đội nhóm xuất sắc theo số việc hoàn thành đúng hạn — ghi nhận và khích lệ tinh thần.' },
+    { target: 'er-toolbar', title: 'Cây tổ chức ⇄ Danh sách', body: 'Xem theo CÂY (Khối → Phòng → Cá nhân) với số liệu cuộn lên, hoặc DANH SÁCH cá nhân có tìm kiếm. Tick "Chỉ hiện có chậm deadline" để lọc nhanh.' },
+    { target: 'er-table', title: 'Bấm số = xem chi tiết + evidence', body: 'Mọi con số bấm được → popup danh sách việc + NHẬT KÝ THAY ĐỔI từng việc để audit. Tên người mở hồ sơ 360°. Header bảng float khi cuộn.' },
+    done('Bạn đã nắm cách đọc báo cáo, lọc, drill-down evidence và vinh danh. Mở lại hướng dẫn từ nút "Hướng dẫn" trên header.'),
+  ],
   projects: [
     { title: '🗂 Dự án — gom việc xuyên nhiều OKR', body: 'Dự án là thực thể độc lập (mã PRJ) gom việc từ nhiều OKR/khối về một nơi. Đi nhanh một vòng.' },
     { target: 'projects-new', title: 'Tạo dự án', body: 'Bấm đây để tạo dự án: tên, chủ trì, đơn vị phụ trách, kỳ và ngân sách.' },
@@ -163,6 +174,7 @@ export function tourKeyForPath(pathname: string): string | null {
   if (p === '/objectives') return 'objectives';
   if (/^\/objectives\/[^/]+$/.test(p) && p !== '/objectives/new') return 'objective-detail';
   if (p === '/tasks') return 'tasks';
+  if (p === '/task-report') return 'task-report';
   if (p === '/meetings') return 'meetings';
   if (/^\/meetings\/[^/]+$/.test(p)) return 'meeting-detail';
   if (p === '/projects') return 'projects';

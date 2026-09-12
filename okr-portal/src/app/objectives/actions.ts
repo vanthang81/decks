@@ -66,6 +66,7 @@ import {
   canEditObjective,
   canDeleteObjective,
   canCreateObjective,
+  isSuperAdmin,
 } from '@/lib/access';
 
 function str(fd: FormData, k: string): string {
@@ -370,6 +371,7 @@ async function assertCanManageObjective(objectiveId: string) {
  * Trả true nếu thoả BẤT KỲ nguồn nào (việc có thể vừa thuộc OKR vừa thuộc cuộc họp).
  */
 async function canManageTaskLoose(user: OkrUser, init: Initiative): Promise<boolean> {
+  if (isSuperAdmin(user)) return true; // Super Admin sửa được status MỌI công việc (CFO 12/09)
   const [units, access] = await Promise.all([listUnits(), loadAccess()]);
   if (init.objective_id) {
     const obj = await getObjective(init.objective_id);
