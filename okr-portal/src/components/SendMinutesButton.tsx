@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { SendMinutesResult } from '@/lib/meeting-mail';
 
 export default function SendMinutesButton({
@@ -10,6 +11,7 @@ export default function SendMinutesButton({
   recipients: { email: string; name: string | null }[];
   send: (fd: FormData) => Promise<SendMinutesResult>;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState('');
@@ -24,6 +26,7 @@ export default function SendMinutesButton({
       fd.set('note', note);
       const r = await send(fd);
       setResult(r);
+      if (r.ok) router.refresh(); // cập nhật note nhật ký gửi cạnh nút
     } catch (e) {
       setResult({ ok: false, error: e instanceof Error ? e.message : String(e) });
     } finally {

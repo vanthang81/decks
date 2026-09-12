@@ -10,6 +10,8 @@ import ExecutionTabs from '@/components/ExecutionTabs';
 import AddTaskToMeeting from '@/components/AddTaskToMeeting';
 import MinutesEditor from '@/components/MinutesEditor';
 import SendMinutesButton from '@/components/SendMinutesButton';
+import MinutesSendLog from '@/components/MinutesSendLog';
+import { listMinutesSends } from '@/lib/meeting-mail';
 import UserLink from '@/components/UserLink';
 import ActivityLogButton from '@/components/ActivityLogButton';
 import { loadEntityAuditAction } from '@/app/audit/actions';
@@ -114,6 +116,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
     list.map((p, i) => (
       <span key={p.email}>{i > 0 ? ', ' : ''}<UserLink email={p.email} name={p.name || p.email} /></span>
     ));
+  const minutesSends = (m.minutes || m.decisions) ? await listMinutesSends(m.id) : [];
   const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url, unit_id: u.unit_id, title: personTitle(u) }));
   // Tra chức danh (vai trò · đơn vị) theo email — kèm vào danh sách người tham gia để phân biệt người trùng tên.
   const titleByEmail = new Map(personOpts.filter((p) => p.title).map((p) => [p.email.toLowerCase(), p.title as string]));
@@ -225,6 +228,7 @@ export default async function MeetingDetail({ params }: { params: { id: string }
               Lưu lần cuối{(m.minutes_updated_by_name || m.minutes_updated_by) ? <> bởi <UserLink email={m.minutes_updated_by} name={m.minutes_updated_by_name || m.minutes_updated_by} /></> : ''} · {fmtDateTime(m.minutes_updated_at)}
             </p>
           )}
+          {(m.minutes || m.decisions) && <MinutesSendLog sends={minutesSends} />}
           {m.minutes || m.decisions ? (
             <>
               {m.minutes && (

@@ -4,6 +4,7 @@ import { sendMail, mailBaseUrl } from './mail';
 import { sanitizeRichHtml, linkifyHtml } from './sanitizeHtml';
 import { brandedEmail, emailSection } from './mail-layout';
 import { logAudit } from './audit';
+import { query } from './db';
 
 function esc(s: string): string {
   return String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
@@ -106,5 +107,25 @@ export async function sendMinutesEmail(meetingId: string, actor: string, note: s
   const failed = results.filter((r) => !r.ok).map((r) => r.email);
   const sent = done.length;
   await logAudit({ actor, action: 'meeting.send_minutes', entity: 'meeting', entityId: meetingId, detail: { sent, total: recips.length, failed: failed.length } }).catch(() => {});
+  // Ghi nhật ký gửi BB (hiện note nhỏ cạnh nút) — best-effort, không chặn kết quả gửi.
+  await query(
+    `INSERT INTO okr_meeting_minutes_sends (meeting_id, sent_by, sent_by_name, recipients, ok_count, fail_count, note)
+     VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+    [meetingId, actor, senderName || null, recips.length, sent, failed.length, note.trim() || null],
+  ).catch(() => {});
   return { ok: true, sent, total: recips.length, recipients: done, failed };
+}
+
+export type MinutesSend = {
+  id: string; sent_at: string; sent_by: string | null; sent_by_name: string | null;
+  recipients: number; ok_count: number; fail_count: number; note: string | null;
+};
+
+/** Nhật ký các lần gửi biên bản của 1 cuộc họp (mới nhất trước). */
+export async function listMinutesSends(meetingId: string): Promise<MinutesSend[]> {
+  return query<MinutesSend>(
+    `SELECT id, sent_at::text, sent_by, sent_by_name, recipients, ok_count, fail_count, note
+       FROM okr_meeting_minutes_sends WHERE meeting_id=$1 ORDER BY sent_at DESC`,
+    [meetingId],
+  );
 }

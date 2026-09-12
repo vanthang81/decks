@@ -1560,6 +1560,22 @@ details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 
   border-top: 1px solid var(--line); background: #FBF7F2;
 }
 .ntf-empty { color: var(--muted); text-align: center; padding: 22px 10px; font-size: 13px; }
+
+/* ── Nhật ký gửi biên bản họp (note nhỏ cạnh nút "Gửi biên bản") ── */
+.mm-sendlog { margin: 8px 0 0; font-size: 12.5px; }
+.mm-sendlog-empty { color: var(--muted); }
+.mm-sendlog-main { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; color: var(--ink);
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+.mm-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; display: inline-block; }
+.mm-sendlog-toggle { border: 0; background: none; color: var(--primary); font: inherit; font-size: 12px;
+  font-weight: 600; cursor: pointer; padding: 2px 4px; margin-left: auto; }
+.mm-sendlog-toggle:hover { text-decoration: underline; }
+.mm-sendlog-list { list-style: none; margin: 6px 0 0; padding: 6px 10px; border: 1px solid var(--line);
+  border-radius: 8px; background: #fff; display: flex; flex-direction: column; gap: 5px; }
+.mm-sendlog-list li { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mm-sendlog-list .mm-when { font-variant-numeric: tabular-nums; color: var(--ink); min-width: 96px; }
+.mm-sendlog-list .mm-by { color: var(--muted); flex: 1; min-width: 0; }
+.mm-sendlog-list .mm-cnt { font-weight: 700; white-space: nowrap; }
 .ntf-av {
   flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; background: var(--primary-tint);
   color: var(--primary); font-weight: 800; display: inline-flex; align-items: center; justify-content: center; font-size: 13px;
