@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-12.172';
+export const GUIDE_VERSION = '2026-09-12.173';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -208,6 +208,18 @@ export const FEATURES: Feature[] = [
     help: 'Xem kết quả OKR theo Công ty → Khối → Phòng → Cá nhân; mỗi nhóm có tổng tính THEO TRỌNG SỐ từng OKR — chỉnh trọng số ngay tại đây.',
     detail: [
       'Trang "Báo cáo theo cấp" tổng hợp OKR của một kỳ theo bốn cấp: Công ty, Khối, Phòng ban, Cá nhân. Mỗi nhóm hiện KẾT QUẢ TỔNG = bình quân CÓ TRỌNG SỐ tiến độ các OKR trong nhóm (Σ tiến độ×trọng số ÷ Σ trọng số). Mặc định mọi OKR trọng số 1 (cân nhau); đặt trọng số cao hơn cho OKR quan trọng hơn để kết quả nhóm phản ánh đúng mức ưu tiên. CEO/CFO chỉnh trọng số NGAY tại báo cáo: mở một nhóm → bấm nút bút chì cạnh "trọng số" của OKR → nhập số (có mức gợi ý nhanh 0,5–3) → Lưu, kết quả nhóm cập nhật liền. Giám đốc khối/trưởng phòng đặt trọng số OKR của mình ở ô "Trọng số" trong cửa sổ Sửa OKR. Mở từng nhóm để xem danh sách OKR cấu thành, bấm vào là tới chi tiết OKR (trace-back).',
+    ],
+  },
+  {
+    key: 'task-report',
+    title: 'Báo cáo thực hiện công việc (tuần / tháng)',
+    where: 'Menu "Tổng quan" → "Báo cáo thực hiện"',
+    help: 'Theo dõi & review việc thực hiện công việc theo tuần/tháng cho từng phòng ban & cá nhân: hoàn thành đúng hạn, trễ hạn, quá hạn, % hoàn thành.',
+    detail: [
+      'Trang tổng hợp mọi công việc có người phụ trách trong kỳ đã chọn (Tuần: Thứ 2–Chủ nhật; Tháng: ngày 1–cuối tháng). Kỳ được tính theo NGÀY ĐẾN HẠN hoặc NGÀY HOÀN THÀNH rơi vào kỳ. Bấm "Tuần/Tháng" để đổi loại kỳ, mũi tên ‹ › để xem kỳ trước/sau.',
+      'Mỗi việc được phân loại: Hoàn thành đúng hạn · Hoàn thành TRỄ hạn · Quá hạn (chưa xong) · Đang làm/đúng tiến độ. "CHẬM DEADLINE" = việc hoàn thành trễ + việc quá hạn chưa xong. Việc chuyển "Xong" SAU hạn cộng số ngày ân hạn cấu hình vẫn bị tính là chậm.',
+      'Số ngày ÂN HẠN deadline chỉnh ở đầu trang (chỉ Super Admin / Quản trị hệ thống / Quản trị OKR sửa được). Bảng xem theo Đơn vị → bấm để xổ theo từng Cá nhân, kèm % hoàn thành & % đúng hạn.',
+      'Quyền xem: Super Admin, Quản trị hệ thống, Quản trị OKR, Quản trị KPI xem TOÀN công ty; lãnh đạo (GĐ khối/Trưởng phòng/Quản lý chức năng) xem đơn vị mình & cấp dưới; nhân viên xem công việc của mình.',
     ],
   },
   {
@@ -668,6 +680,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '12/09/2026 (Báo cáo thực hiện công việc tuần/tháng)',
+    items: [
+      'Trang mới "Báo cáo thực hiện" (menu Tổng quan): review việc thực hiện theo tuần/tháng cho từng phòng ban & cá nhân — hoàn thành đúng hạn / trễ hạn / quá hạn / % hoàn thành.',
+      'Việc chuyển "Xong" sau hạn cộng số ngày ÂN HẠN cấu hình vẫn tính "chậm deadline". Ân hạn sửa được bởi Super Admin / Quản trị hệ thống / Quản trị OKR.',
+      'Quyền xem: Super/QT hệ thống/QT OKR/QT KPI xem toàn công ty; lãnh đạo xem đơn vị mình & cấp dưới; nhân viên xem việc của mình.',
+    ],
+  },
   {
     date: '12/09/2026 (Thông báo thay đổi công việc — tuỳ chọn kênh & giờ nhận)',
     items: [

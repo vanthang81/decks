@@ -348,6 +348,27 @@ html:has(.mobile-menu[open]) .site-header { transform: none !important; }
 .tcs-chip.sm { padding: 5px 10px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
 .tcs-chip:hover { border-color: var(--primary); }
 .tcs-chip.on { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+/* ── Báo cáo thực hiện công việc (/task-report) ── */
+.er-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-bottom: 12px; }
+.er-seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.er-seg-btn { padding: 6px 16px; font-size: 13px; color: var(--ink); text-decoration: none; background: #fff; }
+.er-seg-btn.on { background: var(--primary); color: #fff; font-weight: 600; }
+.er-nav { display: inline-flex; align-items: center; gap: 8px; }
+.er-period-label { font-weight: 700; min-width: 180px; text-align: center; }
+.er-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+@media (max-width: 760px) { .er-tiles { grid-template-columns: repeat(2, 1fr); } }
+.er-tile { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.er-tile-n { font-size: 24px; font-weight: 800; color: var(--ink); line-height: 1.05; }
+.er-tile-l { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.er-table .er-unit { cursor: pointer; background: var(--primary-tint); }
+.er-table .er-unit:hover { filter: brightness(0.98); }
+.er-caret { display: inline-block; width: 14px; color: var(--muted); transition: transform .12s; }
+.er-caret.open { transform: rotate(90deg); }
+.er-person td:first-child { padding-left: 26px; }
+.er-person-name { color: #334155; }
+.er-total { border-top: 2px solid var(--line); background: #FBF7F1; }
+.er-grace { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.er-grace-form { display: inline-flex; align-items: flex-end; gap: 8px; }
 .ss-check { color: var(--primary); font-weight: 800; flex: 0 0 auto; }
 .ss-empty { padding: 10px 11px; color: var(--muted); font-size: 13px; }
 /* Tiêu đề nhóm trong droplist (vd "Thành viên dự án" xếp trước "Thành viên khác") —
