@@ -1,5 +1,6 @@
 import EditModal from '@/components/EditModal';
 import ConfirmButton from '@/components/ConfirmButton';
+import ToastForm from '@/components/ToastForm';
 import NavIcon from '@/components/NavIcon';
 
 // Quản lý VỊ TRÍ / CHỨC DANH (preset) trong trang Phân quyền. Mỗi Vị trí = nhãn + Cấp quyền hạn nền
@@ -94,12 +95,12 @@ export default function PositionsManager({
                           action={saveAction} toastMsg="Đã lưu vị trí">
                           <Fields pos={p} roles={roles} groups={groups} />
                         </EditModal>
-                        <form action={deleteAction}>
+                        <ToastForm action={deleteAction} done="Đã xoá vị trí">
                           <input type="hidden" name="key" value={p.key} />
                           <ConfirmButton className="btn ghost sm danger" label="Xoá" title="Xoá vị trí"
                             message={`Xoá vị trí "${p.label}"? (Không ảnh hưởng người dùng đã gán — vị trí chỉ là preset điền nhanh.)`}
                             confirmLabel="Xoá" />
-                        </form>
+                        </ToastForm>
                       </div>
                     </td>
                   )}

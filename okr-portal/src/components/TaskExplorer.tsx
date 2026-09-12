@@ -8,6 +8,7 @@ import { ProgressBar } from '@/components/ui';
 import { StackedBar, Donut } from '@/components/charts';
 import TaskEditModal from '@/components/TaskEditModal';
 import SearchSelect from '@/components/SearchSelect';
+import { useToast } from '@/components/ToastProvider';
 import UserLink from '@/components/UserLink';
 import { unitTreeOptions } from '@/lib/unit-options';
 import { fmtDate } from '@/lib/format';
@@ -240,6 +241,7 @@ export default function TaskExplorer({
 
   // Chọn nhiều việc → thao tác hàng loạt (chỉ người quản lý được). selected ⊆ việc quản-lý-được đang hiển thị.
   const router = useRouter();
+  const { toast } = useToast();
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [bulkPending, startBulk] = useTransition();
   const [bulkMsg, setBulkMsg] = useState('');
@@ -370,13 +372,13 @@ export default function TaskExplorer({
       try {
         const r = await bulkAction(ids, op);
         setSelected(new Set());
-        setBulkMsg(
-          `${op === 'delete' ? 'Đã xoá' : 'Đã cập nhật'} ${r.done} việc` +
-            (r.skipped ? ` · bỏ qua ${r.skipped} (không đủ quyền)` : '') + '.',
-        );
+        const okMsg = `${op === 'delete' ? 'Đã xoá' : 'Đã cập nhật'} ${r.done} việc` +
+          (r.skipped ? ` · bỏ qua ${r.skipped} (không đủ quyền)` : '') + '.';
+        setBulkMsg(okMsg);
+        toast(okMsg, 'success');
         router.refresh();
       } catch (e) {
-        alert('Không thực hiện được: ' + (e instanceof Error ? e.message : String(e)));
+        toast('Không thực hiện được: ' + (e instanceof Error ? e.message : String(e)), 'error');
       }
     });
   };
@@ -898,6 +900,7 @@ function TasksKanban({
   projectMeta?: Record<string, { unit_id: string | null; unit_name: string | null; okrs: { id: string; code: string | null; title: string }[] }>;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [cards, setCards] = useState<TaskRow[]>(tasks);
   const [dragId, setDragId] = useState<string | null>(null);
   const [overCol, setOverCol] = useState<Status | null>(null);
@@ -914,8 +917,8 @@ function TasksKanban({
     if (!card || card.status === status || !canEditT(card)) return;
     setCards((prev) => prev.map((c) => (c.id === id ? { ...c, status, progress: status === 'done' ? 100 : c.progress } : c)));
     startTransition(async () => {
-      try { await move(id, status); router.refresh(); }
-      catch (e) { setCards(tasks); alert('Không cập nhật được: ' + (e instanceof Error ? e.message : String(e))); }
+      try { await move(id, status); toast('Đã đổi trạng thái', 'success'); router.refresh(); }
+      catch (e) { setCards(tasks); toast('Không cập nhật được: ' + (e instanceof Error ? e.message : String(e)), 'error'); }
     });
   };
 

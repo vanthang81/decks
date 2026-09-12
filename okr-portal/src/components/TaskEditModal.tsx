@@ -10,6 +10,7 @@ import NumberInput from '@/components/NumberInput';
 import MultiSelect, { type MSOption } from '@/components/MultiSelect';
 import CommentThread from '@/components/CommentThread';
 import UserLink from '@/components/UserLink';
+import { useToast } from '@/components/ToastProvider';
 import { ProgressBar } from '@/components/ui';
 import { fmtVnd, fmtDate } from '@/lib/format';
 import type { TaskRow } from '@/lib/initiatives';
@@ -52,6 +53,7 @@ export default function TaskEditModal({
   depOptions?: MSOption[];  // việc anh em (cùng OKR) để chọn phụ thuộc
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [pending, start] = useTransition();
   const [err, setErr] = useState('');
   const editable = canManage || isAssignee;
@@ -78,6 +80,7 @@ export default function TaskEditModal({
       try {
         await editAction(fd);
         onClose();
+        toast('Đã lưu công việc', 'success');
         router.refresh();
       } catch (e2) {
         setErr(e2 instanceof Error ? e2.message : 'Không lưu được. Thử lại.');
@@ -94,6 +97,7 @@ export default function TaskEditModal({
       try {
         await deleteAction(fd);
         onClose();
+        toast('Đã xoá công việc', 'success');
         router.refresh();
       } catch (e2) {
         setErr(e2 instanceof Error ? e2.message : 'Không xoá được. Thử lại.');

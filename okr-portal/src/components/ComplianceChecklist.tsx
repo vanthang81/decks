@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useToast } from '@/components/ToastProvider';
 import type { ChecklistItem } from '@/lib/compliance';
 import {
   CONCLUSION_LABEL, CONCLUSION_CLS, ISSUE_STATUS_LABEL, ISSUE_STATUS_CLS,
@@ -243,6 +244,7 @@ function ItemEditor({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const isNew = !item;
@@ -256,6 +258,7 @@ function ItemEditor({
       if (item) fd.set('id', item.id);
       await (isNew ? create(fd) : update(fd));
       onClose();
+      toast(isNew ? 'Đã thêm tiêu chí' : 'Đã lưu tiêu chí', 'success');
       router.refresh();
     } catch (e2) {
       setErr(e2 instanceof Error ? e2.message : String(e2));

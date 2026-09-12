@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-12.167';
+export const GUIDE_VERSION = '2026-09-12.168';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '12/09/2026 (Thông báo thành công cho mọi thao tác + trạng thái họp nhất quán)',
+    items: [
+      'Mọi nút/form trong app khi bấm xong đều hiện thông báo “Đã lưu / Đã xoá / Đã cập nhật…” (toast góc màn hình) — không còn bấm mà “im lặng” không biết đã thành công hay chưa.',
+      'Bổ sung thông báo cho: check-in KR, gắn KPI, viễn cảnh BSC, nhập giá trị KPI, duyệt/từ chối yêu cầu xem họp, bật/tắt Bảng kiểm tuân thủ, gán vai trò thẩm định, kéo–thả đổi trạng thái, thao tác hàng loạt, áp dụng gợi ý phân quyền, dọn/xoá nhật ký…',
+      'Cuộc họp đã qua giờ luôn hiển thị “Đã họp” (bỏ nhãn “Đã diễn ra” cũ gây rối) — badge và bộ lọc trạng thái khớp nhau.',
+    ],
+  },
   {
     date: '12/09/2026 (Phân quyền: thêm Super Admin + siết Quản trị hệ thống)',
     items: [

@@ -3,6 +3,7 @@ import UserLink from '@/components/UserLink';
 import { notFound, redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import { ProgressBar } from '@/components/ui';
+import ToastForm from '@/components/ToastForm';
 import ExecutionTabs from '@/components/ExecutionTabs';
 import ProjectEditButton from '@/components/ProjectEditButton';
 import ActivityLogButton from '@/components/ActivityLogButton';
@@ -295,11 +296,11 @@ export default async function ProjectDetail({ params }: { params: { id: string }
               />
             )}
             {canManage && (
-              <form action={setComplianceEnabledAction} style={{ margin: '-6px 0 6px' }}>
+              <ToastForm action={setComplianceEnabledAction} done="Đã tắt Bảng kiểm tuân thủ" style={{ margin: '-6px 0 6px' }}>
                 <input type="hidden" name="project_id" value={p.id} />
                 <input type="hidden" name="on" value="0" />
                 <button className="btn ghost sm" type="submit">Tắt Bảng kiểm tuân thủ cho dự án này</button>
-              </form>
+              </ToastForm>
             )}
           </>
         ) : canManage ? (
@@ -312,11 +313,11 @@ export default async function ProjectDetail({ params }: { params: { id: string }
                   tự sinh <b>Vấn đề tuân thủ</b> + công việc khắc phục khi phát hiện vi phạm. Dành cho dự án kiểm tra/tuân thủ.
                 </p>
               </div>
-              <form action={setComplianceEnabledAction}>
+              <ToastForm action={setComplianceEnabledAction} done="Đã bật Bảng kiểm tuân thủ">
                 <input type="hidden" name="project_id" value={p.id} />
                 <input type="hidden" name="on" value="1" />
                 <button className="btn" type="submit">Bật Bảng kiểm tuân thủ</button>
-              </form>
+              </ToastForm>
             </div>
           </div>
         ) : null}

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import HelpTip from '@/components/HelpTip';
 import EditModal from '@/components/EditModal';
+import ToastForm from '@/components/ToastForm';
 import NavIcon from '@/components/NavIcon';
 import ConfirmButton from '@/components/ConfirmButton';
 import MeetingFields from '@/components/MeetingFields';
@@ -70,12 +71,12 @@ export default async function MeetingDetail({ params }: { params: { id: string }
               <div><span className="badge red">Yêu cầu trước đã bị từ chối</span></div>
             ) : null}
             {mine?.status !== 'pending' && (
-              <form action={requestMeetingAccessAction} style={{ marginTop: 10 }}>
+              <ToastForm action={requestMeetingAccessAction} done="Đã gửi yêu cầu xem" style={{ marginTop: 10 }}>
                 <input type="hidden" name="id" value={m.id} />
                 <label className="f">Lý do cần xem (tuỳ chọn)</label>
                 <textarea className="i" name="reason" rows={2} placeholder="VD: tôi phụ trách hạng mục liên quan…" />
                 <div style={{ marginTop: 8 }}><button className="btn" type="submit">Gửi yêu cầu xem</button></div>
-              </form>
+              </ToastForm>
             )}
           </div>
         </div>
@@ -308,18 +309,18 @@ export default async function MeetingDetail({ params }: { params: { id: string }
                         {r.reason && <div className="muted" style={{ fontSize: 12.5 }}>{r.reason}</div>}
                       </div>
                       <div className="row-actions">
-                        <form action={decideMeetingAccessAction}>
+                        <ToastForm action={decideMeetingAccessAction} done="Đã duyệt yêu cầu xem">
                           <input type="hidden" name="id" value={m.id} />
                           <input type="hidden" name="request_id" value={r.id} />
                           <input type="hidden" name="decision" value="approve" />
                           <button className="btn sm" type="submit">Duyệt</button>
-                        </form>
-                        <form action={decideMeetingAccessAction}>
+                        </ToastForm>
+                        <ToastForm action={decideMeetingAccessAction} done="Đã từ chối yêu cầu">
                           <input type="hidden" name="id" value={m.id} />
                           <input type="hidden" name="request_id" value={r.id} />
                           <input type="hidden" name="decision" value="deny" />
                           <button className="btn ghost sm" type="submit">Từ chối</button>
-                        </form>
+                        </ToastForm>
                       </div>
                     </div>
                   ))}

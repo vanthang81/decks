@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import SearchSelect from '@/components/SearchSelect';
+import { useToast } from '@/components/ToastProvider';
 import type { CalEvent, CalEventType } from '@/lib/calendar';
 
 export type CalView = 'day' | 'week' | 'month';
@@ -242,6 +243,7 @@ function QuickAdd({
   createTask: (fd: FormData) => Promise<void>;
   onDone: () => void;
 }) {
+  const { toast } = useToast();
   const [mode, setMode] = useState<'none' | 'meeting' | 'task'>('none');
   const [objId, setObjId] = useState('');
   const [pending, startTransition] = useTransition();
@@ -256,10 +258,11 @@ function QuickAdd({
     startTransition(async () => {
       try {
         if (kind === 'meeting') await createMeeting(fd); else await createTask(fd);
+        toast(kind === 'meeting' ? 'Đã tạo cuộc họp' : 'Đã tạo công việc', 'success');
         onDone();
       } catch (e2) {
         const msg = e2 instanceof Error ? e2.message : String(e2);
-        if (msg.includes('NEXT_REDIRECT')) return;
+        if (msg.includes('NEXT_REDIRECT')) { toast(kind === 'meeting' ? 'Đã tạo cuộc họp' : 'Đã tạo công việc', 'success'); return; }
         setErr(msg);
       }
     });

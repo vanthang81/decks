@@ -11,7 +11,7 @@ import { listUsers } from '@/lib/users';
 import { listUnits } from '@/lib/org';
 import { listAllProjectOptions } from '@/lib/projects';
 import {
-  listMeetings, MEETING_TYPE_LABEL, MEETING_TYPES, MEETING_STATUS_LABEL, meetingStatusView, type MeetingStatus,
+  listMeetings, MEETING_TYPE_LABEL, MEETING_TYPES, MEETING_STATUS_LABEL, meetingStatusView, meetingStatusEffective, type MeetingStatus,
 } from '@/lib/meetings';
 import { fmtDateTime } from '@/lib/format';
 import { createMeetingAction } from './actions';
@@ -28,8 +28,9 @@ export default async function MeetingsPage() {
   // Chuẩn hoá chuỗi tìm kiếm (bỏ dấu) cho mỗi dòng + dựng các lựa chọn lọc CHỈ từ dữ liệu hiện có.
   const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
   const typeOpts = MEETING_TYPES.filter((t) => meetings.some((m) => m.type === t)).map((t) => ({ value: t, label: MEETING_TYPE_LABEL[t] }));
+  // Lọc theo trạng thái HIỆU LỰC (cuộc họp đã qua = 'held') để khớp với badge hiển thị.
   const statusOpts = (['scheduled', 'held', 'cancelled'] as MeetingStatus[])
-    .filter((s) => meetings.some((m) => m.status === s))
+    .filter((s) => meetings.some((m) => meetingStatusEffective(m) === s))
     .map((s) => ({ value: s, label: MEETING_STATUS_LABEL[s] }));
   const hostMap = new Map<string, string>();
   for (const m of meetings) if (m.owner_email) hostMap.set(m.owner_email, m.owner_name ?? m.owner_email);
@@ -76,7 +77,7 @@ export default async function MeetingsPage() {
                   {meetings.map((m) => (
                     <tr key={m.id}
                       data-s={norm([m.code, m.title, m.related_units, m.related_projects, m.owner_name, m.owner_email, MEETING_TYPE_LABEL[m.type]].filter(Boolean).join(' '))}
-                      data-type={m.type} data-status={m.status} data-host={m.owner_email ?? ''}>
+                      data-type={m.type} data-status={meetingStatusEffective(m)} data-host={m.owner_email ?? ''}>
                       <td className="mtg-name">
                         <Link href={`/meetings/${m.id}`} className="tbl-link">
                           {m.code && <span className="okr-code" style={{ marginRight: 6 }}>{m.code}</span>}{m.title}

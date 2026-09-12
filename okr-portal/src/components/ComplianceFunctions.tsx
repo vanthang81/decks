@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/ToastProvider';
 import { FN_LABEL, type ProjectFn } from '@/lib/compliance-shared';
 import type { ProjectFunctionRow } from '@/lib/compliance';
 
@@ -17,6 +18,7 @@ export default function ComplianceFunctions({
   remove: (fd: FormData) => Promise<void>;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [fn, setFn] = useState<ProjectFn>('phap_che');
   const [busy, setBusy] = useState(false);
@@ -31,6 +33,7 @@ export default function ComplianceFunctions({
       fd.set('project_id', projectId); fd.set('email', email); fd.set('fn', fn);
       await add(fd);
       setEmail('');
+      toast('Đã gán vai trò thẩm định', 'success');
       router.refresh();
     } catch (e2) {
       setErr(e2 instanceof Error ? e2.message : String(e2));
@@ -39,8 +42,13 @@ export default function ComplianceFunctions({
   async function del(id: string) {
     const fd = new FormData();
     fd.set('project_id', projectId); fd.set('id', id);
-    await remove(fd);
-    router.refresh();
+    try {
+      await remove(fd);
+      toast('Đã bỏ vai trò', 'success');
+      router.refresh();
+    } catch (e2) {
+      toast(e2 instanceof Error ? e2.message : 'Không bỏ được vai trò', 'error');
+    }
   }
 
   return (

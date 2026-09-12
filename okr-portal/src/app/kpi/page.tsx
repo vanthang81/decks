@@ -9,6 +9,7 @@ import { loadAccess, canInputKpi, canManageKpi, hasCap } from '@/lib/access';
 import { BSC_PERSPECTIVES, BSC_PERSPECTIVE_LABEL, BSC_PERSPECTIVE_ICON } from '@/lib/okr';
 import { TIER_LABEL } from '@/lib/kpis';
 import NewKpiModal from '@/components/NewKpiModal';
+import ToastForm from '@/components/ToastForm';
 import {
   listScorecard,
   scorecardScore,
@@ -180,12 +181,12 @@ export default async function KpiScorecardPage({
                       <td>{st ? <span className={`badge ${STATUS_CLS[st]}`}>{STATUS_LABEL[st]}</span> : <span className="muted">—</span>}</td>
                       {canInput && (
                         <td>
-                          <form action={upsertKpiValueAction} id={`kf-${r.id}`}>
+                          <ToastForm action={upsertKpiValueAction} done="Đã lưu giá trị KPI" id={`kf-${r.id}`}>
                             <input type="hidden" name="kpi_id" value={r.id} />
                             <input type="hidden" name="period_id" value={period?.id ?? ''} />
                             <input type="hidden" name="unit_id" value={unitId} />
                             <button className="btn ghost sm" type="submit">Lưu</button>
-                          </form>
+                          </ToastForm>
                         </td>
                       )}
                     </tr>

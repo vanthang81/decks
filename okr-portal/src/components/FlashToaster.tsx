@@ -15,6 +15,9 @@ const MAP: Record<string, (v: string) => [string, ToastVariant] | null> = {
   kpi: (v) => [`Đồng bộ KPI: ${decodeURIComponent(v)}`, v.startsWith('err') ? 'error' : 'info'],
   digest: (v) => [`Bản tin tuần: ${decodeURIComponent(v)}`, v.startsWith('err') ? 'error' : 'info'],
   test: (v) => [`Gửi thử: ${decodeURIComponent(v)}`, v.startsWith('err') ? 'error' : 'info'],
+  chk: (v) => [`Kiểm tra hệ thống: ${decodeURIComponent(v)}`, v.startsWith('err') ? 'error' : 'info'],
+  pruned: (v) => [`Đã dọn ${decodeURIComponent(v)} dòng nhật ký cũ`, 'success'],
+  cleared: (v) => [`Đã xoá ${decodeURIComponent(v)} dòng nhật ký`, 'success'],
 };
 const KEYS = Object.keys(MAP);
 

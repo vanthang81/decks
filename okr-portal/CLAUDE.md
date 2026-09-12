@@ -26,6 +26,16 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   trôi giữa màn); breakpoint dùng `@media (max-width:640px)` (và 760px cho lưới/row đã có sẵn);
   `.row > *` tự full-width ≤760px; bảng bọc `.table-scroll`; nút đủ lớn để bấm; header thu gọn hamburger.
 - **Tự chủ động rà UI/UX (desktop + mobile) mỗi lần đụng màn hình** — CFO không phải nhắc lại.
+- **PHẢN HỒI THÀNH CÔNG cho MỌI nút/form (BẮT BUỘC — CFO 12/09, "không bao giờ để bấm mà im lặng")**:
+  mọi thao tác lưu/xoá/cập nhật PHẢI hiện toast ("Đã lưu / Đã xoá / Đã cập nhật…") khi xong. Hạ tầng dùng
+  chung: (1) **`ToastForm`** (`src/components/ToastForm.tsx`) thay `<form action={serverAction}>` cho FORM
+  INLINE (ở lại trang, revalidate) — tự toast `done` khi xong / toast lỗi khi ném; (2) action ĐIỀU HƯỚNG
+  (redirect) → thêm flash param vào URL rồi để **`FlashToaster`** (`src/components/FlashToaster.tsx`, MAP:
+  saved/ok/err/deleted/kpi/digest/test/chk/pruned/cleared…) bắt & toast; (3) client component gọi action
+  imperative (modal, kéo–thả, bulk) → gọi **`useToast().toast(...)`** ngay sau khi action thành công (mẫu:
+  `EditModal` toast sẵn `toastMsg` → mọi modal bọc EditModal tự có toast). **TUYỆT ĐỐI KHÔNG dùng `alert()`
+  cho kết quả** (dùng toast). Thêm nút/form/tab mới ⇒ tự gắn 1 trong 3 cơ chế trên; đừng để `<form action=>`
+  trơ hay handler client không toast.
 - **TƯƠNG PHẢN MÀU CHỮ — CHUẨN WCAG AA (CFO 11/09, "không bao giờ để chữ khó đọc")**: mọi chữ phải đạt
   tương phản ≥ 4.5:1 (chữ thường) / ≥ 3:1 (chữ lớn ≥18.66px đậm hoặc ≥24px, và biểu tượng/thanh/chấm đồ
   hoạ). TUYỆT ĐỐI KHÔNG: chữ trắng trên nền sáng (chỉ dùng trắng trên nền maroon `--primary`/đỏ/tối);

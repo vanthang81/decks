@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import NavIcon from '@/components/NavIcon';
+import { useToast } from '@/components/ToastProvider';
 import { ProgressBar } from '@/components/ui';
 import { fmtDate } from '@/lib/format';
 import type { Initiative } from '@/lib/initiatives';
@@ -155,6 +156,7 @@ function MyTaskModal({
   task: Initiative; today: string; update: (fd: FormData) => Promise<void>; onClose: () => void;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [pending, start] = useTransition();
   const [err, setErr] = useState('');
   const [status, setStatus] = useState<Status>(task.status as Status);
@@ -170,7 +172,7 @@ function MyTaskModal({
     fd.set('evidence_url', evi);
     setErr('');
     start(async () => {
-      try { await update(fd); onClose(); router.refresh(); }
+      try { await update(fd); onClose(); toast('Đã cập nhật công việc', 'success'); router.refresh(); }
       catch (e) { setErr(e instanceof Error ? e.message : 'Không lưu được. Thử lại.'); }
     });
   };

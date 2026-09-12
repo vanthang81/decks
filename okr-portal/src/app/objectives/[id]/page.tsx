@@ -4,6 +4,7 @@ import SiteHeader from '@/components/SiteHeader';
 import HelpTip from '@/components/HelpTip';
 import ExecutionTabs from '@/components/ExecutionTabs';
 import ResettableForm from '@/components/ResettableForm';
+import ToastForm from '@/components/ToastForm';
 import SearchSelect from '@/components/SearchSelect';
 import UserLink from '@/components/UserLink';
 import { unitTreeOptions } from '@/lib/unit-options';
@@ -329,7 +330,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                 )}
               </div>
               {canManage && (
-                <form action={setObjectiveBscAction} className="bsc-set">
+                <ToastForm action={setObjectiveBscAction} done="Đã lưu viễn cảnh BSC" className="bsc-set">
                   <input type="hidden" name="objective_id" value={obj.id} />
                   <span className="bsc-set-lbl">Viễn cảnh BSC:</span>
                   <select className="i" name="bsc_perspective" defaultValue={obj.bsc_perspective ?? ''}>
@@ -341,7 +342,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                     ))}
                   </select>
                   <button type="submit" className="btn ghost sm">Lưu</button>
-                </form>
+                </ToastForm>
               )}
               <div className="pagetitle" style={{ margin: 0 }}>
                 {obj.code && <span className="okr-code" style={{ fontSize: 14, marginRight: 8 }}>{obj.code}</span>}
@@ -452,7 +453,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                       <span className="badge kpi" title="KR lấy số từ KPI thư viện">🔗 {kpiById.get(kr.kpi_id) ?? 'KPI đã gắn'}</span>
                     )}
                     {canManage && (
-                      <form action={linkKrKpiAction}>
+                      <ToastForm action={linkKrKpiAction} done="Đã gắn KPI & lấy số">
                         <input type="hidden" name="id" value={kr.id} />
                         <span className="kk-lbl">Gắn KPI:</span>
                         <select className="i" name="kpi_id" defaultValue={kr.kpi_id ?? ''}>
@@ -462,7 +463,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                           ))}
                         </select>
                         <button type="submit" className="btn ghost sm">Gắn &amp; lấy số</button>
-                      </form>
+                      </ToastForm>
                     )}
                   </div>
                 </div>
@@ -499,7 +500,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
               {canManage && (
                 <details className="kr-sub">
                   <summary><span className="kr-sub-ic">📈</span> Check-in / cập nhật</summary>
-                  <form action={checkInAction} className="row" style={{ marginTop: 8 }}>
+                  <ToastForm action={checkInAction} done="Đã lưu check-in" className="row" style={{ marginTop: 8 }}>
                     <input type="hidden" name="key_result_id" value={kr.id} />
                     <div style={{ maxWidth: 140 }}>
                       <label className="f">Giá trị mới <span className="muted" style={{ fontWeight: 400 }}>· {kr.metric_type === 'percent' ? '%' : kr.metric_type === 'currency' ? 'đồng' : kr.metric_type === 'boolean' ? '1=xong / 0=chưa' : kr.unit_label ? kr.unit_label : 'số'}</span></label>
@@ -526,7 +527,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                         Lưu
                       </button>
                     </div>
-                  </form>
+                  </ToastForm>
                 </details>
               )}
 

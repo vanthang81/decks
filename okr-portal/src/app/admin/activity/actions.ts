@@ -37,7 +37,7 @@ export async function pruneAuditNowAction(fd: FormData) {
 export async function clearAllAuditAction(fd: FormData) {
   const me = await guard();
   if (String(fd.get('confirm') ?? '').trim().toUpperCase() !== 'XOA') {
-    redirect('/admin/activity?err=confirm');
+    redirect('/admin/activity?err=' + encodeURIComponent('Chưa xoá — gõ đúng "XOA" để xác nhận.'));
   }
   const deleted = await clearAllAudit();
   await logAudit({ actor: me.email, action: 'audit.clear', entity: 'system', detail: { deleted } });

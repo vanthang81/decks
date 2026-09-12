@@ -7,6 +7,7 @@ import Link from 'next/link';
 import CommentThread from '@/components/CommentThread';
 import ConfirmButton from '@/components/ConfirmButton';
 import SearchSelect from '@/components/SearchSelect';
+import { useToast } from '@/components/ToastProvider';
 import { personSelectOptions } from '@/lib/person-options';
 import { unitTreeOptions } from '@/lib/unit-options';
 import NumberInput from '@/components/NumberInput';
@@ -482,6 +483,7 @@ function EditModal({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [pending, startTransition] = useTransition();
   const [err, setErr] = useState<string | null>(null);
   // Bấm vào việc → mở CHI TIẾT (chỉ xem) trước; bấm "Sửa" mới sang form (CFO 06/08, đồng bộ TaskEditModal).
@@ -518,6 +520,7 @@ function EditModal({
         // Đóng popup NGAY khi lưu xong; làm mới dữ liệu nền (KHÔNG bắt người dùng chờ
         // refetch cả trang dự án nặng mới đóng — trước đây khiến nút "Đang lưu…" treo lâu).
         onClose();
+        toast('Đã lưu', 'success');
         router.refresh();
       } catch (e2) {
         setErr(e2 instanceof Error ? e2.message : String(e2));
@@ -1169,6 +1172,7 @@ function KanbanView({
   onOpen: (c: Card) => void;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [cards, setCards] = useState<Card[]>(initiatives);
   const [dragId, setDragId] = useState<string | null>(null);
   const [overCol, setOverCol] = useState<Status | null>(null);
@@ -1197,10 +1201,11 @@ function KanbanView({
     startTransition(async () => {
       try {
         await move(id, status);
+        toast('Đã đổi trạng thái', 'success');
         router.refresh();
       } catch (e) {
         setCards(initiatives);
-        alert('Không cập nhật được: ' + (e instanceof Error ? e.message : String(e)));
+        toast('Không cập nhật được: ' + (e instanceof Error ? e.message : String(e)), 'error');
       }
     });
   };

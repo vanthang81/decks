@@ -22,16 +22,23 @@ export const MEETING_TYPES = Object.keys(MEETING_TYPE_LABEL) as MeetingType[];
 export const MEETING_STATUS_LABEL: Record<MeetingStatus, string> = { scheduled: 'Đã lên lịch', held: 'Đã họp', cancelled: 'Đã huỷ' };
 export const MEETING_STATUS_CLS: Record<MeetingStatus, string> = { scheduled: 'blue', held: 'green', cancelled: 'gray' };
 
-// Trạng thái HIỂN THỊ (khác trạng thái lưu): cuộc họp còn 'Đã lên lịch' nhưng giờ họp đã QUA
-// thì hiện "Đã diễn ra" cho đúng thực tế (không đổi dữ liệu — chủ trì vẫn có thể đánh dấu "Đã họp"
-// khi ghi biên bản). 'Đã họp'/'Đã huỷ' giữ nguyên.
+// Trạng thái HIỆU LỰC (khác trạng thái LƯU): cuộc họp còn 'Đã lên lịch' nhưng giờ họp đã QUA thì
+// coi như ĐÃ HỌP ('held') — cuộc họp đã qua luôn hiển thị "Đã họp" nhất quán (CFO 12/09, bỏ nhãn
+// "Đã diễn ra" cũ gây rối). KHÔNG đổi dữ liệu (chủ trì vẫn ghi biên bản/đánh dấu bình thường); chỉ
+// suy trạng thái để hiển thị + LỌC cho khớp badge. 'Đã huỷ' giữ nguyên.
+export function meetingStatusEffective(
+  m: { status: MeetingStatus; meeting_at: string | null },
+): MeetingStatus {
+  if (m.status === 'scheduled' && m.meeting_at && new Date(m.meeting_at).getTime() < Date.now()) {
+    return 'held';
+  }
+  return m.status;
+}
 export function meetingStatusView(
   m: { status: MeetingStatus; meeting_at: string | null },
 ): { label: string; cls: string } {
-  if (m.status === 'scheduled' && m.meeting_at && new Date(m.meeting_at).getTime() < Date.now()) {
-    return { label: 'Đã diễn ra', cls: 'slate' };
-  }
-  return { label: MEETING_STATUS_LABEL[m.status], cls: MEETING_STATUS_CLS[m.status] };
+  const s = meetingStatusEffective(m);
+  return { label: MEETING_STATUS_LABEL[s], cls: MEETING_STATUS_CLS[s] };
 }
 export const VISIBILITY_LABEL: Record<MeetingVisibility, string> = {
   participants: 'Chỉ người tham gia/được thêm',

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/ToastProvider';
 import type { ComplianceIssue, ReviewRow } from '@/lib/compliance';
 import { ISSUE_STATUS_LABEL, ISSUE_STATUS_CLS, type IssueStatus } from '@/lib/compliance-shared';
 
@@ -73,6 +74,7 @@ function IssueRow({
   addAction: (fd: FormData) => Promise<void>;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [rejecting, setRejecting] = useState<null | 'kstt' | 'phap_che'>(null);
@@ -87,14 +89,14 @@ function IssueRow({
   const total = issue.task_total ?? 0, done = issue.task_done ?? 0;
   const allDone = total > 0 && done >= total;
 
-  async function run(fn: () => Promise<void>) {
+  async function run(fn: () => Promise<void>, okMsg?: string) {
     setBusy(true); setErr(null);
-    try { await fn(); router.refresh(); }
+    try { await fn(); if (okMsg) toast(okMsg, 'success'); router.refresh(); }
     catch (e) { setErr(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
   }
   function doSubmit() {
-    run(async () => { const fd = new FormData(); fd.set('project_id', projectId); fd.set('issue_id', issue.id); await submit(fd); });
+    run(async () => { const fd = new FormData(); fd.set('project_id', projectId); fd.set('issue_id', issue.id); await submit(fd); }, 'Đã gửi thẩm định');
   }
   function doAdd() {
     if (!aTitle.trim()) { setErr('Nhập nội dung hành động khắc phục.'); return; }
@@ -104,7 +106,7 @@ function IssueRow({
       fd.set('title', aTitle); fd.set('owner_email', aOwner); fd.set('due_on', aDue);
       await addAction(fd);
       setAdding(false); setATitle(''); setAOwner(''); setADue('');
-    });
+    }, 'Đã thêm hành động khắc phục');
   }
   function doReview(step: 'kstt' | 'phap_che', result: 'pass' | 'reject') {
     if (result === 'reject' && !note.trim()) { setErr('Cần ghi lý do khi trả lại.'); return; }
@@ -114,7 +116,7 @@ function IssueRow({
       fd.set('step', step); fd.set('result', result); fd.set('note', note);
       await review(fd);
       setRejecting(null); setNote('');
-    });
+    }, result === 'pass' ? 'Đã duyệt bước thẩm định' : 'Đã trả lại để khắc phục');
   }
 
   return (
