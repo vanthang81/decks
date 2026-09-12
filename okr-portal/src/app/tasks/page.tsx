@@ -7,6 +7,7 @@ import { listUnits, objectiveViewScope } from '@/lib/org';
 import { listUsers, personTitle } from '@/lib/users';
 import { listAllProjectOptions } from '@/lib/projects';
 import { listAllInitiatives } from '@/lib/initiatives';
+import { initiativeIdsMentioning } from '@/lib/comments';
 import { listObjectivesByPeriod } from '@/lib/okr';
 import { getCurrentPeriod } from '@/lib/periods';
 import { depsForTasks } from '@/lib/deps';
@@ -30,7 +31,8 @@ export default async function TasksPage({
     listUsers(),
     listAllProjectOptions(),
   ]);
-  const ctx = buildTaskViewCtx(user, all, units, access);
+  const mentioned = await initiativeIdsMentioning(user.email);
+  const ctx = buildTaskViewCtx(user, all, units, access, mentioned);
   const visible = all.filter((t) => canViewInitiative(user, t, ctx));
   // Meta dự án (đơn vị chủ trì + OKR liên quan) để KẾ THỪA hiển thị cho việc chỉ thuộc dự án.
   const projectMeta = await projectMetaForIds(

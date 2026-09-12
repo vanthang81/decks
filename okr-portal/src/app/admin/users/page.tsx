@@ -12,7 +12,7 @@ import { unitTreeOptions } from '@/lib/unit-options';
 import { listPositions } from '@/lib/positions';
 import { requireUser } from '@/lib/current-user';
 import { ROLE_LABEL, ROLES, isExec } from '@/lib/rbac';
-import { loadAccess, canManageSystem, canAssignPerms } from '@/lib/access';
+import { loadAccess, canManageSystem, canAssignPerms, isSuperAdmin } from '@/lib/access';
 import { DEFAULT_GROUPS, defaultGroupForRole } from '@/lib/capabilities';
 import { listUsers } from '@/lib/users';
 import { listUnits, ancestorIds } from '@/lib/org';
@@ -26,6 +26,9 @@ export default async function AdminUsers() {
   const access = await loadAccess();
   if (!canManageSystem(me, access)) redirect('/');
   const assignPerms = canAssignPerms(me, access);
+  const canSuper = isSuperAdmin(me);
+  // Nhóm 'super_admin' chỉ Super Admin mới thấy/gán được trong ô chọn Nhóm quyền.
+  const formGroups = DEFAULT_GROUPS.filter((g) => g.key !== 'super_admin' || canSuper);
   const [users, units, hoCounts, positions] = await Promise.all([listUsers(), listUnits(), handoverCountsAll(), listPositions()]);
   const posOpts = positions.map((p) => ({ key: p.key, label: p.label, base_role: p.base_role, perm_group: p.perm_group }));
   const EMPTY_CO: HandoverCounts = { openTasks: 0, allTasks: 0, objectives: 0, projects: 0, meetings: 0 };
@@ -45,7 +48,7 @@ export default async function AdminUsers() {
   // Chuỗi đơn vị (đơn vị của user + mọi cấp trên) → lọc theo Khối cũng bắt được người ở Phòng con.
   const unitChain = (unitId: string | null): string => (unitId ? [...ancestorIds(units, unitId)].join(' ') : '');
   const groupOf = (u: (typeof users)[number]): string =>
-    isExec(u.role) ? 'system_admin' : u.perm_group || defaultGroupForRole(u.role);
+    isSuperAdmin(u) ? 'super_admin' : isExec(u.role) ? 'system_admin' : u.perm_group || defaultGroupForRole(u.role);
 
   return (
     <>
@@ -104,7 +107,7 @@ export default async function AdminUsers() {
                 </label>
                 <select className="i" name="perm_group" defaultValue="" disabled={!assignPerms}>
                   <option value="">— Mặc định theo vai trò —</option>
-                  {DEFAULT_GROUPS.map((g) => (
+                  {formGroups.map((g) => (
                     <option key={g.key} value={g.key}>
                       {g.icon} {g.label}
                     </option>
@@ -193,9 +196,9 @@ export default async function AdminUsers() {
                           }}
                           units={units.map((x) => ({ id: x.id, name: x.name, type: x.type, parent_id: x.parent_id, sort: x.sort }))}
                           roles={ROLES.map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
-                          groups={DEFAULT_GROUPS.map((g) => ({ key: g.key, icon: g.icon, label: g.label, desc: g.desc }))}
+                          groups={formGroups.map((g) => ({ key: g.key, icon: g.icon, label: g.label, desc: g.desc }))}
                           positions={posOpts}
-                          assignPerms={assignPerms}
+                          assignPerms={assignPerms && (canSuper || (u.email.toLowerCase() !== me.email.toLowerCase() && !isSuperAdmin(u)))}
                           action={saveUserAction}
                         />
                         <HandoverModal

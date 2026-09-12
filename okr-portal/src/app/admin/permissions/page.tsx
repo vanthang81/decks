@@ -4,8 +4,8 @@ import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
-import { loadAccess, canManageSystem, canAssignPerms } from '@/lib/access';
-import { CAPABILITIES, CAP_CATEGORIES, DEFAULT_GROUPS, type GroupKey } from '@/lib/capabilities';
+import { loadAccess, canManageSystem, canAssignPerms, isSuperAdmin, userGroupKey } from '@/lib/access';
+import { CAPABILITIES, CAP_CATEGORIES, DEFAULT_GROUPS, SYSADMIN_DENY_CAPS, type GroupKey } from '@/lib/capabilities';
 import { ROLES, ROLE_LABEL } from '@/lib/rbac';
 import { listPositions } from '@/lib/positions';
 import PositionsManager from '@/components/PositionsManager';
@@ -23,6 +23,9 @@ export default async function AdminPermissions({
   const access = await loadAccess();
   if (!canManageSystem(me, access)) redirect('/');
   const editable = canAssignPerms(me, access);
+  const sa = isSuperAdmin(me);
+  const myGroup = userGroupKey(me);
+  const DENY = new Set<string>(SYSADMIN_DENY_CAPS);
 
   const groups = DEFAULT_GROUPS; // thứ tự + nhãn cố định; caps lấy từ access
   const has = (g: string, cap: string) => access.groups[g]?.has(cap as never) ?? false;
@@ -35,7 +38,8 @@ export default async function AdminPermissions({
   if (editable) {
     for (const c of CAPABILITIES) {
       for (const g of groups) {
-        if (g.key === 'system_admin') continue;
+        if (g.key === 'super_admin' || g.key === 'system_admin') continue; // super=full; sysadmin invariants
+        if (!sa && g.key === myGroup) continue; // không tự sửa nhóm của chính mình
         if (isSuggested(g.key as GroupKey, c) && !has(g.key, c.key)) suggestCount++;
       }
     }
@@ -119,8 +123,16 @@ export default async function AdminPermissions({
                               <div className="muted" style={{ fontSize: 12 }}>{c.desc}</div>
                             </td>
                             {groups.map((g) => {
-                              const locked = g.key === 'system_admin' || !editable;
-                              const on = g.key === 'system_admin' ? true : has(g.key, c.key);
+                              const isSuperCol = g.key === 'super_admin';
+                              // Bất biến: super_admin luôn đủ; super.admin chỉ ở super_admin; system_admin bỏ cap riêng tư.
+                              const invOn = isSuperCol;
+                              const invOff = (c.key === 'super.admin' && !isSuperCol) || (g.key === 'system_admin' && DENY.has(c.key));
+                              const locked =
+                                !editable || invOn || invOff ||
+                                (isSuperCol && !sa) ||           // chỉ Super Admin sửa nhóm Super Admin
+                                (!sa && g.key === myGroup) ||    // không tự sửa quyền của chính mình
+                                (c.key === 'super.admin' && !sa);
+                              const on = invOn ? true : invOff ? false : has(g.key, c.key);
                               const showSg = !locked && isSuggested(g.key as GroupKey, c) && !on;
                               return (
                                 <td key={g.key} style={{ textAlign: 'center' }} className={showSg ? 'perm-sg-cell' : undefined}>
@@ -145,7 +157,10 @@ export default async function AdminPermissions({
               </table>
             </div>
             <p className="muted" style={{ fontSize: 12.5, marginBottom: 0, marginTop: 10 }}>
-              Nhóm <b>🛡️ Quản trị hệ thống</b> cố định toàn quyền (không thể tự khoá để tránh mất quyền quản trị).
+              <b>👑 Super Admin</b> là đỉnh quyền lực (toàn quyền cố định, chỉ 2 tài khoản tối cao) — chỉ Super Admin
+              chỉnh được cột này &amp; gán quyền Super Admin. <b>🛡️ Quản trị hệ thống</b> KHÔNG có “Toàn phạm vi” &amp;
+              “Hồ sơ 360°” (không xem việc/hồ sơ riêng tư của cá nhân). Trừ Super Admin, không ai tự chỉnh được
+              quyền của <b>chính nhóm mình</b> (ô bị khoá).
             </p>
             {editable && (
               <div style={{ marginTop: 12, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>

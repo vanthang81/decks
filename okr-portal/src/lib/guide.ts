@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-12.166';
+export const GUIDE_VERSION = '2026-09-12.167';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,15 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '12/09/2026 (Phân quyền: thêm Super Admin + siết Quản trị hệ thống)',
+    items: [
+      'Thêm nhóm quyền cao nhất 👑 Super Admin — đỉnh quyền lực, chỉ 2 tài khoản tối cao; là người DUY NHẤT chỉnh được nhóm Super Admin và gán quyền Super Admin.',
+      '“Quản trị hệ thống” nay ÍT quyền hơn: KHÔNG còn “Toàn phạm vi” & “Hồ sơ 360°” → không xem được việc riêng tư và hồ sơ chi tiết của từng cá nhân (chỉ xem việc mình liên quan/được giao/được tag tên/thành viên).',
+      'Trừ Super Admin, không vị trí nào tự chỉnh được quyền của CHÍNH NHÓM MÌNH, cũng không tự đổi nhóm quyền của chính mình (ô bị khoá + chặn ở máy chủ).',
+      'Được @tag tên trong bình luận một công việc → xem được công việc đó (need-to-know).',
+    ],
+  },
   {
     date: '12/09/2026 (Bảng gọn hơn: trạng thái không bị xuống 2 dòng)',
     items: [

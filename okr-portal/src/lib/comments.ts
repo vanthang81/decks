@@ -80,6 +80,16 @@ export function linkWithComment(link: string, commentId: string): string {
   return `${base}#comment-${commentId}`;
 }
 
+/** Tập id CÔNG VIỆC (initiative) mà user được @tag tên trong bình luận → được quyền xem việc đó. */
+export async function initiativeIdsMentioning(email: string): Promise<Set<string>> {
+  const rows = await query<{ entity_id: string }>(
+    `SELECT DISTINCT entity_id FROM okr_comments
+      WHERE entity_type='initiative' AND lower($1) = ANY(SELECT lower(m) FROM unnest(mentions) m)`,
+    [email],
+  );
+  return new Set(rows.map((r) => r.entity_id));
+}
+
 /** Người PHỤ TRÁCH thực thể (chủ trì OKR / người được giao việc) — để báo "có bình luận ở mục của bạn". */
 async function entityStakeholders(entityType: EntityType, entityId: string): Promise<string[]> {
   const emails = new Set<string>();

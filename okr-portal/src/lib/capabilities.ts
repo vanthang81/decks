@@ -7,6 +7,7 @@
 // ============================================================================
 
 export type CapKey =
+  | 'super.admin'
   | 'system.admin'
   | 'system.permissions'
   | 'user.approve'
@@ -28,7 +29,13 @@ export type CapKey =
   | 'kpi.input';
 
 // Nhóm quyền mặc định (nhãn/icon cố định; cap-set suy từ `suggest`).
-export const GROUP_KEYS = ['system_admin', 'okr_admin', 'kpi_admin', 'manager', 'contributor', 'viewer'] as const;
+export const GROUP_KEYS = ['super_admin', 'system_admin', 'okr_admin', 'kpi_admin', 'manager', 'contributor', 'viewer'] as const;
+
+// Năng lực CHỈ Super Admin có (không nhóm nào khác được cấp) — bảo vệ đỉnh quyền lực.
+export const SUPER_ONLY_CAPS = ['super.admin'] as const;
+// Năng lực Quản trị hệ thống KHÔNG được có (bảo vệ riêng tư — không xem việc/hồ sơ cá nhân người khác).
+// CFO 12/09: system_admin "ít quyền hơn" — mất Toàn phạm vi + Hồ sơ 360°.
+export const SYSADMIN_DENY_CAPS = ['scope.all', 'user.view360', 'super.admin'] as const;
 export type GroupKey = (typeof GROUP_KEYS)[number];
 
 export type Capability = { key: CapKey; label: string; desc: string; cat: string; suggest: GroupKey[] };
@@ -46,6 +53,7 @@ export const CAP_CATEGORIES: { key: string; label: string }[] = [
 
 // `suggest` = các Nhóm quyền hệ thống GỢI Ý nên có năng lực này (system_admin luôn có tất cả).
 export const CAPABILITIES: Capability[] = [
+  { key: 'super.admin', cat: 'system', label: 'Toàn quyền tối cao (Super Admin)', desc: 'Đỉnh quyền lực: làm được MỌI thứ + là người DUY NHẤT chỉnh được nhóm quyền Super Admin và gán quyền Super Admin cho người khác. Chỉ nhóm Super Admin có năng lực này.', suggest: ['super_admin'] },
   { key: 'system.admin', cat: 'system', label: 'Quản trị hệ thống', desc: 'Quản lý người dùng, cây tổ chức, kỳ OKR, cấu hình nhắc nhở.', suggest: ['system_admin'] },
   { key: 'system.permissions', cat: 'system', label: 'Phân quyền người dùng', desc: 'Gán Nhóm quyền cho người khác và chỉnh Nhóm quyền.', suggest: ['system_admin'] },
   { key: 'user.approve', cat: 'system', label: 'Duyệt người dùng', desc: 'Duyệt/từ chối lời mời thêm người dùng mới (qua email) do người khác đề xuất.', suggest: ['system_admin', 'okr_admin'] },
@@ -80,7 +88,8 @@ export const CAP_SUGGEST: Record<string, GroupKey[]> = Object.fromEntries(
 export type PermGroup = { key: string; label: string; icon: string; desc: string; caps: CapKey[] };
 
 const GROUP_META: { key: GroupKey; label: string; icon: string; desc: string }[] = [
-  { key: 'system_admin', label: 'Quản trị hệ thống', icon: '🛡️', desc: 'Toàn quyền: quản trị hệ thống + phân quyền + mọi thao tác OKR, chiến lược, họp, ngân sách.' },
+  { key: 'super_admin', label: 'Super Admin', icon: '👑', desc: 'Đỉnh quyền lực — toàn quyền tuyệt đối, là người DUY NHẤT chỉnh được phân quyền Super Admin. Chỉ gán cho tài khoản tối cao của công ty.' },
+  { key: 'system_admin', label: 'Quản trị hệ thống', icon: '🛡️', desc: 'Quản trị hệ thống + phân quyền cho người khác + thao tác OKR/chiến lược/họp/ngân sách. KHÔNG xem được việc riêng tư & hồ sơ 360° của từng cá nhân; KHÔNG tự chỉnh quyền của chính mình.' },
   { key: 'okr_admin', label: 'Quản trị OKR', icon: '⭐', desc: 'Sửa/Xoá/Tạo MỌI OKR (toàn phạm vi) + chiến lược, dự án, họp, ngân sách, KPI, báo cáo. Không quản trị hệ thống.' },
   { key: 'kpi_admin', label: 'Quản trị KPI', icon: '📊', desc: 'Quản lý Thư viện KPI + nhập số KPI + đồng bộ KPI cho TOÀN CÔNG TY (mọi đơn vị). KHÔNG tạo/sửa/xoá OKR — hợp cho bộ phận Nhân sự/đầu mối KPI.' },
   { key: 'manager', label: 'Quản lý', icon: '👔', desc: 'Tạo & Sửa OKR + quản dự án TRONG phạm vi đơn vị mình; xem báo cáo & lịch.' },
@@ -88,12 +97,18 @@ const GROUP_META: { key: GroupKey; label: string; icon: string; desc: string }[]
   { key: 'viewer', label: 'Người xem', icon: '👁️', desc: 'Chỉ xem, không chỉnh sửa.' },
 ];
 
-// cap-set = mọi cap có `suggest` chứa nhóm này (system_admin luôn có TẤT CẢ).
+// cap-set mặc định:
+//  - super_admin: TẤT CẢ (đỉnh quyền lực).
+//  - system_admin: TẤT CẢ TRỪ các cap riêng tư (SYSADMIN_DENY_CAPS) — "ít quyền hơn".
+//  - còn lại: suy từ `suggest`.
+const DENY = new Set<string>(SYSADMIN_DENY_CAPS);
 export const DEFAULT_GROUPS: PermGroup[] = GROUP_META.map((g) => ({
   ...g,
-  caps: g.key === 'system_admin'
+  caps: g.key === 'super_admin'
     ? CAPABILITIES.map((c) => c.key)
-    : CAPABILITIES.filter((c) => c.suggest.includes(g.key)).map((c) => c.key),
+    : g.key === 'system_admin'
+      ? CAPABILITIES.filter((c) => !DENY.has(c.key)).map((c) => c.key)
+      : CAPABILITIES.filter((c) => c.suggest.includes(g.key)).map((c) => c.key),
 }));
 
 // Nhóm mặc định suy từ vai trò tổ chức khi user chưa được gán nhóm riêng.

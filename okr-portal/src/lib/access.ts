@@ -9,6 +9,8 @@ import {
   CAPABILITIES,
   DEFAULT_GROUPS,
   GROUP_KEYS,
+  SUPER_ONLY_CAPS,
+  SYSADMIN_DENY_CAPS,
   defaultGroupForRole,
   type CapKey,
   type GroupKey,
@@ -16,6 +18,18 @@ import {
 import { isExec } from './rbac';
 
 export const PERM_GROUPS_KEY = 'perm_groups';
+
+// SUPER ADMIN — đỉnh quyền lực, chỉ 2 tài khoản của CFO (CFO 12/09). Hardcode để KHÔNG ai hạ quyền
+// được (chống khoá nhầm/leo thang). Ngoài 2 email này, còn nhận nếu perm_group='super_admin'
+// (chỉ Super Admin mới gán được nhóm này). Đổi/thêm tài khoản tối cao ⇒ sửa danh sách này.
+export const SUPER_ADMIN_EMAILS = new Set<string>([
+  'vanthang81@gmail.com',
+  'nguyenvanthang@baotinmanhhai.vn',
+]);
+export function isSuperAdmin(user: Pick<OkrUser, 'email' | 'perm_group'>): boolean {
+  if (user.email && SUPER_ADMIN_EMAILS.has(user.email.toLowerCase())) return true;
+  return user.perm_group === 'super_admin';
+}
 
 const ALL_CAPS = new Set<CapKey>(CAPABILITIES.map((c) => c.key));
 const VALID_CAP = (x: unknown): x is CapKey => typeof x === 'string' && ALL_CAPS.has(x as CapKey);
@@ -37,6 +51,16 @@ export async function loadAccess(): Promise<Access> {
       if (Array.isArray(caps)) groups[k] = new Set(caps.filter(VALID_CAP));
     }
   }
+  // ── BẤT BIẾN bảo mật (áp bất kể dữ liệu lưu / chỉnh tay ở UI) ──
+  // 1) super_admin LUÔN có mọi năng lực.
+  groups['super_admin'] = new Set<CapKey>(CAPABILITIES.map((c) => c.key));
+  // 2) super.admin CHỈ super_admin có — bóc khỏi mọi nhóm khác.
+  for (const k of Object.keys(groups)) {
+    if (k === 'super_admin') continue;
+    for (const c of SUPER_ONLY_CAPS) groups[k]?.delete(c as CapKey);
+  }
+  // 3) system_admin KHÔNG bao giờ có các cap riêng tư (xem toàn bộ việc / hồ sơ 360°).
+  for (const c of SYSADMIN_DENY_CAPS) groups['system_admin']?.delete(c as CapKey);
   const access = { groups };
   _cache = { at: Date.now(), access };
   return access;
@@ -46,8 +70,9 @@ export function invalidateAccess() {
   _cache = null;
 }
 
-/** Nhóm quyền hiệu lực của user (exec luôn = system_admin; chưa gán → suy từ vai trò). */
-export function userGroupKey(user: Pick<OkrUser, 'role' | 'perm_group'>): GroupKey {
+/** Nhóm quyền hiệu lực của user (Super Admin → super_admin; exec → system_admin; chưa gán → suy vai trò). */
+export function userGroupKey(user: Pick<OkrUser, 'role' | 'perm_group' | 'email'>): GroupKey {
+  if (isSuperAdmin(user)) return 'super_admin';
   if (isExec(user.role)) return 'system_admin';
   const g = user.perm_group;
   if (g && (GROUP_KEYS as readonly string[]).includes(g)) return g as GroupKey;
@@ -55,7 +80,7 @@ export function userGroupKey(user: Pick<OkrUser, 'role' | 'perm_group'>): GroupK
 }
 
 export function userCaps(user: OkrUser, access: Access): Set<CapKey> {
-  if (isExec(user.role)) return ALL_CAPS; // CEO/CFO không thể tự khoá
+  if (isSuperAdmin(user)) return ALL_CAPS; // Super Admin (2 tài khoản tối cao) toàn quyền, không thể tự khoá
   return access.groups[userGroupKey(user)] ?? new Set<CapKey>();
 }
 
@@ -163,6 +188,7 @@ export function canCreateObjective(
 // chủ trì OKR / thành viên dự án) hoặc trong phạm vi quản lý của bạn. Nhóm có
 // năng lực "Toàn phạm vi" (scope.all) và CEO/CFO xem TẤT CẢ.
 type TaskView = {
+  id: string;
   owner_email: string | null;
   created_by: string | null;
   unit_id: string | null;
@@ -172,7 +198,7 @@ type TaskView = {
   project_owner: string | null;
 };
 
-export type TaskViewCtx = { seeAll: boolean; scope: Set<string> | null; myProjects: Set<string> };
+export type TaskViewCtx = { seeAll: boolean; scope: Set<string> | null; myProjects: Set<string>; mentioned: Set<string> };
 
 /** Tính ngữ cảnh xem MỘT LẦN cho cả danh sách (tránh lặp): phạm vi lead + dự án user là thành viên. */
 export function buildTaskViewCtx(
@@ -180,6 +206,7 @@ export function buildTaskViewCtx(
   tasks: TaskView[],
   units: Unit[],
   access: Access,
+  mentioned: Set<string> = new Set(),
 ): TaskViewCtx {
   // NHÂN VIÊN (staff) = phạm vi XEM theo VAI TRÒ (đơn vị mình + hậu duệ + tổ tiên), BỎ QUA cap
   // 'scope.all' để nhất quán với trang OKR (objectiveViewScope). Vai trò khác giữ theo năng lực.
@@ -197,7 +224,7 @@ export function buildTaskViewCtx(
       myProjects.add(t.project_id);
     }
   }
-  return { seeAll, scope, myProjects };
+  return { seeAll, scope, myProjects, mentioned };
 }
 
 /**
@@ -210,6 +237,7 @@ export function buildTaskViewCtx(
  */
 export function canViewInitiative(user: OkrUser, t: TaskView, ctx: TaskViewCtx): boolean {
   if (ctx.seeAll || ctx.scope === null) return true;
+  if (ctx.mentioned.has(t.id)) return true; // được @tag tên trong bình luận việc → xem được
   const e = user.email.toLowerCase();
   if (t.owner_email && t.owner_email.toLowerCase() === e) return true;
   if (t.created_by && t.created_by.toLowerCase() === e) return true;

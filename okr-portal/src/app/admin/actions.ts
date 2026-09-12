@@ -3,8 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/current-user';
 import { isRole, isExec, type Role } from '@/lib/rbac';
-import { loadAccess, canManageSystem, canAssignPerms, invalidateAccess, PERM_GROUPS_KEY } from '@/lib/access';
-import { DEFAULT_GROUPS, CAPABILITIES, type CapKey } from '@/lib/capabilities';
+import { loadAccess, canManageSystem, canAssignPerms, invalidateAccess, isSuperAdmin, userGroupKey, PERM_GROUPS_KEY } from '@/lib/access';
+import { DEFAULT_GROUPS, CAPABILITIES, SYSADMIN_DENY_CAPS, type CapKey } from '@/lib/capabilities';
 import {
   upsertUser,
   setUserActive,
@@ -55,8 +55,18 @@ export async function saveUserAction(fd: FormData) {
     key = newEmail;
   }
   // Chỉ người có quyền "Phân quyền" mới đặt được Nhóm quyền; người khác giữ nguyên.
+  // Bảo vệ: (1) chỉ Super Admin gán được nhóm 'super_admin'; (2) KHÔNG ai (trừ Super Admin) tự đổi
+  // nhóm quyền của CHÍNH MÌNH (chống tự leo thang / tự chỉnh quyền của mình — CFO 12/09).
   const grp = orNull(str(fd, 'perm_group'));
-  const permGroup = canAssignPerms(me, access) ? grp : (await getUser(key))?.perm_group ?? null;
+  const existingGroup = (await getUser(key))?.perm_group ?? null;
+  const sa = isSuperAdmin(me);
+  const editingSelf = key.toLowerCase() === me.email.toLowerCase();
+  let permGroup: string | null;
+  if (!canAssignPerms(me, access)) permGroup = existingGroup;
+  else if (!sa && editingSelf) permGroup = existingGroup; // không tự đổi nhóm của chính mình
+  else if (!sa && grp === 'super_admin') permGroup = existingGroup; // chỉ Super Admin gán Super Admin
+  else if (!sa && existingGroup === 'super_admin') permGroup = existingGroup; // không hạ Super Admin của người khác
+  else permGroup = grp;
   await upsertUser({
     email: key,
     display_name: orNull(str(fd, 'display_name')),
@@ -288,16 +298,29 @@ export async function savePermissionsAction(fd: FormData) {
   const me = await requireUser();
   const access = await loadAccess();
   if (!canAssignPerms(me, access)) throw new Error('Bạn không có quyền phân quyền.');
+  const sa = isSuperAdmin(me);
+  const myGroup = userGroupKey(me);
   const allCaps = CAPABILITIES.map((c) => c.key);
+  const deny = new Set<string>(SYSADMIN_DENY_CAPS);
   const out: Record<string, CapKey[]> = {};
   for (const g of DEFAULT_GROUPS) {
-    // system_admin cố định toàn quyền — không cho tự khoá (tránh mất quyền quản trị).
-    if (g.key === 'system_admin') {
-      out[g.key] = allCaps;
+    const key = g.key;
+    // Nhóm KHÔNG được sửa bởi người này → GIỮ NGUYÊN caps hiện tại:
+    //  - super_admin: chỉ Super Admin sửa;
+    //  - nhóm của CHÍNH MÌNH: không tự chỉnh quyền của mình (trừ Super Admin).
+    const lockedForMe = (key === 'super_admin' && !sa) || (!sa && key === myGroup);
+    if (lockedForMe) {
+      out[key] = allCaps.filter((c) => access.groups[key]?.has(c));
       continue;
     }
-    out[g.key] = allCaps.filter((c) => fd.get(`cap_${g.key}_${c}`) === 'on');
+    let caps = allCaps.filter((c) => fd.get(`cap_${key}_${c}`) === 'on');
+    if (!sa) caps = caps.filter((c) => c !== 'super.admin'); // người thường không cấp super.admin
+    out[key] = caps;
   }
+  // ── BẤT BIẾN bảo mật (khớp loadAccess) ──
+  out['super_admin'] = allCaps;                                            // Super Admin toàn quyền
+  for (const k of Object.keys(out)) if (k !== 'super_admin') out[k] = out[k].filter((c) => c !== 'super.admin');
+  out['system_admin'] = (out['system_admin'] ?? []).filter((c) => !deny.has(c)); // bỏ cap riêng tư
   await setSetting(PERM_GROUPS_KEY, out);
   invalidateAccess();
   redirect('/admin/permissions?saved=1');
