@@ -20,7 +20,9 @@ export function brandedEmail(opts: {
   preheader?: string;       // dòng ẩn xem trước trong hộp thư
 }): string {
   const base = mailBaseUrl();
-  const logo = `${base}/icons/icon-192.png`;
+  // Logo nhúng inline qua Content-ID (cid) → hiện chắc chắn trên Gmail/Outlook, không phụ thuộc
+  // ảnh hosted hay cài đặt tải ảnh của người nhận. sendMail tự đính kèm khi html có 'cid:btmhlogo'.
+  const logo = 'cid:btmhlogo';
   const titleHtml = opts.titleUrl
     ? `<a href="${opts.titleUrl}" style="color:#ffffff;text-decoration:none">${opts.title}</a>`
     : opts.title;
@@ -36,21 +38,22 @@ export function brandedEmail(opts: {
 
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-  /* Lề sát mép hơn (CFO 12/09) — bóp thêm trên điện thoại để nội dung rộng, dễ đọc */
-  .em-outer{padding:8px}
-  .em-hd{padding:15px 18px}
-  .em-bd{padding:18px 18px}
+  /* Lề sát mép (CFO 12/09) — Gmail bỏ qua <style> nên giá trị THẬT nằm ở inline; đây chỉ bóp thêm
+     cho client hỗ trợ media query. */
+  .em-outer{padding:4px}
+  .em-hd{padding:14px 14px}
+  .em-bd{padding:16px 14px}
   @media only screen and (max-width:480px){
-    .em-outer{padding:4px !important}
-    .em-hd{padding:13px 13px !important}
-    .em-bd{padding:15px 13px !important}
+    .em-outer{padding:3px !important}
+    .em-hd{padding:12px 12px !important}
+    .em-bd{padding:14px 12px !important}
   }
 </style></head>
 <body style="margin:0;padding:0;background:#f1f5f9">${pre}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9">
-  <tr><td align="left" class="em-outer" style="padding:8px">
+  <tr><td align="left" class="em-outer" style="padding:4px">
     <table role="presentation" cellpadding="0" cellspacing="0" width="680" style="width:680px;max-width:680px;background:#ffffff;border-radius:12px;overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#161A21;box-shadow:0 1px 4px rgba(0,0,0,.08)">
-      <tr><td class="em-hd" style="background:#7C0312;padding:15px 18px">
+      <tr><td class="em-hd" bgcolor="#7C0312" style="background-color:#7C0312;padding:14px 14px">
         <table role="presentation" cellpadding="0" cellspacing="0"><tr>
           <td style="padding-right:14px;vertical-align:middle">
             <img src="${logo}" width="44" height="44" alt="BTMH" style="display:block;border:0;border-radius:9px" />
@@ -61,7 +64,7 @@ export function brandedEmail(opts: {
           </td>
         </tr></table>
       </td></tr>
-      <tr><td class="em-bd" style="padding:18px 18px">
+      <tr><td class="em-bd" style="padding:16px 14px">
         ${opts.bodyHtml}
         ${btn}
         <div style="margin-top:20px;padding-top:14px;border-top:1px solid #eee;color:#94a3b8;font-size:12px">

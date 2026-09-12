@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-12.161';
+export const GUIDE_VERSION = '2026-09-12.162';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '12/09/2026 (Email: hiện chắc chắn banner + logo BTMH, lề sát mép hơn)',
+    items: [
+      'Logo BTMH nay nhúng trực tiếp trong email (ảnh inline) → luôn hiện trên Gmail/Outlook/điện thoại, không còn phụ thuộc việc tải ảnh.',
+      'Thanh tiêu đề (banner) màu đỏ thương hiệu hiển thị ổn định trên mọi ứng dụng email (thêm thuộc tính bgcolor).',
+      'Thu gọn thêm lề trái/phải của email → nội dung sát mép, rộng và dễ đọc hơn, nhất là trên điện thoại.',
+    ],
+  },
   {
     date: '12/09/2026 (Email "Tóm tắt công việc buổi sáng" + trang Cấu hình Email)',
     items: [

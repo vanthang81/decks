@@ -2,6 +2,20 @@
 // portal: gửi từ okr@baotinmanhhai.vn). Nếu chưa cấu hình SMTP → fallback webhook n8n
 // (`N8N_MAIL_WEBHOOK`, giữ tương thích cũ). Chưa có cả hai → no-op (chỉ cảnh báo log).
 import nodemailer, { type Transporter } from 'nodemailer';
+import { BTMH_LOGO_PNG_BASE64 } from './brand-logo';
+
+// Content-ID của logo BTMH nhúng inline. brandedEmail dùng <img src="cid:btmhlogo"> → luôn hiện
+// trên Gmail/Outlook (không phụ thuộc ảnh hosted/ proxy ảnh/ cài đặt tải ảnh của người nhận).
+export const BTMH_LOGO_CID = 'btmhlogo';
+let _logoBuf: Buffer | null | undefined;
+function logoAttachments(html: string) {
+  if (!html.includes(`cid:${BTMH_LOGO_CID}`)) return undefined;
+  if (_logoBuf === undefined) {
+    try { _logoBuf = Buffer.from(BTMH_LOGO_PNG_BASE64, 'base64'); } catch { _logoBuf = null; }
+  }
+  if (!_logoBuf) return undefined;
+  return [{ filename: 'btmh-logo.png', content: _logoBuf, cid: BTMH_LOGO_CID, contentType: 'image/png' }];
+}
 
 /**
  * Domain gốc cho MỌI link trong email (CFO 04/09). Mặc định **okr.baotinmanhhai.vn** — KHÔNG dùng
@@ -47,7 +61,7 @@ export async function sendMail(msg: {
   if (tx) {
     const from = process.env.MAIL_FROM || process.env.SMTP_USER || 'okr@baotinmanhhai.vn';
     try {
-      await tx.sendMail({ from, to: msg.to, subject: msg.subject, html: msg.html });
+      await tx.sendMail({ from, to: msg.to, subject: msg.subject, html: msg.html, attachments: logoAttachments(msg.html) });
       return true;
     } catch (e) {
       console.error('[mail] SMTP gửi lỗi', e);
