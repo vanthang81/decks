@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-12.168';
+export const GUIDE_VERSION = '2026-09-12.169';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -640,6 +640,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '12/09/2026 (Công việc: thêm cột "Người giao" cạnh "Phụ trách")',
+    items: [
+      'Mọi màn hình công việc nay hiển thị CẢ người phụ trách (được giao) LẪN người giao việc: bảng Công việc thêm cột "Người giao" (sắp xếp/chỉnh rộng được); Kanban + danh sách cây + trang Của tôi + popup chi tiết đều ghi rõ "giao bởi ai".',
+      'Việc tự tạo cho chính mình hiển thị nhãn "tự giao" gọn gàng thay vì lặp lại tên.',
+    ],
+  },
   {
     date: '12/09/2026 (Thông báo thành công cho mọi thao tác + trạng thái họp nhất quán)',
     items: [

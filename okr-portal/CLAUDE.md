@@ -36,6 +36,12 @@ cấp/icon nhất quán; mỗi thao tác sửa mở popup gọn, nhãn căn trá
   `EditModal` toast sẵn `toastMsg` → mọi modal bọc EditModal tự có toast). **TUYỆT ĐỐI KHÔNG dùng `alert()`
   cho kết quả** (dùng toast). Thêm nút/form/tab mới ⇒ tự gắn 1 trong 3 cơ chế trên; đừng để `<form action=>`
   trơ hay handler client không toast.
+- **CÔNG VIỆC: LUÔN hiện CẢ "Phụ trách" (assignee) LẪN "Người giao" (assigner) — CFO 12/09**: mọi màn hình
+  liệt kê công việc phải cho thấy người được giao VÀ người giao việc. Nguồn = `owner_email`→`owner_name`
+  (phụ trách) và `created_by`→`creator_name`/`creator_avatar` (người giao) — đã có sẵn trong `TaskRow`
+  & `Initiative` (JOIN `okr_users cu` trong `src/lib/initiatives.ts`). Bảng (TaskExplorer) = cột riêng
+  "Người giao"; layout gọn (Kanban/cây/Của tôi/popup) = dòng "giao bởi …"; khi `created_by == owner_email`
+  hiện nhãn "tự giao" thay vì lặp tên. Thêm màn hình/việc mới ⇒ giữ đúng cặp cột này.
 - **TƯƠNG PHẢN MÀU CHỮ — CHUẨN WCAG AA (CFO 11/09, "không bao giờ để chữ khó đọc")**: mọi chữ phải đạt
   tương phản ≥ 4.5:1 (chữ thường) / ≥ 3:1 (chữ lớn ≥18.66px đậm hoặc ≥24px, và biểu tượng/thanh/chấm đồ
   hoạ). TUYỆT ĐỐI KHÔNG: chữ trắng trên nền sáng (chỉ dùng trắng trên nền maroon `--primary`/đỏ/tối);

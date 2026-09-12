@@ -47,7 +47,7 @@ const PRIO_LABEL: Record<string, string> = { high: 'Cao', medium: 'Trung bình',
 const PRIO_RANK: Record<string, number> = { high: 0, medium: 1, low: 2 };
 
 // Sắp xếp theo cột (nulls luôn xuống cuối, không đổi theo chiều).
-type SortKey = 'code' | 'title' | 'status' | 'priority' | 'progress' | 'owner' | 'unit' | 'objective' | 'project' | 'due' | 'created';
+type SortKey = 'code' | 'title' | 'status' | 'priority' | 'progress' | 'owner' | 'creator' | 'unit' | 'objective' | 'project' | 'due' | 'created';
 function sortVal(t: TaskRow, k: SortKey): string | number | null {
   switch (k) {
     case 'code': return t.code;
@@ -56,6 +56,7 @@ function sortVal(t: TaskRow, k: SortKey): string | number | null {
     case 'priority': return PRIO_RANK[t.priority] ?? 9;
     case 'progress': return t.progress;
     case 'owner': return t.owner_name || t.owner_email;
+    case 'creator': return t.creator_name || t.created_by;
     case 'unit': return t.unit_name;
     case 'objective': return t.objective_code || t.objective_title;
     case 'project': return t.project_name;
@@ -75,7 +76,8 @@ const COLS: { key: SortKey; label: string; style?: CSSProperties; hint?: string 
   { key: 'status', label: 'Trạng thái' },
   { key: 'priority', label: 'Ưu tiên' },
   { key: 'progress', label: 'Tiến độ', style: { minWidth: 120 } },
-  { key: 'owner', label: 'Phụ trách' },
+  { key: 'owner', label: 'Phụ trách', hint: 'Người được giao thực hiện việc.' },
+  { key: 'creator', label: 'Người giao', hint: 'Người tạo & giao việc này.' },
   { key: 'unit', label: 'Đơn vị' },
   { key: 'objective', label: 'OKR' },
   { key: 'project', label: 'Thuộc dự án', hint: 'Dự án xuyên-OKR (mã PRJ) mà việc này được gom vào. Khác với nhãn "Loại: Dự án" (kiểu nút trong cây thực thi).' },
@@ -85,8 +87,8 @@ const COLS: { key: SortKey; label: string; style?: CSSProperties; hint?: string 
 
 // Độ rộng MẶC ĐỊNH mỗi cột (%) — table-layout:fixed nên tổng ~100 để vừa màn hình; cột nào cũng wrap.
 const DEFAULT_COLW: Record<string, string> = {
-  code: '9%', title: '19%', status: '7%', priority: '7%', progress: '9%', owner: '14%',
-  unit: '11%', objective: '7%', project: '7%', due: '8%', created: '7%',
+  code: '8%', title: '16%', status: '7%', priority: '6%', progress: '8%', owner: '12%', creator: '12%',
+  unit: '9%', objective: '6%', project: '6%', due: '6%', created: '5%',
 };
 
 // Cảnh báo hạn (đồng bộ ExecutionTabs): chỉ tính việc CÒN MỞ.
@@ -787,6 +789,28 @@ export default function TaskExplorer({
                     </span>
                   ) : <span className="muted" style={{ fontSize: 12.5 }}>—</span>}
                 </td>
+                <td>
+                  {t.created_by ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5 }}>
+                      {t.creator_avatar && (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={t.creator_avatar} alt="" referrerPolicy="no-referrer"
+                          style={{ width: 20, height: 20, borderRadius: '50%', flex: '0 0 auto' }} />
+                      )}
+                      <span style={{ display: 'inline-flex', flexDirection: 'column', lineHeight: 1.25, minWidth: 0 }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+                          <UserLink email={t.created_by} name={t.creator_name} stop />
+                          {t.owner_email && t.created_by.toLowerCase() === t.owner_email.toLowerCase() && (
+                            <span className="badge" style={{ fontSize: 9.5, padding: '0 5px' }} title="Người giao cũng là người phụ trách">tự giao</span>
+                          )}
+                        </span>
+                        {titleByEmail.get(t.created_by.toLowerCase()) && (
+                          <span className="muted" style={{ fontSize: 11 }}>{titleByEmail.get(t.created_by.toLowerCase())}</span>
+                        )}
+                      </span>
+                    </span>
+                  ) : <span className="muted" style={{ fontSize: 12.5 }}>—</span>}
+                </td>
                 <td style={{ fontSize: 12.5 }}>
                   {t.unit_name
                     ? t.unit_name
@@ -984,6 +1008,14 @@ function TasksKanban({
                         {c.due_on && <span>· {fmtDate(c.due_on)}</span>}
                         <span className="kb-card-prog">{c.progress.toFixed(0)}%</span>
                       </div>
+                      {c.created_by && (
+                        <div className="kb-card-giver" title="Người giao việc">
+                          <span className="kb-giver-ic">↳</span> giao bởi{' '}
+                          {c.owner_email && c.created_by.toLowerCase() === c.owner_email.toLowerCase()
+                            ? <b>tự giao</b>
+                            : <b>{c.creator_name || c.created_by}</b>}
+                        </div>
+                      )}
                       {dl !== 'none' && <div className="kb-card-dl"><DeadlineBadge t={c} /></div>}
                       <div className="kb-mini"><span style={{ width: `${Math.max(0, Math.min(100, c.progress))}%` }} /></div>
                     </div>

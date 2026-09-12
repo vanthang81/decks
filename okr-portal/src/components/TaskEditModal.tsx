@@ -162,6 +162,18 @@ export default function TaskEditModal({
                     </>
                   ) : <span className="muted">Chưa giao</span>}
                 </td></tr>
+                <tr><td className="muted">Người giao</td><td>
+                  {task.created_by
+                    ? (task.owner_email && task.created_by.toLowerCase() === task.owner_email.toLowerCase()
+                        ? <span className="muted">Tự giao (cũng là người phụ trách)</span>
+                        : (
+                          <>
+                            <UserLink email={task.created_by} name={task.creator_name ?? null} />
+                            {(() => { const ti = users.find((u) => u.email.toLowerCase() === (task.created_by ?? '').toLowerCase())?.title; return ti ? <span className="muted"> · {ti}</span> : null; })()}
+                          </>
+                        ))
+                    : <span className="muted">—</span>}
+                </td></tr>
                 <tr><td className="muted">Đơn vị</td><td>{task.unit_name || <span className="muted">—</span>}</td></tr>
                 <tr><td className="muted">Ưu tiên</td><td>{PRIO_LABEL[task.priority] ?? task.priority}</td></tr>
                 <tr><td className="muted">Bắt đầu</td><td>{task.start_on ? fmtDate(task.start_on) : <span className="muted">—</span>}</td></tr>

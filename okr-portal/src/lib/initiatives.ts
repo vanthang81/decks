@@ -60,7 +60,8 @@ export type Initiative = {
   budget_actual: number;
   budget_currency: string;
   budget_source: string | null;
-  created_by: string | null;
+  created_by: string | null;        // email người GIAO việc (người tạo)
+  creator_name: string | null;      // tên hiển thị người giao (để render cột "Người giao")
   evidence_url: string | null;
   expected_output: string | null;
 };
@@ -77,9 +78,11 @@ const SELECT = `
          i.status, i.priority,
          i.progress::float8 AS progress, i.start_on::text, i.due_on::text, i.done_on::text,
          i.budget_planned::float8 AS budget_planned, i.budget_actual::float8 AS budget_actual,
-         i.budget_currency, i.budget_source, i.created_by, i.evidence_url, i.expected_output
+         i.budget_currency, i.budget_source, i.created_by, cu.display_name AS creator_name,
+         i.evidence_url, i.expected_output
     FROM okr_initiatives i
     LEFT JOIN okr_users u ON u.email = i.owner_email
+    LEFT JOIN okr_users cu ON cu.email = i.created_by
     LEFT JOIN okr_units un ON un.id = i.unit_id
     LEFT JOIN okr_projects pr ON pr.id = i.project_id
     LEFT JOIN okr_meetings mt ON mt.id = i.meeting_id
@@ -134,7 +137,9 @@ export type TaskRow = {
   owner_email: string | null;
   owner_name: string | null;
   owner_avatar: string | null;
-  created_by: string | null;
+  created_by: string | null;         // email người GIAO việc (người tạo)
+  creator_name: string | null;       // tên hiển thị người giao
+  creator_avatar: string | null;     // avatar người giao
   unit_id: string | null;
   unit_name: string | null;
   project_id: string | null;
@@ -170,7 +175,8 @@ const TASK_SELECT = `
   SELECT i.id, i.code, i.kind, i.title, i.status, i.priority, i.description, i.parent_id,
          EXISTS (SELECT 1 FROM okr_initiatives c WHERE c.parent_id = i.id) AS has_children,
          i.progress::float8 AS progress, i.start_on::text, i.due_on::text, i.done_on::text,
-         i.owner_email, u.display_name AS owner_name, u.avatar_url AS owner_avatar, i.created_by,
+         i.owner_email, u.display_name AS owner_name, u.avatar_url AS owner_avatar,
+         i.created_by, cu.display_name AS creator_name, cu.avatar_url AS creator_avatar,
          i.unit_id, un.name AS unit_name,
          i.project_id, pr.code AS project_code, pr.name AS project_name, pr.owner_email AS project_owner,
          i.meeting_id, mtg.code AS meeting_code, mtg.title AS meeting_title,
@@ -183,6 +189,7 @@ const TASK_SELECT = `
          i.evidence_url, i.expected_output, i.created_at::text AS created_at
     FROM okr_initiatives i
     LEFT JOIN okr_users u ON u.email = i.owner_email
+    LEFT JOIN okr_users cu ON cu.email = i.created_by
     LEFT JOIN okr_units un ON un.id = i.unit_id
     LEFT JOIN okr_projects pr ON pr.id = i.project_id
     LEFT JOIN okr_meetings mtg ON mtg.id = i.meeting_id

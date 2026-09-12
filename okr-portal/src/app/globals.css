@@ -1815,6 +1815,10 @@ details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 
   color: var(--muted); font-size: 11.5px; margin-top: 6px;
 }
 .kb-card-prog { margin-left: auto; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+/* Người giao việc trên thẻ Kanban — dòng phụ nhỏ, nhẹ */
+.kb-card-giver { color: var(--muted); font-size: 11px; margin-top: 3px; }
+.kb-card-giver b { color: var(--ink); font-weight: 600; }
+.kb-giver-ic { opacity: .6; }
 .kb-mini { height: 5px; border-radius: 999px; background: #EFEAE3; overflow: hidden; margin-top: 5px; }
 .kb-mini > span { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
 .kb-empty { color: var(--muted); text-align: center; font-size: 12px; padding: 8px 0; opacity: .5; }

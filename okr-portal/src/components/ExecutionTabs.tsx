@@ -70,6 +70,8 @@ export type Card = {
   owner_email: string | null;
   owner_name: string | null;
   created_by?: string | null;
+  creator_name?: string | null;
+  creator_avatar?: string | null;
   unit_id: string | null;
   unit_name: string | null;
   project_id: string | null;
@@ -618,6 +620,13 @@ function EditModal({
                 <tr><td className="muted">Phụ trách</td><td>
                   {card.owner_email || card.owner_name ? <UserLink email={card.owner_email} name={card.owner_name} title={users.find((u) => u.email.toLowerCase() === (card.owner_email ?? '').toLowerCase())?.title ?? undefined} /> : <span className="muted">Chưa giao</span>}
                 </td></tr>
+                <tr><td className="muted">Người giao</td><td>
+                  {card.created_by
+                    ? (card.owner_email && card.created_by.toLowerCase() === card.owner_email.toLowerCase()
+                        ? <span className="muted">Tự giao (cũng là người phụ trách)</span>
+                        : <UserLink email={card.created_by} name={card.creator_name ?? null} title={users.find((u) => u.email.toLowerCase() === (card.created_by ?? '').toLowerCase())?.title ?? undefined} />)
+                    : <span className="muted">—</span>}
+                </td></tr>
                 <tr><td className="muted">Đơn vị</td><td>{card.unit_name || <span className="muted">—</span>}</td></tr>
                 <tr><td className="muted">Ưu tiên</td><td>{PRIO_LABEL[card.priority] ?? card.priority}</td></tr>
                 <tr><td className="muted">Bắt đầu</td><td>{card.start_on ? fmtDate(card.start_on) : <span className="muted">—</span>}</td></tr>
@@ -1130,6 +1139,11 @@ function ListView({
                 <div className="il-meta">
                   <span className="il-metatext">
                     {n.owner_name ? `👤 ${n.owner_name}` : 'Chưa giao'}
+                    {n.created_by
+                      ? (n.owner_email && n.created_by.toLowerCase() === n.owner_email.toLowerCase()
+                          ? ' · ✎ tự giao'
+                          : ` · ✎ Giao: ${n.creator_name || n.created_by}`)
+                      : ''}
                     {n.unit_name ? ` · 🏢 ${n.unit_name}` : ''}
                     {n.due_on ? ` · Hạn ${fmtD(n.due_on)}` : ''}
                   </span>
@@ -1290,6 +1304,14 @@ function KanbanView({
                         {c.due_on && <span>· {fmtD(c.due_on)}</span>}
                         <span className="kb-card-prog">{c.progress.toFixed(0)}%</span>
                       </div>
+                      {c.created_by && (
+                        <div className="kb-card-giver" title="Người giao việc">
+                          <span className="kb-giver-ic">↳</span> giao bởi{' '}
+                          {c.owner_email && c.created_by.toLowerCase() === c.owner_email.toLowerCase()
+                            ? <b>tự giao</b>
+                            : <b>{c.creator_name || c.created_by}</b>}
+                        </div>
+                      )}
                       {deadlineInfo(c).state !== 'none' && (
                         <div className="kb-card-dl">
                           <DeadlineBadge c={c} />

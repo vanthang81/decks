@@ -130,6 +130,13 @@ export default function MyTasksBoard({
                               📅 {fmtDate(t.due_on)}{overdue ? ' · quá hạn' : ''}
                             </span>
                           )}
+                          {t.created_by && (
+                            <span className="mytb-chip" title="Người giao việc">
+                              ✎ {t.owner_email && t.created_by.toLowerCase() === t.owner_email.toLowerCase()
+                                ? 'Tự giao'
+                                : `Giao bởi ${t.creator_name || t.created_by}`}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="mytb-prog">
@@ -208,6 +215,13 @@ function MyTaskModal({
 
         <table className="t te-detail" style={{ marginTop: 8 }}>
           <tbody>
+            <tr><td className="muted">Người giao</td><td>
+              {task.created_by
+                ? (task.owner_email && task.created_by.toLowerCase() === task.owner_email.toLowerCase()
+                    ? <span className="muted">Tự giao</span>
+                    : <b>{task.creator_name || task.created_by}</b>)
+                : <span className="muted">—</span>}
+            </td></tr>
             <tr><td className="muted">Đơn vị</td><td>{task.unit_name || <span className="muted">—</span>}</td></tr>
             <tr><td className="muted">Ưu tiên</td><td>{PRIO_LABEL[task.priority] ?? task.priority}</td></tr>
             <tr><td className="muted">Bắt đầu</td><td>{task.start_on ? fmtDate(task.start_on) : <span className="muted">—</span>}</td></tr>
