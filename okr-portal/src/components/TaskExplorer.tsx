@@ -693,7 +693,7 @@ export default function TaskExplorer({
           </div>
         )
       )}
-      <div className="table-sticky">
+      <div className="table-sticky te-desktop">
         <table className={`t task-table${canBulk ? ' has-check' : ''}`}>
           <colgroup>
             {canBulk && <col style={{ width: 34 }} />}
@@ -866,6 +866,92 @@ export default function TaskExplorer({
           </tbody>
         </table>
       </div>
+
+      {/* MOBILE: dạng thẻ (card) — bảng nhiều cột co lại trên màn hẹp rất khó đọc (CFO 13/09).
+          Cùng dữ liệu/pageRows với bảng; ẩn/hiện bằng media query trong globals.css. */}
+      <div className="te-cards">
+        {pageRows.map((t) => {
+          const ek = effKindT(t);
+          const wait = waitingTitles(t.id);
+          const selfAssign = !!(t.owner_email && t.created_by && t.created_by.toLowerCase() === t.owner_email.toLowerCase());
+          const okrs = t.project_id ? projectMeta[t.project_id]?.okrs ?? [] : [];
+          return (
+            <div key={t.id} className={`te-card${selected.has(t.id) ? ' te-sel' : ''}`} onClick={() => setEditing(t)}>
+              <div className="te-card-top">
+                {canBulk && (
+                  <span className="te-card-chk" onClick={(e) => e.stopPropagation()}>
+                    {manageSet.has(t.id)
+                      ? <input type="checkbox" checked={selected.has(t.id)} onChange={() => toggleOne(t.id)} aria-label="Chọn việc này" />
+                      : <span className="tt-nocheck" title="Bạn không có quyền quản lý việc này">–</span>}
+                  </span>
+                )}
+                {ek !== 'action' && <span className={`badge ${KIND_CLS[ek]}`} style={{ fontSize: 10 }}>{KIND_LABEL[ek]}</span>}
+                {t.code && <span className="okr-code">{t.code}</span>}
+                {t.priority === 'high' && <span className="badge red" style={{ fontSize: 10 }}>Ưu tiên</span>}
+                <span className={`badge ${STATUS_CLS[t.status]} te-card-st`}>{STATUS_LABEL[t.status]}</span>
+              </div>
+
+              <div className="te-card-title"><b>{t.title}</b></div>
+              {wait.length > 0 && <div className="te-card-wait"><WaitBadge titles={wait} /></div>}
+
+              <div className="te-card-meta">
+                <span className="te-m">
+                  <span className="te-m-k">Phụ trách</span>
+                  {t.owner_email
+                    ? <span className="te-m-v" onClick={(e) => e.stopPropagation()}>
+                        {t.owner_avatar && (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img src={t.owner_avatar} alt="" referrerPolicy="no-referrer" className="te-ava" />
+                        )}
+                        <UserLink email={t.owner_email} name={t.owner_name} stop />
+                      </span>
+                    : <span className="te-m-v muted">Chưa giao</span>}
+                </span>
+                <span className="te-m">
+                  <span className="te-m-k">Người giao</span>
+                  <span className="te-m-v" onClick={(e) => e.stopPropagation()}>
+                    {t.created_by
+                      ? (selfAssign ? <span className="badge" style={{ fontSize: 10 }}>tự giao</span> : <UserLink email={t.created_by} name={t.creator_name} stop />)
+                      : <span className="muted">—</span>}
+                  </span>
+                </span>
+                {(t.unit_name || (t.project_id && projectMeta[t.project_id]?.unit_name)) && (
+                  <span className="te-m">
+                    <span className="te-m-k">Đơn vị</span>
+                    <span className="te-m-v">
+                      {t.unit_name || <span className="inh">{projectMeta[t.project_id!]!.unit_name}<em> · dự án</em></span>}
+                    </span>
+                  </span>
+                )}
+                {t.due_on && (
+                  <span className="te-m">
+                    <span className="te-m-k">Hạn</span>
+                    <span className="te-m-v">{fmtDate(t.due_on)} <DeadlineBadge t={t} /></span>
+                  </span>
+                )}
+              </div>
+
+              {(t.objective_id || okrs.length > 0 || t.project_id || (!t.objective_id && t.meeting_id)) && (
+                <div className="te-card-ctx" onClick={(e) => e.stopPropagation()}>
+                  {t.objective_code
+                    ? <Link href={`/objectives/${t.objective_id}`} className="ctx-chip ctx-o">🎯 {t.objective_code}</Link>
+                    : okrs.length > 0
+                      ? <Link href={`/objectives/${okrs[0].id}`} className="ctx-chip ctx-o inh" title="Kế thừa từ dự án">🎯 {okrs[0].code || 'OKR'}{okrs.length > 1 ? ` +${okrs.length - 1}` : ''}<em> · dự án</em></Link>
+                      : null}
+                  {t.project_id && <Link href={`/projects/${t.project_id}`} className="ctx-chip ctx-proj">🗂 {t.project_code || t.project_name}</Link>}
+                  {!t.objective_id && t.meeting_id && <Link href={`/meetings/${t.meeting_id}`} className="ctx-chip ctx-mtg">🗓 {t.meeting_code || t.meeting_title}</Link>}
+                </div>
+              )}
+
+              <div className="te-card-prog">
+                <ProgressBar value={t.progress} />
+                <span className="te-card-pct mono">{t.progress.toFixed(0)}%</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       {filtered.length === 0 && (
         <div className="card"><p className="muted" style={{ margin: 0 }}>Không có công việc nào khớp bộ lọc.</p></div>
       )}

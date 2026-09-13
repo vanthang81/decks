@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-12.174';
+export const GUIDE_VERSION = '2026-09-13.175';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '13/09/2026 (Công việc — giao diện MOBILE dạng thẻ)',
+    items: [
+      'Màn hình Công việc (danh sách) trên điện thoại chuyển sang DẠNG THẺ gọn gàng thay vì bảng nhiều cột bị co nhỏ khó đọc — mỗi việc 1 thẻ: tiêu đề, trạng thái, phụ trách, người giao, đơn vị, hạn, OKR/dự án, tiến độ. Máy tính vẫn giữ bảng đầy đủ.',
+    ],
+  },
   {
     date: '12/09/2026 (Báo cáo thực hiện — hierarchy, drill-down evidence, charts, vinh danh)',
     items: [
