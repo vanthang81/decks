@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { getUser } from '@/lib/users';
 import { loadAccess, canSyncKpi } from '@/lib/access';
 import { syncAllKpi, syncKpiScorecardActuals } from '@/lib/kpi';
+import { resyncAllLinkedKrs } from '@/lib/okr';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -23,7 +24,9 @@ async function handle(req: NextRequest) {
   try {
     const r = await syncAllKpi();
     const sc = await syncKpiScorecardActuals().catch(() => ({ updated: 0 }));
-    return NextResponse.json({ ok: true, ...r, scorecardActuals: sc.updated });
+    // Sau khi cập nhật scorecard (BigQuery) → đồng bộ lại mọi KR gắn KPI (đơn vị + số + % đạt khớp scorecard).
+    const linkedKrs = await resyncAllLinkedKrs().catch(() => 0);
+    return NextResponse.json({ ok: true, ...r, scorecardActuals: sc.updated, linkedKrs });
   } catch (e) {
     return NextResponse.json({ ok: false, error: String(e) }, { status: 502 });
   }

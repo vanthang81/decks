@@ -5,6 +5,7 @@ import { requireUser } from '@/lib/current-user';
 import { listUnits, manageScope } from '@/lib/org';
 import { loadAccess, canInputKpi, canManageKpi, hasCap } from '@/lib/access';
 import { upsertKpiValue } from '@/lib/kpi-values';
+import { syncKrsForKpi } from '@/lib/okr';
 import { createKpi, type KpiInput, type KpiTier, type KpiDirection } from '@/lib/kpis';
 import type { BscPerspective } from '@/lib/okr';
 
@@ -45,7 +46,14 @@ export async function upsertKpiValueAction(fd: FormData) {
     },
     user.email,
   );
+  // Số scorecard đổi → đồng bộ NGAY vào mọi KR đang gắn KPI này (đơn vị + % đạt khớp scorecard).
+  try {
+    await syncKrsForKpi(kpiId);
+  } catch {
+    /* best-effort: KR sync lỗi không chặn lưu số KPI */
+  }
   revalidatePath('/kpi');
+  revalidatePath('/objectives');
 }
 
 // Tạo chỉ tiêu KPI mới NGAY trên Scorecard (popup) — gác canManageKpi (quản lý Thư viện KPI).

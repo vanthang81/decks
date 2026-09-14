@@ -505,7 +505,25 @@ export async function linkKrKpi(krId: string, kpiId: string | null): Promise<voi
   await query('UPDATE okr_key_results SET kpi_id=$2, updated_at=now() WHERE id=$1', [krId, kpiId]);
 }
 
-/** Kéo số từ KPI thư viện (giá trị ở kỳ + đơn vị của Objective) vào KR. Trả true nếu tìm được số. */
+/**
+ * Suy loại metric HỢP LÝ theo ĐƠN VỊ của KPI (nguồn sự thật khi KR gắn KPI thư viện).
+ * - '%' → percent · đơn vị TIỀN GỐC (đ/vnd/vnđ/đồng) → currency (fmtVnd tự quy tỷ/triệu)
+ * - còn lại (Tỷ/triệu/khách hàng/HĐ…) → number (hiện thẳng "477 Tỷ" đúng như scorecard).
+ */
+export function metricTypeForUnit(unit: string | null): MetricType {
+  const u = (unit ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').trim();
+  if (u === '%' || u.includes('phan tram')) return 'percent';
+  if (u === 'd' || u === 'vnd' || u === 'dong' || u.includes('dong')) return 'currency';
+  return 'number';
+}
+
+/**
+ * Kéo số từ KPI thư viện (Scorecard) vào KR — KR trở thành "gương" của KPI: lấy ĐÚNG
+ * mục tiêu + thực hiện + ĐƠN VỊ của KPI (tránh lệch đơn vị vnd↔Tỷ) → hiển thị & % đạt khớp
+ * hệt scorecard CFO nhập tay. Trả true nếu tìm được số.
+ * Chọn giá trị ở kỳ của OKR: ưu tiên ĐÚNG đơn vị OKR; nếu OKR không gắn đơn vị (cấp Công ty)
+ * hoặc đơn vị đó chưa có số → lấy dòng KPI mới nhất cho (kpi, kỳ) — thường là đơn vị Công ty.
+ */
 export async function syncKrFromKpi(krId: string): Promise<boolean> {
   const kr = await getKeyResult(krId);
   if (!kr?.kpi_id) return false;
@@ -513,15 +531,63 @@ export async function syncKrFromKpi(krId: string): Promise<boolean> {
     'SELECT period_id, unit_id FROM okr_objectives WHERE id=$1',
     [kr.objective_id],
   );
-  if (!obj?.unit_id) return false;
-  const v = await queryOne<{ target: number | null; actual: number | null }>(
-    `SELECT target::float8 AS target, actual::float8 AS actual
-       FROM okr_kpi_values WHERE kpi_id=$1 AND period_id=$2 AND unit_id=$3`,
+  if (!obj) return false;
+  const v = await queryOne<{ target: number | null; actual: number | null; kpi_unit: string | null }>(
+    `SELECT val.target::float8 AS target, val.actual::float8 AS actual, kp.unit_label AS kpi_unit
+       FROM okr_kpis kp
+       LEFT JOIN LATERAL (
+         SELECT vv.target, vv.actual
+           FROM okr_kpi_values vv
+          WHERE vv.kpi_id = kp.id AND vv.period_id = $2
+          ORDER BY (vv.unit_id = $3) DESC NULLS LAST, vv.updated_at DESC
+          LIMIT 1
+       ) val ON TRUE
+      WHERE kp.id = $1`,
     [kr.kpi_id, obj.period_id, obj.unit_id],
   );
-  if (!v) return false;
-  await setKrAutoValues(krId, v.target, v.actual);
+  if (!v || (v.target == null && v.actual == null)) return false;
+
+  const metric = metricTypeForUnit(v.kpi_unit);
+  const target = v.target ?? kr.target_value;
+  const current = v.actual ?? kr.current_value;
+  // Đưa KR về CÙNG bản vị với KPI (đơn vị + mục tiêu + thực hiện) → start=0 để % đạt của KR
+  // khớp ĐÚNG % đạt scorecard (= thực hiện / mục tiêu), tránh start cũ (đơn vị cũ) làm sai tiến độ.
+  const progress = computeKrProgress({
+    metric_type: metric,
+    direction: kr.direction,
+    start_value: 0,
+    target_value: target,
+    current_value: current,
+  });
+  await query(
+    `UPDATE okr_key_results
+        SET unit_label=$2, metric_type=$3, start_value=0, target_value=$4, current_value=$5,
+            progress=$6, updated_at=now()
+      WHERE id=$1`,
+    [krId, v.kpi_unit, metric, target, current, progress],
+  );
+  await recomputeUp(kr.objective_id);
   return true;
+}
+
+/** Đồng bộ lại MỌI KR đang gắn 1 KPI (gọi khi lưu số scorecard KPI → KR cập nhật KỊP THỜI). */
+export async function syncKrsForKpi(kpiId: string): Promise<number> {
+  const rows = await query<{ id: string }>('SELECT id FROM okr_key_results WHERE kpi_id=$1', [kpiId]);
+  let n = 0;
+  for (const r of rows) {
+    if (await syncKrFromKpi(r.id)) n++;
+  }
+  return n;
+}
+
+/** Đồng bộ lại TẤT CẢ KR có gắn KPI thư viện (dùng cho cron/route đồng bộ KPI + backfill). */
+export async function resyncAllLinkedKrs(): Promise<number> {
+  const rows = await query<{ id: string }>('SELECT id FROM okr_key_results WHERE kpi_id IS NOT NULL');
+  let n = 0;
+  for (const r of rows) {
+    if (await syncKrFromKpi(r.id)) n++;
+  }
+  return n;
 }
 
 export async function deleteKeyResult(krId: string): Promise<void> {

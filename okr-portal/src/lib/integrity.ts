@@ -13,6 +13,7 @@ type Counts = {
   task_project_period_mismatch: number;
   budget_line_mismatch: number;
   task_dep_cross_okr: number;
+  kr_kpi_drift: number;
 };
 
 const DEF: { key: keyof Counts; label: string; hint: string }[] = [
@@ -25,7 +26,18 @@ const DEF: { key: keyof Counts; label: string; hint: string }[] = [
   { key: 'task_project_period_mismatch', label: 'Việc gắn dự án khác kỳ với OKR gốc', hint: 'Công việc được gom vào một dự án (PRJ) thuộc kỳ KHÁC với kỳ của OKR gốc — có thể đã gắn nhầm dự án.' },
   { key: 'budget_line_mismatch', label: 'Ngân sách chi tiết lệch với ngân sách dự án', hint: 'Tổng kế hoạch các dòng chi tiết (sổ ngân sách) khác ngân sách khai báo của dự án >5% — cập nhật ngân sách dự án cho khớp để các trang khác hiển thị đúng.' },
   { key: 'task_dep_cross_okr', label: 'Việc phụ thuộc vào việc khác OKR', hint: 'Ràng buộc waterfall chỉ nên trong CÙNG một OKR. Việc đang phụ thuộc vào một việc thuộc OKR khác — có thể do dữ liệu cũ/gắn nhầm, nên gỡ.' },
+  { key: 'kr_kpi_drift', label: 'KR gắn KPI nhưng số chưa khớp KPI', hint: 'Key Result gắn 1 KPI Scorecard mà mục tiêu/thực hiện của KR KHÁC số KPI ở kỳ này — thường do gắn trước khi có cơ chế đồng bộ, hoặc lệch đơn vị. Mở KR bấm "Đồng bộ" hoặc lưu lại số KPI để cập nhật.' },
 ];
+
+// Số gọn cho trace-back (tỷ/triệu/nghìn) — chịu null.
+function fmtShort(n: number | null): string {
+  if (n == null || !Number.isFinite(n)) return '—';
+  const a = Math.abs(n);
+  if (a >= 1e9) return `${(n / 1e9).toFixed(2)} tỷ`;
+  if (a >= 1e6) return `${(n / 1e6).toFixed(1)} tr`;
+  if (a >= 1e3) return `${(n / 1e3).toFixed(1)} k`;
+  return `${Math.round(n * 100) / 100}`;
+}
 
 // OKR gốc của 1 công việc = objective_id trực tiếp, hoặc suy từ key_result.
 const OKR_OF = (a: string) => `COALESCE(${a}.objective_id, (SELECT objective_id FROM okr_key_results WHERE id=${a}.key_result_id))`;
@@ -74,7 +86,19 @@ export async function integrityIssues(periodId: string): Promise<IntegrityIssue[
           JOIN okr_objectives o ON o.id = COALESCE(i.objective_id,
                (SELECT objective_id FROM okr_key_results WHERE id = i.key_result_id))
          WHERE o.period_id=$1 AND p.period_id IS NOT NULL AND p.period_id <> $1)::int
-         AS task_project_period_mismatch`,
+         AS task_project_period_mismatch,
+       (SELECT count(*) FROM okr_key_results k
+          JOIN okr_objectives o ON o.id=k.objective_id
+          LEFT JOIN LATERAL (
+            SELECT vv.target::float8 AS t, vv.actual::float8 AS a
+              FROM okr_kpi_values vv
+             WHERE vv.kpi_id=k.kpi_id AND vv.period_id=$1
+             ORDER BY (vv.unit_id = o.unit_id) DESC NULLS LAST, vv.updated_at DESC LIMIT 1
+          ) val ON TRUE
+         WHERE o.period_id=$1 AND k.kpi_id IS NOT NULL
+           AND ( (val.t IS NOT NULL AND abs(k.target_value::float8 - val.t) > 1 + 0.01*abs(val.t))
+              OR (val.a IS NOT NULL AND abs(k.current_value::float8 - val.a) > 1 + 0.01*abs(val.a)) ))::int
+         AS kr_kpi_drift`,
     [periodId],
   );
   const c = r[0] ?? ({} as Counts);
@@ -227,6 +251,36 @@ async function itemsFor(key: keyof Counts, periodId: string): Promise<IntegrityI
       } catch {
         return [];
       }
+    case 'kr_kpi_drift':
+      return (
+        await query<{
+          code: string | null; title: string; oid: string; ocode: string | null;
+          kr_t: number; kr_c: number; kpi_t: number | null; kpi_a: number | null; kpi_code: string | null;
+        }>(
+          `SELECT k.code, k.title, o.id AS oid, o.code AS ocode,
+                  k.target_value::float8 AS kr_t, k.current_value::float8 AS kr_c,
+                  val.t AS kpi_t, val.a AS kpi_a, kp.code AS kpi_code
+             FROM okr_key_results k
+             JOIN okr_objectives o ON o.id=k.objective_id
+             JOIN okr_kpis kp ON kp.id=k.kpi_id
+             LEFT JOIN LATERAL (
+               SELECT vv.target::float8 AS t, vv.actual::float8 AS a
+                 FROM okr_kpi_values vv
+                WHERE vv.kpi_id=k.kpi_id AND vv.period_id=$1
+                ORDER BY (vv.unit_id = o.unit_id) DESC NULLS LAST, vv.updated_at DESC LIMIT 1
+             ) val ON TRUE
+            WHERE o.period_id=$1 AND k.kpi_id IS NOT NULL
+              AND ( (val.t IS NOT NULL AND abs(k.target_value::float8 - val.t) > 1 + 0.01*abs(val.t))
+                 OR (val.a IS NOT NULL AND abs(k.current_value::float8 - val.a) > 1 + 0.01*abs(val.a)) )
+            ORDER BY o.code NULLS LAST, k.code NULLS LAST LIMIT ${CAP}`,
+          [periodId],
+        )
+      ).map((k) => ({
+        code: k.code,
+        title: k.title,
+        href: `/objectives/${k.oid}`,
+        sub: `KR (MT ${fmtShort(k.kr_t)} · TH ${fmtShort(k.kr_c)}) ≠ ${k.kpi_code ?? 'KPI'} (MT ${fmtShort(k.kpi_t)} · TH ${fmtShort(k.kpi_a)})`,
+      }));
     default:
       return [];
   }

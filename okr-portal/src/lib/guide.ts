@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-14.181';
+export const GUIDE_VERSION = '2026-09-14.182';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/09/2026 (KR gắn KPI: đồng bộ số & đơn vị kịp thời, chính xác)',
+    items: [
+      'KR gắn 1 KPI trong Thư viện KPI nay là "gương" của KPI đó: tự lấy ĐÚNG mục tiêu, thực hiện VÀ đơn vị của KPI (hết cảnh KR để "vnd" trong khi KPI theo "Tỷ" khiến số & % đạt lệch).',
+      'Sửa lỗi OKR CẤP CÔNG TY (không gắn đơn vị) không kéo được số KPI: nay tự lấy giá trị KPI ở đơn vị Công ty.',
+      'Nhập tay số Thực hiện/Mục tiêu trên Scorecard KPI → KR gắn KPI đó CẬP NHẬT NGAY (kịp thời), không phải đợi. Cron đồng bộ KPI cũng tự đồng bộ lại mọi KR gắn KPI.',
+    ],
+  },
   {
     date: '14/09/2026 (Check-in KR: cảnh báo nhập sai đơn vị)',
     items: [
