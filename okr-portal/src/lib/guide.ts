@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-14.178';
+export const GUIDE_VERSION = '2026-09-14.179';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/09/2026 (Báo cáo theo cấp: trọng số dạng % · Bảng kiểm tuân thủ gọn lại)',
+    items: [
+      'Báo cáo theo cấp: hiển thị trọng số OKR dạng "tỷ trọng %" (phần đóng góp trong nhóm) cho dễ đọc, thay số thô 0,3/0,15… (di chuột xem trọng số gốc).',
+      'Bảng kiểm tuân thủ: KHÔNG còn hiện thẻ "Bật Bảng kiểm" ở mọi dự án. Chỉ Super Admin mới bật/tắt module này (cho đúng dự án cần); dự án đã bật vẫn hiển thị bảng kiểm cho người quản lý như thường.',
+    ],
+  },
   {
     date: '14/09/2026 (Sửa trạng thái KPI: ngưỡng W/A/E = % đạt)',
     items: [

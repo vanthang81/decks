@@ -42,17 +42,25 @@ function GroupRow({ g, canEdit }: { g: ReportGroup; canEdit: boolean }) {
         <span style={{ fontWeight: 700, fontSize: 13.5, width: 44, textAlign: 'right' }}>{g.weighted}%</span>
       </summary>
       <div style={{ marginTop: 8, paddingLeft: 4 }}>
-        {g.items.map((it) => (
-          <div key={it.id} className="rep-okr-row" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0', fontSize: 13, flexWrap: 'wrap' }}>
-            {it.code && <span className="okr-code" style={{ fontSize: 11 }}>{it.code}</span>}
-            <Link href={`/objectives/${it.id}`} style={{ flex: 1, minWidth: 120 }}>{it.title}</Link>
-            <span className="rep-wgt muted" style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-              trọng số <b style={{ color: 'var(--ink)' }}>{it.weight}</b>
-              {canEdit && <WeightEditor objectiveId={it.id} weight={it.weight} title={it.title} />}
-            </span>
-            <span style={{ width: 40, textAlign: 'right', fontWeight: 600 }}>{Math.round(it.progress)}%</span>
-          </div>
-        ))}
+        {(() => {
+          // Hiển thị trọng số dạng % TỶ TRỌNG trong nhóm (thân thiện — CFO 14/09): weight ÷ Σweight nhóm.
+          const wsum = g.items.reduce((a, it) => a + (Number(it.weight) || 0), 0);
+          return g.items.map((it) => {
+            const pct = wsum > 0 ? Math.round(((Number(it.weight) || 0) / wsum) * 100) : 0;
+            return (
+              <div key={it.id} className="rep-okr-row" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0', fontSize: 13, flexWrap: 'wrap' }}>
+                {it.code && <span className="okr-code" style={{ fontSize: 11 }}>{it.code}</span>}
+                <Link href={`/objectives/${it.id}`} style={{ flex: 1, minWidth: 120 }}>{it.title}</Link>
+                <span className="rep-wgt muted" style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                  title={`Tỷ trọng ${pct}% trong nhóm (trọng số ${it.weight} / tổng ${Math.round(wsum * 100) / 100})`}>
+                  tỷ trọng <b style={{ color: 'var(--ink)' }}>{pct}%</b>
+                  {canEdit && <WeightEditor objectiveId={it.id} weight={it.weight} title={it.title} />}
+                </span>
+                <span style={{ width: 40, textAlign: 'right', fontWeight: 600 }}>{Math.round(it.progress)}%</span>
+              </div>
+            );
+          });
+        })()}
       </div>
     </details>
   );

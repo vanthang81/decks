@@ -41,7 +41,7 @@ import {
 import { listInitiativesForProject } from '@/lib/initiatives';
 import { listMeetingOptions } from '@/lib/meetings';
 import { StackedBar } from '@/components/charts';
-import { loadAccess, hasCap } from '@/lib/access';
+import { loadAccess, hasCap, isSuperAdmin } from '@/lib/access';
 import { fmtVnd, fmtDate } from '@/lib/format';
 import {
   editInitiativeAction,
@@ -93,6 +93,9 @@ export default async function ProjectDetail({ params }: { params: { id: string }
     listProjectObjectives(p.id),
   ]);
   const canManage = canManageProject(user, p, units, access);
+  // Bật/tắt module Bảng kiểm tuân thủ chỉ dành cho Super Admin (CFO 14/09) — tránh hiện thẻ "Bật
+  // Bảng kiểm" ở MỌI dự án. Dự án đã bật vẫn hiển thị bảng kiểm cho người quản lý như thường.
+  const canToggleCompliance = isSuperAdmin(user);
   // Phân quyền XEM (CFO 04/09): chỉ thành viên/assignee/quản lý/scope.all mới vào được trang dự án.
   const emailLc = user.email.toLowerCase();
   const isAssignee = tasks.some((t) => (t.owner_email ?? '').toLowerCase() === emailLc);
@@ -295,7 +298,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
                 remove={removeProjectFunctionAction}
               />
             )}
-            {canManage && (
+            {canToggleCompliance && (
               <ToastForm action={setComplianceEnabledAction} done="Đã tắt Bảng kiểm tuân thủ" style={{ margin: '-6px 0 6px' }}>
                 <input type="hidden" name="project_id" value={p.id} />
                 <input type="hidden" name="on" value="0" />
@@ -303,7 +306,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
               </ToastForm>
             )}
           </>
-        ) : canManage ? (
+        ) : canToggleCompliance ? (
           <div className="card">
             <div className="flexbtw" style={{ alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' }}>
               <div>

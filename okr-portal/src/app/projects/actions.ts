@@ -19,7 +19,7 @@ import {
 } from '@/lib/projects';
 import { getInitiative, canUpdateInitiative } from '@/lib/initiatives';
 import { getObjective } from '@/lib/okr';
-import { loadAccess, canEditObjective } from '@/lib/access';
+import { loadAccess, canEditObjective, isSuperAdmin } from '@/lib/access';
 
 function str(fd: FormData, k: string): string {
   return String(fd.get(k) ?? '').trim();
@@ -296,7 +296,8 @@ export async function setComplianceEnabledAction(fd: FormData) {
   const projectId = str(fd, 'project_id');
   const p = await getProject(projectId);
   if (!p) throw new Error('Không tìm thấy dự án.');
-  if (!canManageProject(user, p, units, access)) throw new Error('Bạn không có quyền cấu hình dự án này.');
+  // Bật/tắt module Bảng kiểm tuân thủ CHỈ Super Admin (CFO 14/09) — tránh module chạy vào mọi dự án.
+  if (!isSuperAdmin(user)) throw new Error('Chỉ Super Admin mới bật/tắt được Bảng kiểm tuân thủ.');
   const on = str(fd, 'on') === '1';
   const { setComplianceEnabled } = await import('@/lib/compliance');
   await setComplianceEnabled(projectId, on);
