@@ -61,6 +61,15 @@ export async function listProjectObjectiveIds(projectId: string): Promise<string
   return rows.map((r) => r.objective_id);
 }
 
+/** Gắn THÊM 1 OKR vào dự án (không xoá cái đang có). Dùng khi tạo OKR có chọn "Gắn vào Dự án". */
+export async function linkProjectObjective(projectId: string, objectiveId: string): Promise<void> {
+  await query(
+    `INSERT INTO okr_project_objectives (project_id, objective_id) VALUES ($1, $2)
+     ON CONFLICT (project_id, objective_id) DO NOTHING`,
+    [projectId, objectiveId],
+  );
+}
+
 /** Đặt LẠI toàn bộ danh sách OKR của dự án (thay thế): xoá cái bỏ, thêm cái mới. */
 export async function setProjectObjectives(projectId: string, objectiveIds: string[]): Promise<void> {
   const ids = [...new Set(objectiveIds.filter(Boolean))];

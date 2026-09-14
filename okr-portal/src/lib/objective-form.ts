@@ -15,12 +15,14 @@ import {
   type Level,
 } from './okr';
 import { listStrategicPillars } from './strategy';
+import { listProjectsByPeriod } from './projects';
 
 export async function buildObjectiveFormProps(user: OkrUser, periodId: string) {
   const [units, users, access] = await Promise.all([listUnits(), listUsers(), loadAccess()]);
-  const [objectives, pillars] = await Promise.all([
+  const [objectives, pillars, projects] = await Promise.all([
     listObjectivesByPeriod(periodId),
     listStrategicPillars(),
+    listProjectsByPeriod(periodId),
   ]);
 
   // Đơn vị trong phạm vi tạo được (OKR admin/exec = tất cả; lead = subtree của mình).
@@ -44,6 +46,7 @@ export async function buildObjectiveFormProps(user: OkrUser, periodId: string) {
     units: allowedUnits.map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort })),
     users: users.map((u) => ({ email: u.email, name: u.display_name || u.email, role: u.role, unit_id: u.unit_id, unit_name: u.unit_name, title: personTitle(u) })),
     periodObjectives: objectives.map((o) => ({ id: o.id, code: o.code, title: o.title, level: o.level, bsc: o.bsc_perspective })),
+    projects: projects.map((p) => ({ id: p.id, code: p.code, name: p.name })),
     pillars: pillars.map((p) => ({ id: p.id, code: p.code, title: p.title, bsc: p.bsc_perspective })),
     bscOptions: BSC_PERSPECTIVES.map((b) => ({ value: b, label: BSC_PERSPECTIVE_LABEL[b], icon: BSC_PERSPECTIVE_ICON[b] })),
     okrTypeOptions: (['committed', 'aspirational', 'learning'] as const).map((t) => ({ value: t, label: OKR_TYPE_LABEL[t], expect: OKR_TYPE_EXPECT[t] })),

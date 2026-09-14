@@ -24,7 +24,7 @@ const METRICS = [{ v: 'number', l: 'Số' }, { v: 'percent', l: '%' }, { v: 'cur
 
 export default function NewObjectiveForm({
   periodId, currentEmail, allowedLevels, defaultLevel, levelLabels,
-  units, users, periodObjectives, pillars, bscOptions, okrTypeOptions, create,
+  units, users, periodObjectives, pillars, projects = [], bscOptions, okrTypeOptions, create,
   inline = false, onSuccess, onCancel,
 }: {
   periodId: string;
@@ -36,6 +36,7 @@ export default function NewObjectiveForm({
   users: UserOpt[];
   periodObjectives: ParentOpt[];
   pillars: PillarOpt[];
+  projects?: { id: string; code: string | null; name: string }[];
   bscOptions: BscOpt[];
   okrTypeOptions: { value: string; label: string; expect: string }[];
   create: (fd: FormData) => Promise<void>;
@@ -50,6 +51,7 @@ export default function NewObjectiveForm({
   const [bsc, setBsc] = useState('');
   const [showAllParents, setShowAllParents] = useState(false);
   const [parentId, setParentId] = useState('');
+  const [projectId, setProjectId] = useState('');
   const [title, setTitle] = useState('');
   const [okrType, setOkrType] = useState('committed');
   const [status, setStatus] = useState('active');
@@ -114,6 +116,7 @@ export default function NewObjectiveForm({
     fd.set('unit_id', needsUnit ? unitId : '');
     fd.set('owner_email', owner);
     fd.set('parent_id', parentId);
+    fd.set('project_id', projectId);
     fd.set('okr_type', okrType);
     fd.set('status', status);
     fd.set('weight', weight);
@@ -166,6 +169,14 @@ export default function NewObjectiveForm({
           <input type="checkbox" checked={showAllParents} onChange={(e) => setShowAllParents(e.target.checked)} />
           Hiện OKR cha ở mọi viễn cảnh (mặc định chỉ cùng thẻ BSC)
         </label>
+      )}
+
+      {projects.length > 0 && (
+        <>
+          <label className="f">Gắn vào Dự án <span className="muted" style={{ fontWeight: 400 }}>— tuỳ chọn (OKR sẽ hiện ở mục “OKR liên quan” của dự án)</span></label>
+          <SearchSelect name="_project_pick" value={projectId} onChange={setProjectId} emptyLabel="— Không gắn dự án —"
+            options={projects.map((p) => ({ value: p.id, label: p.name, sub: p.code ?? undefined }))} />
+        </>
       )}
 
       <label className="f">Mục tiêu (Objective) *</label>

@@ -157,6 +157,18 @@ export async function createObjectiveAction(fd: FormData) {
     /* krs không hợp lệ → bỏ qua, OKR vẫn tạo */
   }
 
+  // Gắn OKR vào Dự án (tuỳ chọn) — CFO 14/09: "tạo OKR cho Dự án" = liên kết OKR↔Dự án sẵn có
+  // (không thêm cấp mới). Chỉ gắn khi user QUẢN được dự án đó.
+  const projectId = orNull(str(fd, 'project_id'));
+  if (projectId) {
+    const proj = await getProject(projectId);
+    if (proj && canManageProject(user, proj, units, access)) {
+      const { linkProjectObjective } = await import('@/lib/project-objectives');
+      await linkProjectObjective(projectId, id);
+      revalidatePath(`/projects/${projectId}`);
+    }
+  }
+
   await logAudit({ actor: user.email, action: 'objective.create', entity: 'objective', entityId: id, detail: { title } });
   // Gọi từ POPUP (inline=1) → KHÔNG redirect, chỉ revalidate để đóng cửa sổ + làm mới danh sách tại chỗ.
   if (str(fd, 'inline')) {

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-14.179';
+export const GUIDE_VERSION = '2026-09-14.180';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/09/2026 (Tạo OKR: gắn vào Dự án)',
+    items: [
+      'Form Tạo OKR có thêm ô "Gắn vào Dự án" (tuỳ chọn): tạo OKR như bình thường rồi chọn 1 Dự án để liên kết — OKR sẽ hiện ở mục "OKR liên quan" của dự án đó. Chỉ gắn được vào dự án bạn quản lý.',
+    ],
+  },
   {
     date: '14/09/2026 (Báo cáo theo cấp: trọng số dạng % · Bảng kiểm tuân thủ gọn lại)',
     items: [
