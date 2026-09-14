@@ -38,7 +38,8 @@ export const PAGE_TOURS: Record<string, TourStep[]> = {
     { target: 'objectives-new', title: 'Tạo OKR', body: 'Bấm đây để tạo OKR: chọn Cấp (Công ty/Khối/Phòng/Cá nhân) + đơn vị + kỳ, và "Liên kết lên" một OKR cấp trên để tạo dòng chảy chiến lược.' },
     { target: 'objectives-export', title: 'Xuất Excel', body: 'Xuất OKR ra Excel — chọn nhiều kỳ & đơn vị, tiện cho báo cáo và họp.' },
     { target: 'objectives-tree', title: 'Cây OKR & bộ lọc', body: 'Cây mục tiêu theo alignment. Có thanh lọc (tìm theo tên/mã/người, lọc Khối/Cấp/Trạng thái). Bấm TÊN một OKR để mở chi tiết.' },
-    done('Bạn đã nắm cách xem và tạo OKR. Mở lại hướng dẫn này bất cứ lúc nào từ nút "Hướng dẫn" trên header.'),
+    { target: 'ot-reorder', title: 'Sắp xếp thứ tự OKR', body: 'Người quản lý bấm "Sắp xếp thứ tự" rồi KÉO ⠿ (hoặc bấm ▲/▼) để đổi thứ tự các OKR trong cùng một nhóm — đưa OKR ưu tiên/liên quan lên trước. Thứ tự lưu tự động.' },
+    done('Bạn đã nắm cách xem, tạo và sắp xếp OKR. Mở lại hướng dẫn này bất cứ lúc nào từ nút "Hướng dẫn" trên header.'),
   ],
 
   'objective-detail': [

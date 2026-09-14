@@ -874,6 +874,24 @@ td:has(> .row-actions) { white-space: nowrap; width: 1%; }
 }
 .ot-tbtn:hover:not(:disabled) { color: var(--ink); border-color: #dcd3c9; background: #FBF7F2; }
 .ot-tbtn:disabled { opacity: .4; cursor: default; }
+.ot-tbtn.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+/* Kéo-thả sắp xếp OKR (CFO 14/09) */
+.ot-reorder-hint { font-size: 12.5px; margin: 0 0 10px; }
+.ot-row.ot-reorder { cursor: grab; }
+.ot-row.ot-reorder:active { cursor: grabbing; }
+.ot-row.ot-dragging { opacity: .5; }
+.ot-row.ot-over { border-color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary); background: var(--primary-tint); }
+.ot-reorder-ctl { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 2px; }
+.ot-drag { color: var(--muted); font-size: 15px; line-height: 1; padding: 0 2px; cursor: grab; user-select: none; }
+.ot-move {
+  width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--line); background: #fff; color: var(--muted); border-radius: 6px;
+  font-size: 10px; cursor: pointer; padding: 0;
+}
+.ot-move:hover:not(:disabled) { color: var(--primary); border-color: var(--primary); background: var(--primary-tint); }
+.ot-move:disabled { opacity: .3; cursor: default; }
+.ot-ttl-static { font-weight: 600; color: var(--ink); }
 
 .ot-row {
   display: flex; align-items: center; gap: 10px; padding: 9px 12px 9px 9px;

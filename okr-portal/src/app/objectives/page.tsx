@@ -6,11 +6,12 @@ import ImportOkr from '@/components/ImportOkr';
 import NewObjectiveModal from '@/components/NewObjectiveModal';
 import ExportOkrModal from '@/components/ExportOkrModal';
 import { buildObjectiveFormProps } from '@/lib/objective-form';
-import { createObjectiveAction } from './actions';
+import { createObjectiveAction, reorderObjectivesAction } from './actions';
 import { requireUser } from '@/lib/current-user';
+import { isExec } from '@/lib/rbac';
 import { listUnits, objectiveViewScope, canViewObjectiveUnit } from '@/lib/org';
 import { unitTreeOptions } from '@/lib/unit-options';
-import { loadAccess, canImportData } from '@/lib/access';
+import { loadAccess, canImportData, hasCap } from '@/lib/access';
 import {
   getCurrentPeriod,
   listPeriods,
@@ -39,7 +40,8 @@ export default async function ObjectivesPage({
     ? await getPeriod(searchParams.period)
     : (await getCurrentPeriod()) ?? periods[0] ?? null;
 
-  const canImport = canImportData(user, await loadAccess());
+  const access = await loadAccess();
+  const canImport = canImportData(user, access);
   const allObjectives = period ? await listObjectivesByPeriod(period.id) : [];
   const overLimit = period ? await ownersOverObjectiveLimit(period.id) : [];
   const units = await listUnits();
@@ -50,6 +52,9 @@ export default async function ObjectivesPage({
     ? allObjectives
     : allObjectives.filter((o) => canViewObjectiveUnit(viewScope, o, user.email));
   const scopedView = viewScope !== null;
+  // Kéo-thả sắp xếp OKR: dành cho người quản lý (điều hành / có quyền sửa OKR / toàn phạm vi).
+  // Server (reorderObjectivesAction) vẫn kiểm quyền SỬA từng OKR nên an toàn.
+  const canReorder = !scopedView && (isExec(user.role) || hasCap(user, 'okr.edit', access) || hasCap(user, 'scope.all', access));
   const unitOptions = unitTreeOptions(units, { excludeCompany: true });
   // Dữ liệu cho popup "+ Tạo OKR" (chỉ khi có kỳ + không phải nhân viên).
   const okrFormProps = period && user.role !== 'staff' ? await buildObjectiveFormProps(user, period.id) : null;
@@ -150,7 +155,7 @@ export default async function ObjectivesPage({
           {period && objectives.length === 0 && (
             <p className="muted">Kỳ này chưa có OKR nào. Bấm “+ Tạo OKR”.</p>
           )}
-          {period && objectives.length > 0 && <ObjectiveTree objectives={treeData} unitOptions={unitOptions} initialOwner={searchParams.owner} />}
+          {period && objectives.length > 0 && <ObjectiveTree objectives={treeData} unitOptions={unitOptions} initialOwner={searchParams.owner} canReorder={canReorder} reorder={reorderObjectivesAction} />}
         </div>
 
         {childSections.length > 0 && (

@@ -289,6 +289,14 @@ export async function setObjectiveBsc(id: string, bsc: BscPerspective | null): P
   await query('UPDATE okr_objectives SET bsc_perspective=$2, updated_at=now() WHERE id=$1', [id, bsc]);
 }
 
+/** Ghi thứ tự (cột `sort`) cho các OKR theo danh sách id truyền vào (0..n-1).
+ *  Dùng cho kéo-thả sắp xếp OKR trong cùng một nhóm anh em ở /objectives. */
+export async function setObjectivesSort(ids: string[]): Promise<void> {
+  for (let i = 0; i < ids.length; i++) {
+    await query('UPDATE okr_objectives SET sort=$2, updated_at=now() WHERE id=$1', [ids[i], i]);
+  }
+}
+
 /** Đặt/gỡ OKR cha (cascade alignment). Chặn vòng lặp: cha mới không được là chính
  *  nó hoặc bất kỳ hậu duệ nào của nó. Trả về false nếu bị chặn (tạo vòng). */
 export async function setObjectiveParent(id: string, parentId: string | null): Promise<boolean> {

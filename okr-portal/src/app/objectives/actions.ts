@@ -12,6 +12,7 @@ import {
   updateObjective,
   setObjectiveWeight,
   setObjectiveParent,
+  setObjectivesSort,
   setObjectiveBsc,
   linkKrKpi,
   syncKrFromKpi,
@@ -332,6 +333,25 @@ export async function editObjectiveAction(fd: FormData) {
 
   await logAudit({ actor: user.email, action: 'objective.update', entity: 'objective', entityId: id, detail: { title } });
   revalidatePath(`/objectives/${id}`);
+  revalidatePath('/objectives');
+}
+
+// Kéo-thả sắp xếp thứ tự OKR (cùng nhóm anh em) — ghi cột `sort`. Gác: đăng nhập + phải có quyền
+// SỬA từng OKR trong danh sách (canEditObjective) + cùng kỳ. Thứ tự chỉ tương đối trong nhóm cha.
+export async function reorderObjectivesAction(ids: string[]) {
+  const user = await requireUser();
+  if (!Array.isArray(ids) || ids.length === 0) return;
+  const [units, access] = await Promise.all([listUnits(), loadAccess()]);
+  const objs = await Promise.all(ids.map((id) => getObjective(id)));
+  const list = objs.filter((o): o is NonNullable<typeof o> => !!o);
+  if (list.length !== ids.length) throw new Error('OKR không hợp lệ.');
+  const period = list[0].period_id;
+  for (const o of list) {
+    if (o.period_id !== period) throw new Error('Chỉ sắp xếp các OKR trong cùng một kỳ.');
+    if (!canEditObjective(user, o, units, access)) throw new Error('Bạn không có quyền sắp xếp các OKR này.');
+  }
+  await setObjectivesSort(ids);
+  await logAudit({ actor: user.email, action: 'objective.reorder', entity: 'objective', entityId: list[0].id, detail: { count: ids.length } });
   revalidatePath('/objectives');
 }
 

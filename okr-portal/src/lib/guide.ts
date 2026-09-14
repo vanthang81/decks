@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-14.176';
+export const GUIDE_VERSION = '2026-09-14.177';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/09/2026 (Kéo-thả sắp xếp thứ tự OKR)',
+    items: [
+      'Trang OKR: người quản lý bấm "Sắp xếp thứ tự" rồi kéo ⠿ (hoặc bấm ▲/▼ — tiện trên điện thoại) để đổi thứ tự các OKR trong cùng một nhóm (cùng cấp cha) — vd đưa OKR Bán lẻ lên đầu dưới OKR Công ty. Thứ tự lưu tự động (cột sort).',
+    ],
+  },
   {
     date: '14/09/2026 (Sửa OKR — liên kết lên OKR NGANG HÀNG)',
     items: [

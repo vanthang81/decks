@@ -1,11 +1,13 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ClearFiltersButton from '@/components/ClearFiltersButton';
 import { ProgressBar } from './ui';
 import SearchSelect from '@/components/SearchSelect';
 import UserLink from '@/components/UserLink';
+import { useToast } from '@/components/ToastProvider';
 import { unitIcon } from '@/lib/unit-icons';
 import { OBJ_STATUS_LABEL, OBJ_STATUSES } from '@/lib/okr-status';
 
@@ -75,9 +77,75 @@ function collectParents(nodes: Node[], acc: Set<string>): Set<string> {
   return acc;
 }
 
-export default function ObjectiveTree({ objectives, unitOptions, initialOwner }: { objectives: TreeObjective[]; unitOptions?: { value: string; label: string }[]; initialOwner?: string }) {
-  const roots = useMemo(() => buildTree(objectives), [objectives]);
+export default function ObjectiveTree({
+  objectives, unitOptions, initialOwner, canReorder = false, reorder,
+}: {
+  objectives: TreeObjective[];
+  unitOptions?: { value: string; label: string }[];
+  initialOwner?: string;
+  canReorder?: boolean;                                  // được phép kéo-thả sắp xếp OKR
+  reorder?: (ids: string[]) => Promise<void>;            // lưu thứ tự nhóm anh em
+}) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [, startReorder] = useTransition();
+  // Bản sao cục bộ để kéo-thả tối ưu (optimistic); đồng bộ khi server trả dữ liệu mới.
+  const [items, setItems] = useState<TreeObjective[]>(objectives);
+  useEffect(() => { setItems(objectives); }, [objectives]);
+  const [reorderMode, setReorderMode] = useState(false);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+
+  const roots = useMemo(() => buildTree(items), [items]);
   const parentIds = useMemo(() => collectParents(roots, new Set<string>()), [roots]);
+
+  // "Cha hiệu lực" để nhóm anh em: cha nằm trong tập → id cha; ngược lại (gốc) → '__root'.
+  const byIdAll = useMemo(() => new Map(items.map((o) => [o.id, o])), [items]);
+  const effParent = (o: TreeObjective): string => (o.parent_id && byIdAll.has(o.parent_id) ? o.parent_id : '__root');
+
+  const persistOrder = (arr: TreeObjective[], ep: string) => {
+    if (!reorder) return;
+    const sibIds = arr.filter((o) => effParent(o) === ep).map((o) => o.id);
+    startReorder(async () => {
+      try { await reorder(sibIds); toast('Đã lưu thứ tự OKR', 'success'); router.refresh(); }
+      catch (e) { setItems(objectives); toast(e instanceof Error ? e.message : 'Không lưu được thứ tự', 'error'); }
+    });
+  };
+
+  // Đổi chỗ liền kề (nút ↑/↓ — thân thiện điện thoại) trong cùng nhóm anh em.
+  const moveAdj = (id: string, dir: -1 | 1) => {
+    const o = items.find((x) => x.id === id);
+    if (!o) return;
+    const ep = effParent(o);
+    const sibs = items.filter((x) => effParent(x) === ep);
+    const si = sibs.findIndex((x) => x.id === id);
+    const ti = si + dir;
+    if (ti < 0 || ti >= sibs.length) return;
+    const arr = [...items];
+    const ai = arr.findIndex((x) => x.id === id);
+    const aj = arr.findIndex((x) => x.id === sibs[ti].id);
+    [arr[ai], arr[aj]] = [arr[aj], arr[ai]];
+    setItems(arr);
+    persistOrder(arr, ep);
+  };
+
+  // Thả (kéo-thả desktop): đưa OKR đang kéo tới vị trí OKR đích, chỉ trong cùng nhóm anh em.
+  const drop = (targetId: string) => {
+    const dId = dragId; setDragId(null); setOverId(null);
+    if (!dId || dId === targetId) return;
+    const src = items.find((x) => x.id === dId);
+    const tgt = items.find((x) => x.id === targetId);
+    if (!src || !tgt) return;
+    const ep = effParent(src);
+    if (effParent(tgt) !== ep) { toast('Chỉ kéo trong cùng một nhóm (cùng cấp cha).', 'error'); return; }
+    const origSrc = items.findIndex((x) => x.id === dId);
+    const origTgt = items.findIndex((x) => x.id === targetId);
+    const arr = items.filter((x) => x.id !== dId);
+    const ti = arr.findIndex((x) => x.id === targetId);
+    arr.splice(origSrc < origTgt ? ti + 1 : ti, 0, src);
+    setItems(arr);
+    persistOrder(arr, ep);
+  };
 
   // Mặc định: mở Công ty + Khối, thu gọn từ Phòng trở xuống (depth >= 2) cho dễ nhìn tổng thể.
   const defaultCollapsed = useMemo(() => {
@@ -201,9 +269,29 @@ export default function ObjectiveTree({ objectives, unitOptions, initialOwner }:
   const renderNode = (n: Node): React.ReactNode => {
     const hasKids = n.children.length > 0;
     const isCollapsed = collapsed.has(n.id);
+    // Vị trí trong nhóm anh em (để bật/tắt nút ↑/↓ ở đầu/cuối).
+    const ep = effParent(n);
+    const sibs = items.filter((x) => effParent(x) === ep);
+    const sidx = sibs.findIndex((x) => x.id === n.id);
+    const canUp = sidx > 0, canDown = sidx >= 0 && sidx < sibs.length - 1;
     return (
       <div key={n.id} className="ot-node">
-        <div className="ot-row" data-level={n.level}>
+        <div
+          className={`ot-row${reorderMode ? ' ot-reorder' : ''}${dragId === n.id ? ' ot-dragging' : ''}${overId === n.id ? ' ot-over' : ''}`}
+          data-level={n.level}
+          draggable={reorderMode || undefined}
+          onDragStart={reorderMode ? (e) => { setDragId(n.id); e.dataTransfer.effectAllowed = 'move'; } : undefined}
+          onDragEnd={reorderMode ? () => { setDragId(null); setOverId(null); } : undefined}
+          onDragOver={reorderMode ? (e) => { e.preventDefault(); if (overId !== n.id) setOverId(n.id); } : undefined}
+          onDrop={reorderMode ? (e) => { e.preventDefault(); drop(n.id); } : undefined}
+        >
+          {reorderMode && (
+            <span className="ot-reorder-ctl" onClick={(e) => e.stopPropagation()}>
+              <span className="ot-drag" title="Kéo để sắp xếp" aria-hidden>⠿</span>
+              <button type="button" className="ot-move" disabled={!canUp} title="Lên" aria-label="Lên" onClick={() => moveAdj(n.id, -1)}>▲</button>
+              <button type="button" className="ot-move" disabled={!canDown} title="Xuống" aria-label="Xuống" onClick={() => moveAdj(n.id, 1)}>▼</button>
+            </span>
+          )}
           {hasKids ? (
             <button
               type="button"
@@ -228,7 +316,9 @@ export default function ObjectiveTree({ objectives, unitOptions, initialOwner }:
               )}
               <span className={`ot-lvl lvl-${n.level}`}>{LEVEL_LABEL[n.level] ?? n.level}</span>
               {n.code && <span className="okr-code">{n.code}</span>}
-              <Link href={`/objectives/${n.id}`}>{n.title}</Link>
+              {reorderMode
+                ? <span className="ot-ttl-static">{n.title}</span>
+                : <Link href={`/objectives/${n.id}`}>{n.title}</Link>}
               {hasKids && <span className="ot-kids">{n.children.length}</span>}
             </div>
             <div className="ot-meta">
@@ -303,17 +393,27 @@ export default function ObjectiveTree({ objectives, unitOptions, initialOwner }:
         </>
       ) : (
         <>
-          {parentIds.size > 0 && (
-            <div className="ot-toolbar">
-              <button type="button" className="ot-tbtn" onClick={expandAll} disabled={allExpanded}>
+          {(parentIds.size > 0 || canReorder) && (
+            <div className="ot-toolbar" data-tour="ot-reorder">
+              <button type="button" className="ot-tbtn" onClick={expandAll} disabled={allExpanded || reorderMode}>
                 <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
                 Mở rộng tất cả
               </button>
-              <button type="button" className="ot-tbtn" onClick={collapseAll} disabled={allCollapsed}>
+              <button type="button" className="ot-tbtn" onClick={collapseAll} disabled={allCollapsed || reorderMode}>
                 <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden><path d="M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
                 Thu gọn tất cả
               </button>
+              {canReorder && (
+                <button type="button" className={`ot-tbtn${reorderMode ? ' on' : ''}`} onClick={() => setReorderMode((v) => !v)}
+                  title="Kéo-thả (hoặc nút ▲▼) để sắp xếp thứ tự OKR trong cùng nhóm — vd đưa OKR ưu tiên/liên quan lên trước">
+                  <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden><path d="M8 2v12M8 2L5 5M8 2l3 3M8 14l-3-3M8 14l3-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                  {reorderMode ? 'Xong sắp xếp' : 'Sắp xếp thứ tự'}
+                </button>
+              )}
             </div>
+          )}
+          {reorderMode && (
+            <p className="muted ot-reorder-hint">Kéo biểu tượng ⠿ (hoặc bấm ▲/▼) để đổi thứ tự các OKR trong cùng một nhóm. Thứ tự lưu tự động; bấm “Xong sắp xếp” để mở lại liên kết.</p>
           )}
           <div className="ot-body">{roots.map(renderNode)}</div>
         </>
