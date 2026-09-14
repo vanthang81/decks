@@ -35,9 +35,11 @@ const TYPE_LABEL: Record<string, string> = {
 const LEVEL_LABEL: Record<string, string> = {
   company: 'Công ty', division: 'Khối', department: 'Phòng', individual: 'Cá nhân',
 };
-// Cấp cha hợp lệ theo cấp con (con phải thấp hơn cha).
+// Cấp cha hợp lệ theo cấp con: cấp CAO HƠN hoặc NGANG HÀNG (CFO 14/09 — cho phép gộp 1 OKR
+// vào một OKR khác cùng cấp, vd Khối → Khối, để nhóm các OKR liên quan/ưu tiên gần nhau).
+// Công ty vẫn liên kết lên Trụ cột chiến lược (pillars) — xử lý riêng bên dưới.
 const PARENT_LEVELS: Record<string, string[]> = {
-  company: [], division: ['company'], department: ['division'], individual: ['department', 'division'],
+  company: [], division: ['company', 'division'], department: ['division', 'department'], individual: ['department', 'division', 'individual'],
 };
 
 export default function ObjectiveEditButton({
@@ -100,9 +102,9 @@ export default function ObjectiveEditButton({
   // Đổi cấp → nếu OKR cha đang chọn không còn hợp lệ thì bỏ chọn.
   useEffect(() => { if (parentId && !parentOpts.some((p) => p.id === parentId)) setParentId(''); }, [parentOpts, parentId]);
 
-  const parentLabel = level === 'company' ? 'Liên kết lên Trụ cột chiến lược'
-    : level === 'division' ? 'Liên kết lên OKR Công ty'
-    : level === 'department' ? 'Liên kết lên OKR Khối' : 'Liên kết lên OKR Khối/Phòng';
+  const parentLabel = level === 'company'
+    ? 'Liên kết lên Trụ cột chiến lược'
+    : 'Liên kết lên OKR cấp trên / ngang hàng';
 
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

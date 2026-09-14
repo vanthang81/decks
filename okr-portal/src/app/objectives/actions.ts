@@ -319,11 +319,12 @@ export async function editObjectiveAction(fd: FormData) {
     if (parentId) {
       const parent = await getObjective(parentId);
       if (!parent) throw new Error('OKR cha đã chọn không tồn tại.');
+      // Cấp cha hợp lệ: CAO HƠN hoặc NGANG HÀNG (CFO 14/09 — cho gộp OKR vào 1 OKR cùng cấp).
       const okParentLevel: Record<string, string[]> = {
-        company: ['company'], division: ['company'], department: ['division'], individual: ['department', 'division'],
+        company: ['company'], division: ['company', 'division'], department: ['division', 'department'], individual: ['department', 'division', 'individual'],
       };
       if (!(okParentLevel[level] ?? []).includes(parent.level))
-        throw new Error('OKR cha phải ở cấp cao hơn phù hợp (Cá nhân→Phòng/Khối · Phòng→Khối · Khối→Công ty).');
+        throw new Error('OKR cha phải ở cấp cao hơn hoặc ngang hàng (Cá nhân→Cá nhân/Phòng/Khối · Phòng→Phòng/Khối · Khối→Khối/Công ty).');
     }
     const ok = await setObjectiveParent(id, parentId);
     if (!ok) throw new Error('Không thể liên kết: sẽ tạo vòng lặp cascade (OKR cha là hậu duệ của OKR này).');

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-13.175';
+export const GUIDE_VERSION = '2026-09-14.176';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/09/2026 (Sửa OKR — liên kết lên OKR NGANG HÀNG)',
+    items: [
+      'Khi Sửa OKR, ô "Liên kết lên OKR" nay cho chọn cả OKR CÙNG CẤP (ngang hàng), không chỉ cấp cao hơn — để gộp một OKR vào một OKR liên quan cùng cấp (vd Khối → Khối). Mỗi lựa chọn có nhãn cấp [Công ty]/[Khối]/… để dễ phân biệt; hệ thống tự chặn liên kết tạo vòng lặp.',
+    ],
+  },
   {
     date: '13/09/2026 (Công việc — giao diện MOBILE dạng thẻ)',
     items: [
