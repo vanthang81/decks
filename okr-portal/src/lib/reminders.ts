@@ -4,6 +4,7 @@ import { getCurrentPeriod } from './periods';
 import { sendMail, mailBaseUrl } from './mail';
 import { brandedEmail } from './mail-layout';
 import { roleAtLeast, type Role } from './rbac';
+import { allowedByPolicy } from './notif-policy';
 
 // #4 Nhắc check-in — cấu hình được ở /admin/settings, gửi qua "Deck Mail".
 export type ReminderConfig = {
@@ -87,10 +88,13 @@ export async function runCheckinReminders(opts: {
   if (!period) return { sent: 0, skipped: 'no-period', recipients: [] };
 
   const map = await computeStaleByOwner(period.id, cfg.stale_days, cfg.audience);
+  // Chính sách nhóm: nhóm CHỈ-XEM / tắt "báo cáo" không nhận nhắc check-in (CFO 14/09).
+  const allow = await allowedByPolicy(Array.from(map.keys()), 'checkin_reminder');
   const appUrl = mailBaseUrl();
   let sent = 0;
   const recipients: string[] = [];
   for (const [email, g] of map) {
+    if (!allow.has(email.toLowerCase())) continue;
     const list = g.items
       .map((i) => `<li><b>${esc(i.kr)}</b> — ${esc(i.obj)}</li>`)
       .join('');

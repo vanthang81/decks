@@ -9,6 +9,7 @@ import { sendMail, mailBaseUrl } from './mail';
 import { brandedEmail, emailEsc, emailSection } from './mail-layout';
 import { getSetting, setSetting } from './settings';
 import { isSuperAdmin, userGroupKey } from './access';
+import { allowedByPolicy } from './notif-policy';
 import { INIT_STATUS_LABEL, type InitStatus, type Priority, type Initiative } from './initiatives';
 
 export const TASK_CHANGE_ENABLED_KEY = 'task_change_enabled';
@@ -201,6 +202,9 @@ export async function dispatchTaskChangeDigests(
   }
   if (due.length === 0) return { sent: 0, recipients: [], skipped: opts?.onlyEmail ? 'Không tìm thấy người dùng.' : 'Chưa tới giờ gửi của ai.' };
 
+  // CHÍNH SÁCH NHÓM: nhóm CHỈ-XEM / nhóm tắt "báo cáo" KHÔNG nhận (bỏ qua khi gửi thử onlyEmail).
+  const allow = opts?.onlyEmail ? null : await allowedByPolicy(due.map((d) => d.email), 'task_change');
+
   // 2) Lấy event gần đây kèm người giao + chủ trì OKR (1 truy vấn) — cửa sổ tối đa 3 ngày.
   const events = await query<EventRow>(
     `SELECT e.id, e.task_id, e.task_title, e.actor_email, e.actor_name, e.kind, e.summary, e.created_at::text,
@@ -217,6 +221,7 @@ export async function dispatchTaskChangeDigests(
   let sent = 0;
   for (const r of due) {
     const rlc = r.email.toLowerCase();
+    if (allow && !allow.has(rlc)) continue;
     const sinceMs = opts?.onlyEmail ? Date.now() - 3 * 86400_000 : (r.lastSent ? new Date(r.lastSent).getTime() : Date.now() - 3 * 86400_000);
     // Event mà người này là NGƯỜI GIAO hoặc CHỦ TRÌ OKR, KHÔNG do chính họ gây ra, kể từ lần gửi trước.
     const mine = events.filter((e) =>

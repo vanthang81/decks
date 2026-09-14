@@ -4,7 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/current-user';
 import { isRole, isExec, type Role } from '@/lib/rbac';
 import { loadAccess, canManageSystem, canAssignPerms, invalidateAccess, isSuperAdmin, userGroupKey, PERM_GROUPS_KEY } from '@/lib/access';
-import { DEFAULT_GROUPS, CAPABILITIES, SYSADMIN_DENY_CAPS, type CapKey } from '@/lib/capabilities';
+import { DEFAULT_GROUPS, CAPABILITIES, SYSADMIN_DENY_CAPS, GROUP_KEYS, type CapKey } from '@/lib/capabilities';
+import { setNotifGroupPolicy, type GroupPolicy } from '@/lib/notif-policy';
 import {
   upsertUser,
   setUserActive,
@@ -328,6 +329,22 @@ export async function savePermissionsAction(fd: FormData) {
   await setSetting(PERM_GROUPS_KEY, out);
   invalidateAccess();
   redirect('/admin/permissions?saved=1');
+}
+
+// ---------- Chính sách nhận thông báo/báo cáo theo Nhóm quyền (CFO 14/09) ----------
+export async function saveNotifPolicyAction(fd: FormData) {
+  const me = await requireUser();
+  const access = await loadAccess();
+  if (!canAssignPerms(me, access)) throw new Error('Bạn không có quyền phân quyền.');
+  const policy = {} as GroupPolicy;
+  for (const g of GROUP_KEYS) {
+    policy[g] = {
+      notify: fd.get(`np_${g}_notify`) === 'on',
+      report: fd.get(`np_${g}_report`) === 'on',
+    };
+  }
+  await setNotifGroupPolicy(policy);
+  redirect('/admin/permissions?savedNp=1');
 }
 
 export async function testReminderAction() {

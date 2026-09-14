@@ -2,6 +2,7 @@ import { query } from './db';
 import { sendMail, mailBaseUrl } from './mail';
 import { brandedEmail } from './mail-layout';
 import { notifEnabled } from './notifications';
+import { allowedByPolicy } from './notif-policy';
 
 // NHẮC CÔNG VIỆC QUA EMAIL + CHUÔNG (CFO 30/08): (2) sắp đến hạn 1 ngày · (3) quá hạn ·
 // (4) tổng hợp quá hạn hàng tuần. ((1) "được giao mới" đã có sẵn qua notifyTaskAssigned/notify.)
@@ -61,8 +62,10 @@ async function openTasksDue(where: string): Promise<TaskRow[]> {
 /** (2) Sắp đến hạn: due_on = NGÀY MAI (giờ VN). */
 export async function remindTasksDueSoon(): Promise<number> {
   const rows = await openTasksDue(`i.due_on = ((now() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date + 1)`);
+  const allow = await allowedByPolicy(rows.map((r) => r.owner_email ?? ''), 'task_due_soon');
   let n = 0;
   for (const t of rows) {
+    if (!allow.has((t.owner_email ?? '').toLowerCase())) continue;
     const subject = `[OKR BTMH] Công việc đến hạn ngày mai: ${t.title}`;
     const html = brandedEmail({
       kicker: 'Nhắc công việc', title: 'Công việc đến hạn ngày mai',
@@ -77,8 +80,10 @@ export async function remindTasksDueSoon(): Promise<number> {
 /** (3) Quá hạn: due_on < HÔM NAY (giờ VN) & còn mở — nhắc MỘT LẦN cho mỗi lần quá hạn (idempotent 20 ngày). */
 export async function remindTasksOverdue(): Promise<number> {
   const rows = await openTasksDue(`i.due_on < (now() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date`);
+  const allow = await allowedByPolicy(rows.map((r) => r.owner_email ?? ''), 'task_overdue');
   let n = 0;
   for (const t of rows) {
+    if (!allow.has((t.owner_email ?? '').toLowerCase())) continue;
     const subject = `[OKR BTMH] Công việc QUÁ HẠN: ${t.title}`;
     const html = brandedEmail({
       kicker: 'Nhắc công việc', title: 'Công việc đã quá hạn',
@@ -93,10 +98,12 @@ export async function remindTasksOverdue(): Promise<number> {
 /** (4) Tổng hợp quá hạn HÀNG TUẦN: mỗi người 1 email liệt kê toàn bộ việc quá hạn còn mở. */
 export async function weeklyOverdueDigest(): Promise<number> {
   const rows = await openTasksDue(`i.due_on < (now() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date`);
+  const allow = await allowedByPolicy(rows.map((r) => r.owner_email ?? ''), 'task_overdue_weekly');
   // Gom theo người nhận.
   const byOwner = new Map<string, TaskRow[]>();
   for (const t of rows) {
     if (!notifEnabled(t.notif_prefs, 'task_overdue_weekly') || !t.notify_email) continue;
+    if (!allow.has((t.owner_email ?? '').toLowerCase())) continue;
     const k = (t.owner_email ?? '').trim();
     if (!k) continue;
     (byOwner.get(k) ?? byOwner.set(k, []).get(k)!).push(t);

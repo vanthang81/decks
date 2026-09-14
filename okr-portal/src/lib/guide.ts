@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-14.182';
+export const GUIDE_VERSION = '2026-09-14.183';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/09/2026 (Chính sách nhận Thông báo/Báo cáo theo Nhóm quyền)',
+    items: [
+      'Người dùng CHỈ-XEM (nhóm "Người xem") MẶC ĐỊNH KHÔNG nhận bất kỳ thông báo hay báo cáo nào — tránh làm phiền người chỉ theo dõi.',
+      'Quản trị → Phân quyền có thêm ma trận "Nhận Thông báo & Báo cáo theo Nhóm quyền": bật/tắt cho từng nhóm 2 loại — Thông báo & tương tác (chuông + email @nhắc/bình luận/giao việc) và Báo cáo & nhắc định kỳ (bản tin tuần, tóm tắt sáng, nhắc việc đến/quá hạn, thay đổi công việc, nhắc check-in).',
+      'Lớp chặn theo NHÓM áp lên mọi kênh gửi; cá nhân vẫn tự tắt thêm ở Cài đặt cá nhân.',
+    ],
+  },
   {
     date: '14/09/2026 (KR gắn KPI: đồng bộ số & đơn vị kịp thời, chính xác)',
     items: [

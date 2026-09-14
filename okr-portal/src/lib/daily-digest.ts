@@ -6,6 +6,7 @@ import { query } from './db';
 import { sendMail, mailBaseUrl } from './mail';
 import { brandedEmail, emailEsc, emailSection } from './mail-layout';
 import { notifEnabled } from './notifications';
+import { allowedByPolicy } from './notif-policy';
 import { getSetting, setSetting } from './settings';
 
 const DUE_SOON_DAYS = 3;
@@ -130,6 +131,8 @@ export async function buildAllDigests(): Promise<UserDigest[]> {
   }
 
   // Chỉ giữ user CÓ việc tồn đọng + bật nhận email + chưa tắt loại daily_digest
+  // + NHÓM QUYỀN được nhận "báo cáo" (user CHỈ-XEM mặc định không nhận — CFO 14/09).
+  const allow = await allowedByPolicy(users.map((u) => u.email), 'daily_digest');
   const out: UserDigest[] = [];
   for (const u of users) {
     const d = byEmail.get(u.email.toLowerCase());
@@ -138,6 +141,7 @@ export async function buildAllDigests(): Promise<UserDigest[]> {
     if (!hasWork) continue;
     if (!u.notify_email) continue;
     if (!notifEnabled(u.notif_prefs, 'daily_digest')) continue;
+    if (!allow.has(u.email.toLowerCase())) continue;
     out.push(d);
   }
   return out;

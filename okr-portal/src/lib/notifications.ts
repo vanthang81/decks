@@ -1,6 +1,7 @@
 import { query, queryOne } from './db';
 import { sendMail, mailBaseUrl } from './mail';
 import { brandedEmail, emailEsc } from './mail-layout';
+import { allowedByPolicy } from './notif-policy';
 
 export type Notification = {
   id: string;
@@ -192,7 +193,11 @@ export async function notify(input: {
     `SELECT email, notify_email, notif_prefs FROM okr_users WHERE lower(email) = ANY($1) AND is_active=true`,
     [uniq.map((e) => e.toLowerCase())],
   );
-  const wanted = active.filter((u) => notifEnabled(u.notif_prefs, input.type));
+  const prefWanted = active.filter((u) => notifEnabled(u.notif_prefs, input.type));
+  if (prefWanted.length === 0) return;
+  // CHÍNH SÁCH NHÓM: user CHỈ-XEM (hoặc nhóm bị tắt) KHÔNG nhận (CFO 14/09).
+  const allow = await allowedByPolicy(prefWanted.map((u) => u.email), input.type);
+  const wanted = prefWanted.filter((u) => allow.has(u.email.toLowerCase()));
   if (wanted.length === 0) return;
 
   for (const u of wanted) {

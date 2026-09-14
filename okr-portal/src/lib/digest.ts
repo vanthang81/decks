@@ -4,7 +4,8 @@ import { brandedEmail, emailSection } from './mail-layout';
 import { currentReviewData, type ReviewData } from './review';
 import { STATUS_LABEL } from './kpi-values';
 import { getSetting, setSetting } from './settings';
-import { loadAccess, hasCap } from './access';
+import { loadAccess, hasCap, userGroupKey } from './access';
+import { getNotifGroupPolicy, groupAllowsType } from './notif-policy';
 import { notifEnabled } from './notifications';
 import type { OkrUser } from './users';
 
@@ -78,6 +79,7 @@ type DigestUser = {
 /** Người nhận bản tin = có năng lực 'digest.weekly' + bật email + chưa tự tắt loại 'weekly_digest'. */
 export async function digestRecipients(): Promise<{ email: string; name: string | null }[]> {
   const access = await loadAccess();
+  const policy = await getNotifGroupPolicy();
   const rows = await query<DigestUser>(
     `SELECT email, display_name AS name, role, perm_group, notify_email, notif_prefs
        FROM okr_users WHERE is_active = true ORDER BY email`,
@@ -88,6 +90,8 @@ export async function digestRecipients(): Promise<{ email: string; name: string 
     if (!notifEnabled(u.notif_prefs, 'weekly_digest')) continue;
     const user = { email: u.email, role: u.role, perm_group: u.perm_group } as OkrUser;
     if (!hasCap(user, 'digest.weekly', access)) continue;
+    // Chính sách nhóm (user CHỈ-XEM / nhóm bị tắt "báo cáo" → không nhận).
+    if (!groupAllowsType(userGroupKey(user), 'weekly_digest', policy)) continue;
     out.push({ email: u.email, name: u.name });
   }
   return out;

@@ -8,21 +8,23 @@ import { loadAccess, canManageSystem, canAssignPerms, isSuperAdmin, userGroupKey
 import { CAPABILITIES, CAP_CATEGORIES, DEFAULT_GROUPS, SYSADMIN_DENY_CAPS, type GroupKey } from '@/lib/capabilities';
 import { ROLES, ROLE_LABEL } from '@/lib/rbac';
 import { listPositions } from '@/lib/positions';
+import { getNotifGroupPolicy, NOTIF_CATEGORY_META } from '@/lib/notif-policy';
 import PositionsManager from '@/components/PositionsManager';
 import ApplySuggestions from '@/components/ApplySuggestions';
-import { savePermissionsAction, savePositionAction, deletePositionAction } from '../actions';
+import { savePermissionsAction, savePositionAction, deletePositionAction, saveNotifPolicyAction } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminPermissions({
   searchParams,
 }: {
-  searchParams: { saved?: string };
+  searchParams: { saved?: string; savedNp?: string };
 }) {
   const me = await requireUser();
   const access = await loadAccess();
   if (!canManageSystem(me, access)) redirect('/');
   const editable = canAssignPerms(me, access);
+  const notifPolicy = await getNotifGroupPolicy();
   const sa = isSuperAdmin(me);
   const myGroup = userGroupKey(me);
   const DENY = new Set<string>(SYSADMIN_DENY_CAPS);
@@ -173,6 +175,71 @@ export default async function AdminPermissions({
                     Có {suggestCount} gợi ý phân quyền chưa áp dụng.
                   </span>
                 )}
+              </div>
+            )}
+          </div>
+        </form>
+
+        {/* ── Chính sách nhận Thông báo / Báo cáo theo Nhóm quyền (CFO 14/09) ── */}
+        <div className="pagetitle" style={{ marginTop: 26 }}>
+          Nhận Thông báo &amp; Báo cáo theo Nhóm quyền
+        </div>
+        <p className="subtitle">
+          Chọn nhóm nào được nhận <b>thông báo</b> (chuông + email tương tác) và <b>báo cáo/nhắc định kỳ</b>
+          {' '}(bản tin tuần, tóm tắt sáng, nhắc việc đến/quá hạn, thay đổi công việc, nhắc check-in).
+          {' '}<b>Người xem</b> mặc định <b>KHÔNG nhận gì</b> — tránh làm phiền người chỉ theo dõi.
+          {' '}(Mỗi cá nhân vẫn có thể tự tắt thêm ở Cài đặt cá nhân.)
+        </p>
+
+        {searchParams.savedNp && <p className="badge green">Đã lưu chính sách thông báo.</p>}
+
+        <form action={saveNotifPolicyAction}>
+          <div className="card">
+            <div className="table-scroll">
+              <table className="perm-matrix">
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left', minWidth: 200 }}>Nhóm quyền</th>
+                    {NOTIF_CATEGORY_META.map((c) => (
+                      <th key={c.key} title={c.desc}>
+                        <div className="grp-h-l">{c.label}</div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {groups.map((g) => {
+                    const gp = notifPolicy[g.key as GroupKey];
+                    return (
+                    <tr key={g.key}>
+                      <td style={{ textAlign: 'left' }}>
+                        <b>{g.icon} {g.label}</b>
+                        <div className="muted" style={{ fontSize: 12 }}>{g.desc}</div>
+                      </td>
+                      {NOTIF_CATEGORY_META.map((c) => (
+                        <td key={c.key} style={{ textAlign: 'center' }}>
+                          <input
+                            type="checkbox"
+                            name={`np_${g.key}_${c.key}`}
+                            defaultChecked={gp?.[c.key] !== false}
+                            disabled={!editable}
+                            style={{ width: 'auto' }}
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="muted" style={{ fontSize: 12.5, marginTop: 10, marginBottom: 0 }}>
+              Tắt một ô = nhóm đó KHÔNG nhận loại thông báo tương ứng (kể cả người đã bật ở Cài đặt cá nhân).
+              Đây là lớp chặn theo NHÓM; muốn từng người tự chọn thì để bật ở đây rồi để họ tuỳ chỉnh.
+            </p>
+            {editable && (
+              <div style={{ marginTop: 12 }}>
+                <button className="btn" type="submit">Lưu chính sách thông báo</button>
               </div>
             )}
           </div>
