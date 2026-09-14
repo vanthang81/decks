@@ -61,21 +61,25 @@ export default function NewKpiModal({
       <label className="f">Cụm / mô-đun <span className="muted" style={{ fontWeight: 400 }}>— tuỳ chọn</span></label>
       <input className="i" name="module" placeholder="VD: Commercial / Retail / Store ops" />
 
-      <label className="f" style={{ marginBottom: 0 }}>3 ngưỡng cảnh báo <span className="muted" style={{ fontWeight: 400 }}>· nhập theo Đơn vị đo của KPI</span></label>
+      <label className="f" style={{ marginBottom: 0 }}>3 ngưỡng cảnh báo <span className="muted" style={{ fontWeight: 400 }}>· nhập theo <b>% ĐẠT so mục tiêu</b> (vd 85 / 70 / 50)</span></label>
       <div className="row">
         <div>
-          <label className="f">Ngưỡng Watch</label>
-          <input className="i" name="threshold_watch" inputMode="decimal" placeholder="cảnh báo nhẹ" />
+          <label className="f">Watch (%)</label>
+          <input className="i" name="threshold_watch" inputMode="decimal" placeholder="vd 85" />
         </div>
         <div>
-          <label className="f">Ngưỡng Alert</label>
-          <input className="i" name="threshold_alert" inputMode="decimal" placeholder="cảnh báo" />
+          <label className="f">Alert (%)</label>
+          <input className="i" name="threshold_alert" inputMode="decimal" placeholder="vd 70" />
         </div>
         <div>
-          <label className="f">Ngưỡng Escalate</label>
-          <input className="i" name="threshold_escalate" inputMode="decimal" placeholder="báo động" />
+          <label className="f">Escalate (%)</label>
+          <input className="i" name="threshold_escalate" inputMode="decimal" placeholder="vd 50" />
         </div>
       </div>
+      <p className="muted" style={{ fontSize: 11.5, margin: '4px 0 0' }}>
+        Ngưỡng là <b>% hoàn thành so mục tiêu</b>. KPI cao-tốt: dưới ngưỡng = cảnh báo (85/70/50).
+        KPI thấp-tốt (chi phí…): trên ngưỡng = cảnh báo (vd 90/100/110). Bỏ trống = dùng mặc định 90/70/50.
+      </p>
 
       <label className="f">Mô tả <span className="muted" style={{ fontWeight: 400 }}>— tuỳ chọn</span></label>
       <textarea className="i" name="description" rows={2} placeholder="Định nghĩa / cách đo chỉ tiêu này" />

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-14.177';
+export const GUIDE_VERSION = '2026-09-14.178';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/09/2026 (Sửa trạng thái KPI: ngưỡng W/A/E = % đạt)',
+    items: [
+      'Sửa lỗi trạng thái KPI báo "Ổn" dù mới đạt thấp: 3 ngưỡng Watch/Alert/Escalate nay hiểu là % ĐẠT so mục tiêu (actual/target×100), KHÔNG so với giá trị tuyệt đối của thực hiện. Vd KPI "Khách hàng Active" đạt 28% nay đúng là "Khẩn". KPI cao-tốt: dưới ngưỡng = cảnh báo (85/70/50); thấp-tốt (chi phí): trên ngưỡng = cảnh báo (90/100/110). Bỏ trống ngưỡng = mặc định 90/70/50.',
+    ],
+  },
   {
     date: '14/09/2026 (Kéo-thả sắp xếp thứ tự OKR)',
     items: [

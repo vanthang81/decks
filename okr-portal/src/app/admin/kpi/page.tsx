@@ -133,11 +133,11 @@ function KpiFields({
         defMeasure={kpi?.measurement_owner ?? ''}
       />
 
-      <label className="f">3 ngưỡng cảnh báo (Watch · Alert · Escalate) <span className="muted" style={{ fontWeight: 400 }}>· nhập theo Đơn vị đo của KPI</span></label>
+      <label className="f">3 ngưỡng cảnh báo (Watch · Alert · Escalate) <span className="muted" style={{ fontWeight: 400 }}>· nhập theo <b>% ĐẠT so mục tiêu</b> — vd 85 / 70 / 50 (cao-tốt) hoặc 90 / 100 / 110 (thấp-tốt như chi phí). Bỏ trống = mặc định 90/70/50.</span></label>
       <div className="row">
-        <div><NumberInput name="threshold_watch" defaultValue={kpi?.threshold_watch ?? ''} placeholder="Watch" /></div>
-        <div><NumberInput name="threshold_alert" defaultValue={kpi?.threshold_alert ?? ''} placeholder="Alert" /></div>
-        <div><NumberInput name="threshold_escalate" defaultValue={kpi?.threshold_escalate ?? ''} placeholder="Escalate" /></div>
+        <div><NumberInput name="threshold_watch" defaultValue={kpi?.threshold_watch ?? ''} placeholder="Watch %" /></div>
+        <div><NumberInput name="threshold_alert" defaultValue={kpi?.threshold_alert ?? ''} placeholder="Alert %" /></div>
+        <div><NumberInput name="threshold_escalate" defaultValue={kpi?.threshold_escalate ?? ''} placeholder="Escalate %" /></div>
       </div>
 
       <label className="f">Mô tả / cách đọc</label>

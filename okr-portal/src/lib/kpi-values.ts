@@ -37,10 +37,13 @@ export type ScorecardRow = {
 };
 
 /**
- * Trạng thái cảnh báo theo ngưỡng W/A/E + hướng tốt.
- * - direction 'down' (thấp tốt, vd DIO): actual vượt escalate > alert > watch → càng nặng.
- * - direction 'up'  (cao tốt, vd coverage): actual rơi dưới các ngưỡng → càng nặng.
- * Trả null nếu chưa có actual hoặc chưa đặt ngưỡng nào.
+ * Trạng thái cảnh báo theo ngưỡng W/A/E — hiểu là **% ĐẠT so với mục tiêu** (actual/target×100),
+ * KHÔNG phải giá trị tuyệt đối của actual (CFO 14/09 — trước đây so ngưỡng với actual thô nên
+ * KPI đơn vị lớn như "Khách hàng Active" 19.026 > 85 luôn ra "Ổn" dù mới đạt 28%).
+ * - direction 'up'  (cao tốt): % đạt càng THẤP càng nặng → escalate nếu %<te, alert <ta, watch <tw.
+ * - direction 'down' (thấp tốt, vd chi phí/DIO): % so mục tiêu càng CAO càng nặng (vượt ngân sách)
+ *   → escalate nếu %>te, alert >ta, watch >tw. Ngưỡng nhập theo % (vd 85/70/50 hoặc 90/100/110).
+ * Trả null nếu chưa có actual, hoặc đã đặt ngưỡng nhưng thiếu target (không tính được %).
  */
 export function kpiStatus(
   k: Pick<ScorecardRow, 'direction' | 'threshold_watch' | 'threshold_alert' | 'threshold_escalate'>,
@@ -50,19 +53,21 @@ export function kpiStatus(
   if (actual == null) return null;
   const { threshold_watch: w, threshold_alert: a, threshold_escalate: e } = k;
   if (w != null || a != null || e != null) {
-    // Ngưỡng TUYỆT ĐỐI đã đặt → dùng trực tiếp.
+    // Ngưỡng W/A/E = % ĐẠT so mục tiêu (không phải actual thô).
+    if (target == null || target === 0) return null;
+    const pct = (actual / target) * 100;
     if (k.direction === 'down') {
-      if (e != null && actual > e) return 'escalate';
-      if (a != null && actual > a) return 'alert';
-      if (w != null && actual > w) return 'watch';
+      if (e != null && pct > e) return 'escalate';
+      if (a != null && pct > a) return 'alert';
+      if (w != null && pct > w) return 'watch';
       return 'ok';
     }
-    if (e != null && actual < e) return 'escalate';
-    if (a != null && actual < a) return 'alert';
-    if (w != null && actual < w) return 'watch';
+    if (e != null && pct < e) return 'escalate';
+    if (a != null && pct < a) return 'alert';
+    if (w != null && pct < w) return 'watch';
     return 'ok';
   }
-  // Mặc định: theo % ĐẠT so target (khi chưa đặt ngưỡng tuyệt đối). Bands 90/70/50.
+  // Mặc định (chưa đặt ngưỡng): theo % ĐẠT so target. Bands 90/70/50.
   const at = attainment(k.direction, target ?? null, actual);
   if (at == null) return null;
   if (at >= 0.9) return 'ok';
