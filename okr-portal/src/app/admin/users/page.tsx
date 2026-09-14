@@ -11,9 +11,9 @@ import PositionAutofill from '@/components/PositionAutofill';
 import { unitTreeOptions } from '@/lib/unit-options';
 import { listPositions } from '@/lib/positions';
 import { requireUser } from '@/lib/current-user';
-import { ROLE_LABEL, ROLES, isExec } from '@/lib/rbac';
-import { loadAccess, canManageSystem, canAssignPerms, isSuperAdmin } from '@/lib/access';
-import { DEFAULT_GROUPS, defaultGroupForRole } from '@/lib/capabilities';
+import { ROLE_LABEL, ROLES } from '@/lib/rbac';
+import { loadAccess, canManageSystem, canAssignPerms, isSuperAdmin, userGroupKey } from '@/lib/access';
+import { DEFAULT_GROUPS } from '@/lib/capabilities';
 import { listUsers } from '@/lib/users';
 import { listUnits, ancestorIds } from '@/lib/org';
 import { handoverCountsAll, type HandoverCounts } from '@/lib/handover';
@@ -47,8 +47,9 @@ export default async function AdminUsers() {
   const groupOpts = DEFAULT_GROUPS.map((g) => ({ value: g.key, label: `${g.icon} ${g.label}` }));
   // Chuỗi đơn vị (đơn vị của user + mọi cấp trên) → lọc theo Khối cũng bắt được người ở Phòng con.
   const unitChain = (unitId: string | null): string => (unitId ? [...ancestorIds(units, unitId)].join(' ') : '');
-  const groupOf = (u: (typeof users)[number]): string =>
-    isSuperAdmin(u) ? 'super_admin' : isExec(u.role) ? 'system_admin' : u.perm_group || defaultGroupForRole(u.role);
+  // NGUỒN SỰ THẬT DUY NHẤT = userGroupKey (nhóm gán tường minh THẮNG mặc định vai trò) → khớp
+  // với ô "Sửa quyền" và mọi trang khác (tránh lệch list vs modal — CFO 14/09).
+  const groupOf = (u: (typeof users)[number]): string => userGroupKey(u);
 
   return (
     <>
@@ -162,12 +163,12 @@ export default async function AdminUsers() {
                     </td>
                     <td>
                       {(() => {
-                        const gkey = isExec(u.role) ? 'system_admin' : u.perm_group || defaultGroupForRole(u.role);
+                        const gkey = userGroupKey(u);
                         const g = DEFAULT_GROUPS.find((x) => x.key === gkey);
                         return (
                           <span title={g?.desc}>
                             {g ? `${g.icon} ${g.label}` : gkey}
-                            {!u.perm_group && !isExec(u.role) && (
+                            {!u.perm_group && !isSuperAdmin(u) && (
                               <span className="muted" style={{ fontSize: 11 }}> (mặc định)</span>
                             )}
                           </span>

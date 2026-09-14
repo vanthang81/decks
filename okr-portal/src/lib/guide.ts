@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-14.183';
+export const GUIDE_VERSION = '2026-09-14.184';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/09/2026 (Nhất quán Nhóm quyền giữa các trang)',
+    items: [
+      'Nhóm quyền GÁN TƯỜNG MINH nay luôn được tôn trọng — kể cả với vai trò điều hành (Chủ tịch/CEO/CFO). Trước đây danh sách Người dùng hiển thị "Quản trị hệ thống" cho người điều hành dù đã đổi sang "Người xem"; nay list, ô Sửa quyền, năng lực và chính sách thông báo đều khớp nhau (nguồn duy nhất `userGroupKey`).',
+      'Nhờ vậy có thể hạ một Chủ tịch/CEO xuống "Người xem" (chỉ xem toàn công ty, không sửa, không nhận thông báo). Hai tài khoản Super Admin tối cao của công ty vẫn luôn toàn quyền (không thể tự khoá).',
+    ],
+  },
   {
     date: '14/09/2026 (Chính sách nhận Thông báo/Báo cáo theo Nhóm quyền)',
     items: [

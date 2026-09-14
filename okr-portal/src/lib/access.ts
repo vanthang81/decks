@@ -74,12 +74,18 @@ export function invalidateAccess() {
   _cache = null;
 }
 
-/** Nhóm quyền hiệu lực của user (Super Admin → super_admin; exec → system_admin; chưa gán → suy vai trò). */
+/**
+ * Nhóm quyền HIỆU LỰC của user — NGUỒN SỰ THẬT DUY NHẤT (mọi trang/logic phải dùng hàm này,
+ * KHÔNG tự suy `isExec ? system_admin : perm_group` tại chỗ → tránh lệch giữa các trang).
+ * Thứ tự: Super Admin (2 tài khoản tối cao / nhóm super_admin) → NHÓM ĐƯỢC GÁN TƯỜNG MINH
+ * (kể cả với vai trò điều hành: cho phép hạ 1 Chủ tịch/CEO xuống "Người xem" đúng ý quản trị,
+ * CFO 14/09) → mặc định theo vai trò (điều hành chưa gán nhóm → system_admin).
+ */
 export function userGroupKey(user: Pick<OkrUser, 'role' | 'perm_group' | 'email'>): GroupKey {
   if (isSuperAdmin(user)) return 'super_admin';
-  if (isExec(user.role)) return 'system_admin';
   const g = user.perm_group;
-  if (g && (GROUP_KEYS as readonly string[]).includes(g)) return g as GroupKey;
+  if (g && (GROUP_KEYS as readonly string[]).includes(g)) return g as GroupKey; // gán tường minh THẮNG
+  if (isExec(user.role)) return 'system_admin'; // điều hành chưa gán nhóm → mặc định quản trị hệ thống
   return defaultGroupForRole(user.role);
 }
 
