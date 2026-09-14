@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-14.180';
+export const GUIDE_VERSION = '2026-09-14.181';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '14/09/2026 (Check-in KR: cảnh báo nhập sai đơn vị)',
+    items: [
+      'Khi check-in giá trị KR, nếu giá trị nhập lớn hơn mục tiêu rất nhiều lần (thường do nhập nhầm đơn vị — vd gõ số ĐỒNG trong khi KR để theo "tỷ") → hiện cảnh báo mềm nhắc kiểm tra đơn vị, tránh tiến độ vọt 100% sai.',
+    ],
+  },
   {
     date: '14/09/2026 (Tạo OKR: gắn vào Dự án)',
     items: [

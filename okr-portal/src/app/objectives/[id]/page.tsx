@@ -15,6 +15,7 @@ import ObjectiveEditButton from '@/components/ObjectiveEditButton';
 import ActivityLogButton from '@/components/ActivityLogButton';
 import { loadEntityAuditAction } from '@/app/audit/actions';
 import KeyResultEditButton from '@/components/KeyResultEditButton';
+import KrValueInput from '@/components/KrValueInput';
 import NewChildOkrModal from '@/components/NewChildOkrModal';
 import { Sparkline } from '@/components/charts';
 import { ProgressBar, LevelBadge, StatusBadge } from '@/components/ui';
@@ -502,9 +503,9 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                   <summary><span className="kr-sub-ic">📈</span> Check-in / cập nhật</summary>
                   <ToastForm action={checkInAction} done="Đã lưu check-in" className="row" style={{ marginTop: 8 }}>
                     <input type="hidden" name="key_result_id" value={kr.id} />
-                    <div style={{ maxWidth: 140 }}>
+                    <div style={{ maxWidth: 260 }}>
                       <label className="f">Giá trị mới <span className="muted" style={{ fontWeight: 400 }}>· {kr.metric_type === 'percent' ? '%' : kr.metric_type === 'currency' ? 'đồng' : kr.metric_type === 'boolean' ? '1=xong / 0=chưa' : kr.unit_label ? kr.unit_label : 'số'}</span></label>
-                      <input className="i" name="value" defaultValue={kr.current_value} />
+                      <KrValueInput name="value" defaultValue={kr.current_value} target={kr.target_value} unitLabel={kr.metric_type === 'currency' ? 'đồng' : kr.unit_label} />
                     </div>
                     <div style={{ maxWidth: 160 }}>
                       <label className="f">Độ tự tin</label>

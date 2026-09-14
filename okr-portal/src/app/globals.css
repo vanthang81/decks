@@ -1543,6 +1543,11 @@ details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 
   border-left: 2px solid var(--primary-tint);
   display: flex; flex-direction: column; gap: 2px;
 }
+/* Cảnh báo mềm nhập KR sai đơn vị (check-in) */
+.kr-unit-warn {
+  margin-top: 4px; font-size: 11.5px; line-height: 1.4; color: #92400e;
+  background: #fef3c7; border: 1px solid #fde68a; border-radius: 7px; padding: 5px 8px;
+}
 .kr-sub > summary {
   list-style: none; cursor: pointer; color: var(--primary); font-weight: 600; font-size: 13.5px;
   display: inline-flex; align-items: center; gap: 6px; padding: 3px 0;
