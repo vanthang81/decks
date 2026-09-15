@@ -3,7 +3,7 @@ import SiteHeader from '@/components/SiteHeader';
 import TaskExplorer from '@/components/TaskExplorer';
 import NewTaskModal from '@/components/NewTaskModal';
 import { requireUser } from '@/lib/current-user';
-import { listUnits, objectiveViewScope } from '@/lib/org';
+import { listUnits } from '@/lib/org';
 import { listUsers, personTitle } from '@/lib/users';
 import { listAllProjectOptions } from '@/lib/projects';
 import { listAllInitiatives } from '@/lib/initiatives';
@@ -11,7 +11,7 @@ import { initiativeIdsMentioning } from '@/lib/comments';
 import { listObjectivesByPeriod } from '@/lib/okr';
 import { getCurrentPeriod } from '@/lib/periods';
 import { depsForTasks } from '@/lib/deps';
-import { loadAccess, buildTaskViewCtx, canViewInitiative, canEditObjective } from '@/lib/access';
+import { loadAccess, buildTaskViewCtx, canViewInitiative, canEditObjective, okrViewScope } from '@/lib/access';
 import { projectMetaForIds } from '@/lib/project-objectives';
 import { memberProjectIds } from '@/lib/project-members';
 import { editInitiativeAction, deleteInitiativeAction, moveInitiativeAction, createTaskAction, bulkTasksAction } from '@/app/objectives/actions';
@@ -71,7 +71,7 @@ export default async function TasksPage({
   for (const [k, v] of depsMapRaw) depsMap[k] = v;
 
   // Nhân viên: ô lọc "Đơn vị" chỉ liệt kê đơn vị TRONG PHẠM VI (khớp phạm vi xem việc); vai trò khác = mọi đơn vị.
-  const taskUnitScope = objectiveViewScope(user, units);
+  const taskUnitScope = okrViewScope(user, units, access);
   const scopedUnits = taskUnitScope === null ? units : units.filter((u) => taskUnitScope.has(u.id));
   const unitOpts = scopedUnits.map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort }));
   // Chức danh hiển thị kèm tên (phân biệt người trùng tên khi chọn/giao việc) — helper CHUNG toàn hệ thống.

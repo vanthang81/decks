@@ -63,7 +63,9 @@ export async function loadAccess(): Promise<Access> {
   //    Ép dương ở đây (bất kể dữ liệu lưu cũ / lần lưu tay trước) để KHÔNG tái diễn lỗi 12/09: siết riêng
   //    tư đã vô tình bỏ scope.all → quản trị hệ thống không sửa được OKR các khối/phòng.
   groups['system_admin']?.add('scope.all');
-  // 4) system_admin KHÔNG bao giờ có các cap RIÊNG TƯ (xem toàn bộ công việc cá nhân / hồ sơ 360°).
+  // 4) system_admin chỉ KHÔNG được 'super.admin' (SYSADMIN_DENY_CAPS) — mọi cap review khác
+  //    (task.viewall/user.view360…) nay CẤU HÌNH ĐƯỢC ở Phân quyền (CFO 15/09: Quản trị hệ thống
+  //    review toàn công ty + edit mọi OKR). #2 ở trên đã bóc super.admin; vòng này giữ cho rõ ý.
   for (const c of SYSADMIN_DENY_CAPS) groups['system_admin']?.delete(c as CapKey);
   const access = { groups };
   _cache = { at: Date.now(), access };
@@ -147,6 +149,17 @@ export function canReceiveWeeklyDigest(user: OkrUser, access: Access): boolean {
   return hasCap(user, 'digest.weekly', access);
 }
 
+/**
+ * Phạm vi XEM OKR theo NĂNG LỰC (nguồn sự thật DUY NHẤT cho mọi trang xem/xuất OKR).
+ * `scope.all` (vd Quản trị hệ thống / Quản trị OKR) → null = REVIEW TOÀN CÔNG TY, bất kể vai trò
+ * tổ chức (kể cả người có vai trò 'staff' nhưng được gán nhóm quản trị — nhất quán toàn app, CFO 15/09).
+ * Ngược lại giữ phạm vi theo vai trò (`objectiveViewScope`: exec/lead=null, staff=đơn vị mình).
+ */
+export function okrViewScope(user: OkrUser, units: Unit[], access: Access): Set<string> | null {
+  if (hasCap(user, 'scope.all', access)) return null;
+  return objectiveViewScope(user, units);
+}
+
 // ---- Kiểm quyền theo OKR (năng lực × phạm vi) ----
 // level tuỳ chọn: có → bật ngoại lệ "chủ nhân OKR cá nhân tự cập nhật"; thiếu → giữ hành vi cũ.
 type ObjScope = Pick<Objective, 'unit_id' | 'owner_email' | 'created_by'> & { level?: Level };
@@ -222,8 +235,11 @@ export function buildTaskViewCtx(
   // NHÂN VIÊN (staff) = phạm vi XEM theo VAI TRÒ (đơn vị mình + hậu duệ + tổ tiên). Vai trò khác:
   // xem TẤT CẢ công việc chỉ khi có cap RIÊNG TƯ 'task.viewall' (KHÁC 'scope.all' = quyền quản lý).
   // → Quản trị hệ thống (có scope.all nhưng KHÔNG có task.viewall) chỉ thấy việc cần-mới-biết (CFO 12/09).
+  // Xem TẤT CẢ công việc = có cap 'task.viewall' (CẤU HÌNH ĐƯỢC theo nhóm — Quản trị hệ thống mặc
+  // định BẬT để review toàn công ty; admin có thể tắt để siết riêng tư). Không phụ thuộc vai trò tổ
+  // chức → staff được gán nhóm có cap này cũng xem được (nhất quán toàn app, CFO 15/09).
+  const seeAll = hasCap(user, 'task.viewall', access);
   const staff = user.role === 'staff';
-  const seeAll = staff ? false : hasCap(user, 'task.viewall', access);
   const scope = staff ? objectiveViewScope(user, units) : manageScope(user, units); // null = exec (không giới hạn)
   const e = user.email.toLowerCase();
   const myProjects = new Set<string>();

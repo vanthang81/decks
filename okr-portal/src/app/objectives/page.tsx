@@ -9,9 +9,9 @@ import { buildObjectiveFormProps } from '@/lib/objective-form';
 import { createObjectiveAction, reorderObjectivesAction } from './actions';
 import { requireUser } from '@/lib/current-user';
 import { isExec } from '@/lib/rbac';
-import { listUnits, objectiveViewScope, canViewObjectiveUnit } from '@/lib/org';
+import { listUnits, canViewObjectiveUnit } from '@/lib/org';
 import { unitTreeOptions } from '@/lib/unit-options';
-import { loadAccess, canImportData, hasCap } from '@/lib/access';
+import { loadAccess, canImportData, hasCap, okrViewScope } from '@/lib/access';
 import {
   getCurrentPeriod,
   listPeriods,
@@ -47,7 +47,7 @@ export default async function ObjectivesPage({
   const units = await listUnits();
   // Phạm vi ĐỌC: nhân viên (staff) chỉ thấy OKR trong đơn vị mình + chuỗi cấp trên; điều hành &
   // trưởng khối/phòng thấy tất cả. Lọc TẠI NGUỒN để không lộ OKR khối khác cho nhân viên.
-  const viewScope = objectiveViewScope(user, units);
+  const viewScope = okrViewScope(user, units, access);
   const objectives = viewScope === null
     ? allObjectives
     : allObjectives.filter((o) => canViewObjectiveUnit(viewScope, o, user.email));
@@ -56,8 +56,10 @@ export default async function ObjectivesPage({
   // Server (reorderObjectivesAction) vẫn kiểm quyền SỬA từng OKR nên an toàn.
   const canReorder = !scopedView && (isExec(user.role) || hasCap(user, 'okr.edit', access) || hasCap(user, 'scope.all', access));
   const unitOptions = unitTreeOptions(units, { excludeCompany: true });
-  // Dữ liệu cho popup "+ Tạo OKR" (chỉ khi có kỳ + không phải nhân viên).
-  const okrFormProps = period && user.role !== 'staff' ? await buildObjectiveFormProps(user, period.id) : null;
+  // Dữ liệu cho popup "+ Tạo OKR" (chỉ khi có kỳ + không phải nhân viên thuần).
+  // NGOẠI LỆ: staff có năng lực quản OKR (okr.create/okr.edit, vd "Quản trị hệ thống") vẫn hiện form.
+  const canCreateOkr = user.role !== 'staff' || hasCap(user, 'okr.create', access) || hasCap(user, 'okr.edit', access);
+  const okrFormProps = period && canCreateOkr ? await buildObjectiveFormProps(user, period.id) : null;
 
   // Chỉ truyền field cần cho cây (serializable) sang client component.
   const toTree = (rows: typeof objectives): TreeObjective[] =>

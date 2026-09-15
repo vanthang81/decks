@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireUser } from '@/lib/current-user';
-import { listUnits, objectiveViewScope } from '@/lib/org';
+import { listUnits } from '@/lib/org';
+import { loadAccess, okrViewScope } from '@/lib/access';
 import { listPeriods, descendantPeriods } from '@/lib/periods';
 import { buildOkrWorkbook, buildOkrTemplateWorkbook } from '@/lib/excel';
 
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
   // Áp ĐÚNG phạm vi xem như giao diện: nhân viên chỉ xuất OKR trong đơn vị mình (+ cấp Công ty +
   // OKR mình chủ trì); điều hành/quản lý xuất tất cả. Tránh rò rỉ OKR khối khác qua file Excel.
   const units = await listUnits();
-  const viewScope = objectiveViewScope(user, units);
+  const viewScope = okrViewScope(user, units, await loadAccess());
   const scope = viewScope === null ? null : { unitIds: [...viewScope], email: user.email };
   const buf = await buildOkrWorkbook(expandedPeriodIds, unitIds, scope);
   return new NextResponse(new Uint8Array(buf), {

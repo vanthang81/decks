@@ -5,13 +5,17 @@ import NewObjectiveForm from '@/components/NewObjectiveForm';
 import { requireUser } from '@/lib/current-user';
 import { getCurrentPeriod, getPeriod, listPeriods } from '@/lib/periods';
 import { buildObjectiveFormProps } from '@/lib/objective-form';
+import { loadAccess, hasCap } from '@/lib/access';
 import { createObjectiveAction } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function NewObjectivePage({ searchParams }: { searchParams: { period?: string; parent?: string } }) {
   const user = await requireUser();
-  if (user.role === 'staff') redirect('/objectives'); // Nhân viên = chỉ xem, không tạo OKR
+  // Nhân viên = chỉ xem, không tạo OKR — TRỪ khi có năng lực quản OKR (okr.create/okr.edit, vd "Quản trị hệ thống").
+  const access = await loadAccess();
+  if (user.role === 'staff' && !hasCap(user, 'okr.create', access) && !hasCap(user, 'okr.edit', access))
+    redirect('/objectives');
   const periods = await listPeriods();
   const period = searchParams.period ? await getPeriod(searchParams.period) : (await getCurrentPeriod()) ?? periods[0] ?? null;
   const formProps = period ? await buildObjectiveFormProps(user, period.id) : null;

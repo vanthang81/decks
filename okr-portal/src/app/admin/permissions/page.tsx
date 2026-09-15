@@ -162,8 +162,8 @@ export default async function AdminPermissions({
             <p className="muted" style={{ fontSize: 12.5, marginBottom: 0, marginTop: 10 }}>
               <b>👑 Super Admin</b> là đỉnh quyền lực (toàn quyền cố định, chỉ 2 tài khoản tối cao) — chỉ Super Admin
               chỉnh được cột này &amp; gán quyền Super Admin. <b>🛡️ Quản trị hệ thống</b> LUÔN có “Toàn phạm vi
-              quản lý” (quản OKR/KR · dự án · KPI mọi khối/phòng) nhưng KHÔNG có “Xem toàn bộ công việc” &amp;
-              “Hồ sơ 360°” — tức chỉ thấy việc cần-mới-biết, không xem chi tiết việc/hồ sơ riêng tư của cá nhân.
+              quản lý” (review TOÀN CÔNG TY + sửa mọi OKR/KR · dự án · KPI mọi khối/phòng) và mặc định được
+              “Xem toàn bộ công việc” &amp; “Hồ sơ 360°” — bạn có thể TẮT 2 ô này nếu muốn siết riêng tư.
               Trừ Super Admin, không ai tự chỉnh được quyền của <b>chính nhóm mình</b> (ô bị khoá).
             </p>
             {editable && (

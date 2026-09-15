@@ -20,7 +20,7 @@ import NewChildOkrModal from '@/components/NewChildOkrModal';
 import { Sparkline } from '@/components/charts';
 import { ProgressBar, LevelBadge, StatusBadge } from '@/components/ui';
 import { requireUser } from '@/lib/current-user';
-import { listUnits, objectiveViewScope, canViewObjectiveUnit, subtreeIds } from '@/lib/org';
+import { listUnits, canViewObjectiveUnit, subtreeIds } from '@/lib/org';
 import { listUsers, personTitle } from '@/lib/users';
 import {
   getObjective,
@@ -70,7 +70,7 @@ import {
 } from '../actions';
 import { createProjectForInitiativeAction } from '@/app/projects/actions';
 import { withinEditWindow } from '@/lib/moderation';
-import { loadAccess, canEditObjective, canDeleteObjective, canCreateObjective } from '@/lib/access';
+import { loadAccess, canEditObjective, canDeleteObjective, canCreateObjective, okrViewScope, hasCap } from '@/lib/access';
 import { buildObjectiveFormProps } from '@/lib/objective-form';
 import { unitIcon } from '@/lib/unit-icons';
 
@@ -82,8 +82,10 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
   if (!obj) notFound();
 
   const units = await listUnits();
-  // Gác phạm vi ĐỌC: nhân viên chỉ mở được OKR trong đơn vị mình (+ cấp trên align lên) hoặc OKR mình chủ trì.
-  const viewScope = objectiveViewScope(user, units);
+  const access = await loadAccess();
+  // Gác phạm vi ĐỌC: nhân viên chỉ mở được OKR trong đơn vị mình (+ cấp trên align lên) hoặc OKR mình
+  // chủ trì. Nhóm review toàn công ty (scope.all — vd Quản trị hệ thống) xem được MỌI OKR.
+  const viewScope = okrViewScope(user, units, access);
   if (!canViewObjectiveUnit(viewScope, obj, user.email)) {
     return (
       <>
@@ -101,7 +103,6 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
     );
   }
   const users = await listUsers();
-  const access = await loadAccess();
   const canManage = canEditObjective(user, obj, units, access);
   const kpiOpts = (await listKpis()).filter((k) => k.is_active);
   const kpiById = new Map(kpiOpts.map((k) => [k.id, `${k.code ? `${k.code} · ` : ''}${k.name}`]));
@@ -391,7 +392,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
                     periodObjectives={objFormProps?.periodObjectives ?? []}
                     pillars={objFormProps?.pillars ?? []}
                     canDelete={canDelete}
-                    canReparent={user.role !== 'staff'}
+                    canReparent={user.role !== 'staff' || hasCap(user, 'okr.edit', access)}
                     save={editObjectiveAction}
                     del={deleteObjectiveAction}
                   />

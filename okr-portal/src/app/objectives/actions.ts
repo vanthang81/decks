@@ -68,6 +68,7 @@ import {
   canDeleteObjective,
   canCreateObjective,
   isSuperAdmin,
+  hasCap,
 } from '@/lib/access';
 
 function str(fd: FormData, k: string): string {
@@ -90,9 +91,11 @@ export async function createObjectiveAction(fd: FormData) {
   const units = await listUnits();
   const level = str(fd, 'level') as Level;
   const unitId = orNull(str(fd, 'unit_id'));
-  const isStaff = user.role === 'staff';
+  const access = await loadAccess();
   // Nhân viên (view-only) chỉ tạo OKR CÁ NHÂN cho CHÍNH MÌNH, KHÔNG được đặt chủ trì người khác hay gắn
   // cha (chống chèn node vào cây đơn vị khác + đầu độc roll-up của OKR cha không có KR). Quản lý giữ nguyên.
+  // NGOẠI LỆ: staff có năng lực quản OKR (okr.edit/okr.create, vd nhóm "Quản trị hệ thống") → form đầy đủ.
+  const isStaff = user.role === 'staff' && !hasCap(user, 'okr.edit', access) && !hasCap(user, 'okr.create', access);
   const ownerEmail = isStaff
     ? user.email
     : (orNull(str(fd, 'owner_email')) ?? (level === 'individual' ? user.email : null));
@@ -101,7 +104,6 @@ export async function createObjectiveAction(fd: FormData) {
   const title = str(fd, 'title');
 
   if (!title || !periodId) throw new Error('Thiếu tiêu đề hoặc kỳ.');
-  const access = await loadAccess();
   if (!canCreateObjective(user, level, unitId, units, access)) {
     throw new Error('Bạn không có quyền tạo OKR ở phạm vi này.');
   }
@@ -183,16 +185,18 @@ export async function createObjectiveAction(fd: FormData) {
 // Kế thừa kỳ của cha; đơn vị con phải nằm TRONG cây đơn vị của cha (alignment đúng cấp).
 export async function createChildObjectiveAction(fd: FormData) {
   const user = await requireUser();
+  const access = await loadAccess();
   // "Thêm OKR con" là thao tác QUẢN LÝ cây OKR. Nhân viên (view-only) tạo OKR cá nhân ở /my (đường riêng),
   // không được chèn OKR con vào cây đơn vị khác qua đây (chống đầu độc roll-up OKR cha).
-  if (user.role === 'staff') throw new Error('Nhân viên tạo OKR cá nhân ở trang "Của tôi".');
+  // NGOẠI LỆ: staff có năng lực quản OKR (okr.edit/okr.create) → được thao tác cây OKR như quản lý.
+  if (user.role === 'staff' && !hasCap(user, 'okr.edit', access) && !hasCap(user, 'okr.create', access))
+    throw new Error('Nhân viên tạo OKR cá nhân ở trang "Của tôi".');
   const parentId = str(fd, 'parent_id');
   if (!parentId) throw new Error('Thiếu OKR cha.');
   const parent = await getObjective(parentId);
   if (!parent) throw new Error('Không tìm thấy OKR cha.');
 
   const units = await listUnits();
-  const access = await loadAccess();
   const level = str(fd, 'level') as Level;
   if (level === 'company') throw new Error('OKR con không thể ở cấp Công ty.');
   if (!(PARENT_LEVEL_OK[level] ?? []).includes(parent.level))
@@ -300,7 +304,8 @@ export async function editObjectiveAction(fd: FormData) {
 
   // Nhân viên chỉ được cập nhật NỘI DUNG OKR cá nhân của mình (canEditObjective đã cho qua ở trên): KHOÁ
   // đổi cấp/đơn vị/chủ trì/liên kết cha (chống dùng quyền sửa để chèn OKR vào cây đơn vị khác).
-  const isStaff = user.role === 'staff';
+  // NGOẠI LỆ: staff có năng lực quản OKR (okr.edit) → mở khoá đầy đủ như quản lý.
+  const isStaff = user.role === 'staff' && !hasCap(user, 'okr.edit', access);
   // Cấp OKR: cho đổi (mặc định giữ nguyên). Đơn vị bắt buộc với Khối/Phòng, để trống với Công ty/Cá nhân.
   const level = isStaff ? (obj.level as Level) : ((orNull(str(fd, 'level')) ?? obj.level) as Level);
   const unitId = isStaff ? obj.unit_id : (level === 'individual' || level === 'company' ? null : orNull(str(fd, 'unit_id')));
@@ -738,7 +743,12 @@ export async function createTaskAction(fd: FormData) {
   const title = str(fd, 'title').trim();
   if (!title) throw new Error('Thiếu tên công việc.');
   const [units, access] = await Promise.all([listUnits(), loadAccess()]);
-  const isStaff = user.role === 'staff';
+  // NGOẠI LỆ: staff có năng lực quản (okr.edit/scope.all/project.manage — vd "Quản trị hệ thống")
+  // → dùng form đầy đủ (gắn OKR/dự án/giao người khác); việc gắn vẫn re-check quyền từng mục bên dưới.
+  const isStaff = user.role === 'staff'
+    && !hasCap(user, 'okr.edit', access)
+    && !hasCap(user, 'scope.all', access)
+    && !hasCap(user, 'project.manage', access);
 
   // NHÂN VIÊN: chỉ tạo VIỆC CÁ NHÂN cho chính mình — ép người phụ trách = mình,
   // KHÔNG gắn OKR/dự án/đơn vị/ngân sách (không có quyền quản các thực thể đó).

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-15.185';
+export const GUIDE_VERSION = '2026-09-15.186';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '15/09/2026 (Quản trị hệ thống review & sửa OKR toàn công ty)',
+    items: [
+      'Nhóm quyền "Quản trị hệ thống" nay REVIEW TOÀN CÔNG TY (xem mọi OKR/công việc) và SỬA/TẠO/XOÁ được MỌI OKR/KR của mọi khối/phòng — nhất quán ở mọi trang & thao tác.',
+      'Hai năng lực "Xem toàn bộ công việc" và "Xem hồ sơ 360°" của nhóm này chuyển thành CẤU HÌNH ĐƯỢC ở Quản trị → Phân quyền (mặc định BẬT), có thể tắt nếu muốn siết riêng tư.',
+    ],
+  },
   {
     date: '15/09/2026 (Popup chi tiết công việc rộng & gọn hơn)',
     items: [
