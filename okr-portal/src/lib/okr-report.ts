@@ -1,5 +1,6 @@
 import { listObjectivesByPeriod, type ObjectiveRow } from './okr';
 import { listUnits, type Unit } from './org';
+import { naturalCodeCompare } from './sortcode';
 
 // ── Báo cáo OKR theo CẤP (Công ty / Khối / Phòng / Cá nhân) với KẾT QUẢ TỔNG THEO TRỌNG SỐ ──
 // Mỗi nhóm: tổng = bình quân CÓ TRỌNG SỐ tiến độ các OKR trong nhóm = Σ(progress·weight) / Σ(weight).
@@ -52,7 +53,7 @@ function groupByUnit(rows: ObjectiveRow[], units: Unit[]): ReportGroup[] {
   return [...map.entries()]
     .map(([unitId, list]) => {
       const u = byId.get(unitId);
-      const items = list.map(toItem);
+      const items = list.map(toItem).sort((a, b) => naturalCodeCompare(a.code, b.code)); // OKR theo mã 1→n
       return {
         key: unitId,
         name: u?.name ?? list[0].unit_name ?? '(đơn vị)',
@@ -77,7 +78,7 @@ export async function okrLevelReport(
   const departments = objs.filter((o) => o.level === 'department');
   const individuals = objs.filter((o) => o.level === 'individual');
 
-  const companyItems = company.map(toItem);
+  const companyItems = company.map(toItem).sort((a, b) => naturalCodeCompare(a.code, b.code));
   const companyGroup: ReportGroup | null = companyItems.length
     ? { key: 'company', name: 'Công ty', code: null, count: companyItems.length, weighted: weightedAvg(companyItems), items: companyItems }
     : null;
@@ -97,7 +98,7 @@ export async function okrLevelReport(
   }
   const individualGroups: ReportGroup[] = [...indByOwner.entries()]
     .map(([owner, list]) => {
-      const items = list.map(toItem);
+      const items = list.map(toItem).sort((a, b) => naturalCodeCompare(a.code, b.code));
       return {
         key: owner,
         name: list[0].owner_name ?? list[0].owner_email ?? '(chưa gán)',

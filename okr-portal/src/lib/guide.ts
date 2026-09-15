@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-15.187';
+export const GUIDE_VERSION = '2026-09-15.188';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '15/09/2026 (Sắp xếp OKR theo mã — hết cảnh mã lộn xộn)',
+    items: [
+      'Cây OKR (trang OKR) + Báo cáo theo cấp nay MẶC ĐỊNH sắp theo MÃ mục tiêu (số tự nhiên 1→n): 05·07·08·010·011 đúng thứ tự.',
+      'Trang OKR thêm nút "Sắp xếp: Theo mã / Thủ công" — chọn "Thủ công" để giữ thứ tự đã kéo-thả (ưu tiên/nhóm liên quan). Kéo-thả tự chuyển sang "Thủ công". Đổi cách sắp xếp KHÔNG làm đổi mã (định danh giữ nguyên).',
+    ],
+  },
   {
     date: '15/09/2026 (Phạm vi xem theo vai trò — chống lộ dữ liệu chéo đơn vị)',
     items: [

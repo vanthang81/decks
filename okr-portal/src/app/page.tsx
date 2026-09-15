@@ -15,6 +15,7 @@ import {
 } from '@/lib/okr';
 import { listUnits, canViewObjectiveUnit } from '@/lib/org';
 import { loadAccess, okrViewScope } from '@/lib/access';
+import { naturalCodeCompare } from '@/lib/sortcode';
 import { periodInsights } from '@/lib/insights';
 import { integrityIssues } from '@/lib/integrity';
 import { reviewData } from '@/lib/review';
@@ -46,8 +47,10 @@ export default async function Dashboard({ searchParams }: { searchParams: { tour
   const objectives = scoped
     ? allObjectives.filter((o) => canViewObjectiveUnit(viewScope, o, user.email))
     : allObjectives;
-  const company = objectives.filter((o) => o.level === 'company');
-  const divisions = objectives.filter((o) => o.level === 'division');
+  // Sắp theo MÃ (1→n) cho các danh sách OKR hiển thị (đồng nhất với /objectives + /report).
+  const byCode = (a: ObjectiveRow, b: ObjectiveRow) => naturalCodeCompare(a.code, b.code);
+  const company = objectives.filter((o) => o.level === 'company').sort(byCode);
+  const divisions = objectives.filter((o) => o.level === 'division').sort(byCode);
   const departments = objectives.filter((o) => o.level === 'department');
   const individuals = objectives.filter((o) => o.level === 'individual');
 

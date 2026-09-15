@@ -9,6 +9,7 @@ import SearchSelect from '@/components/SearchSelect';
 import UserLink from '@/components/UserLink';
 import { useToast } from '@/components/ToastProvider';
 import { unitIcon } from '@/lib/unit-icons';
+import { naturalCodeCompare } from '@/lib/sortcode';
 import { OBJ_STATUS_LABEL, OBJ_STATUSES } from '@/lib/okr-status';
 
 // Kiểu dữ liệu phẳng truyền từ server (chỉ field cần cho cây — đều serializable).
@@ -96,7 +97,27 @@ export default function ObjectiveTree({
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
 
-  const roots = useMemo(() => buildTree(items), [items]);
+  // Kiểu sắp xếp hiển thị: 'code' = theo MÃ (1→n, mặc định) · 'manual' = thứ tự thủ công đã kéo-thả.
+  // Kéo-thả chỉ có nghĩa ở chế độ 'manual' → sắp theo mã KHÔNG ảnh hưởng thứ tự/định danh mã đã lưu.
+  const [sortMode, setSortMode] = useState<'code' | 'manual'>('code');
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem('okrSortMode');
+      if (v === 'manual' || v === 'code') setSortMode(v);
+    } catch { /* ignore */ }
+  }, []);
+  const changeSort = (m: 'code' | 'manual') => {
+    setSortMode(m);
+    try { localStorage.setItem('okrSortMode', m); } catch { /* ignore */ }
+    if (m === 'code' && reorderMode) setReorderMode(false); // sắp theo mã thì tắt chế độ kéo-thả
+  };
+
+  // Danh sách hiển thị: sắp theo mã (natural) khi 'code'; giữ thứ tự server (manual) khi 'manual'.
+  const displayItems = useMemo(
+    () => (sortMode === 'code' ? [...items].sort((a, b) => naturalCodeCompare(a.code, b.code)) : items),
+    [items, sortMode],
+  );
+  const roots = useMemo(() => buildTree(displayItems), [displayItems]);
   const parentIds = useMemo(() => collectParents(roots, new Set<string>()), [roots]);
 
   // "Cha hiệu lực" để nhóm anh em: cha nằm trong tập → id cha; ngược lại (gốc) → '__root'.
@@ -214,7 +235,7 @@ export default function ObjectiveTree({
   const fOwnerLc = fOwner.toLowerCase();
   const matched = useMemo(() => {
     if (!filterActive) return [];
-    return objectives.filter((o) => {
+    const rows = objectives.filter((o) => {
       if (fOwnerLc && (o.owner_email ?? '').toLowerCase() !== fOwnerLc) return false;
       if (fUnit && o.unit_id !== fUnit) return false;
       if (fLevel && o.level !== fLevel) return false;
@@ -226,7 +247,8 @@ export default function ObjectiveTree({
       }
       return true;
     });
-  }, [objectives, filterActive, fOwnerLc, fUnit, fLevel, fStatus, fType, qlc]);
+    return sortMode === 'code' ? rows.sort((a, b) => naturalCodeCompare(a.code, b.code)) : rows;
+  }, [objectives, filterActive, fOwnerLc, fUnit, fLevel, fStatus, fType, qlc, sortMode]);
   const clearFilter = () => {
     setQ('');
     setFUnit('');
@@ -393,25 +415,40 @@ export default function ObjectiveTree({
         </>
       ) : (
         <>
-          {(parentIds.size > 0 || canReorder) && (
-            <div className="ot-toolbar" data-tour="ot-reorder">
-              <button type="button" className="ot-tbtn" onClick={expandAll} disabled={allExpanded || reorderMode}>
-                <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-                Mở rộng tất cả
+          <div className="ot-toolbar" data-tour="ot-reorder">
+            {/* Kiểu sắp xếp: Theo mã (1→n, mặc định) ⇄ Thủ công (thứ tự đã kéo-thả) */}
+            <span className="ot-sort" role="group" aria-label="Kiểu sắp xếp OKR">
+              <span className="ot-sort-l">Sắp xếp:</span>
+              <button type="button" className={`ot-tbtn${sortMode === 'code' ? ' on' : ''}`} onClick={() => changeSort('code')}
+                title="Sắp theo MÃ mục tiêu (số tự nhiên 1→n) — không đổi định danh mã">
+                Theo mã
               </button>
-              <button type="button" className="ot-tbtn" onClick={collapseAll} disabled={allCollapsed || reorderMode}>
-                <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden><path d="M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-                Thu gọn tất cả
+              <button type="button" className={`ot-tbtn${sortMode === 'manual' ? ' on' : ''}`} onClick={() => changeSort('manual')}
+                title="Giữ thứ tự thủ công đã kéo-thả (vd đưa OKR ưu tiên/liên quan lên trước)">
+                Thủ công
               </button>
-              {canReorder && (
-                <button type="button" className={`ot-tbtn${reorderMode ? ' on' : ''}`} onClick={() => setReorderMode((v) => !v)}
-                  title="Kéo-thả (hoặc nút ▲▼) để sắp xếp thứ tự OKR trong cùng nhóm — vd đưa OKR ưu tiên/liên quan lên trước">
-                  <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden><path d="M8 2v12M8 2L5 5M8 2l3 3M8 14l-3-3M8 14l3-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
-                  {reorderMode ? 'Xong sắp xếp' : 'Sắp xếp thứ tự'}
+            </span>
+            {parentIds.size > 0 && (
+              <>
+                <button type="button" className="ot-tbtn" onClick={expandAll} disabled={allExpanded || reorderMode}>
+                  <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                  Mở rộng tất cả
                 </button>
-              )}
-            </div>
-          )}
+                <button type="button" className="ot-tbtn" onClick={collapseAll} disabled={allCollapsed || reorderMode}>
+                  <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden><path d="M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                  Thu gọn tất cả
+                </button>
+              </>
+            )}
+            {canReorder && (
+              <button type="button" className={`ot-tbtn${reorderMode ? ' on' : ''}`}
+                onClick={() => { if (sortMode === 'code') changeSort('manual'); setReorderMode((v) => !v); }}
+                title="Kéo-thả (hoặc nút ▲▼) để sắp xếp thứ tự OKR trong cùng nhóm — vd đưa OKR ưu tiên/liên quan lên trước (tự chuyển sang 'Thủ công')">
+                <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden><path d="M8 2v12M8 2L5 5M8 2l3 3M8 14l-3-3M8 14l3-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                {reorderMode ? 'Xong sắp xếp' : 'Sắp xếp thứ tự'}
+              </button>
+            )}
+          </div>
           {reorderMode && (
             <p className="muted ot-reorder-hint">Kéo biểu tượng ⠿ (hoặc bấm ▲/▼) để đổi thứ tự các OKR trong cùng một nhóm. Thứ tự lưu tự động; bấm “Xong sắp xếp” để mở lại liên kết.</p>
           )}
