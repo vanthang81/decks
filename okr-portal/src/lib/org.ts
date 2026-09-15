@@ -95,12 +95,15 @@ export function manageScope(user: OkrUser, units: Unit[]): Set<string> | null {
 }
 
 /**
- * Phạm vi ĐỌC OKR. Điều hành + Giám đốc khối + Trưởng phòng = null (xem TẤT CẢ — giữ minh bạch
- * quản lý xuyên đơn vị). NHÂN VIÊN (staff) = CHỈ trong phạm vi đơn vị mình: đơn vị + hậu duệ +
- * chuỗi TỔ TIÊN (để vẫn thấy OKR cấp Công ty/Khối mà mình align lên) — KHÔNG thấy OKR các khối khác.
+ * Phạm vi ĐỌC OKR theo VAI TRÒ tổ chức (CFO 15/09 — siết lại "minh bạch toàn công ty" cũ 08/08):
+ *  - Điều hành (CEO/CFO/Chủ tịch) = null (xem TẤT CẢ).
+ *  - Giám đốc khối / Trưởng phòng / Quản lý chức năng / Nhân viên = đơn vị mình + hậu duệ (subtree)
+ *    + chuỗi TỔ TIÊN (để vẫn thấy OKR cấp Công ty/Khối mà mình align lên) — KHÔNG thấy khối/phòng khác.
+ * → Giám đốc khối thấy TOÀN KHỐI (khối + các phòng dưới), Trưởng phòng/Nhân viên thấy PHÒNG mình.
+ * (Quyền QUẢN LÝ toàn công ty vẫn mở cho nhóm có năng lực 'scope.all' — xử lý ở access.okrViewScope.)
  */
 export function objectiveViewScope(user: OkrUser, units: Unit[]): Set<string> | null {
-  if (user.role !== 'staff') return null;
+  if (isExec(user.role)) return null;
   if (!user.unit_id) return new Set();
   const s = subtreeIds(units, user.unit_id);
   for (const a of ancestorIds(units, user.unit_id)) s.add(a);

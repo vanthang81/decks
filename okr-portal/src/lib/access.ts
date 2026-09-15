@@ -239,8 +239,10 @@ export function buildTaskViewCtx(
   // định BẬT để review toàn công ty; admin có thể tắt để siết riêng tư). Không phụ thuộc vai trò tổ
   // chức → staff được gán nhóm có cap này cũng xem được (nhất quán toàn app, CFO 15/09).
   const seeAll = hasCap(user, 'task.viewall', access);
-  const staff = user.role === 'staff';
-  const scope = staff ? objectiveViewScope(user, units) : manageScope(user, units); // null = exec (không giới hạn)
+  // Phạm vi XEM việc = phạm vi QUẢN LÝ theo vai trò (CFO 15/09): Giám đốc khối → toàn khối (subtree);
+  // Trưởng phòng/Nhân viên → PHÒNG mình. KHÁC okrViewScope (OKR thấy cả cấp trên align lên) — việc chỉ
+  // trong phạm vi mình, không thấy việc cấp Công ty/khối khác (trừ khi liên quan trực tiếp — canViewInitiative).
+  const scope = manageScope(user, units); // null = exec (không giới hạn)
   const e = user.email.toLowerCase();
   const myProjects = new Set<string>();
   for (const t of tasks) {

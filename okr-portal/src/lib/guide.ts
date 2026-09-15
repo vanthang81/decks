@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-15.186';
+export const GUIDE_VERSION = '2026-09-15.187';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '15/09/2026 (Phạm vi xem theo vai trò — chống lộ dữ liệu chéo đơn vị)',
+    items: [
+      'Từ cấp Giám đốc khối trở xuống, mọi màn hình (Bảng điều khiển · OKR · Báo cáo theo cấp · Công việc) chỉ hiển thị trong PHẠM VI của mình: Giám đốc khối = toàn khối; Trưởng phòng/Nhân viên = phòng mình (kèm OKR cấp Công ty/khối mà mình align lên).',
+      '"Họp điều hành" (WBR/MBR) là báo cáo toàn công ty — nay chỉ hiện cho cấp điều hành & Quản trị (có "Toàn phạm vi"); người bị giới hạn phạm vi không còn thấy số liệu khối/phòng khác.',
+      'Nhóm "Quản trị hệ thống/OKR/KPI" (có năng lực Toàn phạm vi) vẫn xem toàn công ty như trước.',
+    ],
+  },
   {
     date: '15/09/2026 (Quản trị hệ thống review & sửa OKR toàn công ty)',
     items: [

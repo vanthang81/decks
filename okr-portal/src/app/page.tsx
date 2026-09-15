@@ -13,7 +13,8 @@ import {
   BSC_PERSPECTIVE_LABEL,
   BSC_PERSPECTIVE_ICON,
 } from '@/lib/okr';
-import { listUnits } from '@/lib/org';
+import { listUnits, canViewObjectiveUnit } from '@/lib/org';
+import { loadAccess, okrViewScope } from '@/lib/access';
 import { periodInsights } from '@/lib/insights';
 import { integrityIssues } from '@/lib/integrity';
 import { reviewData } from '@/lib/review';
@@ -31,9 +32,20 @@ export const dynamic = 'force-dynamic';
 
 export default async function Dashboard({ searchParams }: { searchParams: { tour?: string } }) {
   const user = await requireUser();
+  const access = await loadAccess();
   const period = (await getCurrentPeriod()) ?? (await listPeriods())[0] ?? null;
 
-  const objectives = period ? await listObjectivesByPeriod(period.id) : [];
+  // Phạm vi xem theo vai trò (CFO 15/09): Giám đốc khối → toàn khối; Trưởng phòng/Nhân viên → phòng mình
+  // (+ OKR cấp Công ty/khối align lên). Điều hành & nhóm 'scope.all' → null = xem toàn bộ.
+  const allUnits = await listUnits();
+  const viewScope = okrViewScope(user, allUnits, access);
+  const scoped = viewScope !== null;
+  const scopeFilter = scoped ? { unitIds: [...viewScope], email: user.email } : undefined;
+
+  const allObjectives = period ? await listObjectivesByPeriod(period.id) : [];
+  const objectives = scoped
+    ? allObjectives.filter((o) => canViewObjectiveUnit(viewScope, o, user.email))
+    : allObjectives;
   const company = objectives.filter((o) => o.level === 'company');
   const divisions = objectives.filter((o) => o.level === 'division');
   const departments = objectives.filter((o) => o.level === 'department');
@@ -42,9 +54,12 @@ export default async function Dashboard({ searchParams }: { searchParams: { tour
   const avg = (arr: ObjectiveRow[]) =>
     arr.length ? arr.reduce((a, o) => a + o.progress, 0) / arr.length : 0;
 
-  const ins = period ? await periodInsights(period.id) : null;
-  const issues = period ? await integrityIssues(period.id).catch(() => []) : [];
-  const rv = period ? await reviewData(period).catch(() => null) : null;
+  const ins = period ? await periodInsights(period.id, scopeFilter) : null;
+  // Phân tích ĐIỀU HÀNH toàn công ty (Nhận định · Sức khỏe OKR · Cảnh báo toàn vẹn) chỉ hiện cho người
+  // xem toàn công ty (điều hành / Quản trị có 'scope.all'); user bị giới hạn phạm vi KHÔNG thấy (tránh lộ
+  // số liệu khối/phòng khác). Họ vẫn có đủ số liệu trong phạm vi mình ở các card trên.
+  const issues = !scoped && period ? await integrityIssues(period.id).catch(() => []) : [];
+  const rv = !scoped && period ? await reviewData(period).catch(() => null) : null;
   const companyProg = Math.round(avg(company.length ? company : divisions));
   // Nhịp độ: % thời gian kỳ đã trôi qua (so với tiến độ để biết đang dẫn/chậm).
   let elapsed = 0;
@@ -57,9 +72,8 @@ export default async function Dashboard({ searchParams }: { searchParams: { tour
   // "Tiến độ theo Khối" — liệt kê MỌI khối từ cây tổ chức (kể cả khối CHƯA có OKR = 0%), tiến độ =
   // bình quân OKR cấp khối GẮN ĐÚNG đơn vị đó. KHÔNG bịa "khối" từ tiêu đề OKR (trước đây OKR khối chưa
   // gán đơn vị bị hiện tên OKR như một khối). OKR khối thiếu đơn vị được cảnh báo riêng ở trang Toàn vẹn.
-  const allUnits = await listUnits();
   const activeDivisions = allUnits
-    .filter((u) => u.type === 'division' && u.is_active)
+    .filter((u) => u.type === 'division' && u.is_active && (!scoped || viewScope.has(u.id)))
     .sort((a, b) => a.sort - b.sort || a.name.localeCompare(b.name));
   const divProg = new Map<string, { sum: number; n: number }>();
   for (const o of divisions) {

@@ -101,10 +101,10 @@ export default async function ObjectivesPage({
       <div className="wrap">
         <div className="flexbtw">
           <div>
-            <div className="pagetitle">{scopedView ? 'OKR của đơn vị tôi' : 'Toàn bộ OKR'}<HelpTip k="okr-cascade" /></div>
+            <div className="pagetitle">{scopedView ? 'OKR trong phạm vi của tôi' : 'Toàn bộ OKR'}<HelpTip k="okr-cascade" /></div>
             <p className="subtitle">
               {scopedView
-                ? 'Bạn đang xem OKR trong phạm vi đơn vị mình (kèm mục tiêu cấp Công ty/Khối mà đơn vị align lên). Chế độ chỉ xem.'
+                ? 'Bạn đang xem OKR trong phạm vi đơn vị mình (kèm mục tiêu cấp Công ty/Khối mà đơn vị align lên) — không thấy OKR của khối/phòng khác.'
                 : 'Cây mục tiêu theo alignment: Công ty → Khối → Phòng ban → Cá nhân.'}
             </p>
           </div>

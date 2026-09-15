@@ -65,8 +65,13 @@ function groupByUnit(rows: ObjectiveRow[], units: Unit[]): ReportGroup[] {
     .sort((a, b) => b.weighted - a.weighted || a.name.localeCompare(b.name));
 }
 
-export async function okrLevelReport(periodId: string): Promise<OkrLevelReport> {
-  const [objs, units] = await Promise.all([listObjectivesByPeriod(periodId), listUnits()]);
+// canView: bộ lọc phạm vi xem (CFO 15/09) — chỉ tính OKR người xem được phép thấy. Bỏ trống = toàn bộ.
+export async function okrLevelReport(
+  periodId: string,
+  canView?: (o: ObjectiveRow) => boolean,
+): Promise<OkrLevelReport> {
+  const [allObjs, units] = await Promise.all([listObjectivesByPeriod(periodId), listUnits()]);
+  const objs = canView ? allObjs.filter(canView) : allObjs;
   const company = objs.filter((o) => o.level === 'company');
   const divisions = objs.filter((o) => o.level === 'division');
   const departments = objs.filter((o) => o.level === 'department');

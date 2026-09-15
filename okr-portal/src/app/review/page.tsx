@@ -1,7 +1,10 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import SiteHeader from '@/components/SiteHeader';
 import HelpTip from '@/components/HelpTip';
 import { requireUser } from '@/lib/current-user';
+import { listUnits } from '@/lib/org';
+import { loadAccess, okrViewScope } from '@/lib/access';
 import { currentReviewData } from '@/lib/review';
 import { BSC_PERSPECTIVE_LABEL, BSC_PERSPECTIVE_ICON, LEVEL_LABEL, type BscPerspective, type Level } from '@/lib/okr';
 import { STATUS_LABEL, STATUS_CLS } from '@/lib/kpi-values';
@@ -21,7 +24,12 @@ function compact(v: number | null, unit: string | null): string {
 }
 
 export default async function ReviewPage() {
-  await requireUser();
+  const user = await requireUser();
+  // Họp điều hành = báo cáo tổng hợp TOÀN CÔNG TY (WBR/MBR) → chỉ cho người xem toàn công ty:
+  // điều hành (CEO/CFO) hoặc nhóm có năng lực 'scope.all' (Quản trị hệ thống/OKR). Người bị giới hạn
+  // phạm vi (Giám đốc khối/Trưởng phòng/Nhân viên) → về Bảng điều khiển (đã hiện đúng phạm vi của họ).
+  const [access, units] = await Promise.all([loadAccess(), listUnits()]);
+  if (okrViewScope(user, units, access) !== null) redirect('/');
   const d = await currentReviewData();
 
   if (!d) {

@@ -11,7 +11,17 @@ export type PeriodInsights = {
   overdueTasks: number;
 };
 
-export async function periodInsights(periodId: string): Promise<PeriodInsights> {
+// Phạm vi XEM (CFO 15/09): giới hạn số liệu Dashboard theo đơn vị người xem. unitIds=null = toàn bộ.
+export type ScopeFilter = { unitIds: string[] | null; email: string };
+
+export async function periodInsights(periodId: string, scope?: ScopeFilter): Promise<PeriodInsights> {
+  // Lọc theo phạm vi: OKR trong đơn vị mình (subtree+cấp trên) HOẶC OKR cấp Công ty HOẶC do mình chủ trì.
+  const scoped = !!scope && scope.unitIds !== null;
+  const params: unknown[] = scoped ? [periodId, scope!.unitIds, scope!.email] : [periodId];
+  const sc = scoped
+    ? ` AND (o.unit_id = ANY($2::text[]) OR o.level='company' OR lower(o.owner_email)=lower($3))`
+    : '';
+
   const kr = await queryOne<{
     total: number;
     done: number;
@@ -27,8 +37,8 @@ export async function periodInsights(periodId: string): Promise<PeriodInsights> 
         count(*) FILTER (WHERE k.progress<10)::int notstarted,
         count(*) FILTER (WHERE EXISTS (SELECT 1 FROM okr_checkins c WHERE c.key_result_id=k.id))::int checked
        FROM okr_key_results k JOIN okr_objectives o ON o.id=k.objective_id
-      WHERE o.period_id=$1`,
-    [periodId],
+      WHERE o.period_id=$1${sc}`,
+    params,
   );
 
   const conf = await query<{ confidence: string; n: number }>(
@@ -37,26 +47,26 @@ export async function periodInsights(periodId: string): Promise<PeriodInsights> 
           FROM okr_checkins c
           JOIN okr_key_results k ON k.id=c.key_result_id
           JOIN okr_objectives o ON o.id=k.objective_id
-         WHERE o.period_id=$1 AND c.key_result_id IS NOT NULL
+         WHERE o.period_id=$1 AND c.key_result_id IS NOT NULL${sc}
          ORDER BY c.key_result_id, c.created_at DESC
      ) t GROUP BY confidence`,
-    [periodId],
+    params,
   );
   const cmap = Object.fromEntries(conf.map((r) => [r.confidence, r.n]));
 
   const initRows = await query<{ status: string; n: number }>(
     `SELECT i.status, count(*)::int n FROM okr_initiatives i
         JOIN okr_objectives o ON o.id=i.objective_id
-       WHERE o.period_id=$1 GROUP BY i.status`,
-    [periodId],
+       WHERE o.period_id=$1${sc} GROUP BY i.status`,
+    params,
   );
   const imap = Object.fromEntries(initRows.map((r) => [r.status, r.n]));
 
   const od = await queryOne<{ n: number }>(
     `SELECT count(*)::int n FROM okr_initiatives i JOIN okr_objectives o ON o.id=i.objective_id
       WHERE o.period_id=$1 AND i.due_on IS NOT NULL AND i.due_on < CURRENT_DATE
-        AND i.status NOT IN ('done','canceled')`,
-    [periodId],
+        AND i.status NOT IN ('done','canceled')${sc}`,
+    params,
   );
 
   const total = kr?.total ?? 0;
