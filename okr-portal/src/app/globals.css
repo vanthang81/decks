@@ -670,7 +670,8 @@ table.t th.sortable.active { color: var(--primary); }
 }
 
 /* Popup sửa/cập nhật/xoá công việc từ trang Công việc */
-.task-edit { max-width: 660px; max-height: 92vh; overflow-y: auto; }
+/* Popup chi tiết công việc — RỘNG theo tỷ lệ cửa sổ (CFO 15/09): to trên desktop, gọn trên mobile. */
+.task-edit { max-width: min(920px, 94vw); max-height: 92vh; overflow-y: auto; }
 .te-links { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; }
 .te-links a { text-decoration: none; }
 .te-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
@@ -689,6 +690,18 @@ table.t th.sortable.active { color: var(--primary); }
 .te-eo-txt { margin: 0; color: var(--ink); font-size: 13.5px; line-height: 1.5; white-space: pre-wrap; }
 table.te-detail td { padding: 7px 4px; vertical-align: middle; }
 table.te-detail td:first-child { width: 130px; white-space: nowrap; }
+/* Lưới trường chi tiết công việc — 2 cột trên desktop (lấp đầy bề rộng), 1 cột trên mobile. */
+.te-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; margin: 12px 0 0; }
+.te-detail-grid .te-field { display: flex; gap: 10px; align-items: baseline; padding: 8px 2px; border-bottom: 1px solid var(--line); min-width: 0; }
+.te-detail-grid .te-field.full { grid-column: 1 / -1; }
+.te-detail-grid dt { flex: 0 0 108px; color: var(--muted); font-size: 13px; }
+.te-detail-grid dd { flex: 1 1 auto; margin: 0; min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  .te-detail-grid { grid-template-columns: 1fr; gap: 0; }
+  /* Mobile: nhãn XUỐNG DÒNG riêng trên giá trị (dễ đọc, không cắt cụt/ xuống dòng xấu). */
+  .te-detail-grid .te-field { flex-direction: column; gap: 2px; align-items: stretch; padding: 7px 2px; }
+  .te-detail-grid dt { flex: 0 0 auto; font-size: 12px; }
+}
 .te-err { color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 8px 10px; margin-top: 10px; font-size: 13px; }
 .te-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
 

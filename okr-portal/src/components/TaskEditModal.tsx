@@ -146,23 +146,30 @@ export default function TaskEditModal({
                 <p className="te-eo-txt">{task.expected_output}</p>
               </div>
             )}
-            <table className="t te-detail" style={{ marginTop: 10 }}>
-              <tbody>
-                <tr><td className="muted">Tiến độ</td><td>
+            <dl className="te-detail-grid">
+              <div className="te-field full">
+                <dt>Tiến độ</dt>
+                <dd>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ width: 150, display: 'inline-block' }}><ProgressBar value={task.progress} /></span>
+                    <span style={{ width: 180, maxWidth: '100%', display: 'inline-block' }}><ProgressBar value={task.progress} /></span>
                     <b className="mono">{task.progress.toFixed(0)}%</b>
                   </span>
-                </td></tr>
-                <tr><td className="muted">Phụ trách</td><td>
+                </dd>
+              </div>
+              <div className="te-field">
+                <dt>Phụ trách</dt>
+                <dd>
                   {task.owner_email || task.owner_name ? (
                     <>
                       <UserLink email={task.owner_email} name={task.owner_name} />
                       {(() => { const ti = users.find((u) => u.email.toLowerCase() === (task.owner_email ?? '').toLowerCase())?.title; return ti ? <span className="muted"> · {ti}</span> : null; })()}
                     </>
                   ) : <span className="muted">Chưa giao</span>}
-                </td></tr>
-                <tr><td className="muted">Người giao</td><td>
+                </dd>
+              </div>
+              <div className="te-field">
+                <dt>Người giao</dt>
+                <dd>
                   {task.created_by
                     ? (task.owner_email && task.created_by.toLowerCase() === task.owner_email.toLowerCase()
                         ? <span className="muted">Tự giao (cũng là người phụ trách)</span>
@@ -173,33 +180,33 @@ export default function TaskEditModal({
                           </>
                         ))
                     : <span className="muted">—</span>}
-                </td></tr>
-                <tr><td className="muted">Đơn vị</td><td>{task.unit_name || <span className="muted">—</span>}</td></tr>
-                <tr><td className="muted">Ưu tiên</td><td>{PRIO_LABEL[task.priority] ?? task.priority}</td></tr>
-                <tr><td className="muted">Bắt đầu</td><td>{task.start_on ? fmtDate(task.start_on) : <span className="muted">—</span>}</td></tr>
-                <tr><td className="muted">Hạn</td><td>{task.due_on ? fmtDate(task.due_on) : <span className="muted">—</span>}</td></tr>
-                <tr><td className="muted">Hoàn thành</td><td>
-                  {task.done_on ? (
-                    <>
-                      {fmtDate(task.done_on)}
-                      {task.due_on && (
-                        <span className={`badge ${task.done_on > task.due_on ? 'red' : 'green'}`} style={{ marginLeft: 6 }}>
-                          {task.done_on > task.due_on
-                            ? `Trễ ${Math.round((Date.parse(task.done_on) - Date.parse(task.due_on)) / 86400000)} ngày`
-                            : 'Đúng hạn'}
-                        </span>
-                      )}
-                    </>
-                  ) : <span className="muted">— chưa xong</span>}
-                </td></tr>
-                <tr><td className="muted">NS kế hoạch</td><td className="mono">{fmtVnd(task.budget_planned)}</td></tr>
-                <tr><td className="muted">Đã chi</td><td className="mono">{fmtVnd(task.budget_actual)}</td></tr>
-                <tr><td className="muted">Minh chứng</td><td>{task.evidence_url
-                  ? <a className="ci-evi" href={task.evidence_url} target="_blank" rel="noopener noreferrer" title={task.evidence_url}>🔗 Mở minh chứng</a>
-                  : <span className="muted">—</span>}</td></tr>
-                {depLabels.length > 0 && <tr><td className="muted">⏳ Phụ thuộc</td><td>{depLabels.join(' · ')}</td></tr>}
-              </tbody>
-            </table>
+                </dd>
+              </div>
+              <div className="te-field"><dt>Đơn vị</dt><dd>{task.unit_name || <span className="muted">—</span>}</dd></div>
+              <div className="te-field"><dt>Ưu tiên</dt><dd>{PRIO_LABEL[task.priority] ?? task.priority}</dd></div>
+              <div className="te-field"><dt>Bắt đầu</dt><dd>{task.start_on ? fmtDate(task.start_on) : <span className="muted">—</span>}</dd></div>
+              <div className="te-field"><dt>Hạn</dt><dd>{task.due_on ? fmtDate(task.due_on) : <span className="muted">—</span>}</dd></div>
+              <div className="te-field"><dt>Hoàn thành</dt><dd>
+                {task.done_on ? (
+                  <>
+                    {fmtDate(task.done_on)}
+                    {task.due_on && (
+                      <span className={`badge ${task.done_on > task.due_on ? 'red' : 'green'}`} style={{ marginLeft: 6 }}>
+                        {task.done_on > task.due_on
+                          ? `Trễ ${Math.round((Date.parse(task.done_on) - Date.parse(task.due_on)) / 86400000)} ngày`
+                          : 'Đúng hạn'}
+                      </span>
+                    )}
+                  </>
+                ) : <span className="muted">— chưa xong</span>}
+              </dd></div>
+              <div className="te-field"><dt>NS kế hoạch</dt><dd className="mono">{fmtVnd(task.budget_planned)}</dd></div>
+              <div className="te-field"><dt>Đã chi</dt><dd className="mono">{fmtVnd(task.budget_actual)}</dd></div>
+              <div className="te-field full"><dt>Minh chứng</dt><dd>{task.evidence_url
+                ? <a className="ci-evi" href={task.evidence_url} target="_blank" rel="noopener noreferrer" title={task.evidence_url}>🔗 Mở minh chứng</a>
+                : <span className="muted">—</span>}</dd></div>
+              {depLabels.length > 0 && <div className="te-field full"><dt>⏳ Phụ thuộc</dt><dd>{depLabels.join(' · ')}</dd></div>}
+            </dl>
             {!editable && <p className="muted" style={{ fontSize: 12.5, marginTop: 8 }}>Bạn chỉ có quyền xem việc này.</p>}
             <div className="te-actions">
               <div>

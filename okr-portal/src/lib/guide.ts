@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-14.184';
+export const GUIDE_VERSION = '2026-09-15.185';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '15/09/2026 (Popup chi tiết công việc rộng & gọn hơn)',
+    items: [
+      'Cửa sổ chi tiết công việc (mở từ thông báo / danh sách việc) nay RỘNG theo tỷ lệ màn hình (tối đa ~920px) — thoáng, dễ đọc trên máy tính.',
+      'Các trường thông tin xếp lưới 2 cột trên desktop (lấp đầy bề rộng, không còn khoảng trống), tự về 1 cột + nhãn trên giá trị trên điện thoại.',
+    ],
+  },
   {
     date: '14/09/2026 (Nhất quán Nhóm quyền giữa các trang)',
     items: [
