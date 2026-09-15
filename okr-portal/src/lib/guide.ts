@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-15.188';
+export const GUIDE_VERSION = '2026-09-15.190';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '15/09/2026 (Tạo OKR ngay trong Dự án + tách quyền Check-in)',
+    items: [
+      'Trang Dự án — mục "🎯 OKR liên quan" thêm nút "+ Tạo OKR mới": tạo Objective ngay tại chỗ và TỰ gắn vào dự án (không phải sang trang OKR rồi quay lại).',
+      'Phân quyền: tách năng lực "Check-in / Cập nhật tiến độ KR" khỏi "Sửa OKR/KR" — cấp Quản lý trở xuống có thể được cấp quyền cập nhật tiến độ trong phạm vi mình mà KHÔNG cần toàn quyền sửa OKR (bật ở Quản trị → Phân quyền cho nhóm Cộng tác/Quản lý).',
+    ],
+  },
   {
     date: '15/09/2026 (Sắp xếp OKR theo mã — hết cảnh mã lộn xộn)',
     items: [

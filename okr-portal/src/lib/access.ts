@@ -188,6 +188,17 @@ export function canEditObjective(user: OkrUser, obj: ObjScope, units: Unit[], ac
   if (!hasCap(user, 'okr.edit', access)) return false;
   return inScope(user, obj.unit_id, units, access);
 }
+/**
+ * Quyền CHECK-IN / cập nhật tiến độ KR (CFO 15/09 — tách khỏi okr.edit): ai sửa được OKR thì hiển
+ * nhiên check-in được; ngoài ra người có năng lực 'okr.checkin' được check-in OKR mình chủ trì HOẶC
+ * trong phạm vi quản lý của mình — KHÔNG cần toàn quyền sửa OKR. Dành cho cấp Quản lý trở xuống.
+ */
+export function canCheckinObjective(user: OkrUser, obj: ObjScope, units: Unit[], access: Access): boolean {
+  if (canEditObjective(user, obj, units, access)) return true;
+  if (!hasCap(user, 'okr.checkin', access)) return false;
+  if (ownerOrCreator(user, obj)) return true;
+  return inScope(user, obj.unit_id, units, access);
+}
 export function canDeleteObjective(user: OkrUser, obj: ObjScope, units: Unit[], access: Access): boolean {
   // Nhân viên chỉ xem — trừ khi được cấp 'okr.delete'. (Kiểm cap ngay dưới cũng chặn, để rõ ý.)
   if (!hasCap(user, 'okr.delete', access)) return false;

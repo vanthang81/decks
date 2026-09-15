@@ -65,6 +65,7 @@ import { recordTaskChange } from '@/lib/task-changes';
 import {
   loadAccess,
   canEditObjective,
+  canCheckinObjective,
   canDeleteObjective,
   canCreateObjective,
   isSuperAdmin,
@@ -401,6 +402,21 @@ async function assertCanManageObjective(objectiveId: string) {
   return { user, obj };
 }
 
+// Quyền CHECK-IN (nới hơn sửa OKR): cho phép người có năng lực 'okr.checkin' cập nhật tiến độ KR
+// trong phạm vi mình mà KHÔNG cần toàn quyền sửa OKR (CFO 15/09).
+async function assertCanCheckin(objectiveId: string) {
+  const user = await requireUser();
+  const [units, obj, access] = await Promise.all([
+    listUnits(),
+    getObjective(objectiveId),
+    loadAccess(),
+  ]);
+  if (!obj) throw new Error('Không tìm thấy OKR.');
+  if (!canCheckinObjective(user, obj, units, access))
+    throw new Error('Bạn không có quyền check-in OKR này.');
+  return { user, obj };
+}
+
 /**
  * Quyền QUẢN LÝ 1 công việc bất kể nó gắn OKR / cuộc họp / dự án:
  *  - gắn OKR → quyền sửa OKR đó;
@@ -538,7 +554,7 @@ export async function checkInAction(fd: FormData) {
   const krId = str(fd, 'key_result_id');
   const kr = await getKeyResult(krId);
   if (!kr) throw new Error('Không tìm thấy KR.');
-  await assertCanManageObjective(kr.objective_id);
+  await assertCanCheckin(kr.objective_id);
   // KR gắn nguồn KPI tự động: giá trị do BigQuery quản → KHÔNG ghi đè bằng check-in tay,
   // chỉ lưu độ tự tin/ghi chú (value = giá trị hiện tại đã đồng bộ).
   const isAuto = !!kr.kpi_source;

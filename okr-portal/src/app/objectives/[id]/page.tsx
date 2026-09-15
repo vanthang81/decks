@@ -70,7 +70,7 @@ import {
 } from '../actions';
 import { createProjectForInitiativeAction } from '@/app/projects/actions';
 import { withinEditWindow } from '@/lib/moderation';
-import { loadAccess, canEditObjective, canDeleteObjective, canCreateObjective, okrViewScope, hasCap } from '@/lib/access';
+import { loadAccess, canEditObjective, canCheckinObjective, canDeleteObjective, canCreateObjective, okrViewScope, hasCap } from '@/lib/access';
 import { buildObjectiveFormProps } from '@/lib/objective-form';
 import { unitIcon } from '@/lib/unit-icons';
 
@@ -104,6 +104,9 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
   }
   const users = await listUsers();
   const canManage = canEditObjective(user, obj, units, access);
+  // Check-in tách khỏi Sửa OKR (CFO 15/09): người có năng lực 'okr.checkin' cập nhật tiến độ KR được,
+  // dù KHÔNG có toàn quyền sửa OKR (cấp Quản lý trở xuống theo dõi tiến độ trong phạm vi mình).
+  const canCheckin = canManage || canCheckinObjective(user, obj, units, access);
   const kpiOpts = (await listKpis()).filter((k) => k.is_active);
   const kpiById = new Map(kpiOpts.map((k) => [k.id, `${k.code ? `${k.code} · ` : ''}${k.name}`]));
   const canDelete = canDeleteObjective(user, obj, units, access);
@@ -499,7 +502,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
               </div>
 
               <div className="kr-foot">
-              {canManage && (
+              {canCheckin && (
                 <details className="kr-sub">
                   <summary><span className="kr-sub-ic">📈</span> Check-in / cập nhật</summary>
                   <ToastForm action={checkInAction} done="Đã lưu check-in" className="row" style={{ marginTop: 8 }}>

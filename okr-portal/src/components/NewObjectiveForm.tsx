@@ -25,7 +25,7 @@ const METRICS = [{ v: 'number', l: 'Số' }, { v: 'percent', l: '%' }, { v: 'cur
 export default function NewObjectiveForm({
   periodId, currentEmail, allowedLevels, defaultLevel, levelLabels,
   units, users, periodObjectives, pillars, projects = [], bscOptions, okrTypeOptions, create,
-  inline = false, onSuccess, onCancel,
+  inline = false, onSuccess, onCancel, defaultProjectId = '',
 }: {
   periodId: string;
   currentEmail: string;
@@ -44,6 +44,7 @@ export default function NewObjectiveForm({
   inline?: boolean;
   onSuccess?: () => void;
   onCancel?: () => void;
+  defaultProjectId?: string; // preselect "Gắn vào Dự án" (khi tạo OKR ngay trong 1 dự án)
 }) {
   const { toast } = useToast();
   const [level, setLevel] = useState<Level>(defaultLevel);
@@ -51,7 +52,7 @@ export default function NewObjectiveForm({
   const [bsc, setBsc] = useState('');
   const [showAllParents, setShowAllParents] = useState(false);
   const [parentId, setParentId] = useState('');
-  const [projectId, setProjectId] = useState('');
+  const [projectId, setProjectId] = useState(defaultProjectId);
   const [title, setTitle] = useState('');
   const [okrType, setOkrType] = useState('committed');
   const [status, setStatus] = useState('active');

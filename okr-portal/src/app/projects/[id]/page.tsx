@@ -48,7 +48,9 @@ import {
   deleteInitiativeAction,
   createInitiativeAction,
   moveInitiativeAction,
+  createObjectiveAction,
 } from '../../objectives/actions';
+import { buildObjectiveFormProps } from '@/lib/objective-form';
 import { updateProjectAction, deleteProjectAction, createProjectForInitiativeAction, saveProjectCharterAction, addProjectDocAction, deleteProjectDocAction, addProjectMemberAction, removeProjectMemberAction, createProjectTaskAction, createProjectTasksBulkAction, setProjectObjectivesAction, setComplianceEnabledAction } from '../actions';
 import EditModal from '@/components/EditModal';
 import NavIcon from '@/components/NavIcon';
@@ -133,6 +135,12 @@ export default async function ProjectDetail({ params }: { params: { id: string }
   const projectOpts = p.period_id ? await listProjectOptions(p.period_id) : [];
   const meetingOpts = await listMeetingOptions(user);
   const objectiveOpts = p.period_id ? await listObjectivesWithKrs(p.period_id) : [];
+  // Tạo OKR mới NGAY tại dự án (CFO 15/09): chỉ khi quản được dự án + dự án có kỳ. Đảm bảo dự án hiện tại
+  // luôn nằm trong danh sách "Gắn vào Dự án" của form (dù ngoài cửa sổ kỳ) để tự liên kết sau khi tạo.
+  const okrFormProps = canManage && p.period_id ? await buildObjectiveFormProps(user, p.period_id) : null;
+  if (okrFormProps && !okrFormProps.projects.some((x) => x.id === p.id)) {
+    okrFormProps.projects = [{ id: p.id, code: p.code, name: p.name }, ...okrFormProps.projects];
+  }
   const personOpts = users.map((u) => ({ email: u.email, name: u.display_name || u.email, avatar: u.avatar_url, unit_id: u.unit_id, title: personTitle(u) }));
   const unitOpts = units.filter((u) => u.type !== 'company').map((u) => ({ id: u.id, name: u.name, type: u.type, parent_id: u.parent_id, sort: u.sort }));
 
@@ -230,6 +238,8 @@ export default async function ProjectDetail({ params }: { params: { id: string }
           options={objectiveOpts.map((o) => ({ id: o.id, code: o.code, title: o.title, unit_name: o.unit_name }))}
           canManage={canManage}
           save={setProjectObjectivesAction}
+          okrFormProps={okrFormProps}
+          createObjective={createObjectiveAction}
         />
 
         {/* ---- Điều lệ dự án (Project Charter) ---- */}

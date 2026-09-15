@@ -12,11 +12,13 @@ export default function NewObjectiveModal({
   create,
   label = '+ Tạo OKR',
   triggerClass = 'btn',
+  defaultProjectId,
 }: {
   formProps: ObjectiveFormProps;
   create: (fd: FormData) => Promise<void>;
   label?: string;
   triggerClass?: string;
+  defaultProjectId?: string;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -35,6 +37,7 @@ export default function NewObjectiveModal({
               {...formProps}
               create={create}
               inline
+              defaultProjectId={defaultProjectId}
               onSuccess={() => { setOpen(false); router.refresh(); }}
               onCancel={() => setOpen(false)}
             />

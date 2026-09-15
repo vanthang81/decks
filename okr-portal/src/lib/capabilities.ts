@@ -17,6 +17,7 @@ export type CapKey =
   | 'strategy.manage'
   | 'okr.create'
   | 'okr.edit'
+  | 'okr.checkin'
   | 'okr.delete'
   | 'project.manage'
   | 'meeting.manage'
@@ -64,7 +65,8 @@ export const CAPABILITIES: Capability[] = [
   { key: 'scope.all', cat: 'system', label: 'Toàn phạm vi quản lý (mọi đơn vị)', desc: 'Bỏ qua giới hạn phạm vi tổ chức khi QUẢN LÝ — thao tác được MỌI OKR/KR, dự án, KPI của mọi khối/phòng (không giới hạn ở đơn vị mình). KHÔNG tự động cho xem chi tiết công việc cá nhân của người khác (việc đó là "Xem toàn bộ công việc").', suggest: ['system_admin', 'okr_admin', 'kpi_admin'] },
   { key: 'strategy.manage', cat: 'strategy', label: 'Quản lý Chiến lược công ty', desc: 'Khai báo / sửa Tầm nhìn – Sứ mệnh – Giá trị – Khát vọng và sắp xếp trụ cột chiến lược ở trang "Chiến lược".', suggest: ['system_admin', 'okr_admin'] },
   { key: 'okr.create', cat: 'okr', label: 'Tạo OKR', desc: 'Tạo Objective mới (trong phạm vi, trừ khi có "Toàn phạm vi").', suggest: ['system_admin', 'okr_admin', 'manager'] },
-  { key: 'okr.edit', cat: 'okr', label: 'Sửa OKR / KR / check-in', desc: 'Sửa Objective, Key Result, ghi & sửa check-in, quản việc thực thi; duyệt bình luận.', suggest: ['system_admin', 'okr_admin', 'manager'] },
+  { key: 'okr.edit', cat: 'okr', label: 'Sửa OKR / KR', desc: 'Sửa nội dung Objective, Key Result, quản việc thực thi; duyệt bình luận (đã bao gồm quyền check-in).', suggest: ['system_admin', 'okr_admin', 'manager'] },
+  { key: 'okr.checkin', cat: 'okr', label: 'Check-in / Cập nhật tiến độ KR', desc: 'Ghi & sửa check-in (cập nhật giá trị/độ tự tin/ghi chú KR) trong phạm vi đơn vị mình — KHÔNG cần toàn quyền Sửa OKR. Dành cho cấp Quản lý trở xuống theo dõi tiến độ.', suggest: ['system_admin', 'okr_admin', 'manager', 'contributor'] },
   { key: 'okr.delete', cat: 'okr', label: 'Xoá OKR', desc: 'Xoá Objective vĩnh viễn (trong phạm vi, trừ khi có "Toàn phạm vi").', suggest: ['system_admin', 'okr_admin'] },
   { key: 'task.viewall', cat: 'exec', label: 'Xem toàn bộ công việc (mọi người)', desc: 'Xem TẤT CẢ công việc ở trang "Công việc" — kể cả việc riêng của người khác / đơn vị khác. KHÔNG có quyền này = chỉ thấy việc liên quan tới mình (được giao / mình giao / chủ trì OKR / thành viên dự án / được @tag) + việc trong phạm vi đơn vị mình quản (cần-mới-biết).', suggest: ['system_admin', 'okr_admin', 'kpi_admin'] },
   { key: 'project.manage', cat: 'exec', label: 'Quản lý Dự án', desc: 'Tạo / sửa / xoá dự án và gắn việc vào dự án.', suggest: ['system_admin', 'okr_admin', 'manager'] },

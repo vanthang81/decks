@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ToastProvider';
+import NewObjectiveModal from '@/components/NewObjectiveModal';
+import type { ObjectiveFormProps } from '@/lib/objective-form';
 
 type Obj = { id: string; code: string | null; title: string; unit_name: string | null };
 
@@ -15,12 +17,17 @@ export default function ProjectObjectivesCard({
   options,
   canManage,
   save,
+  okrFormProps,
+  createObjective,
 }: {
   projectId: string;
   linked: Obj[];
   options: Obj[];
   canManage: boolean;
   save: (fd: FormData) => Promise<void>;
+  // Tạo OKR mới NGAY tại dự án (CFO 15/09) — tuỳ chọn: chỉ khi người dùng quản được dự án + có kỳ.
+  okrFormProps?: ObjectiveFormProps | null;
+  createObjective?: (fd: FormData) => Promise<void>;
 }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -53,9 +60,20 @@ export default function ProjectObjectivesCard({
       <div className="flexbtw flexbtw-top">
         <h3 style={{ marginTop: 0 }}>🎯 OKR liên quan {linked.length ? `(${linked.length})` : ''}</h3>
         {canManage && !editing && (
-          <button type="button" className="btn ghost sm" onClick={() => { setSel(new Set(linked.map((o) => o.id))); setEditing(true); }}>
-            {linked.length ? 'Sửa' : 'Chọn OKR'}
-          </button>
+          <div className="row-actions" style={{ display: 'inline-flex', gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" className="btn ghost sm" onClick={() => { setSel(new Set(linked.map((o) => o.id))); setEditing(true); }}>
+              {linked.length ? 'Sửa' : 'Chọn OKR'}
+            </button>
+            {okrFormProps && createObjective && (
+              <NewObjectiveModal
+                formProps={okrFormProps}
+                create={createObjective}
+                defaultProjectId={projectId}
+                label="+ Tạo OKR mới"
+                triggerClass="btn ghost sm"
+              />
+            )}
+          </div>
         )}
       </div>
 
