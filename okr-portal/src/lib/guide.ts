@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-15.190';
+export const GUIDE_VERSION = '2026-09-16.191';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '16/09/2026 (Giữ bộ lọc OKR khi quay lại)',
+    items: [
+      'Trang OKR: lọc theo Khối/Phòng (hoặc tìm kiếm) rồi vào chi tiết một OKR, bấm Back trình duyệt sẽ GIỮ NGUYÊN bộ lọc trước đó — không còn về danh sách tổng phải lọc lại. Bộ lọc nhớ theo phiên làm việc; bấm "Xoá lọc" để về danh sách đầy đủ.',
+    ],
+  },
   {
     date: '15/09/2026 (Tạo OKR ngay trong Dự án + tách quyền Check-in)',
     items: [

@@ -157,7 +157,7 @@ export default async function ObjectivesPage({
           {period && objectives.length === 0 && (
             <p className="muted">Kỳ này chưa có OKR nào. Bấm “+ Tạo OKR”.</p>
           )}
-          {period && objectives.length > 0 && <ObjectiveTree objectives={treeData} unitOptions={unitOptions} initialOwner={searchParams.owner} canReorder={canReorder} reorder={reorderObjectivesAction} />}
+          {period && objectives.length > 0 && <ObjectiveTree objectives={treeData} unitOptions={unitOptions} initialOwner={searchParams.owner} canReorder={canReorder} reorder={reorderObjectivesAction} persistKey="okr-tree-filters" />}
         </div>
 
         {childSections.length > 0 && (

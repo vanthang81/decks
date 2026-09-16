@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ClearFiltersButton from '@/components/ClearFiltersButton';
@@ -79,13 +79,14 @@ function collectParents(nodes: Node[], acc: Set<string>): Set<string> {
 }
 
 export default function ObjectiveTree({
-  objectives, unitOptions, initialOwner, canReorder = false, reorder,
+  objectives, unitOptions, initialOwner, canReorder = false, reorder, persistKey,
 }: {
   objectives: TreeObjective[];
   unitOptions?: { value: string; label: string }[];
   initialOwner?: string;
   canReorder?: boolean;                                  // được phép kéo-thả sắp xếp OKR
   reorder?: (ids: string[]) => Promise<void>;            // lưu thứ tự nhóm anh em
+  persistKey?: string;                                   // nhớ bộ lọc theo phiên (back giữ nguyên filter)
 }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -257,6 +258,38 @@ export default function ObjectiveTree({
     setFType('');
     setFOwner('');
   };
+
+  // GIỮ BỘ LỌC theo phiên (CFO 16/09): vào chi tiết OKR rồi back lại → khôi phục đúng bộ lọc trước đó
+  // (trước đây component remount làm mất filter, phải chọn lại Khối/Phòng). Lưu ở sessionStorage (theo
+  // phiên tab; "Xoá lọc" sẽ ghi rỗng). Chỉ áp cho cây CHÍNH (có persistKey) — cây kỳ con không đụng.
+  // Khôi phục 1 lần khi mount; unit/owner chỉ áp nếu CÒN tồn tại trong kỳ hiện tại (tránh lọc rỗng khi đổi kỳ).
+  useEffect(() => {
+    if (!persistKey || typeof window === 'undefined') return;
+    try {
+      const raw = sessionStorage.getItem(persistKey);
+      if (!raw) return;
+      const s = JSON.parse(raw) as Record<string, unknown>;
+      if (typeof s.q === 'string') setQ(s.q);
+      if (typeof s.fLevel === 'string') setFLevel(s.fLevel);
+      if (typeof s.fStatus === 'string') setFStatus(s.fStatus);
+      if (typeof s.fType === 'string') setFType(s.fType);
+      if (typeof s.fUnit === 'string' && s.fUnit && objectives.some((o) => o.unit_id === s.fUnit)) setFUnit(s.fUnit);
+      if (!initialOwner && typeof s.fOwner === 'string' && s.fOwner &&
+          objectives.some((o) => (o.owner_email ?? '').toLowerCase() === (s.fOwner as string).toLowerCase())) setFOwner(s.fOwner);
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [persistKey]);
+
+  // Lưu bộ lọc mỗi khi đổi (bỏ qua lần mount đầu để không ghi đè giá trị vừa khôi phục).
+  const skipSave = useRef(true);
+  useEffect(() => {
+    if (!persistKey || typeof window === 'undefined') return;
+    if (skipSave.current) { skipSave.current = false; return; }
+    try {
+      sessionStorage.setItem(persistKey, JSON.stringify({ q, fUnit, fLevel, fStatus, fType, fOwner }));
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [persistKey, q, fUnit, fLevel, fStatus, fType, fOwner]);
 
   // Dòng phẳng (dùng khi đang lọc — bỏ cây thụt cấp, hiện đủ ngữ cảnh).
   const renderFlat = (o: TreeObjective): React.ReactNode => (
