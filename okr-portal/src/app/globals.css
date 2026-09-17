@@ -705,6 +705,20 @@ table.te-detail td:first-child { width: 130px; white-space: nowrap; }
 .te-err { color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 8px 10px; margin-top: 10px; font-size: 13px; }
 .te-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
 
+/* Việc con (sub-task) trong popup chi tiết công việc */
+.te-subs { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+.te-subs-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.te-subs-title { font-weight: 700; font-size: 14px; }
+.te-subs-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.te-sub-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--card, #fff); flex-wrap: wrap; }
+.te-sub-ttl { flex: 1; min-width: 140px; font-size: 13.5px; }
+.te-sub-meta { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; }
+.te-sub-pct { min-width: 34px; text-align: right; }
+.te-subs-note { font-size: 12px; margin: 6px 0 0; }
+.te-sub-add { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; background: #f8fafc; border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+.te-sub-add-act { display: flex; justify-content: flex-end; gap: 8px; }
+@media (max-width: 640px) { .te-sub-meta { width: 100%; justify-content: space-between; } }
+
 /* Viễn cảnh BSC — badge + ô đặt nhanh trên trang chi tiết OKR */
 .badge.bsc { background: #F4EEDD; color: #8A6A1E; border: 1px solid #E4D5A9; }
 .bsc-set { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; margin-top: 10px; }

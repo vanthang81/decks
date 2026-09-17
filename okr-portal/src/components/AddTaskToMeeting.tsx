@@ -82,6 +82,9 @@ export default function AddTaskToMeeting({
               <label className="f">Tên việc</label>
               <input className="i" name="title" required placeholder="VD: Gửi báo cáo doanh thu T8 trước 10/8" />
 
+              <label className="f">Mô tả công việc <span className="muted" style={{ fontWeight: 400 }}>(tuỳ chọn)</span></label>
+              <textarea className="i" name="description" rows={2} placeholder="Nội dung/ngữ cảnh chi tiết của việc — điền ngay khi tạo, khỏi phải mở lại để sửa" />
+
               <label className="f">Kết quả đầu ra <span className="muted" style={{ fontWeight: 400 }}>— tiêu chí hoàn thành (tuỳ chọn)</span></label>
               <textarea className="i" name="expected_output" rows={2} placeholder="Xong là ra cái gì? VD: Báo cáo T8 đã gửi & được duyệt" />
 

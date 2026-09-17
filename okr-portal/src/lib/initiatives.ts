@@ -515,6 +515,23 @@ export function canUpdateInitiative(
   return { manage, assignee };
 }
 
+/**
+ * NGƯỜI NHẬN việc = người ĐƯỢC GIAO (owner_email) KHÁC với người GIAO (created_by).
+ * Người này CHỈ được cập nhật trạng thái/tiến độ/minh chứng, KHÔNG được sửa định nghĩa (tiêu đề, mô tả,
+ * hạn, người phụ trách…) hay XOÁ việc — KỂ CẢ khi có nhóm quyền "Quản lý" (Trưởng phòng/GĐK) — CFO 17/09.
+ * Người GIAO mới toàn quyền định nghĩa việc mình giao. created_by TRỐNG (dữ liệu cũ) → không xác định được
+ * người giao → KHÔNG coi là recipient-only (giữ quyền theo phạm vi quản lý như trước).
+ */
+export function isRecipientOnly(
+  user: { email: string },
+  init: Pick<Initiative, 'owner_email' | 'created_by'>,
+): boolean {
+  const e = user.email.toLowerCase();
+  const isRecipient = Boolean(init.owner_email && init.owner_email.toLowerCase() === e);
+  const giver = (init.created_by ?? '').toLowerCase();
+  return isRecipient && !!giver && giver !== e;
+}
+
 /** Tổng ngân sách kế hoạch vs thực chi cho 1 objective — chỉ tính NÚT LÁ (tránh cộng đôi cha+con). */
 export async function budgetSummaryForObjective(
   objectiveId: string,

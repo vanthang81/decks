@@ -270,8 +270,13 @@ export default function ExecutionTabs({
   const isMine = (c: Card) =>
     (!!c.owner_email && c.owner_email.toLowerCase() === emailLc) ||
     (!!c.created_by && c.created_by.toLowerCase() === emailLc);
+  // NGƯỜI NHẬN việc (owner khác người giao) → CHỈ cập nhật tiến độ, KHÔNG sửa định nghĩa/hạn/xoá,
+  // kể cả khi có quyền Quản lý (CFO 17/09 — #36a). Khớp server canManageTaskLoose/isRecipientOnly.
+  const isRecipientOnly = (c: Card) =>
+    !!c.owner_email && c.owner_email.toLowerCase() === emailLc &&
+    !!c.created_by && c.created_by.toLowerCase() !== emailLc;
   // Thành viên dự án được QUẢN đầy đủ (sửa mọi trường + xoá) việc của mình → hiện form sửa đầy đủ.
-  const canManageRow = (c: Card) => canManage || (memberOwnFullEdit && isMine(c));
+  const canManageRow = (c: Card) => !isRecipientOnly(c) && (canManage || (memberOwnFullEdit && isMine(c)));
   const canEdit = (c: Card) =>
     canManage ||
     (!!c.owner_email && c.owner_email.toLowerCase() === emailLc) ||

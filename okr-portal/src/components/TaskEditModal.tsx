@@ -36,6 +36,8 @@ export default function TaskEditModal({
   editAction,
   deleteAction,
   onClose,
+  subtasks = [],
+  createSubtask,
   depInitial = [],
   depOptions = [],
 }: {
@@ -49,6 +51,9 @@ export default function TaskEditModal({
   editAction: (fd: FormData) => Promise<void>;
   deleteAction: (fd: FormData) => Promise<void>;
   onClose: () => void;
+  currentEmail?: string;
+  subtasks?: TaskRow[];                              // việc con (chia nhỏ) của việc này
+  createSubtask?: (fd: FormData) => Promise<void>;   // thêm việc con
   depInitial?: string[];    // predecessor id hiện có
   depOptions?: MSOption[];  // việc anh em (cùng OKR) để chọn phụ thuộc
 }) {
@@ -101,6 +106,34 @@ export default function TaskEditModal({
         router.refresh();
       } catch (e2) {
         setErr(e2 instanceof Error ? e2.message : 'Không xoá được. Thử lại.');
+      }
+    });
+  };
+
+  // ── Việc con (sub-task) — chia nhỏ công việc; người giao/quản HOẶC người được giao đều thêm được ──
+  const [subTitle, setSubTitle] = useState('');
+  const [subOwner, setSubOwner] = useState('');
+  const [subErr, setSubErr] = useState('');
+  const [showSubAdd, setShowSubAdd] = useState(false);
+  const canAddSub = !!createSubtask && editable;
+  const subDone = subtasks.filter((s) => s.status === 'done').length;
+  const addSub = () => {
+    if (!createSubtask || !subTitle.trim()) return;
+    const fd = new FormData();
+    fd.set('parent_id', task.id);
+    fd.set('title', subTitle.trim());
+    if (subOwner) fd.set('owner_email', subOwner);
+    setSubErr('');
+    start(async () => {
+      try {
+        await createSubtask(fd);
+        setSubTitle('');
+        setSubOwner('');
+        setShowSubAdd(false);
+        toast('Đã thêm việc con', 'success');
+        router.refresh();
+      } catch (e2) {
+        setSubErr(e2 instanceof Error ? e2.message : 'Không thêm được việc con.');
       }
     });
   };
@@ -207,6 +240,51 @@ export default function TaskEditModal({
                 : <span className="muted">—</span>}</dd></div>
               {depLabels.length > 0 && <div className="te-field full"><dt>⏳ Phụ thuộc</dt><dd>{depLabels.join(' · ')}</dd></div>}
             </dl>
+
+            {(subtasks.length > 0 || canAddSub) && (
+              <div className="te-subs">
+                <div className="te-subs-head">
+                  <span className="te-subs-title">🧩 Việc con{subtasks.length > 0 && <span className="muted" style={{ fontWeight: 400 }}> · {subDone}/{subtasks.length} xong</span>}</span>
+                  {canAddSub && !showSubAdd && (
+                    <button type="button" className="btn ghost sm" onClick={() => { setSubErr(''); setShowSubAdd(true); }}>+ Thêm việc con</button>
+                  )}
+                </div>
+                {subtasks.length > 0 ? (
+                  <ul className="te-subs-list">
+                    {subtasks.map((s) => (
+                      <li key={s.id} className="te-sub-row">
+                        <span className={`badge ${STATUS_CLS[s.status]}`}>{STATUS_LABEL[s.status]}</span>
+                        <Link href={`/tasks?task=${s.id}`} className="te-sub-ttl" onClick={onClose} title="Mở việc con">{s.title}</Link>
+                        <span className="te-sub-meta">
+                          {s.owner_name || s.owner_email ? <UserLink email={s.owner_email} name={s.owner_name} /> : <span className="muted">chưa giao</span>}
+                          <b className="mono te-sub-pct">{s.progress.toFixed(0)}%</b>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="muted" style={{ fontSize: 12.5, margin: '4px 0 0' }}>Chưa có việc con. Chia nhỏ để theo dõi tiến độ từng phần (a/b/c…).</p>
+                )}
+                {subtasks.length > 0 && (
+                  <p className="muted te-subs-note">Đã có việc con → tiến độ việc này TỰ tính bình quân theo các việc con.</p>
+                )}
+                {canAddSub && showSubAdd && (
+                  <div className="te-sub-add">
+                    <input className="i" placeholder="Tên việc con…" value={subTitle}
+                      onChange={(e) => setSubTitle(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSub(); } }} autoFocus />
+                    <SearchSelect value={subOwner} onChange={setSubOwner} emptyLabel="— Giao cho (tuỳ chọn) —"
+                      options={users.map((u) => ({ value: u.email, label: u.name, sub: u.title ?? undefined }))} />
+                    <div className="te-sub-add-act">
+                      <button type="button" className="btn ghost sm" onClick={() => { setShowSubAdd(false); setSubErr(''); }}>Huỷ</button>
+                      <button type="button" className="btn sm" disabled={pending || !subTitle.trim()} onClick={addSub}>{pending ? 'Đang thêm…' : 'Thêm việc con'}</button>
+                    </div>
+                    {subErr && <div className="te-err">{subErr}</div>}
+                  </div>
+                )}
+              </div>
+            )}
+
             {!editable && <p className="muted" style={{ fontSize: 12.5, marginTop: 8 }}>Bạn chỉ có quyền xem việc này.</p>}
             <div className="te-actions">
               <div>

@@ -6,7 +6,7 @@ import { requireUser } from '@/lib/current-user';
 import { listUnits } from '@/lib/org';
 import { listUsers, personTitle } from '@/lib/users';
 import { listAllProjectOptions } from '@/lib/projects';
-import { listAllInitiatives } from '@/lib/initiatives';
+import { listAllInitiatives, isRecipientOnly } from '@/lib/initiatives';
 import { initiativeIdsMentioning } from '@/lib/comments';
 import { listObjectivesByPeriod } from '@/lib/okr';
 import { getCurrentPeriod } from '@/lib/periods';
@@ -14,7 +14,7 @@ import { depsForTasks } from '@/lib/deps';
 import { loadAccess, buildTaskViewCtx, canViewInitiative, canEditObjective, okrViewScope } from '@/lib/access';
 import { projectMetaForIds } from '@/lib/project-objectives';
 import { memberProjectIds } from '@/lib/project-members';
-import { editInitiativeAction, deleteInitiativeAction, moveInitiativeAction, createTaskAction, bulkTasksAction } from '@/app/objectives/actions';
+import { editInitiativeAction, deleteInitiativeAction, moveInitiativeAction, createTaskAction, createSubtaskAction, bulkTasksAction } from '@/app/objectives/actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,6 +45,9 @@ export default async function TasksPage({
   const myMemberProjects = await memberProjectIds(user.email);
   const manageIds = visible
     .filter((t) =>
+      // NGƯỜI NHẬN việc (owner khác người giao) KHÔNG quản đầy đủ — chỉ cập nhật tiến độ (CFO 17/09 #36a).
+      !isRecipientOnly(user, t) &&
+      (
       canEditObjective(
         user,
         { unit_id: t.objective_unit_id, owner_email: t.objective_owner, created_by: t.objective_created_by },
@@ -61,7 +64,8 @@ export default async function TasksPage({
       // VIỆC CÁ NHÂN (không gắn OKR/dự án/cuộc họp) → chính chủ toàn quyền sửa/xoá.
       (!t.objective_id && !t.key_result_id && !t.project_id && !t.meeting_id &&
         ((t.owner_email && t.owner_email.toLowerCase() === emailLc) ||
-          (t.created_by && t.created_by.toLowerCase() === emailLc))),
+          (t.created_by && t.created_by.toLowerCase() === emailLc)))
+      ),
     )
     .map((t) => t.id);
 
@@ -140,6 +144,7 @@ export default async function TasksPage({
           deleteAction={deleteInitiativeAction}
           move={moveInitiativeAction}
           bulkAction={bulkTasksAction}
+          createSubtask={createSubtaskAction}
           initialTaskId={searchParams.task}
           initialMine={!!searchParams.mine}
           initialStatus={searchParams.status}

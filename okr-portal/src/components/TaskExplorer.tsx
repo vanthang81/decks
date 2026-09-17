@@ -134,6 +134,7 @@ export default function TaskExplorer({
   deleteAction,
   move,
   bulkAction,
+  createSubtask,
   depsMap = {},
   initialTaskId,
   initialMine,
@@ -158,6 +159,7 @@ export default function TaskExplorer({
   deleteAction: (fd: FormData) => Promise<void>;
   move: (id: string, status: Status) => Promise<void>;
   bulkAction: (ids: string[], op: BulkOp) => Promise<{ done: number; skipped: number }>;
+  createSubtask?: (fd: FormData) => Promise<void>;   // thêm việc con (chia nhỏ công việc)
   initialTaskId?: string;
   initialMine?: boolean;
   initialStatus?: string;
@@ -1024,6 +1026,8 @@ export default function TaskExplorer({
           editAction={editAction}
           deleteAction={deleteAction}
           onClose={() => setEditing(null)}
+          subtasks={tasks.filter((t) => t.parent_id === editing.id)}
+          createSubtask={createSubtask}
           depInitial={depsMap[editing.id] ?? []}
           depOptions={tasks
             .filter((t) => t.id !== editing.id && t.objective_id && t.objective_id === editing.objective_id)

@@ -22,7 +22,7 @@ export type Notification = {
 
 // ── Loại thông báo + tuỳ chọn chi tiết (per-user, lưu okr_users.notif_prefs) ──
 export type NotifType =
-  | 'mention' | 'reply' | 'comment_mine' | 'assignment' | 'task_change'
+  | 'mention' | 'reply' | 'comment_mine' | 'assignment' | 'task_completed' | 'task_change'
   | 'task_due_soon' | 'task_overdue' | 'task_overdue_weekly'
   | 'daily_digest' | 'weekly_digest';
 export const NOTIF_TYPE_META: { key: NotifType; label: string; desc: string }[] = [
@@ -30,6 +30,7 @@ export const NOTIF_TYPE_META: { key: NotifType; label: string; desc: string }[] 
   { key: 'reply', label: 'Trả lời bình luận của bạn', desc: 'Khi ai đó trả lời bình luận bạn đã viết.' },
   { key: 'comment_mine', label: 'Bình luận trên mục bạn phụ trách', desc: 'Khi có bình luận mới trên OKR/công việc bạn chủ trì hoặc được giao.' },
   { key: 'assignment', label: 'Được giao việc mới', desc: 'Khi bạn được giao một công việc mới.' },
+  { key: 'task_completed', label: 'Việc bạn giao đã hoàn thành', desc: 'Khi người bạn giao việc đánh dấu công việc đó là Hoàn thành.' },
   { key: 'task_due_soon', label: 'Công việc sắp đến hạn (trước 1 ngày)', desc: 'Nhắc trước 1 ngày cho công việc của bạn sắp đến hạn.' },
   { key: 'task_overdue', label: 'Công việc quá hạn', desc: 'Báo khi công việc của bạn quá hạn mà chưa hoàn thành.' },
   { key: 'task_overdue_weekly', label: 'Tổng hợp việc quá hạn hàng tuần', desc: 'Email tổng hợp các công việc quá hạn của bạn mỗi tuần.' },
@@ -41,6 +42,7 @@ const NOTIF_VERB: Record<NotifType, string> = {
   reply: 'đã trả lời bình luận của bạn',
   comment_mine: 'đã bình luận ở mục bạn phụ trách',
   assignment: 'đã giao việc cho bạn',
+  task_completed: 'đã hoàn thành việc bạn giao',
   task_change: 'cập nhật thay đổi công việc',
   task_due_soon: 'nhắc: công việc sắp đến hạn',
   task_overdue: 'nhắc: công việc quá hạn',
@@ -288,5 +290,57 @@ export async function notifyTaskAssigned(
     });
   } catch (e) {
     console.error('[notify] assignment failed', e);
+  }
+}
+
+/**
+ * Báo NGƯỜI GIAO (created_by) khi việc họ giao ĐƯỢC HOÀN THÀNH (CFO 17/09 — #36c). Chỉ gửi khi có
+ * người giao rõ ràng và khác người thực hiện thao tác (tránh tự báo cho mình). Best-effort.
+ */
+export async function notifyTaskCompleted(
+  task: {
+    id: string;
+    title: string;
+    owner_email: string | null;
+    created_by: string | null;
+    objective_id: string | null;
+    project_id: string | null;
+    meeting_id?: string | null;
+  },
+  actorEmail: string,
+): Promise<void> {
+  const giver = (task.created_by ?? '').trim();
+  if (!giver) return;
+  if (giver.toLowerCase() === actorEmail.toLowerCase()) return; // tự mình hoàn thành việc mình giao
+  try {
+    const ownerName = task.owner_email
+      ? (await queryOne<{ display_name: string | null }>('SELECT display_name FROM okr_users WHERE email=$1', [task.owner_email]))?.display_name ?? task.owner_email
+      : 'Người phụ trách';
+    let label = 'việc';
+    if (task.objective_id) {
+      const o = await queryOne<{ title: string; code: string | null }>('SELECT title, code FROM okr_objectives WHERE id=$1', [task.objective_id]);
+      label = o ? `OKR ${o.code ? o.code + ' · ' : ''}${o.title}` : 'OKR';
+    } else if (task.project_id) {
+      const p = await queryOne<{ name: string; code: string | null }>('SELECT name, code FROM okr_projects WHERE id=$1', [task.project_id]);
+      label = p ? `Dự án ${p.code ? p.code + ' · ' : ''}${p.name}` : 'Dự án';
+    } else if (task.meeting_id) {
+      const m = await queryOne<{ title: string }>('SELECT title FROM okr_meetings WHERE id=$1', [task.meeting_id]);
+      label = m ? `Cuộc họp: ${m.title}` : 'Cuộc họp';
+    }
+    const actor = await queryOne<{ display_name: string | null }>('SELECT display_name FROM okr_users WHERE email=$1', [actorEmail]);
+    await notify({
+      recipients: [giver],
+      type: 'task_completed',
+      actorEmail,
+      actorName: actor?.display_name ?? null,
+      entityType: 'initiative',
+      entityId: task.id,
+      commentId: null,
+      preview: `${ownerName} đã hoàn thành: ${task.title}`,
+      link: `/tasks?task=${task.id}`,
+      entityLabel: label,
+    });
+  } catch (e) {
+    console.error('[notify] task_completed failed', e);
   }
 }

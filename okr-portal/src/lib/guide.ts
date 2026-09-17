@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-17.194';
+export const GUIDE_VERSION = '2026-09-17.195';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,15 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '17/09/2026 (Công việc: quyền người nhận · việc con · báo hoàn thành · mô tả khi tạo trong họp)',
+    items: [
+      'Người NHẬN việc (người được giao) chỉ cập nhật trạng thái/tiến độ/minh chứng — KHÔNG sửa tiêu đề, mô tả, hạn hay xoá việc, kể cả khi có nhóm quyền "Quản lý" (Trưởng phòng/Giám đốc khối). Người GIAO mới toàn quyền định nghĩa việc mình giao.',
+      'Thêm VIỆC CON (sub-task): mở chi tiết một công việc → "Thêm việc con" để chia nhỏ thành a/b/c; tiến độ việc cha tự tính bình quân theo các việc con. Người giao/quản việc và người được giao đều thêm được.',
+      'Người GIAO việc được THÔNG BÁO khi việc mình giao được đánh dấu Hoàn thành (chuông + email; tự tắt được ở Cài đặt cá nhân).',
+      'Cuộc họp → "Thêm việc": có thêm ô "Mô tả công việc" ngay khi tạo (không phải tạo xong rồi mở lại để sửa mới điền được).',
+    ],
+  },
   {
     date: '17/09/2026 (Giữ trạng thái xem khi quay lại — nhất quán toàn app)',
     items: [

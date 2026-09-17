@@ -40,6 +40,7 @@ import {
   deleteInitiative,
   getInitiative,
   canUpdateInitiative,
+  isRecipientOnly,
   CHILD_KIND,
   type InitStatus,
   type Priority,
@@ -60,7 +61,7 @@ import { getProject, canManageProject } from '@/lib/projects';
 import type { Initiative } from '@/lib/initiatives';
 import type { OkrUser } from '@/lib/users';
 import { canManageObjectiveId, withinEditWindow } from '@/lib/moderation';
-import { notifyTaskAssigned } from '@/lib/notifications';
+import { notifyTaskAssigned, notifyTaskCompleted } from '@/lib/notifications';
 import { recordTaskChange } from '@/lib/task-changes';
 import {
   loadAccess,
@@ -426,6 +427,9 @@ async function assertCanCheckin(objectiveId: string) {
  */
 async function canManageTaskLoose(user: OkrUser, init: Initiative): Promise<boolean> {
   if (isSuperAdmin(user)) return true; // Super Admin sửa được status MỌI công việc (CFO 12/09)
+  // NGƯỜI NHẬN việc (owner) khác người giao (created_by) → KHÔNG toàn quyền quản (sửa định nghĩa/hạn/xoá),
+  // kể cả khi có nhóm Quản lý; họ chỉ cập nhật tiến độ/trạng thái qua đường 'assignee' (CFO 17/09 — #36a).
+  if (isRecipientOnly(user, init)) return false;
   const [units, access] = await Promise.all([listUnits(), loadAccess()]);
   if (init.objective_id) {
     const obj = await getObjective(init.objective_id);
@@ -816,6 +820,50 @@ export async function createTaskAction(fd: FormData) {
   revalidatePath('/tasks');
 }
 
+// Thêm VIỆC CON (sub-task) để chia nhỏ 1 công việc thành a/b/c (CFO 17/09 — #36b). Người GIAO/quản việc
+// HOẶC người ĐƯỢC GIAO (tự chia nhỏ việc của mình) đều thêm được. Việc con KẾ THỪA ngữ cảnh của việc cha
+// (OKR/KR/dự án/cuộc họp/đơn vị) → tiến độ việc cha TỰ tổng hợp theo các việc con (recomputeInitiativeUp).
+export async function createSubtaskAction(fd: FormData) {
+  const user = await requireUser();
+  const parentId = str(fd, 'parent_id');
+  const parent = await getInitiative(parentId);
+  if (!parent) throw new Error('Không tìm thấy công việc cha.');
+  const e = user.email.toLowerCase();
+  const isOwnerOrGiver =
+    (parent.owner_email ?? '').toLowerCase() === e || (parent.created_by ?? '').toLowerCase() === e;
+  if (!isOwnerOrGiver && !(await canManageTaskLoose(user, parent)))
+    throw new Error('Bạn không có quyền thêm việc con cho công việc này.');
+  const title = str(fd, 'title').trim();
+  if (!title) throw new Error('Thiếu tên việc con.');
+  const owner = orNull(str(fd, 'owner_email')) ?? parent.owner_email;
+  // createInitiative tự sinh mã, tự thông báo người được giao & roll-up tiến độ việc cha.
+  await createInitiative({
+    objective_id: parent.objective_id,
+    key_result_id: parent.key_result_id,
+    parent_id: parent.id,
+    kind: 'action',
+    title,
+    description: null,
+    owner_email: owner,
+    unit_id: parent.unit_id,
+    project_id: parent.project_id,
+    meeting_id: parent.meeting_id,
+    status: 'todo',
+    priority: (str(fd, 'priority') || parent.priority || 'medium') as Priority,
+    start_on: null,
+    due_on: orNull(str(fd, 'due_on')),
+    budget_planned: 0,
+    budget_actual: 0,
+    budget_source: null,
+    expected_output: null,
+    created_by: user.email,
+  });
+  await auditTask(user.email, 'initiative.create', parent, { title, subtask: true });
+  revalidateTask(parent);
+  revalidatePath('/tasks');
+  revalidatePath('/my');
+}
+
 // Cập nhật: quản lý sửa đầy đủ; người được giao chỉ đổi trạng thái + tiến độ việc của mình.
 export async function updateInitiativeAction(fd: FormData) {
   const user = await requireUser();
@@ -845,6 +893,7 @@ export async function updateInitiativeAction(fd: FormData) {
       progress: num(fd, 'progress'),
     });
   }
+  if ((str(fd, 'status') || 'todo') === 'done' && init.status !== 'done') await notifyTaskCompleted(init, user.email);
   await recordTaskChange(user.email, init, {
     status: (str(fd, 'status') || 'todo') as InitStatus, progress: num(fd, 'progress'),
     ...(perm.manage ? { owner_email: orNull(str(fd, 'owner_email')), priority: (str(fd, 'priority') || 'medium') as Priority, due_on: orNull(str(fd, 'due_on')) } : {}),
@@ -925,6 +974,8 @@ export async function editInitiativeAction(fd: FormData) {
       evidence_url: evidenceVal,
     });
   }
+  // Báo NGƯỜI GIAO khi việc chuyển sang HOÀN THÀNH (CFO 17/09 — #36c).
+  if ((str(fd, 'status') || 'todo') === 'done' && init.status !== 'done') await notifyTaskCompleted(init, user.email);
   await recordTaskChange(user.email, init, perm.manage ? {
     title: str(fd, 'title') || init.title,
     description: orNull(str(fd, 'description')),
@@ -977,6 +1028,7 @@ export async function updateOwnTaskProgressAction(fd: FormData) {
     progress: num(fd, 'progress'),
     evidence_url: hasEvidence ? orNull(evidence) : undefined,
   });
+  if ((str(fd, 'status') || 'todo') === 'done' && init.status !== 'done') await notifyTaskCompleted(init, user.email);
   await recordTaskChange(user.email, init, {
     status: (str(fd, 'status') || 'todo') as InitStatus, progress: num(fd, 'progress'),
   });
@@ -994,6 +1046,7 @@ export async function moveInitiativeAction(id: string, status: InitStatus) {
   const perm = canUpdateInitiative(user, init, manage);
   if (!perm.manage && !perm.assignee) throw new Error('Bạn không có quyền cập nhật việc này.');
   await setInitiativeStatus(id, status);
+  if (status === 'done' && init.status !== 'done') await notifyTaskCompleted(init, user.email);
   await recordTaskChange(user.email, init, { status });
   await auditTask(user.email, 'initiative.status', init, { title: init.title, status });  revalidateTask(init);
 }
@@ -1035,6 +1088,7 @@ export async function bulkTasksAction(
         continue;
       }
       await setInitiativeStatus(id, op);
+      if (op === 'done' && init.status !== 'done') await notifyTaskCompleted(init, user.email);
       await recordTaskChange(user.email, init, { status: op });
       await auditTask(user.email, 'initiative.status', init, { title: init.title, status: op, bulk: true });
     }
