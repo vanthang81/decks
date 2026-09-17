@@ -19,7 +19,7 @@ export async function periodInsights(periodId: string, scope?: ScopeFilter): Pro
   const scoped = !!scope && scope.unitIds !== null;
   const params: unknown[] = scoped ? [periodId, scope!.unitIds, scope!.email] : [periodId];
   const sc = scoped
-    ? ` AND (o.unit_id = ANY($2::text[]) OR o.level='company' OR lower(o.owner_email)=lower($3))`
+    ? ` AND (o.unit_id = ANY($2::uuid[]) OR o.level='company' OR lower(o.owner_email)=lower($3))`
     : '';
 
   const kr = await queryOne<{

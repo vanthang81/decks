@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-17.192';
+export const GUIDE_VERSION = '2026-09-17.193';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '17/09/2026 (Sửa lỗi Bảng điều khiển với người xem theo phạm vi)',
+    items: [
+      'Khắc phục lỗi "Đã có lỗi xảy ra" ở Trang chủ (Bảng điều khiển) đối với người dùng bị giới hạn theo phạm vi đơn vị (Trưởng phòng/Nhân viên/nhóm Cộng tác, Người xem): biểu đồ tổng hợp theo kỳ bị lỗi truy vấn (so khớp mã đơn vị sai kiểu dữ liệu) → nay đã sửa, Bảng điều khiển hiển thị đúng số liệu trong phạm vi được phép.',
+    ],
+  },
   {
     date: '17/09/2026 (Báo cáo theo cấp: thêm "Theo Dự án" & "Theo tháng")',
     items: [
