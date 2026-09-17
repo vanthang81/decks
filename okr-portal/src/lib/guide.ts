@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-16.191';
+export const GUIDE_VERSION = '2026-09-17.192';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '17/09/2026 (Báo cáo theo cấp: thêm "Theo Dự án" & "Theo tháng")',
+    items: [
+      'Báo cáo theo cấp có thêm mục "Theo Dự án" — gom & tổng hợp OKR theo từng Dự án (một OKR có thể thuộc nhiều dự án), như cách xem theo Khối/Phòng. Dự án là lăng kính riêng, không nằm trong roll-up Công ty→Khối→Phòng.',
+      'Khi xem kỳ Năm/Quý, Báo cáo theo cấp có thêm mục "Theo tháng" — tổng hợp OKR của từng tháng con (đáp ứng OKR theo tháng), mở từng tháng để xem danh sách.',
+      'Tạo OKR trong Dự án: thêm gợi ý rõ ràng về ý nghĩa của "Cấp OKR" (dùng để tổng hợp theo tổ chức) — hết bối rối chọn cấp nào; OKR gắn dự án luôn hiện ở mục "Theo Dự án".',
+    ],
+  },
   {
     date: '16/09/2026 (Giữ bộ lọc OKR khi quay lại)',
     items: [

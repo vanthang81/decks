@@ -9,9 +9,12 @@ import {
   getPeriod,
   listPeriods,
   orderPeriodsHierarchically,
+  descendantPeriods,
   PERIOD_KIND_LABEL,
 } from '@/lib/periods';
-import { okrLevelReport, type ReportGroup } from '@/lib/okr-report';
+import { listObjectivesByPeriods } from '@/lib/okr';
+import { okrLevelReport, type ReportGroup, type ReportItem } from '@/lib/okr-report';
+import { naturalCodeCompare } from '@/lib/sortcode';
 import { progressColor } from '@/lib/format';
 import { isExec } from '@/lib/rbac';
 import { listUnits, canViewObjectiveUnit } from '@/lib/org';
@@ -98,9 +101,43 @@ export default async function ReportPage({ searchParams }: { searchParams: { per
   // (+ OKR cấp Công ty/khối align lên). Điều hành & nhóm có 'scope.all' xem toàn bộ.
   const units = await listUnits();
   const viewScope = okrViewScope(user, units, access);
-  const rep = period
-    ? await okrLevelReport(period.id, viewScope === null ? undefined : (o) => canViewObjectiveUnit(viewScope, o, user.email))
-    : null;
+  const canView = viewScope === null ? undefined : (o: { unit_id: string | null; owner_email: string | null; level: string }) => canViewObjectiveUnit(viewScope, o, user.email);
+  const rep = period ? await okrLevelReport(period.id, canView) : null;
+
+  // ── LĂNG KÍNH "Theo tháng" (kỳ con): khi xem Năm/Quý → tổng hợp OKR của từng THÁNG con ──
+  // (đáp ứng nhu cầu OKR theo tháng của chị Hương: xem kết quả từng tháng như khối/phòng).
+  const wavg = (items: ReportItem[]): number => {
+    if (!items.length) return 0;
+    let sw = 0, acc = 0;
+    for (const it of items) { const w = it.weight > 0 ? it.weight : 0; sw += w; acc += it.progress * w; }
+    const v = sw > 0 ? acc / sw : items.reduce((a, it) => a + it.progress, 0) / items.length;
+    return Math.round(v * 10) / 10;
+  };
+  let monthGroups: ReportGroup[] = [];
+  if (period && (period.kind === 'year' || period.kind === 'quarter')) {
+    const childMonths = descendantPeriods(periods, period.id).filter((p) => p.kind === 'month');
+    if (childMonths.length) {
+      const raw = await listObjectivesByPeriods(childMonths.map((p) => p.id));
+      const objs = canView ? raw.filter(canView) : raw;
+      const byPeriod = new Map<string, ReportItem[]>();
+      for (const o of objs) {
+        const arr = byPeriod.get(o.period_id) ?? [];
+        arr.push({ id: o.id, code: o.code, title: o.title, progress: o.progress, weight: o.weight ?? 1 });
+        byPeriod.set(o.period_id, arr);
+      }
+      monthGroups = childMonths
+        .map((p) => ({ p, items: byPeriod.get(p.id) ?? [] }))
+        .filter((x) => x.items.length > 0)
+        .map((x) => ({
+          key: x.p.id,
+          name: x.p.name,
+          code: null,
+          count: x.items.length,
+          weighted: wavg(x.items),
+          items: x.items.slice().sort((a, b) => naturalCodeCompare(a.code, b.code)),
+        }));
+    }
+  }
   // Chỉnh trọng số ngay tại báo cáo: điều hành (CEO/CFO) hoặc người có năng lực "Quản lý Chiến lược".
   // Giám đốc khối / trưởng phòng vẫn đặt trọng số OKR của mình ở form Sửa OKR (trang chi tiết).
   const canEditWeight = isExec(user.role) || canManageStrategy(user, access);
@@ -156,6 +193,22 @@ export default async function ReportPage({ searchParams }: { searchParams: { per
             <Section title="Theo Khối" help="Mỗi khối = bình quân có trọng số các OKR cấp khối gắn đúng đơn vị." groups={rep.divisions} canEdit={canEditWeight} />
             <Section title="Theo Phòng ban" groups={rep.departments} canEdit={canEditWeight} />
             <Section title="Theo Cá nhân" groups={rep.individuals} canEdit={canEditWeight} />
+            {rep.projects.length > 0 && (
+              <Section
+                title="Theo Dự án"
+                help="Gom mọi OKR gắn với từng Dự án (một OKR có thể thuộc nhiều dự án) — lăng kính riêng, không nằm trong roll-up Công ty→Khối→Phòng."
+                groups={rep.projects}
+                canEdit={canEditWeight}
+              />
+            )}
+            {monthGroups.length > 0 && (
+              <Section
+                title={`Theo tháng (kỳ con của ${PERIOD_KIND_LABEL[period.kind]} ${period.name})`}
+                help="Kết quả OKR của từng tháng con. Mở một tháng để xem danh sách OKR; bấm mã/tên để mở chi tiết."
+                groups={monthGroups}
+                canEdit={false}
+              />
+            )}
           </>
         )}
       </div>

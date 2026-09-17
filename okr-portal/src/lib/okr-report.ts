@@ -1,6 +1,7 @@
 import { listObjectivesByPeriod, type ObjectiveRow } from './okr';
 import { listUnits, type Unit } from './org';
 import { naturalCodeCompare } from './sortcode';
+import { query } from './db';
 
 // ── Báo cáo OKR theo CẤP (Công ty / Khối / Phòng / Cá nhân) với KẾT QUẢ TỔNG THEO TRỌNG SỐ ──
 // Mỗi nhóm: tổng = bình quân CÓ TRỌNG SỐ tiến độ các OKR trong nhóm = Σ(progress·weight) / Σ(weight).
@@ -21,6 +22,7 @@ export type OkrLevelReport = {
   divisions: ReportGroup[];
   departments: ReportGroup[];
   individuals: ReportGroup[];
+  projects: ReportGroup[]; // LĂNG KÍNH Dự án: gom OKR theo dự án gắn (okr_project_objectives) — 1 OKR có thể ở nhiều dự án
 };
 
 /** Bình quân CÓ TRỌNG SỐ (weight>0). Nếu tổng trọng số = 0 → bình quân thường. */
@@ -110,11 +112,43 @@ export async function okrLevelReport(
     })
     .sort((a, b) => b.weighted - a.weighted || a.name.localeCompare(b.name));
 
+  // ── LĂNG KÍNH "Theo Dự án": gom MỌI OKR (mọi cấp) theo dự án gắn qua okr_project_objectives ──
+  // Riêng biệt với roll-up tổ chức (1 OKR có thể thuộc nhiều dự án → tính cho từng dự án).
+  const byId = new Map(objs.map((o) => [o.id, o]));
+  let projectGroups: ReportGroup[] = [];
+  if (objs.length) {
+    const links = await query<{ project_id: string; pcode: string | null; pname: string; objective_id: string }>(
+      `SELECT po.project_id, pr.code AS pcode, pr.name AS pname, po.objective_id
+         FROM okr_project_objectives po JOIN okr_projects pr ON pr.id = po.project_id
+        WHERE po.objective_id = ANY($1::uuid[])`,
+      [objs.map((o) => o.id)],
+    ).catch(() => [] as { project_id: string; pcode: string | null; pname: string; objective_id: string }[]);
+    const byProj = new Map<string, { code: string | null; name: string; items: ReportItem[] }>();
+    for (const l of links) {
+      const o = byId.get(l.objective_id);
+      if (!o) continue;
+      const g = byProj.get(l.project_id) ?? { code: l.pcode, name: l.pname, items: [] };
+      g.items.push(toItem(o));
+      byProj.set(l.project_id, g);
+    }
+    projectGroups = [...byProj.entries()]
+      .map(([pid, g]) => ({
+        key: pid,
+        name: g.name,
+        code: g.code,
+        count: g.items.length,
+        weighted: weightedAvg(g.items.slice().sort((a, b) => naturalCodeCompare(a.code, b.code))),
+        items: g.items.slice().sort((a, b) => naturalCodeCompare(a.code, b.code)),
+      }))
+      .sort((a, b) => b.weighted - a.weighted || a.name.localeCompare(b.name));
+  }
+
   return {
     companyTotal,
     company: companyGroup,
     divisions: groupByUnit(divisions, units),
     departments: groupByUnit(departments, units),
     individuals: individualGroups,
+    projects: projectGroups,
   };
 }

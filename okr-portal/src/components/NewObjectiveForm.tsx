@@ -145,6 +145,13 @@ export default function NewObjectiveForm({
       <select className="i" value={level} onChange={(e) => setLevel(e.target.value as Level)}>
         {allowedLevels.map((l) => <option key={l} value={l}>{levelLabels[l]}</option>)}
       </select>
+      {projectId && (
+        <p className="pp-hint" style={{ marginTop: 4 }}>
+          💡 OKR này gắn <b>Dự án</b> — “Cấp” chỉ dùng để tổng hợp trong <b>Báo cáo theo tổ chức</b>:
+          chọn <b>Khối/Phòng</b> nếu OKR thuộc đơn vị đó, hoặc <b>Cá nhân</b> nếu là mục tiêu riêng của dự án.
+          Dù chọn cấp nào, OKR vẫn luôn hiện ở mục <b>“Theo Dự án”</b> của Báo cáo.
+        </p>
+      )}
 
       {needsUnit && (
         <>
