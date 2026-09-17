@@ -5,6 +5,7 @@ import HelpTip from '@/components/HelpTip';
 import ImportOkr from '@/components/ImportOkr';
 import NewObjectiveModal from '@/components/NewObjectiveModal';
 import ExportOkrModal from '@/components/ExportOkrModal';
+import PersistDetails from '@/components/PersistDetails';
 import { buildObjectiveFormProps } from '@/lib/objective-form';
 import { createObjectiveAction, reorderObjectivesAction } from './actions';
 import { requireUser } from '@/lib/current-user';
@@ -172,21 +173,27 @@ export default async function ObjectivesPage({
               Mở từng kỳ con (Quý/Tháng) để xem cây OKR riêng của kỳ đó.
             </p>
             {childSections.map((sec) => (
-              <details key={sec.period.id} style={{ borderTop: '1px solid var(--line)', padding: '10px 0' }}>
-                <summary style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <span className="badge gray">{PERIOD_KIND_LABEL[sec.period.kind]}</span>
-                  <b>{sec.period.name}</b>
-                  <span className="muted" style={{ fontSize: 12.5 }}>· {sec.count} OKR</span>
-                  <span style={{ flex: 1, minWidth: 8 }} />
-                  <span style={{ width: 120, height: 7, background: 'var(--line)', borderRadius: 999, overflow: 'hidden', flex: '0 0 auto' }}>
-                    <span style={{ display: 'block', height: '100%', width: `${sec.avg}%`, background: 'var(--primary)' }} />
-                  </span>
-                  <span style={{ fontWeight: 700, fontSize: 13, width: 36, textAlign: 'right' }}>{sec.avg}%</span>
-                </summary>
+              <PersistDetails
+                key={sec.period.id}
+                sk={`okr-obj-child:${period!.id}:${sec.period.id}`}
+                style={{ borderTop: '1px solid var(--line)', padding: '10px 0' }}
+                summary={
+                  <summary style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <span className="badge gray">{PERIOD_KIND_LABEL[sec.period.kind]}</span>
+                    <b>{sec.period.name}</b>
+                    <span className="muted" style={{ fontSize: 12.5 }}>· {sec.count} OKR</span>
+                    <span style={{ flex: 1, minWidth: 8 }} />
+                    <span style={{ width: 120, height: 7, background: 'var(--line)', borderRadius: 999, overflow: 'hidden', flex: '0 0 auto' }}>
+                      <span style={{ display: 'block', height: '100%', width: `${sec.avg}%`, background: 'var(--primary)' }} />
+                    </span>
+                    <span style={{ fontWeight: 700, fontSize: 13, width: 36, textAlign: 'right' }}>{sec.avg}%</span>
+                  </summary>
+                }
+              >
                 <div style={{ marginTop: 12 }}>
                   <ObjectiveTree objectives={sec.tree} unitOptions={unitOptions} />
                 </div>
-              </details>
+              </PersistDetails>
             ))}
           </div>
         )}

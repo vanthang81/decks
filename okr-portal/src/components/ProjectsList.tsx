@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import ClearFiltersButton from '@/components/ClearFiltersButton';
 import NavIcon from '@/components/NavIcon';
@@ -25,13 +25,37 @@ const PROJECT_STATUS_CLS: Record<ProjectStatus, string> = {
 };
 const STATUS_ORDER: ProjectStatus[] = ['active', 'done', 'paused', 'archived'];
 
-export default function ProjectsList({ projects, initialOwner, currentEmail }: { projects: ProjectRow[]; initialOwner?: string; currentEmail?: string }) {
+export default function ProjectsList({ projects, initialOwner, currentEmail, persistKey }: { projects: ProjectRow[]; initialOwner?: string; currentEmail?: string; persistKey?: string }) {
   const meLc = (currentEmail ?? '').toLowerCase();
   const [q, setQ] = useState('');
   const [fStatus, setFStatus] = useState('');
   const [fUnit, setFUnit] = useState('');
   const [fOwner, setFOwner] = useState(initialOwner ?? '');
   const fOwnerLc = fOwner.toLowerCase();
+
+  // GIỮ BỘ LỌC theo phiên (CFO 17/09, nhất quán với /objectives #34): vào chi tiết dự án rồi BACK →
+  // khôi phục bộ lọc. Bỏ qua khi tới từ hồ sơ 360° (?owner=) để không ghi đè ngữ cảnh tạm.
+  const skipSaveFilters = useRef(true);
+  useEffect(() => {
+    if (!persistKey || initialOwner || typeof window === 'undefined') return;
+    try {
+      const raw = sessionStorage.getItem(persistKey);
+      if (!raw) return;
+      const s = JSON.parse(raw) as Record<string, unknown>;
+      if (typeof s.q === 'string') setQ(s.q);
+      if (typeof s.fStatus === 'string') setFStatus(s.fStatus);
+      if (typeof s.fUnit === 'string' && s.fUnit && projects.some((p) => p.unit_id === s.fUnit)) setFUnit(s.fUnit);
+      if (typeof s.fOwner === 'string' && s.fOwner &&
+          projects.some((p) => (p.owner_email ?? '').toLowerCase() === (s.fOwner as string).toLowerCase())) setFOwner(s.fOwner);
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [persistKey]);
+  useEffect(() => {
+    if (!persistKey || initialOwner || typeof window === 'undefined') return;
+    if (skipSaveFilters.current) { skipSaveFilters.current = false; return; }
+    try { sessionStorage.setItem(persistKey, JSON.stringify({ q, fStatus, fUnit, fOwner })); } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [persistKey, q, fStatus, fUnit, fOwner]);
 
   // Dự án yêu thích (⭐) — nhớ theo trình duyệt; favourite được ưu tiên xếp lên đầu.
   const [favs, setFavs] = useState<Set<string>>(new Set());

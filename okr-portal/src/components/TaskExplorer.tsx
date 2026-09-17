@@ -140,6 +140,7 @@ export default function TaskExplorer({
   initialStatus,
   initialOverdue,
   initialOwner,
+  persistKey,
 }: {
   tasks: TaskRow[];
   depsMap?: Record<string, string[]>;
@@ -162,6 +163,7 @@ export default function TaskExplorer({
   initialStatus?: string;
   initialOverdue?: boolean;
   initialOwner?: string;
+  persistKey?: string;   // nhớ bộ lọc theo phiên (back giữ nguyên) — bỏ qua khi có ý định từ URL
 }) {
   // Độ rộng cột kéo giãn được (nhớ theo trình duyệt). Cột chưa kéo → dùng % mặc định.
   const [colW, setColW] = useState<Record<string, string>>({});
@@ -240,6 +242,44 @@ export default function TaskExplorer({
   const [hideDone, setHideDone] = useState(initialStatus !== 'done');
   const [repOpen, setRepOpen] = useState(true); // hiện báo cáo tổng quan
   const [dim, setDim] = useState<'unit' | 'project' | 'owner' | 'prio'>('unit'); // chiều phân bổ (breakout)
+
+  // GIỮ BỘ LỌC theo phiên (CFO 17/09, nhất quán với /objectives #34): mở popup việc (?task=) hoặc vào
+  // trang khác rồi BACK → khôi phục đúng bộ lọc. BỎ QUA khi URL mang ý định riêng (hồ sơ 360° ?owner=,
+  // tile trạng thái/quá hạn/của tôi, mở sẵn 1 việc) để không ghi đè/lưu nhầm ngữ cảnh tạm.
+  const hasUrlIntent = !!(initialOwner || initialStatus || initialOverdue || initialMine || initialTaskId);
+  const skipSaveFilters = useRef(true);
+  useEffect(() => {
+    if (!persistKey || hasUrlIntent || typeof window === 'undefined') return;
+    try {
+      const raw = sessionStorage.getItem(persistKey);
+      if (!raw) return;
+      const s = JSON.parse(raw) as Record<string, unknown>;
+      if (typeof s.q === 'string') setQ(s.q);
+      if (typeof s.fStatus === 'string') setFStatus(s.fStatus);
+      if (typeof s.fPrio === 'string') setFPrio(s.fPrio);
+      if (typeof s.fKind === 'string') setFKind(s.fKind);
+      if (typeof s.fPeriod === 'string') setFPeriod(s.fPeriod);
+      if (typeof s.hideDone === 'boolean') setHideDone(s.hideDone);
+      if (typeof s.fOverdue === 'boolean') setFOverdue(s.fOverdue);
+      if (typeof s.fMine === 'boolean') setFMine(s.fMine);
+      if (s.dim === 'unit' || s.dim === 'project' || s.dim === 'owner' || s.dim === 'prio') setDim(s.dim);
+      // Chỉ khôi phục lựa chọn còn tồn tại trong dữ liệu hiện tại (tránh lọc rỗng khi đổi kỳ/mất mục).
+      if (typeof s.fOwner === 'string' && s.fOwner &&
+          tasks.some((t) => (t.owner_email ?? '').toLowerCase() === (s.fOwner as string).toLowerCase())) setFOwner(s.fOwner);
+      if (typeof s.fUnit === 'string' && s.fUnit && units.some((u) => u.id === s.fUnit)) setFUnit(s.fUnit);
+      if (typeof s.fObj === 'string' && s.fObj && objectiveOpts.some((o) => o.id === s.fObj)) setFObj(s.fObj);
+      if (typeof s.fProject === 'string' && s.fProject && projects.some((p) => p.id === s.fProject)) setFProject(s.fProject);
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [persistKey]);
+  useEffect(() => {
+    if (!persistKey || hasUrlIntent || typeof window === 'undefined') return;
+    if (skipSaveFilters.current) { skipSaveFilters.current = false; return; }
+    try {
+      sessionStorage.setItem(persistKey, JSON.stringify({ q, fOwner, fUnit, fObj, fProject, fStatus, fPrio, fKind, fPeriod, fOverdue, fMine, hideDone, dim }));
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [persistKey, q, fOwner, fUnit, fObj, fProject, fStatus, fPrio, fKind, fPeriod, fOverdue, fMine, hideDone, dim]);
 
   // Chọn nhiều việc → thao tác hàng loạt (chỉ người quản lý được). selected ⊆ việc quản-lý-được đang hiển thị.
   const router = useRouter();

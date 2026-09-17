@@ -145,6 +145,7 @@ export default async function TasksPage({
           initialStatus={searchParams.status}
           initialOverdue={!!searchParams.overdue}
           initialOwner={searchParams.owner}
+          persistKey="tasks-filters"
         />
         </div>
       </div>

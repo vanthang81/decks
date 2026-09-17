@@ -21,6 +21,7 @@ import { listUnits, canViewObjectiveUnit } from '@/lib/org';
 import { loadAccess, canViewReports, canManageStrategy, okrViewScope } from '@/lib/access';
 import WeightEditor from '@/components/WeightEditor';
 import PrintButton from '@/components/PrintButton';
+import PersistDetails from '@/components/PersistDetails';
 import NavIcon from '@/components/NavIcon';
 
 export const dynamic = 'force-dynamic';
@@ -34,17 +35,22 @@ function Bar({ value }: { value: number }) {
   );
 }
 
-function GroupRow({ g, canEdit }: { g: ReportGroup; canEdit: boolean }) {
+function GroupRow({ g, canEdit, skNs }: { g: ReportGroup; canEdit: boolean; skNs: string }) {
   return (
-    <details style={{ borderTop: '1px solid var(--line)', padding: '9px 0' }}>
-      <summary style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        {g.code && <span className="badge gray">{g.code}</span>}
-        <b>{g.name}</b>
-        <span className="muted" style={{ fontSize: 12.5 }}>· {g.count} OKR</span>
-        <span style={{ flex: 1, minWidth: 8 }} />
-        <Bar value={g.weighted} />
-        <span style={{ fontWeight: 700, fontSize: 13.5, width: 44, textAlign: 'right' }}>{g.weighted}%</span>
-      </summary>
+    <PersistDetails
+      sk={`${skNs}:${g.key}`}
+      style={{ borderTop: '1px solid var(--line)', padding: '9px 0' }}
+      summary={
+        <summary style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          {g.code && <span className="badge gray">{g.code}</span>}
+          <b>{g.name}</b>
+          <span className="muted" style={{ fontSize: 12.5 }}>· {g.count} OKR</span>
+          <span style={{ flex: 1, minWidth: 8 }} />
+          <Bar value={g.weighted} />
+          <span style={{ fontWeight: 700, fontSize: 13.5, width: 44, textAlign: 'right' }}>{g.weighted}%</span>
+        </summary>
+      }
+    >
       <div style={{ marginTop: 8, paddingLeft: 4 }}>
         {(() => {
           // Hiển thị trọng số dạng % TỶ TRỌNG trong nhóm (thân thiện — CFO 14/09): weight ÷ Σweight nhóm.
@@ -66,11 +72,11 @@ function GroupRow({ g, canEdit }: { g: ReportGroup; canEdit: boolean }) {
           });
         })()}
       </div>
-    </details>
+    </PersistDetails>
   );
 }
 
-function Section({ title, help, groups, canEdit }: { title: string; help?: string; groups: ReportGroup[]; canEdit: boolean }) {
+function Section({ title, help, groups, canEdit, skNs }: { title: string; help?: string; groups: ReportGroup[]; canEdit: boolean; skNs: string }) {
   const total = groups.reduce((a, g) => a + g.count, 0);
   return (
     <div className="card">
@@ -82,7 +88,7 @@ function Section({ title, help, groups, canEdit }: { title: string; help?: strin
       {groups.length === 0 ? (
         <p className="muted" style={{ marginTop: 8 }}>Chưa có OKR ở cấp này trong kỳ.</p>
       ) : (
-        groups.map((g) => <GroupRow key={g.key} g={g} canEdit={canEdit} />)
+        groups.map((g) => <GroupRow key={g.key} g={g} canEdit={canEdit} skNs={skNs} />)
       )}
     </div>
   );
@@ -141,6 +147,8 @@ export default async function ReportPage({ searchParams }: { searchParams: { per
   // Chỉnh trọng số ngay tại báo cáo: điều hành (CEO/CFO) hoặc người có năng lực "Quản lý Chiến lược".
   // Giám đốc khối / trưởng phòng vẫn đặt trọng số OKR của mình ở form Sửa OKR (trang chi tiết).
   const canEditWeight = isExec(user.role) || canManageStrategy(user, access);
+  // Khoá lưu trạng thái mở/thu gọn nhóm (theo kỳ) — giữ đúng vị trí khi vào OKR rồi back (CFO 17/09).
+  const repNs = `okr-rep:${period?.id ?? 'none'}`;
 
   return (
     <>
@@ -189,16 +197,17 @@ export default async function ReportPage({ searchParams }: { searchParams: { per
                 kết quả tổng của nhóm cập nhật theo <b>bình quân có trọng số</b>.
               </p>
             )}
-            {rep.company && <Section title="Cấp Công ty" groups={[rep.company]} canEdit={canEditWeight} />}
-            <Section title="Theo Khối" help="Mỗi khối = bình quân có trọng số các OKR cấp khối gắn đúng đơn vị." groups={rep.divisions} canEdit={canEditWeight} />
-            <Section title="Theo Phòng ban" groups={rep.departments} canEdit={canEditWeight} />
-            <Section title="Theo Cá nhân" groups={rep.individuals} canEdit={canEditWeight} />
+            {rep.company && <Section title="Cấp Công ty" groups={[rep.company]} canEdit={canEditWeight} skNs={`${repNs}:company`} />}
+            <Section title="Theo Khối" help="Mỗi khối = bình quân có trọng số các OKR cấp khối gắn đúng đơn vị." groups={rep.divisions} canEdit={canEditWeight} skNs={`${repNs}:div`} />
+            <Section title="Theo Phòng ban" groups={rep.departments} canEdit={canEditWeight} skNs={`${repNs}:dept`} />
+            <Section title="Theo Cá nhân" groups={rep.individuals} canEdit={canEditWeight} skNs={`${repNs}:ind`} />
             {rep.projects.length > 0 && (
               <Section
                 title="Theo Dự án"
                 help="Gom mọi OKR gắn với từng Dự án (một OKR có thể thuộc nhiều dự án) — lăng kính riêng, không nằm trong roll-up Công ty→Khối→Phòng."
                 groups={rep.projects}
                 canEdit={canEditWeight}
+                skNs={`${repNs}:proj`}
               />
             )}
             {monthGroups.length > 0 && (
@@ -207,6 +216,7 @@ export default async function ReportPage({ searchParams }: { searchParams: { per
                 help="Kết quả OKR của từng tháng con. Mở một tháng để xem danh sách OKR; bấm mã/tên để mở chi tiết."
                 groups={monthGroups}
                 canEdit={false}
+                skNs={`${repNs}:month`}
               />
             )}
           </>

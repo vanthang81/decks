@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-17.193';
+export const GUIDE_VERSION = '2026-09-17.194';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '17/09/2026 (Giữ trạng thái xem khi quay lại — nhất quán toàn app)',
+    items: [
+      'Báo cáo theo cấp: khi mở một nhóm (Khối/Phòng/Cá nhân/Dự án/Tháng) rồi bấm vào OKR để xem chi tiết và quay lại, các nhóm đang mở được GIỮ NGUYÊN (trước đây bị thu gọn hết, phải mở lại).',
+      'Áp dụng nhất quán cho các trang danh sách khác: OKR theo kỳ con (trang OKR), bộ lọc ở trang Công việc và trang Dự án đều được ghi nhớ theo phiên — vào chi tiết rồi Back sẽ trở lại đúng bộ lọc/trạng thái mở trước đó. (Riêng khi mở từ hồ sơ 1 người thì vẫn theo ngữ cảnh của link đó.)',
+    ],
+  },
   {
     date: '17/09/2026 (Sửa lỗi Bảng điều khiển với người xem theo phạm vi)',
     items: [
