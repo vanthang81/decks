@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-18.196';
+export const GUIDE_VERSION = '2026-09-18.197';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '18/09/2026 (Báo cáo theo cấp — "Theo Dự án" hiện đủ OKR xuyên kỳ)',
+    items: [
+      'Mục "Theo Dự án" của Báo cáo theo cấp nay gom đủ MỌI OKR gắn dự án dù OKR đó thuộc kỳ khác kỳ đang xem (dự án chạy xuyên nhiều tháng/quý). Trước đây dự án có OKR ở kỳ khác (vd Trân Bảo — OKR tháng 8) bị ẩn khi xem báo cáo tháng 9.',
+    ],
+  },
   {
     date: '18/09/2026 (Quản trị hệ thống xoá/quản được mọi công việc)',
     items: [

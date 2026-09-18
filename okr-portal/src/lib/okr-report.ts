@@ -71,7 +71,7 @@ function groupByUnit(rows: ObjectiveRow[], units: Unit[]): ReportGroup[] {
 // canView: bộ lọc phạm vi xem (CFO 15/09) — chỉ tính OKR người xem được phép thấy. Bỏ trống = toàn bộ.
 export async function okrLevelReport(
   periodId: string,
-  canView?: (o: ObjectiveRow) => boolean,
+  canView?: (o: Pick<ObjectiveRow, 'unit_id' | 'owner_email' | 'level'>) => boolean,
 ): Promise<OkrLevelReport> {
   const [allObjs, units] = await Promise.all([listObjectivesByPeriod(periodId), listUnits()]);
   const objs = canView ? allObjs.filter(canView) : allObjs;
@@ -112,36 +112,41 @@ export async function okrLevelReport(
     })
     .sort((a, b) => b.weighted - a.weighted || a.name.localeCompare(b.name));
 
-  // ── LĂNG KÍNH "Theo Dự án": gom MỌI OKR (mọi cấp) theo dự án gắn qua okr_project_objectives ──
-  // Riêng biệt với roll-up tổ chức (1 OKR có thể thuộc nhiều dự án → tính cho từng dự án).
-  const byId = new Map(objs.map((o) => [o.id, o]));
-  let projectGroups: ReportGroup[] = [];
-  if (objs.length) {
-    const links = await query<{ project_id: string; pcode: string | null; pname: string; objective_id: string }>(
-      `SELECT po.project_id, pr.code AS pcode, pr.name AS pname, po.objective_id
-         FROM okr_project_objectives po JOIN okr_projects pr ON pr.id = po.project_id
-        WHERE po.objective_id = ANY($1::uuid[])`,
-      [objs.map((o) => o.id)],
-    ).catch(() => [] as { project_id: string; pcode: string | null; pname: string; objective_id: string }[]);
-    const byProj = new Map<string, { code: string | null; name: string; items: ReportItem[] }>();
-    for (const l of links) {
-      const o = byId.get(l.objective_id);
-      if (!o) continue;
-      const g = byProj.get(l.project_id) ?? { code: l.pcode, name: l.pname, items: [] };
-      g.items.push(toItem(o));
-      byProj.set(l.project_id, g);
-    }
-    projectGroups = [...byProj.entries()]
-      .map(([pid, g]) => ({
-        key: pid,
-        name: g.name,
-        code: g.code,
-        count: g.items.length,
-        weighted: weightedAvg(g.items.slice().sort((a, b) => naturalCodeCompare(a.code, b.code))),
-        items: g.items.slice().sort((a, b) => naturalCodeCompare(a.code, b.code)),
-      }))
-      .sort((a, b) => b.weighted - a.weighted || a.name.localeCompare(b.name));
+  // ── LĂNG KÍNH "Theo Dự án": gom MỌI OKR gắn dự án qua okr_project_objectives — XUYÊN KỲ ──
+  // Dự án là thực thể XUYÊN nhiều kỳ (OKR gắn có thể ở tháng/quý/năm KHÁC kỳ đang xem). Nếu chỉ lấy OKR
+  // đúng kỳ đang xem → dự án có OKR ở kỳ khác sẽ BIẾN MẤT (đúng ca CFO 18/09: dự án Trân Bảo, OKR ở T8
+  // không hiện khi xem T9). → Lấy TẤT CẢ OKR gắn dự án (mọi kỳ), vẫn tôn trọng bộ lọc phạm vi xem.
+  type PLink = {
+    project_id: string; pcode: string | null; pname: string;
+    id: string; code: string | null; title: string; progress: number; weight: number;
+    level: string; unit_id: string | null; owner_email: string | null;
+  };
+  const links = await query<PLink>(
+    `SELECT po.project_id, pr.code AS pcode, pr.name AS pname,
+            o.id, o.code, o.title, o.progress::float8 AS progress, COALESCE(o.weight, 1)::float8 AS weight,
+            o.level, o.unit_id, o.owner_email
+       FROM okr_project_objectives po
+       JOIN okr_projects pr ON pr.id = po.project_id
+       JOIN okr_objectives o ON o.id = po.objective_id
+      WHERE pr.status <> 'archived'`,
+  ).catch(() => [] as PLink[]);
+  const byProj = new Map<string, { code: string | null; name: string; items: ReportItem[] }>();
+  for (const l of links) {
+    if (canView && !canView({ unit_id: l.unit_id, owner_email: l.owner_email, level: l.level as ObjectiveRow['level'] })) continue;
+    const g = byProj.get(l.project_id) ?? { code: l.pcode, name: l.pname, items: [] };
+    g.items.push({ id: l.id, code: l.code, title: l.title, progress: l.progress, weight: l.weight ?? 1 });
+    byProj.set(l.project_id, g);
   }
+  const projectGroups: ReportGroup[] = [...byProj.entries()]
+    .map(([pid, g]) => ({
+      key: pid,
+      name: g.name,
+      code: g.code,
+      count: g.items.length,
+      weighted: weightedAvg(g.items.slice().sort((a, b) => naturalCodeCompare(a.code, b.code))),
+      items: g.items.slice().sort((a, b) => naturalCodeCompare(a.code, b.code)),
+    }))
+    .sort((a, b) => b.weighted - a.weighted || a.name.localeCompare(b.name));
 
   return {
     companyTotal,

@@ -204,7 +204,7 @@ export default async function ReportPage({ searchParams }: { searchParams: { per
             {rep.projects.length > 0 && (
               <Section
                 title="Theo Dự án"
-                help="Gom mọi OKR gắn với từng Dự án (một OKR có thể thuộc nhiều dự án) — lăng kính riêng, không nằm trong roll-up Công ty→Khối→Phòng."
+                help="Gom mọi OKR gắn với từng Dự án (một OKR có thể thuộc nhiều dự án), tính XUYÊN KỲ — hiện đủ cả OKR ở kỳ khác kỳ đang xem, vì dự án chạy qua nhiều tháng/quý. Lăng kính riêng, không nằm trong roll-up Công ty→Khối→Phòng."
                 groups={rep.projects}
                 canEdit={canEditWeight}
                 skNs={`${repNs}:proj`}
