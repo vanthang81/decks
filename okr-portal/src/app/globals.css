@@ -606,6 +606,12 @@ table.t th.sortable.active { color: var(--primary); }
 .te-row:hover td { background: #FBF7F2; }
 .te-row.te-sel td { background: #eef2ff; }
 .te-row.te-sel:hover td { background: #e5eaff; }
+/* PHÂN CẤP việc cha–con (CFO 18/09): việc con thụt lề + nền hơi khác để nhìn thấy quan hệ. */
+.te-row-child > td { background: #FCFBFA; }
+.te-row-child:hover > td { background: #F7F2EC; }
+.te-titlecell { display: inline; }
+.te-sub-caret { color: var(--muted, #94a3b8); font-weight: 700; margin-right: 4px; }
+.te-subcount { color: var(--muted, #94a3b8); font-size: 11.5px; font-weight: 400; margin-left: 6px; white-space: nowrap; }
 
 /* ── Danh sách công việc dạng THẺ cho MOBILE (CFO 13/09) — bảng 12 cột co lại rất khó đọc ──
    Mặc định ẩn (desktop dùng bảng); ≤760px ẩn bảng, hiện thẻ. Cùng dữ liệu/pageRows. */
@@ -621,6 +627,8 @@ table.t th.sortable.active { color: var(--primary); }
 }
 .te-card:active { background: #FBF7F2; }
 .te-card.te-sel { border-color: var(--primary); background: #eef2ff; }
+/* Việc con (mobile): thụt lề + viền trái nhấn để thấy nó thuộc việc cha ngay trên. */
+.te-card-child { border-left: 3px solid var(--accent, #C8A951); background: #FCFBFA; }
 .te-card-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .te-card-chk { display: inline-flex; align-items: center; }
 .te-card-chk input { width: 17px; height: 17px; accent-color: var(--primary, #7C0312); }

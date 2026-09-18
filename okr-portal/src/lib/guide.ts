@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-18.199';
+export const GUIDE_VERSION = '2026-09-18.200';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '18/09/2026 (Tab Công việc: việc con lồng dưới việc cha)',
+    items: [
+      'Tab "Công việc": việc con nay hiển thị LỒNG (thụt lề, mũi ↳) ngay dưới việc cha thay vì tách rời rạc — dễ theo dõi quan hệ cha–con. Việc cha có nhãn "· N việc con". Áp cho cả bảng (máy tính) lẫn thẻ (điện thoại); vẫn giữ tìm kiếm/lọc/sắp xếp.',
+    ],
+  },
   {
     date: '18/09/2026 (Tạo việc đầy đủ cho mọi người · lọc Khối/Phòng báo cáo · CV đã giao)',
     items: [

@@ -119,6 +119,34 @@ function WaitBadge({ titles }: { titles: string[] }) {
   return <span className="dl-badge dl-wait" title={`Phải xong trước: ${titles.join(' · ')}`}>⏳ Chờ {titles.length} việc</span>;
 }
 
+// SẮP XẾP PHÂN CẤP: việc con nằm NGAY DƯỚI việc cha (thụt cấp) để dễ theo dõi (CFO 18/09).
+// Giữ nguyên thứ tự đã lọc/sắp của nút gốc & anh-em; con có cha KHÔNG nằm trong tập hiện tại (bị lọc/khác trang
+// dữ liệu) → hiển thị như một nút gốc để không bị mất. Chống vòng lặp bằng tập `seen`.
+function buildTaskHierarchy(rows: TaskRow[]): { t: TaskRow; depth: number }[] {
+  const present = new Set(rows.map((r) => r.id));
+  const childrenOf = new Map<string, TaskRow[]>();
+  const roots: TaskRow[] = [];
+  for (const r of rows) {
+    const pid = r.parent_id && present.has(r.parent_id) ? r.parent_id : null;
+    if (pid) {
+      const arr = childrenOf.get(pid);
+      if (arr) arr.push(r);
+      else childrenOf.set(pid, [r]);
+    } else roots.push(r);
+  }
+  const out: { t: TaskRow; depth: number }[] = [];
+  const seen = new Set<string>();
+  const visit = (r: TaskRow, depth: number) => {
+    if (seen.has(r.id)) return;
+    seen.add(r.id);
+    out.push({ t: r, depth });
+    for (const c of childrenOf.get(r.id) ?? []) visit(c, depth + 1);
+  };
+  for (const r of roots) visit(r, 0);
+  for (const r of rows) if (!seen.has(r.id)) out.push({ t: r, depth: 0 }); // phòng hờ (vòng lặp)
+  return out;
+}
+
 export default function TaskExplorer({
   tasks,
   currentEmail,
@@ -427,12 +455,21 @@ export default function TaskExplorer({
     });
   };
 
+  // PHÂN CẤP: dựng lại thứ tự để việc con nằm ngay dưới việc cha (thụt cấp) — dễ theo dõi (CFO 18/09).
+  const hierRows = useMemo(() => buildTaskHierarchy(sorted), [sorted]);
+  // Số việc con của mỗi việc (đếm trên TOÀN tập để hiện nhãn "N việc con" kể cả con đang bị lọc/khác trang).
+  const childCount = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const t of tasks) if (t.parent_id) m.set(t.parent_id, (m.get(t.parent_id) ?? 0) + 1);
+    return m;
+  }, [tasks]);
+
   // Phân trang danh sách (50 việc/trang) — chỉ ở chế độ Danh sách; Kanban/Gantt vẫn hiện đủ.
   const PAGE_SIZE = 50;
   const [page, setPage] = useState(0);
-  const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const pageCount = Math.max(1, Math.ceil(hierRows.length / PAGE_SIZE));
   const curPage = Math.min(page, pageCount - 1);
-  const pageRows = useMemo(() => sorted.slice(curPage * PAGE_SIZE, curPage * PAGE_SIZE + PAGE_SIZE), [sorted, curPage]);
+  const pageRows = useMemo(() => hierRows.slice(curPage * PAGE_SIZE, curPage * PAGE_SIZE + PAGE_SIZE), [hierRows, curPage]);
   // Lọc/sắp xếp đổi → về trang 1.
   useEffect(() => { setPage(0); }, [q, fOwner, fUnit, fObj, fProject, fStatus, fPrio, fKind, fPeriod, fOverdue, fMine, hideDone, sortKey, sortDir]);
 
@@ -778,8 +815,8 @@ export default function TaskExplorer({
             </tr>
           </thead>
           <tbody>
-            {pageRows.map((t) => (
-              <tr key={t.id} className={`te-row${selected.has(t.id) ? ' te-sel' : ''}`} onClick={() => setEditing(t)} title="Bấm để cập nhật / sửa / xoá">
+            {pageRows.map(({ t, depth }) => (
+              <tr key={t.id} className={`te-row${selected.has(t.id) ? ' te-sel' : ''}${depth > 0 ? ' te-row-child' : ''}`} onClick={() => setEditing(t)} title="Bấm để cập nhật / sửa / xoá">
                 {canBulk && (
                   <td className="tt-check" onClick={(e) => e.stopPropagation()}>
                     {manageSet.has(t.id) ? (
@@ -796,13 +833,19 @@ export default function TaskExplorer({
                 )}
                 <td>{t.code && <span className="okr-code">{t.code}</span>}</td>
                 <td>
-                  {/* CHỈ hiện nhãn khi là NHÓM (Dự án/Tiểu dự án có việc con) — việc lẻ không cần
-                      nhãn "Công việc" (thừa). Nhãn inline để tiêu đề dài chảy tự nhiên, không xuống dòng lệch. */}
-                  {effKindT(t) !== 'action' && (
-                    <span className={`badge ${KIND_CLS[effKindT(t)]}`} style={{ fontSize: 10.5, marginRight: 6 }}>{KIND_LABEL[effKindT(t)]}</span>
-                  )}
-                  <b>{t.title}</b>
-                  {' '}<WaitBadge titles={waitingTitles(t.id)} />
+                  {/* PHÂN CẤP: thụt lề theo độ sâu + mũi ↳ cho việc con → nhìn thấy ngay quan hệ cha-con.
+                      CHỈ hiện nhãn khi là NHÓM (Dự án/Tiểu dự án) — việc lẻ không cần nhãn "Công việc" (thừa). */}
+                  <span className="te-titlecell" style={depth > 0 ? { paddingLeft: depth * 20 } : undefined}>
+                    {depth > 0 && <span className="te-sub-caret" aria-hidden>↳</span>}
+                    {effKindT(t) !== 'action' && (
+                      <span className={`badge ${KIND_CLS[effKindT(t)]}`} style={{ fontSize: 10.5, marginRight: 6 }}>{KIND_LABEL[effKindT(t)]}</span>
+                    )}
+                    <b>{t.title}</b>
+                    {(childCount.get(t.id) ?? 0) > 0 && (
+                      <span className="te-subcount" title="Việc này có việc con (hiển thị lồng bên dưới)">· {childCount.get(t.id)} việc con</span>
+                    )}
+                    {' '}<WaitBadge titles={waitingTitles(t.id)} />
+                  </span>
                 </td>
                 <td><span className={`badge ${STATUS_CLS[t.status]}`}>{STATUS_LABEL[t.status]}</span></td>
                 <td>
@@ -912,13 +955,19 @@ export default function TaskExplorer({
       {/* MOBILE: dạng thẻ (card) — bảng nhiều cột co lại trên màn hẹp rất khó đọc (CFO 13/09).
           Cùng dữ liệu/pageRows với bảng; ẩn/hiện bằng media query trong globals.css. */}
       <div className="te-cards">
-        {pageRows.map((t) => {
+        {pageRows.map(({ t, depth }) => {
           const ek = effKindT(t);
           const wait = waitingTitles(t.id);
           const selfAssign = !!(t.owner_email && t.created_by && t.created_by.toLowerCase() === t.owner_email.toLowerCase());
           const okrs = t.project_id ? projectMeta[t.project_id]?.okrs ?? [] : [];
+          const kids = childCount.get(t.id) ?? 0;
           return (
-            <div key={t.id} className={`te-card${selected.has(t.id) ? ' te-sel' : ''}`} onClick={() => setEditing(t)}>
+            <div
+              key={t.id}
+              className={`te-card${selected.has(t.id) ? ' te-sel' : ''}${depth > 0 ? ' te-card-child' : ''}`}
+              style={depth > 0 ? { marginLeft: Math.min(depth, 3) * 14 } : undefined}
+              onClick={() => setEditing(t)}
+            >
               <div className="te-card-top">
                 {canBulk && (
                   <span className="te-card-chk" onClick={(e) => e.stopPropagation()}>
@@ -933,7 +982,11 @@ export default function TaskExplorer({
                 <span className={`badge ${STATUS_CLS[t.status]} te-card-st`}>{STATUS_LABEL[t.status]}</span>
               </div>
 
-              <div className="te-card-title"><b>{t.title}</b></div>
+              <div className="te-card-title">
+                {depth > 0 && <span className="te-sub-caret" aria-hidden>↳ </span>}
+                <b>{t.title}</b>
+                {kids > 0 && <span className="te-subcount" title="Có việc con (hiển thị lồng bên dưới)"> · {kids} việc con</span>}
+              </div>
               {wait.length > 0 && <div className="te-card-wait"><WaitBadge titles={wait} /></div>}
 
               <div className="te-card-meta">
