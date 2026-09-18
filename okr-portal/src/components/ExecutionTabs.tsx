@@ -219,6 +219,7 @@ export default function ExecutionTabs({
   save,
   del,
   createChild,
+  createSubtask,
   createProjectForInit,
   objectiveId,
   users,
@@ -239,6 +240,7 @@ export default function ExecutionTabs({
   save: (fd: FormData) => Promise<void>;
   del: (fd: FormData) => Promise<void>;
   createChild: (fd: FormData) => Promise<void>;
+  createSubtask?: (fd: FormData) => Promise<void>;   // thêm việc con (chia nhỏ) — mọi loại việc
   createProjectForInit: (fd: FormData) => Promise<void>;
   objectiveId: string;
   users: PersonOpt[];
@@ -441,6 +443,9 @@ export default function ExecutionTabs({
           save={save}
           del={del}
           createChild={createChild}
+          createSubtask={createSubtask}
+          subtasks={initiatives.filter((i) => i.parent_id === editing.id)}
+          onOpenSub={(c) => setEditing(c)}
           createProjectForInit={createProjectForInit}
           objectiveId={objectiveId}
           manageStructure={manageStructure}
@@ -466,6 +471,9 @@ function EditModal({
   save,
   del,
   createChild,
+  createSubtask,
+  subtasks = [],
+  onOpenSub,
   createProjectForInit,
   objectiveId,
   manageStructure,
@@ -475,6 +483,8 @@ function EditModal({
   canManage: boolean;
   canEdit: boolean;
   hasChildren: boolean;
+  subtasks?: Card[];
+  onOpenSub?: (c: Card) => void;
   users: PersonOpt[];
   priorityEmails?: string[];
   units: UnitOpt[];
@@ -484,6 +494,7 @@ function EditModal({
   save: (fd: FormData) => Promise<void>;
   del: (fd: FormData) => Promise<void>;
   createChild: (fd: FormData) => Promise<void>;
+  createSubtask?: (fd: FormData) => Promise<void>;   // thêm việc con (chia nhỏ) — mọi loại việc
   createProjectForInit: (fd: FormData) => Promise<void>;
   objectiveId: string;
   manageStructure: boolean;
@@ -496,6 +507,10 @@ function EditModal({
   // Bấm vào việc → mở CHI TIẾT (chỉ xem) trước; bấm "Sửa" mới sang form (CFO 06/08, đồng bộ TaskEditModal).
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [addKid, setAddKid] = useState(false);
+  // Việc con (sub-task) — chia nhỏ MỌI việc (kể cả việc gắn KR); dùng chung createSubtaskAction (#42).
+  const [subTitle, setSubTitle] = useState('');
+  const [subOwner, setSubOwner] = useState('');
+  const [showSubAdd, setShowSubAdd] = useState(false);
   const [inProject, setInProject] = useState<boolean>(!!card.project_id);
   const [newProj, setNewProj] = useState(false);
   const [newProjName, setNewProjName] = useState('');
@@ -549,6 +564,17 @@ function EditModal({
     fd.set('parent_id', card.id);
     if (card.unit_id) fd.set('unit_id', card.unit_id);
     run(() => createChild(fd));
+  };
+
+  const canAddSub = !!createSubtask && canEdit;
+  const subDone = subtasks.filter((s) => s.status === 'done').length;
+  const addSub = () => {
+    if (!createSubtask || !subTitle.trim()) return;
+    const fd = new FormData();
+    fd.set('parent_id', card.id);
+    fd.set('title', subTitle.trim());
+    if (subOwner) fd.set('owner_email', subOwner);
+    run(() => createSubtask(fd)); // run() đóng popup + toast + refresh (giống Thêm mục con)
   };
 
   const doDelete = () => {
@@ -643,6 +669,52 @@ function EditModal({
                   : <span className="muted">—</span>}</td></tr>
               </tbody>
             </table>
+
+            {(subtasks.length > 0 || canAddSub) && (
+              <div className="te-subs">
+                <div className="te-subs-head">
+                  <span className="te-subs-title">🧩 Việc con{subtasks.length > 0 && <span className="muted" style={{ fontWeight: 400 }}> · {subDone}/{subtasks.length} xong</span>}</span>
+                  {canAddSub && !showSubAdd && (
+                    <button type="button" className="btn ghost sm" onClick={() => { setErr(null); setShowSubAdd(true); }}>+ Thêm việc con</button>
+                  )}
+                </div>
+                {subtasks.length > 0 ? (
+                  <ul className="te-subs-list">
+                    {subtasks.map((s) => (
+                      <li key={s.id} className="te-sub-row">
+                        <span className={`badge ${STATUS_CLS[s.status]}`}>{STATUS_LABEL[s.status]}</span>
+                        {onOpenSub
+                          ? <button type="button" className="te-sub-ttl linklike" onClick={() => onOpenSub(s)} title="Mở việc con">{s.title}</button>
+                          : <span className="te-sub-ttl">{s.title}</span>}
+                        <span className="te-sub-meta">
+                          {s.owner_name || s.owner_email ? <UserLink email={s.owner_email} name={s.owner_name} /> : <span className="muted">chưa giao</span>}
+                          <b className="mono te-sub-pct">{Number(s.progress).toFixed(0)}%</b>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="muted" style={{ fontSize: 12.5, margin: '4px 0 0' }}>Chưa có việc con. Chia nhỏ để theo dõi tiến độ từng phần (a/b/c…).</p>
+                )}
+                {subtasks.length > 0 && (
+                  <p className="muted te-subs-note">Đã có việc con → tiến độ việc này TỰ tính bình quân theo các việc con.</p>
+                )}
+                {canAddSub && showSubAdd && (
+                  <div className="te-sub-add">
+                    <input className="i" placeholder="Tên việc con…" value={subTitle}
+                      onChange={(e) => setSubTitle(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSub(); } }} autoFocus />
+                    <SearchSelect value={subOwner} onChange={setSubOwner} emptyLabel="— Giao cho (tuỳ chọn) —"
+                      options={personSelectOptions(users, priorityEmails)} />
+                    <div className="te-sub-add-act">
+                      <button type="button" className="btn ghost sm" onClick={() => { setShowSubAdd(false); }}>Huỷ</button>
+                      <button type="button" className="btn sm" disabled={pending || !subTitle.trim()} onClick={addSub}>{pending ? 'Đang thêm…' : 'Thêm việc con'}</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {!canEdit && <p className="muted" style={{ fontSize: 12.5, marginTop: 8 }}>Bạn chỉ có quyền xem việc này (chỉ người quản lý OKR hoặc người được giao mới sửa được).</p>}
             <div className="te-actions">
               <div></div>

@@ -61,6 +61,7 @@ import {
   deleteCheckInAction,
   deleteKeyResultAction,
   createInitiativeAction,
+  createSubtaskAction,
   editInitiativeAction,
   deleteInitiativeAction,
   moveInitiativeAction,
@@ -701,6 +702,7 @@ export default async function ObjectiveDetail({ params }: { params: { id: string
             save={editInitiativeAction}
             del={deleteInitiativeAction}
             createChild={createInitiativeAction}
+            createSubtask={createSubtaskAction}
             createProjectForInit={createProjectForInitiativeAction}
             objectiveId={obj.id}
             users={personOpts}

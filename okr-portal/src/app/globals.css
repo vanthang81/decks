@@ -717,6 +717,8 @@ table.te-detail td:first-child { width: 130px; white-space: nowrap; }
 .te-subs-note { font-size: 12px; margin: 6px 0 0; }
 .te-sub-add { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; background: #f8fafc; border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
 .te-sub-add-act { display: flex; justify-content: flex-end; gap: 8px; }
+.te-sub-row .linklike { background: none; border: 0; padding: 0; margin: 0; color: var(--primary); cursor: pointer; text-align: left; font: inherit; }
+.te-sub-row .linklike:hover { text-decoration: underline; }
 @media (max-width: 640px) { .te-sub-meta { width: 100%; justify-content: space-between; } }
 
 /* Viễn cảnh BSC — badge + ô đặt nhanh trên trang chi tiết OKR */

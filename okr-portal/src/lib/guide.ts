@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-18.197';
+export const GUIDE_VERSION = '2026-09-18.198';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '18/09/2026 (Thêm "Việc con" ngay trong công việc của OKR/KR)',
+    items: [
+      'Việc gắn OKR/KR (mục Chiến lược & Đo lường và trong Dự án): mở chi tiết một công việc là thấy khu "Việc con" để chia nhỏ (a/b/c…) — trước đây chỉ thêm được việc con ở mục Thực thi/Công việc. Tiến độ việc cha tự tính bình quân theo việc con.',
+    ],
+  },
   {
     date: '18/09/2026 (Báo cáo theo cấp — "Theo Dự án" hiện đủ OKR xuyên kỳ)',
     items: [

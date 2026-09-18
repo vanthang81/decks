@@ -47,6 +47,7 @@ import {
   editInitiativeAction,
   deleteInitiativeAction,
   createInitiativeAction,
+  createSubtaskAction,
   moveInitiativeAction,
   createObjectiveAction,
 } from '../../objectives/actions';
@@ -391,6 +392,7 @@ export default async function ProjectDetail({ params }: { params: { id: string }
               save={editInitiativeAction}
               del={deleteInitiativeAction}
               createChild={createInitiativeAction}
+              createSubtask={createSubtaskAction}
               createProjectForInit={createProjectForInitiativeAction}
               objectiveId=""
               users={personOpts}
