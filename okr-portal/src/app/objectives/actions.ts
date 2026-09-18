@@ -431,6 +431,10 @@ async function canManageTaskLoose(user: OkrUser, init: Initiative): Promise<bool
   // kể cả khi có nhóm Quản lý; họ chỉ cập nhật tiến độ/trạng thái qua đường 'assignee' (CFO 17/09 — #36a).
   if (isRecipientOnly(user, init)) return false;
   const [units, access] = await Promise.all([listUnits(), loadAccess()]);
+  // QUẢN TRỊ (Quản trị hệ thống / OKR / KPI) quản MỌI công việc — kể cả việc standalone (không gắn
+  // OKR/dự án/cuộc họp) — CFO 18/09. system_admin bị BÓC scope.all (privacy OKR) nhưng vẫn giữ
+  // task.viewall (xem & quản mọi việc) → xét cả hai cap để khớp UI (manageIds) đang hiện nút Xoá.
+  if (hasCap(user, 'scope.all', access) || hasCap(user, 'task.viewall', access)) return true;
   if (init.objective_id) {
     const obj = await getObjective(init.objective_id);
     if (obj && canEditObjective(user, obj, units, access)) return true;

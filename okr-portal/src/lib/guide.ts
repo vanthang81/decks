@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-17.195';
+export const GUIDE_VERSION = '2026-09-18.196';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,12 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '18/09/2026 (Quản trị hệ thống xoá/quản được mọi công việc)',
+    items: [
+      'Sửa lỗi nhóm "Quản trị hệ thống" bấm Xoá công việc (việc không gắn OKR/dự án/cuộc họp) báo lỗi: nay Quản trị (hệ thống/OKR/KPI — có quyền xem hoặc quản mọi việc) quản & xoá được MỌI công việc, khớp với nút hiển thị trên màn hình.',
+    ],
+  },
   {
     date: '17/09/2026 (Công việc: quyền người nhận · việc con · báo hoàn thành · mô tả khi tạo trong họp)',
     items: [

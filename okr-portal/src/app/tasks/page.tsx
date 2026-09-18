@@ -11,7 +11,7 @@ import { initiativeIdsMentioning } from '@/lib/comments';
 import { listObjectivesByPeriod } from '@/lib/okr';
 import { getCurrentPeriod } from '@/lib/periods';
 import { depsForTasks } from '@/lib/deps';
-import { loadAccess, buildTaskViewCtx, canViewInitiative, canEditObjective, okrViewScope } from '@/lib/access';
+import { loadAccess, buildTaskViewCtx, canViewInitiative, canEditObjective, okrViewScope, hasCap } from '@/lib/access';
 import { projectMetaForIds } from '@/lib/project-objectives';
 import { memberProjectIds } from '@/lib/project-members';
 import { editInitiativeAction, deleteInitiativeAction, moveInitiativeAction, createTaskAction, createSubtaskAction, bulkTasksAction } from '@/app/objectives/actions';
@@ -48,6 +48,8 @@ export default async function TasksPage({
       // NGƯỜI NHẬN việc (owner khác người giao) KHÔNG quản đầy đủ — chỉ cập nhật tiến độ (CFO 17/09 #36a).
       !isRecipientOnly(user, t) &&
       (
+      // Quản trị (scope.all / task.viewall) quản MỌI việc, kể cả standalone (CFO 18/09) — khớp server.
+      hasCap(user, 'scope.all', access) || hasCap(user, 'task.viewall', access) ||
       canEditObjective(
         user,
         { unit_id: t.objective_unit_id, owner_email: t.objective_owner, created_by: t.objective_created_by },
