@@ -22,6 +22,7 @@ import { loadAccess, canViewReports, canManageStrategy, okrViewScope } from '@/l
 import WeightEditor from '@/components/WeightEditor';
 import PrintButton from '@/components/PrintButton';
 import PersistDetails from '@/components/PersistDetails';
+import ReportUnitFilter from '@/components/ReportUnitFilter';
 import NavIcon from '@/components/NavIcon';
 
 export const dynamic = 'force-dynamic';
@@ -198,8 +199,8 @@ export default async function ReportPage({ searchParams }: { searchParams: { per
               </p>
             )}
             {rep.company && <Section title="Cấp Công ty" groups={[rep.company]} canEdit={canEditWeight} skNs={`${repNs}:company`} />}
-            <Section title="Theo Khối" help="Mỗi khối = bình quân có trọng số các OKR cấp khối gắn đúng đơn vị." groups={rep.divisions} canEdit={canEditWeight} skNs={`${repNs}:div`} />
-            <Section title="Theo Phòng ban" groups={rep.departments} canEdit={canEditWeight} skNs={`${repNs}:dept`} />
+            {/* Theo Khối + Theo Phòng ban: gộp vào 1 khối có BỘ LỌC Khối/Phòng + nhãn "thuộc khối nào" (CFO 18/09) */}
+            <ReportUnitFilter divisions={rep.divisions} departments={rep.departments} canEdit={canEditWeight} ns={repNs} />
             <Section title="Theo Cá nhân" groups={rep.individuals} canEdit={canEditWeight} skNs={`${repNs}:ind`} />
             {rep.projects.length > 0 && (
               <Section

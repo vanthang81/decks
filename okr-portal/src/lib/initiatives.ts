@@ -225,6 +225,16 @@ export async function listAllInitiativesForOwner(email: string): Promise<Initiat
   );
 }
 
+// Việc TÔI ĐÃ GIAO cho NGƯỜI KHÁC (created_by=tôi, owner≠tôi) — bảng recap "CV đã giao" (CFO 18/09).
+export async function listInitiativesDelegatedBy(email: string): Promise<Initiative[]> {
+  return query<Initiative>(
+    `${SELECT} WHERE lower(i.created_by)=lower($1) AND i.owner_email IS NOT NULL
+       AND lower(i.owner_email) <> lower($1) AND i.status <> 'canceled'
+     ORDER BY i.due_on NULLS LAST, i.sort`,
+    [email],
+  );
+}
+
 // Số liệu tổng quan công việc cá nhân (mọi trạng thái) — cho tiles ở trang "Của tôi".
 export type MyTaskCounts = { total: number; doing: number; todo: number; blocked: number; done: number; overdue: number };
 export async function taskCountsForOwner(email: string): Promise<MyTaskCounts> {

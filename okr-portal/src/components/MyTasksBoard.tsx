@@ -37,9 +37,13 @@ function bucketOf(t: Initiative, today: string): Bucket {
 export default function MyTasksBoard({
   tasks,
   update,
+  showOwner = false,
+  emptyText = 'Bạn chưa có công việc nào.',
 }: {
   tasks: Initiative[];
   update: (fd: FormData) => Promise<void>;  // updateOwnTaskProgressAction
+  showOwner?: boolean;   // bảng "CV đã giao": hiện NGƯỜI ĐƯỢC GIAO thay vì "giao bởi" (CFO 18/09)
+  emptyText?: string;
 }) {
   const today = todayISO();
   const [open, setOpen] = useState<Initiative | null>(null);
@@ -76,7 +80,7 @@ export default function MyTasksBoard({
   }, [tasks, today]);
 
   if (tasks.length === 0) {
-    return <p className="muted" style={{ margin: 0 }}>Bạn chưa có công việc nào.</p>;
+    return <p className="muted" style={{ margin: 0 }}>{emptyText}</p>;
   }
 
   return (
@@ -130,13 +134,19 @@ export default function MyTasksBoard({
                               📅 {fmtDate(t.due_on)}{overdue ? ' · quá hạn' : ''}
                             </span>
                           )}
-                          {t.created_by && (
-                            <span className="mytb-chip" title="Người giao việc">
-                              ✎ {t.owner_email && t.created_by.toLowerCase() === t.owner_email.toLowerCase()
-                                ? 'Tự giao'
-                                : `Giao bởi ${t.creator_name || t.created_by}`}
-                            </span>
-                          )}
+                          {showOwner
+                            ? (t.owner_email || t.owner_name) && (
+                                <span className="mytb-chip" title="Người được giao">
+                                  → Giao cho {t.owner_name || t.owner_email}
+                                </span>
+                              )
+                            : t.created_by && (
+                                <span className="mytb-chip" title="Người giao việc">
+                                  ✎ {t.owner_email && t.created_by.toLowerCase() === t.owner_email.toLowerCase()
+                                    ? 'Tự giao'
+                                    : `Giao bởi ${t.creator_name || t.created_by}`}
+                                </span>
+                              )}
                         </div>
                       </div>
                       <div className="mytb-prog">

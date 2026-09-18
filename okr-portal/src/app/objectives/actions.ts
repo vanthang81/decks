@@ -6,7 +6,7 @@ import { logAudit } from '@/lib/audit';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/current-user';
-import { listUnits, subtreeIds } from '@/lib/org';
+import { listUnits, subtreeIds, canViewObjectiveUnit } from '@/lib/org';
 import {
   createObjective,
   updateObjective,
@@ -71,6 +71,7 @@ import {
   canCreateObjective,
   isSuperAdmin,
   hasCap,
+  okrViewScope,
 } from '@/lib/access';
 
 function str(fd: FormData, k: string): string {
@@ -767,23 +768,22 @@ export async function createTaskAction(fd: FormData) {
   const title = str(fd, 'title').trim();
   if (!title) throw new Error('Thiếu tên công việc.');
   const [units, access] = await Promise.all([listUnits(), loadAccess()]);
-  // NGOẠI LỆ: staff có năng lực quản (okr.edit/scope.all/project.manage — vd "Quản trị hệ thống")
-  // → dùng form đầy đủ (gắn OKR/dự án/giao người khác); việc gắn vẫn re-check quyền từng mục bên dưới.
-  const isStaff = user.role === 'staff'
-    && !hasCap(user, 'okr.edit', access)
-    && !hasCap(user, 'scope.all', access)
-    && !hasCap(user, 'project.manage', access);
-
-  // NHÂN VIÊN: chỉ tạo VIỆC CÁ NHÂN cho chính mình — ép người phụ trách = mình,
-  // KHÔNG gắn OKR/dự án/đơn vị/ngân sách (không có quyền quản các thực thể đó).
-  const objectiveId = isStaff ? null : orNull(str(fd, 'objective_id'));
-  const projectId = isStaff ? null : orNull(str(fd, 'project_id'));
-  const ownerEmail = isStaff ? user.email : orNull(str(fd, 'owner_email'));
+  // CFO 18/09: MỌI người (kể cả Nhân viên) tạo việc bằng form ĐẦY ĐỦ — giao cho bất kỳ ai + gắn
+  // OKR/dự án (CBNV giao việc cho nhau / được uỷ quyền). Không ép owner=self nữa.
+  const objectiveId = orNull(str(fd, 'objective_id'));
+  const projectId = orNull(str(fd, 'project_id'));
+  const ownerEmail = orNull(str(fd, 'owner_email'));
 
   if (objectiveId) {
     const obj = await getObjective(objectiveId);
     if (!obj) throw new Error('Không tìm thấy OKR.');
-    if (!canEditObjective(user, obj, units, access)) throw new Error('Bạn không có quyền gắn việc vào OKR này.');
+    // Gắn việc vào OKR = liên kết thực thi, KHÔNG phải sửa OKR → chỉ cần XEM được OKR đó (trong phạm
+    // vi của mình) HOẶC có quyền sửa. Nhân viên gắn được vào OKR đơn vị mình + cấp trên align lên.
+    const vs = okrViewScope(user, units, access);
+    const canLinkOkr = vs === null
+      || canEditObjective(user, obj, units, access)
+      || canViewObjectiveUnit(vs, obj, user.email);
+    if (!canLinkOkr) throw new Error('Bạn không có quyền gắn việc vào OKR này.');
   }
   if (projectId) {
     const pr = await getProject(projectId);
@@ -805,14 +805,14 @@ export async function createTaskAction(fd: FormData) {
     title,
     description: orNull(str(fd, 'description')),
     owner_email: ownerEmail,
-    unit_id: isStaff ? null : orNull(str(fd, 'unit_id')),
+    unit_id: orNull(str(fd, 'unit_id')),
     project_id: projectId,
     status: (str(fd, 'status') || 'todo') as InitStatus,
     priority: (str(fd, 'priority') || 'medium') as Priority,
     start_on: orNull(str(fd, 'start_on')),
     due_on: orNull(str(fd, 'due_on')),
-    budget_planned: isStaff ? 0 : num(fd, 'budget_planned'),
-    budget_actual: isStaff ? 0 : num(fd, 'budget_actual'),
+    budget_planned: num(fd, 'budget_planned'),
+    budget_actual: num(fd, 'budget_actual'),
     budget_source: null,
     expected_output: orNull(str(fd, 'expected_output')),
     created_by: user.email,

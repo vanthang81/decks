@@ -15,6 +15,10 @@ export type ReportGroup = {
   count: number;
   weighted: number; // % tổng có trọng số
   items: ReportItem[];
+  // Khối cha (chỉ set cho nhóm cấp PHÒNG) → hiện "thuộc khối nào" + lọc theo khối (CFO 18/09).
+  parentKey?: string | null;
+  parentName?: string | null;
+  parentCode?: string | null;
 };
 export type OkrLevelReport = {
   companyTotal: number; // kết quả tổng công ty (bình quân có trọng số các OKR cấp Công ty; nếu chưa có thì theo Khối)
@@ -55,6 +59,9 @@ function groupByUnit(rows: ObjectiveRow[], units: Unit[]): ReportGroup[] {
   return [...map.entries()]
     .map(([unitId, list]) => {
       const u = byId.get(unitId);
+      // Khối cha = đơn vị cha nếu cha là 'division' (áp cho nhóm cấp Phòng); Khối thì cha là Công ty → bỏ.
+      const parent = u?.parent_id ? byId.get(u.parent_id) : undefined;
+      const khoi = parent && parent.type === 'division' ? parent : undefined;
       const items = list.map(toItem).sort((a, b) => naturalCodeCompare(a.code, b.code)); // OKR theo mã 1→n
       return {
         key: unitId,
@@ -63,6 +70,9 @@ function groupByUnit(rows: ObjectiveRow[], units: Unit[]): ReportGroup[] {
         count: items.length,
         weighted: weightedAvg(items),
         items,
+        parentKey: khoi?.id ?? null,
+        parentName: khoi?.name ?? null,
+        parentCode: khoi?.code ?? null,
       };
     })
     .sort((a, b) => b.weighted - a.weighted || a.name.localeCompare(b.name));

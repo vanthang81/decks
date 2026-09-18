@@ -3,7 +3,7 @@ import SiteHeader from '@/components/SiteHeader';
 import TaskExplorer from '@/components/TaskExplorer';
 import NewTaskModal from '@/components/NewTaskModal';
 import { requireUser } from '@/lib/current-user';
-import { listUnits } from '@/lib/org';
+import { listUnits, canViewObjectiveUnit } from '@/lib/org';
 import { listUsers, personTitle } from '@/lib/users';
 import { listAllProjectOptions } from '@/lib/projects';
 import { listAllInitiatives, isRecipientOnly } from '@/lib/initiatives';
@@ -89,17 +89,21 @@ export default async function TasksPage({
     title: personTitle(u),
   }));
 
-  // Tạo công việc mới ngay tại đây: MỌI người đều tạo được. Nhân viên (staff) chỉ tạo VIỆC CÁ NHÂN
-  // cho mình (form gọn, ép owner=mình) → dùng `personalTask`. Quản lý dùng form đầy đủ: ô "Thuộc OKR"
-  // chỉ liệt kê OKR kỳ hiện tại mà người này có quyền quản (để gắn việc hợp lệ).
-  const personalTask = user.role === 'staff';
+  // Tạo công việc mới: MỌI người dùng FORM ĐẦY ĐỦ (giao cho bất kỳ ai + gắn OKR/dự án) — CFO 18/09
+  // (CBNV giao việc cho nhau / được uỷ quyền). Ô "Thuộc OKR" liệt kê OKR kỳ hiện tại người này ĐƯỢC XEM
+  // (trong phạm vi) HOẶC có quyền quản — gắn việc là liên kết thực thi, không phải sửa OKR.
+  const personalTask = false;
   let objOpts: { id: string; label: string; sub?: string }[] = [];
-  if (!personalTask) {
+  {
     const period = await getCurrentPeriod();
     if (period) {
       const objs = await listObjectivesByPeriod(period.id);
+      const vs = okrViewScope(user, units, access);
       objOpts = objs
-        .filter((o) => canEditObjective(user, { unit_id: o.unit_id, owner_email: o.owner_email, created_by: o.created_by }, units, access))
+        .filter((o) =>
+          vs === null ||
+          canEditObjective(user, { unit_id: o.unit_id, owner_email: o.owner_email, created_by: o.created_by }, units, access) ||
+          canViewObjectiveUnit(vs, o, user.email))
         // TÊN OKR = dòng chính (dễ nhận biết); mã · đơn vị = dòng phụ mờ → dropdown đọc rõ, không cắt cụt.
         .map((o) => ({ id: o.id, label: o.title, sub: [o.code, o.unit_name].filter(Boolean).join(' · ') || undefined }));
     }

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-18.198';
+export const GUIDE_VERSION = '2026-09-18.199';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,14 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '18/09/2026 (Tạo việc đầy đủ cho mọi người · lọc Khối/Phòng báo cáo · CV đã giao)',
+    items: [
+      'Nhân viên nay dùng form "Tạo công việc" ĐẦY ĐỦ như cấp quản lý: giao việc cho người khác + gắn OKR/KR/dự án (CBNV giao việc cho nhau / được uỷ quyền). Gắn việc vào OKR chỉ cần XEM được OKR đó (trong phạm vi).',
+      'Báo cáo theo cấp: thêm BỘ LỌC theo Khối/Phòng + mỗi Phòng hiện rõ "thuộc Khối nào" (hết cảnh nhiều phòng không biết thuộc khối nào).',
+      'Trang "Của tôi": thêm bảng "Công việc tôi đã giao" — theo dõi việc bạn giao cho người khác (nhóm theo quá hạn/đang làm/chưa làm/hoàn thành, hiện người được giao), tiện cho vai trò quản lý.',
+    ],
+  },
   {
     date: '18/09/2026 (Thêm "Việc con" ngay trong công việc của OKR/KR)',
     items: [
