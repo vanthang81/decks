@@ -7,6 +7,7 @@ import NavIcon from '@/components/NavIcon';
 import { useToast } from '@/components/ToastProvider';
 import { ProgressBar } from '@/components/ui';
 import { fmtDate } from '@/lib/format';
+import { statusFromProgress } from '@/lib/status-progress';
 import type { Initiative } from '@/lib/initiatives';
 
 // Nhãn/màu khai lại (KHÔNG import runtime từ lib/initiatives → tránh kéo pg vào client bundle).
@@ -184,8 +185,10 @@ function MyTaskModal({
   const save = () => {
     const fd = new FormData();
     fd.set('id', task.id);
-    fd.set('status', status);
-    fd.set('progress', String(status === 'done' ? 100 : progress));
+    const prg = status === 'done' ? 100 : progress;
+    // Trạng thái tự khớp tiến độ khi lưu (100% → Xong) — nhất quán với các modal việc khác.
+    fd.set('status', statusFromProgress(prg, status));
+    fd.set('progress', String(prg));
     fd.set('evidence_url', evi);
     setErr('');
     start(async () => {
@@ -264,7 +267,9 @@ function MyTaskModal({
             <div>
               <label className="f">Tiến độ (%)</label>
               <input className="i" type="number" min={0} max={100} value={status === 'done' ? 100 : progress}
-                disabled={status === 'done'} onChange={(e) => setProgress(Number(e.target.value))} />
+                disabled={status === 'done'}
+                onChange={(e) => { const n = Number(e.target.value); setProgress(n); setStatus((prev) => statusFromProgress(n, prev) as Status); }} />
+              <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>Trạng thái tự theo tiến độ (100% → Xong)</div>
             </div>
           </div>
           <label className="f">Link minh chứng <span className="muted" style={{ fontWeight: 400 }}>(tuỳ chọn)</span></label>

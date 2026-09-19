@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-18.200';
+export const GUIDE_VERSION = '2026-09-19.201';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,15 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '19/09/2026 (Cập nhật việc gọn hơn · báo bình luận đủ người · export báo cáo cấp)',
+    items: [
+      'Modal công việc: nút cá nhân hoá — người NHẬN việc thấy "Cập nhật công việc", người GIAO thấy "Sửa công việc".',
+      'Cập nhật việc: chỉ cần nhập TIẾN ĐỘ, TRẠNG THÁI tự theo (100% → Xong; 1–99% → Đang làm; 0% → Chưa làm; giữ Vướng/Huỷ nếu đang đặt) — hết cảnh nhập 100% mà vẫn "chưa hoàn thành".',
+      'Bình luận công việc: nay báo cho MỌI người liên quan kể cả khi KHÔNG @tag — người phụ trách, người giao, chủ trì OKR và ai đã từng trao đổi trong việc đó (tránh miss).',
+      'Export "Báo cáo đánh giá OKR theo cấp": thêm cột "Người phụ trách" (PIC từng OKR) ở sheet Chi tiết + đổi tên cột "Kết quả có trọng số (%)" → "Kết quả hoàn thành OKR (%)".',
+    ],
+  },
   {
     date: '18/09/2026 (Tab Công việc: việc con lồng dưới việc cha)',
     items: [

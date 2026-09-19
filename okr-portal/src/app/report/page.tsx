@@ -129,7 +129,7 @@ export default async function ReportPage({ searchParams }: { searchParams: { per
       const byPeriod = new Map<string, ReportItem[]>();
       for (const o of objs) {
         const arr = byPeriod.get(o.period_id) ?? [];
-        arr.push({ id: o.id, code: o.code, title: o.title, progress: o.progress, weight: o.weight ?? 1 });
+        arr.push({ id: o.id, code: o.code, title: o.title, progress: o.progress, weight: o.weight ?? 1, owner_email: o.owner_email ?? null, owner_name: o.owner_name ?? null });
         byPeriod.set(o.period_id, arr);
       }
       monthGroups = childMonths

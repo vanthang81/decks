@@ -14,6 +14,7 @@ import NumberInput from '@/components/NumberInput';
 import UserLink from '@/components/UserLink';
 import { ProgressBar } from '@/components/ui';
 import { fmtVnd, fmtDate } from '@/lib/format';
+import { statusFromProgress } from '@/lib/status-progress';
 
 // Hằng số lặp lại từ lib (KHÔNG import initiatives.ts để tránh kéo pg vào client bundle).
 type Status = 'todo' | 'in_progress' | 'blocked' | 'done' | 'canceled';
@@ -506,6 +507,14 @@ function EditModal({
   const [err, setErr] = useState<string | null>(null);
   // Bấm vào việc → mở CHI TIẾT (chỉ xem) trước; bấm "Sửa" mới sang form (CFO 06/08, đồng bộ TaskEditModal).
   const [mode, setMode] = useState<'view' | 'edit'>('view');
+  // Tiến độ + trạng thái controlled → gõ tiến độ thì trạng thái TỰ THEO (CFO/Liễu 19/09, đồng bộ TaskEditModal).
+  const [stat, setStat] = useState<Status>(card.status);
+  const [prog, setProg] = useState<string>(String(card.progress));
+  const onProg = (v: string) => {
+    setProg(v);
+    const n = Number(v);
+    if (Number.isFinite(n)) setStat((prev) => statusFromProgress(n, prev) as Status);
+  };
   const [addKid, setAddKid] = useState(false);
   // Việc con (sub-task) — chia nhỏ MỌI việc (kể cả việc gắn KR); dùng chung createSubtaskAction (#42).
   const [subTitle, setSubTitle] = useState('');
@@ -554,6 +563,10 @@ function EditModal({
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     fd.set('id', card.id);
+    // An toàn: trạng thái khớp tiến độ khi lưu (100% → Xong). Việc có con → tiến độ disabled (không gửi) nên bỏ qua.
+    if (fd.has('progress') && fd.has('status')) {
+      fd.set('status', statusFromProgress(Number(fd.get('progress')), fd.get('status') as Status));
+    }
     run(() => save(fd));
   };
 
@@ -720,7 +733,8 @@ function EditModal({
               <div></div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="button" className="btn ghost sm" onClick={onClose}>Đóng</button>
-                {canEdit && <button type="button" className="btn sm" onClick={() => { setErr(null); setMode('edit'); }}>✏️ Sửa</button>}
+                {/* Nhãn cá nhân hoá (CFO/Liễu 19/09): người GIAO/quản → "Sửa công việc"; người NHẬN → "Cập nhật công việc". */}
+                {canEdit && <button type="button" className="btn sm" onClick={() => { setErr(null); setMode('edit'); }}>{canManage ? '✏️ Sửa công việc' : '✏️ Cập nhật công việc'}</button>}
               </div>
             </div>
           </div>
@@ -947,7 +961,7 @@ function EditModal({
             <div className="row">
               <div>
                 <label className="f">Trạng thái</label>
-                <select className="i" name="status" defaultValue={card.status}>
+                <select className="i" name="status" value={stat} onChange={(e) => setStat(e.target.value as Status)}>
                   {COLUMNS.map((s) => (
                     <option key={s} value={s}>
                       {STATUS_LABEL[s]}
@@ -960,12 +974,15 @@ function EditModal({
                 <input
                   className="i"
                   name="progress"
-                  defaultValue={card.progress}
+                  value={prog}
+                  onChange={(e) => onProg(e.target.value)}
                   disabled={hasChildren}
                   title={hasChildren ? 'Tiến độ tự cuộn từ mục con — sửa ở từng công việc con' : undefined}
                 />
-                {hasChildren && (
+                {hasChildren ? (
                   <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>Tự cuộn từ mục con</div>
+                ) : (
+                  <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>Trạng thái tự theo tiến độ (100% → Xong)</div>
                 )}
               </div>
               {canManage && (

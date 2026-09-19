@@ -476,18 +476,19 @@ export function buildOkrReportWorkbook(periodLabel: string, rep: OkrLevelReport)
     ['Kỳ', periodLabel],
     ['Kết quả tổng công ty (%)', rep.companyTotal],
     [],
-    ['Cấp', 'Mã', 'Nhóm / Đơn vị / Người phụ trách', 'Số OKR', 'Kết quả có trọng số (%)'],
+    ['Cấp', 'Mã', 'Nhóm / Đơn vị / Người phụ trách', 'Số OKR', 'Kết quả hoàn thành OKR (%)'],
   ];
   for (const lv of REP_LEVELS) {
     for (const g of lv.pick(rep)) sum.push([lv.label, g.code ?? '', g.name, g.count, g.weighted]);
   }
 
-  // Sheet 2 — Chi tiết: mọi OKR (phẳng) kèm trọng số & tiến độ.
-  const detail: (string | number)[][] = [['Cấp', 'Nhóm', 'Mã OKR', 'Tên OKR', 'Trọng số', 'Tiến độ (%)']];
+  // Sheet 2 — Chi tiết: mọi OKR (phẳng) kèm NGƯỜI PHỤ TRÁCH (để HR lấy PIC không phải map lại — CFO 19/09)
+  // + trọng số & tiến độ.
+  const detail: (string | number)[][] = [['Cấp', 'Nhóm / Đơn vị', 'Người phụ trách', 'Mã OKR', 'Tên OKR', 'Trọng số', 'Kết quả hoàn thành OKR (%)']];
   for (const lv of REP_LEVELS) {
     for (const g of lv.pick(rep)) {
       for (const it of g.items) {
-        detail.push([lv.label, g.name, it.code ?? '', it.title, it.weight, Math.round(it.progress)]);
+        detail.push([lv.label, g.name, it.owner_name || it.owner_email || '', it.code ?? '', it.title, it.weight, Math.round(it.progress)]);
       }
     }
   }

@@ -7,7 +7,7 @@ import { query } from './db';
 // Mỗi nhóm: tổng = bình quân CÓ TRỌNG SỐ tiến độ các OKR trong nhóm = Σ(progress·weight) / Σ(weight).
 // (weight mặc định 1 → giống bình quân thường). Kèm danh sách OKR để trace-back tới /objectives/[id].
 
-export type ReportItem = { id: string; code: string | null; title: string; progress: number; weight: number };
+export type ReportItem = { id: string; code: string | null; title: string; progress: number; weight: number; owner_email: string | null; owner_name: string | null };
 export type ReportGroup = {
   key: string;
   name: string;
@@ -44,7 +44,7 @@ function weightedAvg(items: ReportItem[]): number {
 }
 
 function toItem(o: ObjectiveRow): ReportItem {
-  return { id: o.id, code: o.code, title: o.title, progress: o.progress, weight: o.weight ?? 1 };
+  return { id: o.id, code: o.code, title: o.title, progress: o.progress, weight: o.weight ?? 1, owner_email: o.owner_email ?? null, owner_name: o.owner_name ?? null };
 }
 
 function groupByUnit(rows: ObjectiveRow[], units: Unit[]): ReportGroup[] {
@@ -129,22 +129,23 @@ export async function okrLevelReport(
   type PLink = {
     project_id: string; pcode: string | null; pname: string;
     id: string; code: string | null; title: string; progress: number; weight: number;
-    level: string; unit_id: string | null; owner_email: string | null;
+    level: string; unit_id: string | null; owner_email: string | null; owner_name: string | null;
   };
   const links = await query<PLink>(
     `SELECT po.project_id, pr.code AS pcode, pr.name AS pname,
             o.id, o.code, o.title, o.progress::float8 AS progress, COALESCE(o.weight, 1)::float8 AS weight,
-            o.level, o.unit_id, o.owner_email
+            o.level, o.unit_id, o.owner_email, ou.display_name AS owner_name
        FROM okr_project_objectives po
        JOIN okr_projects pr ON pr.id = po.project_id
        JOIN okr_objectives o ON o.id = po.objective_id
+       LEFT JOIN okr_users ou ON ou.email = o.owner_email
       WHERE pr.status <> 'archived'`,
   ).catch(() => [] as PLink[]);
   const byProj = new Map<string, { code: string | null; name: string; items: ReportItem[] }>();
   for (const l of links) {
     if (canView && !canView({ unit_id: l.unit_id, owner_email: l.owner_email, level: l.level as ObjectiveRow['level'] })) continue;
     const g = byProj.get(l.project_id) ?? { code: l.pcode, name: l.pname, items: [] };
-    g.items.push({ id: l.id, code: l.code, title: l.title, progress: l.progress, weight: l.weight ?? 1 });
+    g.items.push({ id: l.id, code: l.code, title: l.title, progress: l.progress, weight: l.weight ?? 1, owner_email: l.owner_email ?? null, owner_name: l.owner_name ?? null });
     byProj.set(l.project_id, g);
   }
   const projectGroups: ReportGroup[] = [...byProj.entries()]

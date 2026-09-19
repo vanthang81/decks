@@ -13,6 +13,7 @@ import UserLink from '@/components/UserLink';
 import { useToast } from '@/components/ToastProvider';
 import { ProgressBar } from '@/components/ui';
 import { fmtVnd, fmtDate } from '@/lib/format';
+import { statusFromProgress } from '@/lib/status-progress';
 import type { TaskRow } from '@/lib/initiatives';
 import type { PersonOpt, UnitOpt, ProjectOpt } from '@/components/ExecutionTabs';
 
@@ -64,6 +65,14 @@ export default function TaskEditModal({
   const editable = canManage || isAssignee;
   // Bấm vào việc → mở CHI TIẾT (chỉ xem) trước; bấm "Sửa" mới sang form chỉnh sửa (CFO 06/08).
   const [mode, setMode] = useState<'view' | 'edit'>('view');
+  // Tiến độ + trạng thái controlled → gõ tiến độ thì trạng thái TỰ THEO (CFO/Liễu 19/09).
+  const [prog, setProg] = useState<string>(String(task.progress));
+  const [stat, setStat] = useState<Status>(task.status);
+  const onProg = (v: string) => {
+    setProg(v);
+    const n = Number(v);
+    if (Number.isFinite(n)) setStat((prev) => statusFromProgress(n, prev));
+  };
   const depLabels = depInitial
     .map((id) => depOptions.find((o) => o.value === id)?.label)
     .filter(Boolean) as string[];
@@ -80,6 +89,10 @@ export default function TaskEditModal({
       fd.set('key_result_id', sameObj ? (task.key_result_id ?? '') : '');
     }
     if (!fd.has('meeting_id')) fd.set('meeting_id', task.meeting_id ?? '');
+    // An toàn: trạng thái luôn khớp tiến độ khi lưu (100% → Xong), phòng khi mở form sẵn 100% mà chưa gõ lại.
+    if (fd.has('progress') && fd.has('status')) {
+      fd.set('status', statusFromProgress(Number(fd.get('progress')), fd.get('status') as Status));
+    }
     setErr('');
     start(async () => {
       try {
@@ -301,7 +314,8 @@ export default function TaskEditModal({
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="button" className="btn ghost sm" onClick={onClose}>Đóng</button>
-                {editable && <button type="button" className="btn sm" onClick={() => { setErr(''); setMode('edit'); }}>✏️ Sửa công việc</button>}
+                {/* Nhãn cá nhân hoá (CFO/Liễu 19/09): người GIAO/quản → "Sửa"; người NHẬN việc → "Cập nhật". */}
+                {editable && <button type="button" className="btn sm" onClick={() => { setErr(''); setMode('edit'); }}>{canManage ? '✏️ Sửa công việc' : '✏️ Cập nhật công việc'}</button>}
               </div>
             </div>
           </div>
@@ -331,7 +345,7 @@ export default function TaskEditModal({
               <div className="row">
                 <div>
                   <label className="f">Trạng thái</label>
-                  <select className="i" name="status" defaultValue={task.status}>
+                  <select className="i" name="status" value={stat} onChange={(e) => setStat(e.target.value as Status)}>
                     {COLUMNS.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
                   </select>
                 </div>
@@ -345,7 +359,8 @@ export default function TaskEditModal({
                 </div>
                 <div>
                   <label className="f">Tiến độ (%)</label>
-                  <input className="i" name="progress" type="number" min={0} max={100} defaultValue={task.progress} />
+                  <input className="i" name="progress" type="number" min={0} max={100} value={prog} onChange={(e) => onProg(e.target.value)} />
+                  <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>Trạng thái tự cập nhật theo tiến độ (100% → Xong)</div>
                 </div>
               </div>
               <div className="row">
@@ -421,13 +436,14 @@ export default function TaskEditModal({
               <div className="row">
                 <div>
                   <label className="f">Trạng thái</label>
-                  <select className="i" name="status" defaultValue={task.status}>
+                  <select className="i" name="status" value={stat} onChange={(e) => setStat(e.target.value as Status)}>
                     {COLUMNS.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="f">Tiến độ (%)</label>
-                  <input className="i" name="progress" type="number" min={0} max={100} defaultValue={task.progress} />
+                  <input className="i" name="progress" type="number" min={0} max={100} value={prog} onChange={(e) => onProg(e.target.value)} />
+                  <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>Trạng thái tự cập nhật theo tiến độ (100% → Xong)</div>
                 </div>
               </div>
               <label className="f">Link minh chứng <span className="muted" style={{ fontWeight: 400 }}>(tuỳ chọn) — tài liệu/hình ảnh chứng minh kết quả</span></label>

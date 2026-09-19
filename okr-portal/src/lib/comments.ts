@@ -103,14 +103,27 @@ async function entityStakeholders(entityType: EntityType, entityId: string): Pro
     );
     if (k?.owner) emails.add(k.owner);
   } else {
-    const i = await queryOne<{ owner_email: string | null; oowner: string | null }>(
-      'SELECT i.owner_email, o.owner_email AS oowner FROM okr_initiatives i LEFT JOIN okr_objectives o ON o.id=i.objective_id WHERE i.id=$1',
+    // Việc: người PHỤ TRÁCH (owner) + NGƯỜI GIAO (created_by) + chủ trì OKR gốc → đều là "người liên quan"
+    // cần biết có bình luận, kể cả khi KHÔNG được @tag (CFO/Liễu 19/09 — tránh miss trao đổi).
+    const i = await queryOne<{ owner_email: string | null; created_by: string | null; oowner: string | null }>(
+      'SELECT i.owner_email, i.created_by, o.owner_email AS oowner FROM okr_initiatives i LEFT JOIN okr_objectives o ON o.id=i.objective_id WHERE i.id=$1',
       [entityId],
     );
     if (i?.owner_email) emails.add(i.owner_email);
+    if (i?.created_by) emails.add(i.created_by);
     if (i?.oowner) emails.add(i.oowner);
   }
   return [...emails];
+}
+
+/** Người ĐÃ THAM GIA thảo luận (từng bình luận) ở thực thể → báo khi có bình luận mới để không ai bị miss. */
+async function threadParticipants(entityType: EntityType, entityId: string): Promise<string[]> {
+  const rows = await query<{ author_email: string }>(
+    `SELECT DISTINCT author_email FROM okr_comments
+      WHERE entity_type=$1 AND entity_id=$2 AND deleted_at IS NULL AND author_email IS NOT NULL`,
+    [entityType, entityId],
+  );
+  return rows.map((r) => r.author_email);
 }
 
 /** Objective mà thực thể (objective/KR/việc) thuộc về — để kiểm quyền quản lý. */
@@ -175,13 +188,17 @@ export async function addComment(input: {
     };
     // 1) Nhắc tên / trả lời trực tiếp.
     if (recipients.length > 0) await notify({ ...base, recipients, type });
-    // 2) "Bình luận ở mục bạn phụ trách" — cho chủ trì/được giao (chưa nằm trong recipients, không phải người viết).
+    // 2) "Bình luận ở mục liên quan" — báo cho MỌI người liên quan kể cả KHÔNG được @tag (CFO/Liễu 19/09):
+    //    người phụ trách + NGƯỜI GIAO + chủ trì OKR (stakeholders) VÀ ai đã từng tham gia thảo luận (participants)
+    //    → trao đổi qua lại không ai bị miss. Loại người viết + người đã nhận ở (1).
     const already = new Set(recipients.map((r) => r.toLowerCase()));
     already.add(input.authorEmail.toLowerCase());
-    const stake = (await entityStakeholders(input.entityType, input.entityId)).filter(
-      (e) => !already.has(e.toLowerCase()),
-    );
-    if (stake.length > 0) await notify({ ...base, recipients: stake, type: 'comment_mine' });
+    const [stake, parts] = await Promise.all([
+      entityStakeholders(input.entityType, input.entityId),
+      threadParticipants(input.entityType, input.entityId),
+    ]);
+    const auto = [...new Set([...stake, ...parts].map((e) => e))].filter((e) => !already.has(e.toLowerCase()));
+    if (auto.length > 0) await notify({ ...base, recipients: auto, type: 'comment_mine' });
   } catch (e) {
     console.error('[comments] notify failed', e);
   }
