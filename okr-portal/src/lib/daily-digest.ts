@@ -174,7 +174,9 @@ const STATUS_VN: Record<string, string> = { todo: 'Chưa làm', in_progress: 'Đ
 
 function kpiTable(c: Counts): string {
   const cell = (n: number, l: string, color: string) =>
-    `<td style="background:#fff;border:1px solid #EDE7E0;border-radius:10px;padding:12px 6px;text-align:center;width:20%"><div style="font-size:23px;font-weight:800;color:${color};line-height:1">${n}</div><div style="font-size:11px;color:#7A6F6A;margin-top:3px">${l}</div></td>`;
+    // vertical-align:top + số line-height cố định để 5 SỐ luôn thẳng hàng ngang; nhãn dành sẵn chỗ 2 dòng
+    // (min-height) nên card có nhãn 1 dòng ("Quá hạn") KHÔNG bị lệch/ngắn hơn các card nhãn 2 dòng (mobile).
+    `<td style="background:#fff;border:1px solid #EDE7E0;border-radius:10px;padding:12px 4px;text-align:center;width:20%;vertical-align:top"><div style="font-size:23px;font-weight:800;color:${color};line-height:26px;height:26px">${n}</div><div style="font-size:11px;color:#7A6F6A;margin-top:4px;line-height:14px;min-height:28px">${l}</div></td>`;
   const sp = `<td style="width:6px"></td>`;
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 4px"><tr>${cell(c.total, 'Tổng việc', '#241C1A')}${sp}${cell(c.doing, 'Đang làm', '#2563eb')}${sp}${cell(c.todo, 'Chưa làm', '#7A6F6A')}${sp}${cell(c.overdue, 'Quá hạn', c.overdue > 0 ? '#B42318' : '#15803d')}${sp}${cell(c.done, 'Hoàn thành', '#15803d')}</tr></table>`;
 }
