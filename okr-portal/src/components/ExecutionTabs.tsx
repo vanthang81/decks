@@ -7,6 +7,7 @@ import Link from 'next/link';
 import CommentThread from '@/components/CommentThread';
 import ConfirmButton from '@/components/ConfirmButton';
 import SearchSelect from '@/components/SearchSelect';
+import SubtaskAddForm from '@/components/SubtaskAddForm';
 import { useToast } from '@/components/ToastProvider';
 import { personSelectOptions } from '@/lib/person-options';
 import { unitTreeOptions } from '@/lib/unit-options';
@@ -516,9 +517,7 @@ function EditModal({
     if (Number.isFinite(n)) setStat((prev) => statusFromProgress(n, prev) as Status);
   };
   const [addKid, setAddKid] = useState(false);
-  // Việc con (sub-task) — chia nhỏ MỌI việc (kể cả việc gắn KR); dùng chung createSubtaskAction (#42).
-  const [subTitle, setSubTitle] = useState('');
-  const [subOwner, setSubOwner] = useState('');
+  // Việc con (sub-task) — chia nhỏ MỌI việc (kể cả việc gắn KR); form đầy đủ trường (SubtaskAddForm, #53).
   const [showSubAdd, setShowSubAdd] = useState(false);
   const [inProject, setInProject] = useState<boolean>(!!card.project_id);
   const [newProj, setNewProj] = useState(false);
@@ -581,14 +580,6 @@ function EditModal({
 
   const canAddSub = !!createSubtask && canEdit;
   const subDone = subtasks.filter((s) => s.status === 'done').length;
-  const addSub = () => {
-    if (!createSubtask || !subTitle.trim()) return;
-    const fd = new FormData();
-    fd.set('parent_id', card.id);
-    fd.set('title', subTitle.trim());
-    if (subOwner) fd.set('owner_email', subOwner);
-    run(() => createSubtask(fd)); // run() đóng popup + toast + refresh (giống Thêm mục con)
-  };
 
   const doDelete = () => {
     const fd = new FormData();
@@ -712,18 +703,18 @@ function EditModal({
                 {subtasks.length > 0 && (
                   <p className="muted te-subs-note">Đã có việc con → tiến độ việc này TỰ tính bình quân theo các việc con.</p>
                 )}
-                {canAddSub && showSubAdd && (
-                  <div className="te-sub-add">
-                    <input className="i" placeholder="Tên việc con…" value={subTitle}
-                      onChange={(e) => setSubTitle(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSub(); } }} autoFocus />
-                    <SearchSelect value={subOwner} onChange={setSubOwner} emptyLabel="— Giao cho (tuỳ chọn) —"
-                      options={personSelectOptions(users, priorityEmails)} />
-                    <div className="te-sub-add-act">
-                      <button type="button" className="btn ghost sm" onClick={() => { setShowSubAdd(false); }}>Huỷ</button>
-                      <button type="button" className="btn sm" disabled={pending || !subTitle.trim()} onClick={addSub}>{pending ? 'Đang thêm…' : 'Thêm việc con'}</button>
-                    </div>
-                  </div>
+                {canAddSub && showSubAdd && createSubtask && (
+                  <SubtaskAddForm
+                    parentId={card.id}
+                    users={users}
+                    units={units}
+                    priorityEmails={priorityEmails}
+                    defaultOwner={card.owner_email}
+                    defaultUnitId={card.unit_id}
+                    createSubtask={createSubtask}
+                    onDone={() => setShowSubAdd(false)}
+                    onCancel={() => setShowSubAdd(false)}
+                  />
                 )}
               </div>
             )}

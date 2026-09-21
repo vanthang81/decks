@@ -9,6 +9,7 @@ import { unitTreeOptions } from '@/lib/unit-options';
 import NumberInput from '@/components/NumberInput';
 import MultiSelect, { type MSOption } from '@/components/MultiSelect';
 import CommentThread from '@/components/CommentThread';
+import SubtaskAddForm from '@/components/SubtaskAddForm';
 import UserLink from '@/components/UserLink';
 import { useToast } from '@/components/ToastProvider';
 import { ProgressBar } from '@/components/ui';
@@ -123,33 +124,10 @@ export default function TaskEditModal({
     });
   };
 
-  // ── Việc con (sub-task) — chia nhỏ công việc; người giao/quản HOẶC người được giao đều thêm được ──
-  const [subTitle, setSubTitle] = useState('');
-  const [subOwner, setSubOwner] = useState('');
-  const [subErr, setSubErr] = useState('');
+  // ── Việc con (sub-task) — form đầy đủ trường như tạo Công việc (SubtaskAddForm dùng chung) ──
   const [showSubAdd, setShowSubAdd] = useState(false);
   const canAddSub = !!createSubtask && editable;
   const subDone = subtasks.filter((s) => s.status === 'done').length;
-  const addSub = () => {
-    if (!createSubtask || !subTitle.trim()) return;
-    const fd = new FormData();
-    fd.set('parent_id', task.id);
-    fd.set('title', subTitle.trim());
-    if (subOwner) fd.set('owner_email', subOwner);
-    setSubErr('');
-    start(async () => {
-      try {
-        await createSubtask(fd);
-        setSubTitle('');
-        setSubOwner('');
-        setShowSubAdd(false);
-        toast('Đã thêm việc con', 'success');
-        router.refresh();
-      } catch (e2) {
-        setSubErr(e2 instanceof Error ? e2.message : 'Không thêm được việc con.');
-      }
-    });
-  };
 
 
   return (
@@ -259,7 +237,7 @@ export default function TaskEditModal({
                 <div className="te-subs-head">
                   <span className="te-subs-title">🧩 Việc con{subtasks.length > 0 && <span className="muted" style={{ fontWeight: 400 }}> · {subDone}/{subtasks.length} xong</span>}</span>
                   {canAddSub && !showSubAdd && (
-                    <button type="button" className="btn ghost sm" onClick={() => { setSubErr(''); setShowSubAdd(true); }}>+ Thêm việc con</button>
+                    <button type="button" className="btn ghost sm" onClick={() => setShowSubAdd(true)}>+ Thêm việc con</button>
                   )}
                 </div>
                 {subtasks.length > 0 ? (
@@ -281,19 +259,17 @@ export default function TaskEditModal({
                 {subtasks.length > 0 && (
                   <p className="muted te-subs-note">Đã có việc con → tiến độ việc này TỰ tính bình quân theo các việc con.</p>
                 )}
-                {canAddSub && showSubAdd && (
-                  <div className="te-sub-add">
-                    <input className="i" placeholder="Tên việc con…" value={subTitle}
-                      onChange={(e) => setSubTitle(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSub(); } }} autoFocus />
-                    <SearchSelect value={subOwner} onChange={setSubOwner} emptyLabel="— Giao cho (tuỳ chọn) —"
-                      options={users.map((u) => ({ value: u.email, label: u.name, sub: u.title ?? undefined }))} />
-                    <div className="te-sub-add-act">
-                      <button type="button" className="btn ghost sm" onClick={() => { setShowSubAdd(false); setSubErr(''); }}>Huỷ</button>
-                      <button type="button" className="btn sm" disabled={pending || !subTitle.trim()} onClick={addSub}>{pending ? 'Đang thêm…' : 'Thêm việc con'}</button>
-                    </div>
-                    {subErr && <div className="te-err">{subErr}</div>}
-                  </div>
+                {canAddSub && showSubAdd && createSubtask && (
+                  <SubtaskAddForm
+                    parentId={task.id}
+                    users={users}
+                    units={units}
+                    defaultOwner={task.owner_email}
+                    defaultUnitId={task.unit_id}
+                    createSubtask={createSubtask}
+                    onDone={() => setShowSubAdd(false)}
+                    onCancel={() => setShowSubAdd(false)}
+                  />
                 )}
               </div>
             )}

@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-19.201';
+export const GUIDE_VERSION = '2026-09-20.202';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '20/09/2026 (Việc con khai đầy đủ như tạo Công việc · export tách cột Người phụ trách)',
+    items: [
+      'Việc con (sub-task): form thêm việc con nay khai ĐẦY ĐỦ như tạo Công việc — Tên, Mô tả, Kết quả đầu ra, Giao cho, Đơn vị phụ trách, Ưu tiên, Bắt đầu, HẠN (deadline), NS kế hoạch/Đã chi (trước chỉ có Tên việc + Giao cho, không đặt được hạn). Việc con vẫn kế thừa OKR/dự án/cuộc họp từ việc cha.',
+      'Export "Báo cáo đánh giá OKR theo cấp" — sheet Tổng hợp: tách cột gộp "Nhóm / Đơn vị / Người phụ trách" thành 2 cột riêng "Nhóm / Đơn vị" và "Người phụ trách" (điền người chủ trì từng nhóm — cấp đơn vị suy từ chủ trì các OKR; cấp Cá nhân là chính người đó).',
+    ],
+  },
   {
     date: '19/09/2026 (Cập nhật việc gọn hơn · báo bình luận đủ người · export báo cáo cấp)',
     items: [

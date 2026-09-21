@@ -840,26 +840,30 @@ export async function createSubtaskAction(fd: FormData) {
   const title = str(fd, 'title').trim();
   if (!title) throw new Error('Thiếu tên việc con.');
   const owner = orNull(str(fd, 'owner_email')) ?? parent.owner_email;
+  // Đơn vị: dùng ô form nếu có gửi (rỗng → createInitiative TỰ lấy đơn vị người giao qua resolveTaskUnit);
+  // caller cũ không gửi ô này → kế thừa đơn vị việc cha.
+  const unitId = fd.has('unit_id') ? orNull(str(fd, 'unit_id')) : parent.unit_id;
   // createInitiative tự sinh mã, tự thông báo người được giao & roll-up tiến độ việc cha.
+  // Việc con nay khai đầy đủ trường như tạo Công việc (mô tả, KQĐR, ngày, ưu tiên, ngân sách) — CFO/Lieu 20/09.
   await createInitiative({
     objective_id: parent.objective_id,
     key_result_id: parent.key_result_id,
     parent_id: parent.id,
     kind: 'action',
     title,
-    description: null,
+    description: orNull(str(fd, 'description')),
     owner_email: owner,
-    unit_id: parent.unit_id,
+    unit_id: unitId,
     project_id: parent.project_id,
     meeting_id: parent.meeting_id,
     status: 'todo',
     priority: (str(fd, 'priority') || parent.priority || 'medium') as Priority,
-    start_on: null,
+    start_on: orNull(str(fd, 'start_on')),
     due_on: orNull(str(fd, 'due_on')),
-    budget_planned: 0,
-    budget_actual: 0,
+    budget_planned: num(fd, 'budget_planned'),
+    budget_actual: num(fd, 'budget_actual'),
     budget_source: null,
-    expected_output: null,
+    expected_output: orNull(str(fd, 'expected_output')),
     created_by: user.email,
   });
   await auditTask(user.email, 'initiative.create', parent, { title, subtask: true });
