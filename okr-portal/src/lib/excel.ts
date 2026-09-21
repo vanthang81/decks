@@ -468,18 +468,43 @@ const REP_LEVELS: { label: string; pick: (r: OkrLevelReport) => ReportGroup[] }[
   { label: 'Cá nhân', pick: (r) => r.individuals },
 ];
 
+// Người phụ trách của 1 NHÓM = danh sách người chủ trì DUY NHẤT của các OKR trong nhóm
+// (suy từ owner_name/owner_email của từng OKR) — để cột "Người phụ trách" ở sheet Tổng hợp có dữ liệu
+// cho CẢ cấp đơn vị (Khối/Phòng) chứ không chỉ cấp Cá nhân (CFO 20/09, tách theo yêu cầu team).
+function groupOwners(g: ReportGroup): string {
+  const seen = new Set<string>();
+  const names: string[] = [];
+  for (const it of g.items) {
+    const nm = (it.owner_name || it.owner_email || '').trim();
+    if (!nm) continue;
+    const k = nm.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    names.push(nm);
+  }
+  return names.join(', ');
+}
+
 /** Dựng workbook "Báo cáo đánh giá OKR theo cấp" của 1 kỳ: sheet Tổng hợp + Chi tiết OKR. */
 export function buildOkrReportWorkbook(periodLabel: string, rep: OkrLevelReport): Buffer {
   // Sheet 1 — Tổng hợp: kết quả tổng công ty + kết quả từng nhóm theo cấp.
+  // Cột "Nhóm / Đơn vị" và "Người phụ trách" TÁCH RIÊNG (trước gộp 1 cột) — CFO 20/09.
   const sum: (string | number)[][] = [
     ['BÁO CÁO ĐÁNH GIÁ OKR THEO CẤP'],
     ['Kỳ', periodLabel],
     ['Kết quả tổng công ty (%)', rep.companyTotal],
     [],
-    ['Cấp', 'Mã', 'Nhóm / Đơn vị / Người phụ trách', 'Số OKR', 'Kết quả hoàn thành OKR (%)'],
+    ['Cấp', 'Mã', 'Nhóm / Đơn vị', 'Người phụ trách', 'Số OKR', 'Kết quả hoàn thành OKR (%)'],
   ];
   for (const lv of REP_LEVELS) {
-    for (const g of lv.pick(rep)) sum.push([lv.label, g.code ?? '', g.name, g.count, g.weighted]);
+    const isIndiv = lv.label === 'Cá nhân';
+    for (const g of lv.pick(rep)) {
+      // Cá nhân: nhóm CHÍNH LÀ người → cột đơn vị để trống, người phụ trách = tên người.
+      // Cấp đơn vị (Công ty/Khối/Phòng): đơn vị = tên nhóm, người phụ trách = (các) chủ trì OKR.
+      const unitCol = isIndiv ? '' : g.name;
+      const picCol = isIndiv ? g.name : groupOwners(g);
+      sum.push([lv.label, g.code ?? '', unitCol, picCol, g.count, g.weighted]);
+    }
   }
 
   // Sheet 2 — Chi tiết: mọi OKR (phẳng) kèm NGƯỜI PHỤ TRÁCH (để HR lấy PIC không phải map lại — CFO 19/09)
