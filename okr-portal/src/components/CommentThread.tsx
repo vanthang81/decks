@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import ConfirmButton from './ConfirmButton';
 
 type EntityType = 'objective' | 'key_result' | 'initiative';
@@ -23,6 +23,22 @@ function fmtTime(iso: string): string {
   return new Intl.DateTimeFormat('vi-VN', {
     timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
   }).format(d);
+}
+
+// Tô nổi bật thẻ @người trong nội dung bình luận (CFO 25/09): chỉ tô những người
+// THỰC SỰ được gắn thẻ (labels = "@Tên" suy từ mentions) → chip màu thương hiệu, dễ theo dõi.
+function highlightMentions(body: string, labels: string[]): ReactNode {
+  const uniq = Array.from(new Set(labels.filter(Boolean)));
+  if (uniq.length === 0) return body;
+  // Ghép regex: nhãn DÀI trước (tránh "@An" khớp lồng trong "@An Nhiên"); escape ký tự đặc biệt.
+  const esc = uniq
+    .sort((a, b) => b.length - a.length)
+    .map((l) => l.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const re = new RegExp('(' + esc.join('|') + ')', 'g');
+  const parts = body.split(re);
+  return parts.map((p, i) =>
+    uniq.includes(p) ? <span key={i} className="cmt-mention">{p}</span> : <span key={i}>{p}</span>,
+  );
 }
 
 // Avatar Google nếu có, ngược lại chữ cái đầu.
@@ -193,6 +209,7 @@ export default function CommentThread({
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const fetchedRef = useRef(false);
+  const nameOf = (email: string) => users.find((u) => u.email === email)?.name ?? email;
 
   const load = async () => {
     const r = await fetch(`/api/comments?entityType=${entityType}&entityId=${entityId}`);
@@ -304,7 +321,7 @@ export default function CommentThread({
             />
           ) : (
             <>
-              <div className="cmt-body">{c.body}</div>
+              <div className="cmt-body">{highlightMentions(c.body, c.mentions.map((m) => `@${nameOf(m)}`))}</div>
               <div className="cmt-actions">
                 {!isReply && (
                   <button className="linkbtn" type="button" onClick={() => setReplyTo(replyTo === c.id ? null : c.id)}>

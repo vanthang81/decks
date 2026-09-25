@@ -6,7 +6,7 @@
 // 1 dòng vào CHANGELOG (xem CLAUDE.md "Quy tắc cập nhật tài liệu").
 // ============================================================================
 
-export const GUIDE_VERSION = '2026-09-20.202';
+export const GUIDE_VERSION = '2026-09-25.203';
 
 export type Block = { p?: string; list?: string[]; note?: string };
 export type GuideSection = { id: string; title: string; blocks: Block[] };
@@ -682,6 +682,13 @@ export const GLOSSARY: { term: string; def: string }[] = [
 
 export type ChangeLog = { date: string; items: string[] };
 export const CHANGELOG: ChangeLog[] = [
+  {
+    date: '25/09/2026 (Popup rộng hơn theo cửa sổ · thẻ @người nổi bật trong bình luận)',
+    items: [
+      'Cửa sổ pop-up (chi tiết công việc, sửa OKR/KR/dự án, KPI, lịch, xác nhận…) nay RỘNG hơn theo tỷ lệ màn hình, đọc thoáng hơn trên máy tính; trên điện thoại vẫn vừa khít khung. (Sửa lỗi popup chi tiết công việc bị co hẹp.)',
+      'Thẻ @người trong bình luận được tô màu thương hiệu nổi bật (chip) — dễ nhận ra ai được nhắc tên để theo dõi & phản hồi.',
+    ],
+  },
   {
     date: '20/09/2026 (Việc con khai đầy đủ như tạo Công việc · export tách cột Người phụ trách)',
     items: [

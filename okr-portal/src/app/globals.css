@@ -679,7 +679,9 @@ table.t th.sortable.active { color: var(--primary); }
 
 /* Popup sửa/cập nhật/xoá công việc từ trang Công việc */
 /* Popup chi tiết công việc — RỘNG theo tỷ lệ cửa sổ (CFO 15/09): to trên desktop, gọn trên mobile. */
-.task-edit { max-width: min(920px, 94vw); max-height: 92vh; overflow-y: auto; }
+/* Dùng .okr-modal.task-edit (2 lớp) để THẮNG rule .okr-modal base bất kể thứ tự nguồn
+   (trước đây .okr-modal {max-width:620} ở dưới file GHI ĐÈ .task-edit → modal bị co còn 620px). */
+.okr-modal.task-edit { max-width: min(1120px, 95vw); max-height: 92vh; overflow-y: auto; }
 .te-links { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; }
 .te-links a { text-decoration: none; }
 .te-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
@@ -767,7 +769,7 @@ td:has(> .row-actions) { white-space: nowrap; width: 1%; }
 .kpi-result-empty { font-size: 12px; }
 
 /* Popup kết quả KPI */
-.kpi-result-modal { max-width: 480px; }
+.okr-modal.kpi-result-modal { max-width: min(600px, 94vw); }
 .kpi-result-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 10px 0 2px; }
 .kpi-rg-cell {
   display: flex; flex-direction: column; gap: 3px; align-items: flex-start;
@@ -1001,7 +1003,7 @@ td:has(> .row-actions) { white-space: nowrap; width: 1%; }
 @keyframes okrFade { from { opacity: 0; } to { opacity: 1; } }
 .okr-modal {
   background: var(--card); border: 1px solid var(--line); border-radius: 14px;
-  width: 100%; max-width: 620px; padding: 18px 20px 20px;
+  width: 100%; max-width: min(820px, 94vw); padding: 18px 20px 20px;
   box-shadow: 0 18px 50px rgba(0,0,0,.28); animation: okrPop .14s ease;
   text-align: left; /* reset — modal có thể nằm trong container căn phải (vd cột header) */
   font-weight: 400; /* reset — modal có thể nằm trong tiêu đề in đậm (.pagetitle) → thừa kế bold */
@@ -1074,7 +1076,7 @@ a.ctx-chip:hover { text-decoration: underline; }
 }
 .cf-modal {
   background: var(--card); border: 1px solid var(--line); border-radius: 14px;
-  width: 100%; max-width: 400px; padding: 18px 20px 16px; text-align: left;
+  width: 100%; max-width: min(460px, 94vw); padding: 18px 20px 16px; text-align: left;
   box-shadow: 0 18px 50px rgba(0,0,0,.30); animation: okrPop .14s ease;
 }
 .cf-title { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 6px; }
@@ -1342,7 +1344,7 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
 i.cal-task, .cal-dot.cal-task { background: var(--primary); } i.cal-meeting, .cal-dot.cal-meeting { background: #2563eb; } i.cal-checkin, .cal-dot.cal-checkin { background: #1f9d55; }
 .cal-more { font-size: 10.5px; color: var(--muted); padding-left: 3px; font-weight: 700; }
 /* Modal chi tiết ngày + thêm nhanh */
-.cal-modal { max-width: 520px; }
+.okr-modal.cal-modal { max-width: min(680px, 94vw); }
 .cal-modal-body { padding: 2px 2px 4px; }
 .cal-daylist { list-style: none; margin: 2px 0 12px; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .cal-dayitem { display: flex; align-items: flex-start; gap: 9px; padding: 7px 8px; border-radius: 8px; }
@@ -1500,9 +1502,9 @@ a.prof-row:hover { background: var(--primary-tint); border-radius: 6px; }
 .flexbtw { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 /* Hàng tiêu đề có nút hành động ở GÓC PHẢI-TRÊN (nút canh đỉnh, không kéo giãn theo tiêu đề nhiều dòng) */
 .flexbtw-top { align-items: flex-start; }
-.okr-modal.okr-modal-wide { max-width: 760px; }
+.okr-modal.okr-modal-wide { max-width: min(960px, 95vw); }
 /* Popup chi tiết công việc (Báo cáo thực hiện) — bảng evidence + nhật ký thay đổi */
-.okr-modal.tdm { max-width: 1040px; }
+.okr-modal.tdm { max-width: min(1280px, 96vw); }
 .tdm-scroll { overflow: auto; max-height: 72vh; margin-top: 6px; }
 .tdm-scroll table.tdm-table thead th { position: sticky; top: 0; z-index: 2; background: #F6F1EA; box-shadow: inset 0 -1px 0 var(--line); }
 .tdm-table { min-width: 860px; }
@@ -1662,7 +1664,7 @@ details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 
 .helptip:hover { background: var(--primary); color: #fff; text-decoration: none; }
 
 /* Popup hướng dẫn chi tiết */
-.help-modal { max-width: 560px; }
+.okr-modal.help-modal { max-width: min(720px, 94vw); }
 .help-where {
   display: inline-block; font-size: 12px; color: var(--muted); background: #F4EFE8;
   border-radius: 6px; padding: 3px 9px; margin: 2px 0 10px;
@@ -1814,6 +1816,8 @@ details.inline > summary { cursor: pointer; color: var(--primary); font-weight: 
 .cmt-head b { font-size: 13.5px; }
 .cmt-time { color: var(--muted); font-size: 11.5px; }
 .cmt-body { font-size: 13.5px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 1px; }
+/* Thẻ @người trong nội dung bình luận — chip màu thương hiệu, nổi bật để tiện theo dõi (CFO 25/09). */
+.cmt-mention { color: var(--primary); background: var(--primary-tint); font-weight: 700; border-radius: 5px; padding: 0 5px; white-space: nowrap; }
 .cmt-deleted { color: var(--muted); font-style: italic; }
 .cmt-mentions { color: var(--primary); font-size: 12px; margin-top: 2px; }
 .cmt-actions { display: flex; gap: 12px; margin-top: 3px; }
@@ -2612,14 +2616,14 @@ a.strat-bsc-cell:hover { text-decoration: none; box-shadow: 0 6px 18px rgba(0,0,
 .cmpl-ag-lbl { font-weight: 500; }
 .cmpl-addact { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
 .cmpl-addact-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.cmpl-modal { max-width: 760px; width: 96%; }
+.okr-modal.cmpl-modal { max-width: min(980px, 96vw); }
 .cmpl-form .f { margin-top: 8px; }
 .cmpl-form-sec { margin-top: 14px; font-weight: 600; color: var(--primary); border-top: 1px dashed var(--line); padding-top: 10px; }
 .cmpl-rowact { display: flex; gap: 4px; }
 
 /* ---- Gửi biên bản họp qua email (CFO 11/09) ---- */
 .md-minutes-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.sm-mail { max-width: 560px; width: 96%; }
+.okr-modal.sm-mail { max-width: min(720px, 94vw); }
 .sm-mail-recips { display: flex; flex-wrap: wrap; gap: 6px; max-height: 160px; overflow-y: auto; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: #fafafa; }
 .sm-mail-chip { background: var(--primary-tint); color: var(--ink); border-radius: 999px; padding: 2px 10px; font-size: 12.5px; white-space: nowrap; }
 .cmt-kbd-hint { align-self: center; margin-left: auto; font-size: 11.5px; color: var(--muted); }
