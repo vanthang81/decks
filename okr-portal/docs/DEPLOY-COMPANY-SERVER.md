@@ -1,374 +1,228 @@
-# Hướng dẫn cài đặt OKR Portal lên SERVER CÔNG TY
+# Triển khai app OKR lên SERVER CÔNG TY — Hướng dẫn & Prompt AI (bản cho OKR)
 
-> Runbook triển khai **okr-portal** lên server công ty, theo **đúng khuôn mẫu** đã dùng cho
-> **BTMH Control Tower (price-engine)**: Next.js standalone chạy Docker + host **nginx** (reverse proxy)
-> + **certbot/cert wildcard** + **PostgreSQL `btmh_data`** + **n8n** (deploy & cron).
+> Bản này KẾ THỪA playbook đã thành công với **BTMH MIS (price-engine bản công ty)** và **điều chỉnh cho
+> đúng app OKR**. Kiến trúc mục tiêu: **Docker Compose + Caddy (TLS Let's Encrypt) + Postgres RIÊNG (mạng
+> internal) + auto-deploy KÉO**, **KHÔNG dùng n8n**, DB **least-privilege**, di trú **mã hoá age**, bàn giao
+> **squash git sạch** — giống hệt BTMH MIS.
 >
-> Đối tượng đọc: CFO + đội IT/DevOps. Ngôn ngữ thao tác: shell trên server công ty.
-> Cập nhật lần đầu: 27/09/2026.
+> ⚠️ Bản này **THAY THẾ** runbook khuôn VPS cũ (host nginx + DB dùng chung + giữ n8n) trước đây — khuôn đó
+> KHÔNG đúng chuẩn công ty. Cập nhật: 27/09/2026.
 
 ---
 
-## 0. Điểm mấu chốt phải nhớ trước khi làm
+## §0. REVIEW NOTES — 6 điều chỉnh QUAN TRỌNG so với bản playbook gốc (áp riêng cho OKR)
 
-1. **OKR DÙNG CHUNG database `btmh_data` với price-engine + decks** (bảng prefix `okr_`), và **đọc bảng
-   `pe_pricing_config`** (của price-engine) để lấy cấu hình **Metabase → BigQuery** cho KPI.
-   → **Nếu price-engine đã lên server công ty** thì `btmh_data` + `pe_pricing_config` **đã có sẵn ở đó** →
-   việc cài OKR chủ yếu là: **build container + vhost domain riêng + chạy migration `okr_*` + nối cron**.
-   KHÔNG cần dựng lại Postgres/Metabase từ đầu.
-2. App **standalone** (Next.js `output:'standalone'`) → chạy 1 process Node trong container, cổng nội bộ **3000**.
-3. **Mỗi domain = 1 container** (cùng image, khác `AUTH_URL` + Google client) — vì Auth.js v5 build này KHÔNG
-   dựng redirect_uri từ header, bắt buộc đặt `AUTH_URL` cứng cho từng domain.
-4. **`.env` NẰM NGOÀI git** (chứa secret) — không bao giờ commit.
-5. **Migration `db/*.sql` số ≥ 320 tự chạy mỗi lần deploy** (idempotent). Baseline `001`–`31x` chỉ chạy 1 lần
-   lúc khởi tạo DB.
+Bản gốc viết cho price-engine nên có vài chỗ **không đúng với OKR**. Đã sửa trong tài liệu, tóm tắt để anh nắm:
 
----
-
-## 1. Thông tin cần THU THẬP trước (điền vào bảng này)
-
-| Hạng mục | Giá trị (điền) | Lấy ở đâu |
-|---|---|---|
-| IP server công ty | `__________` | Đội IT / nơi đã cài price-engine |
-| SSH user + key | `__________` | Đội IT (nên tạo cred n8n "SSH - VPS deploy (company)") |
-| Đã có Docker? | ☐ có ☐ chưa | `docker version` |
-| Đã có host nginx? | ☐ có ☐ chưa | `nginx -v` |
-| Đã có Postgres `btmh_data`? | ☐ có ☐ chưa | do price-engine mang sang |
-| Cổng Postgres (host) | `__________` (VPS cũ: 5435) | `docker ps`/`.env` price-engine |
-| Container/superuser Postgres | `__________` | như price-engine |
-| Đã có n8n? | ☐ có ☐ chưa | `automation.<domain>` |
-| Domain OKR sẽ dùng | `okr.baotinmanhhai.vn` (khuyến nghị) | DNS công ty |
-| Cert TLS | ☐ wildcard `*.baotinmanhhai.vn` ☐ certbot | như price-engine |
-| Google OAuth client cho domain | `__________` | Google Cloud Console |
-| SMTP gửi mail | `okr@baotinmanhhai.vn` (app-password) | Google Workspace |
-| Metabase URL (BI) | `report.consultx.vn` (hoặc BI công ty) | `pe_pricing_config` key `metabase` |
-
-> **Nguyên tắc "giống price-engine":** với mọi giá trị hạ tầng (đường dẫn checkout, tên container Postgres,
-> cổng, vị trí cert, cred SSH n8n) → **soi lại đúng cách price-engine đang chạy trên server công ty** rồi dùng
-> cùng quy ước. Runbook này dùng **cổng 8640/8641/8643** cho OKR (đừng trùng cổng price-engine 3001).
+1. **"OKR không có BigQuery" là SAI.** OKR **có** kéo KPI (doanh thu/lãi gộp/tồn kho) từ **BigQuery qua
+   Metabase** (`src/lib/bigquery.ts` → POST `{metabase}/api/dataset`, database 5 = `btmh-dwh-485609`). ⇒ phải
+   quyết định giữ hay bỏ luồng này (xem §0.5-mục 1). App KHÔNG có chatbot/AI/Telegram (đã grep xác nhận) → phần
+   "egress ra AI" (Nhóm A) = **N/A**.
+2. **Phụ thuộc chéo DB.** OKR đọc bảng **`pe_pricing_config`** (của price-engine) để lấy cấu hình Metabase.
+   Khi cho OKR **DB riêng chỉ có `okr_*`** thì bảng này KHÔNG tồn tại → KPI sync gãy. ⇒ **phải refactor** đọc
+   cấu hình từ **ENV** (`METABASE_URL`/`METABASE_API_KEY`) thay vì DB (task code nhỏ ở Pha B), hoặc seed 1 dòng
+   config tối thiểu. **Khuyến nghị: refactor sang ENV** (cắt hẳn coupling).
+3. **`worker` là BẮT BUỘC, không phải tuỳ chọn.** OKR có **~8 job nền định kỳ** (bản gốc ghi "bỏ nếu không có
+   job nền"). Phải dựng container `worker` thay toàn bộ cron n8n (danh sách ở §0.5-mục 3).
+4. **DSAR + Google tokens.** OKR chứa **nhiều PII nhân sự** (user, tên, email, cây tổ chức, bình luận, nhật ký
+   theo actor) **và OAuth token Google Calendar** (`okr_google_tokens`). Cần tính năng **xem/xoá dữ liệu 1 người**
+   (Nhóm B — DSAR) + xử lý token (khuyến nghị **KHÔNG di trú token**, để user tự nối lại Calendar).
+5. **Tách repo riêng để squash sạch.** Code OKR đang nằm **chung repo `decks`** (`okr-portal/` + `decks` +
+   `mcp-server`). Để "gộp lịch sử về 1 commit sạch, repo private" cho gọn, nên **`git filter`/tách OKR ra repo
+   riêng** trước khi squash (CLAUDE.md đã dự trù "khi có repo riêng thì git mv").
+6. **Bỏ n8n mail webhook + publish deck.** OKR đã hỗ trợ **SMTP trực tiếp** (nodemailer) → dùng SMTP, bỏ
+   `N8N_MAIL_WEBHOOK`. Việc publish "deck giới thiệu" (deck.consultx.vn) là ngoài phạm vi bản công ty → bỏ.
 
 ---
 
-## 2. Yêu cầu hệ thống trên server (prerequisite)
+## §0.5. ĐẶC THÙ OKR (đọc kỹ trước khi làm)
 
-Nếu price-engine đã chạy trên server này thì **hầu hết đã có sẵn**. Kiểm tra/cài bổ sung:
+**1) Luồng KPI BigQuery — quyết định trước:**
+- Hiện: app gọi **Metabase** (`report.consultx.vn`) → Metabase truy vấn **BigQuery** (`btmh-dwh-485609`, DWH của
+  công ty). Đây là **kéo số liệu tổng hợp VỀ**, không phải đẩy PII ra AI.
+- Lựa chọn: **(a)** giữ, cho server công ty egress tới Metabase (khai báo là "residual có chủ đích"); **(b)**
+  trỏ sang **Metabase nội bộ công ty** nếu có; **(c)** tắt auto-KPI, nhập tay. → **CFO chốt.** Nếu (a)/(b): cần
+  `METABASE_URL` + `METABASE_API_KEY` trong `.env` (sau refactor).
 
-- **OS**: Ubuntu 22.04/24.04 LTS.
-- **Docker Engine + CLI**: `curl -fsSL https://get.docker.com | sh` (nếu chưa có).
-- **Host nginx**: `apt install nginx`.
-- **certbot** (nếu dùng Let's Encrypt): `apt install certbot python3-certbot-nginx`.
-  *(Nếu dùng cert wildcard `*.baotinmanhhai.vn` do công ty mua → chỉ cần đặt 2 file `fullchain.pem` + `privkey.pem`.)*
-- **git**: `apt install git`.
-- **PostgreSQL `btmh_data`**: dùng lại DB mà price-engine đã restore. Nếu OKR đi 1 mình (không kèm price-engine)
-  → xem **Phụ lục B** (tách DB).
-- **n8n**: dùng lại instance đang chạy (deploy + cron). Nếu chưa có → dựng n8n (Docker) như price-engine.
-- **Mạng egress** từ server phải tới được: **Metabase** (BI), **Google** (`accounts.google.com`,
-  `oauth2.googleapis.com`, `www.googleapis.com`), **SMTP** (`smtp.gmail.com:587`).
-- **Mạng ingress**: mở **443** (và 80 cho certbot).
+**2) DB & di trú:** chỉ trích **bảng `okr_*`** từ `btmh_data` VPS cũ. Cân nhắc **loại `okr_google_tokens`**
+(token OAuth — nhạy cảm, để user tự nối lại). Sau restore: chạy **grants.sql** (least-privilege theo bảng).
+Migration schema: `db/*.sql` — baseline `001–31x` (DB trắng) + mọi file **≥ 320 idempotent** (nâng cấp).
 
----
+**3) Các job nền phải chuyển từ n8n sang `worker/` (in-repo):** worker gọi route nội bộ kèm header
+`x-sync-key: <SYNC_KEY>` (các route đã có sẵn xác thực này — đã kiểm), hoặc gọi thẳng hàm lib.
 
-## 3. Chuẩn bị mã nguồn trên server (git checkout / worktree)
-
-Giống price-engine: dùng 1 checkout của repo `decks`, nhánh OKR `claude/okr-kpi-tracking-system-ugv41q`
-(hoặc `main` nếu đã merge), **build context = thư mục `okr-portal/`**.
-
-```bash
-# Ví dụ đặt tại /home/<user>/okr-portal-src  (mirror cách price-engine đặt /home/<user>/price-engine)
-cd /home/<user>
-git clone <URL repo decks> okr-portal-src           # nếu chưa có
-cd okr-portal-src
-git fetch origin
-git checkout claude/okr-kpi-tracking-system-ugv41q  # hoặc main
-git reset --hard origin/claude/okr-kpi-tracking-system-ugv41q
-```
-
-> Deploy key **read-only** của server công ty phải được add vào repo (giống `~/.ssh/gh_deploy` của price-engine).
-
----
-
-## 4. Tạo file `.env` (NGOÀI git)
-
-Đặt tại `okr-portal-src/okr-portal/.env`. Đây là bản **container domain chính (consultx/base)**; 2 domain kia
-override qua `-e` lúc `docker run` (mục 6).
-
-```dotenv
-# ── Database (dùng chung btmh_data với price-engine) ──
-DATABASE_URL=postgres://btmh_app:<mật khẩu>@host.docker.internal:<cổng 5435>/btmh_data
-
-# ── Auth.js ──
-AUTH_URL=https://okr.baotinmanhhai.vn        # domain chính (đổi theo domain container này phục vụ)
-AUTH_SECRET=<chuỗi random 32+ ký tự>          # GIỮ NGUYÊN secret cũ để không đăng xuất user
-AUTH_TRUST_HOST=true
-GOOGLE_CLIENT_ID=<client id>
-GOOGLE_CLIENT_SECRET=<client secret>
-
-# ── URL tuyệt đối app (dựng link email/tuyệt đối) ──
-APP_URL=https://okr.baotinmanhhai.vn
-
-# ── SMTP gửi mail hệ thống (ưu tiên hơn n8n webhook nếu có SMTP_HOST) ──
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=okr@baotinmanhhai.vn
-SMTP_PASS=<app-password 16 ký tự, BỎ dấu cách>
-MAIL_FROM=BTMH OKR <okr@baotinmanhhai.vn>
-
-# ── Khoá gọi cron nội bộ (n8n → curl route) ──
-SYNC_KEY=<chuỗi random>
-
-# ── (Tuỳ chọn) fallback gửi mail qua n8n nếu không dùng SMTP ──
-# N8N_MAIL_WEBHOOK=https://automation.<domain>/webhook/deck-mail
-```
-
-> **Metabase/BigQuery**: OKR đọc cấu hình từ bảng `pe_pricing_config` key `metabase` trong `btmh_data`
-> (KHÔNG cần env riêng). Chỉ cần server tới được Metabase URL đó.
-
----
-
-## 5. Build image
-
-```bash
-cd /home/<user>/okr-portal-src/okr-portal
-docker build -t okr-portal:latest .
-```
-
-> Dockerfile đã: `npm run build` (kèm `check-page-tours` + `check-role-constraint` gác lỗi), copy `public/`,
-> giữ `nodemailer` external. Build xong image tự chứa mọi thứ để chạy `node server.js` cổng 3000.
-
----
-
-## 6. Chạy container (1 domain, hoặc 3 domain như hiện tại)
-
-**Tối thiểu — chỉ domain công ty `okr.baotinmanhhai.vn` (khuyến nghị gọn):**
-
-```bash
-docker rm -f okr-portal-btmh 2>/dev/null
-docker run -d --name okr-portal-btmh \
-  --env-file /home/<user>/okr-portal-src/okr-portal/.env \
-  -e AUTH_URL=https://okr.baotinmanhhai.vn \
-  -e APP_URL=https://okr.baotinmanhhai.vn \
-  -p 127.0.0.1:8643:3000 \
-  --add-host=host.docker.internal:host-gateway \
-  --restart unless-stopped \
-  okr-portal:latest
-```
-
-**Nếu muốn giữ đủ 3 domain (như VPS cũ):** chạy 3 container cùng image, khác `AUTH_URL` + cổng + Google client:
-
-| Container | Domain | Cổng host | AUTH_URL | Google client |
-|---|---|---|---|---|
-| `okr-portal` | okr.consultx.vn | 8640 | https://okr.consultx.vn | client "consultx" |
-| `okr-portal-vt` | okr.vanthang.io | 8641 | https://okr.vanthang.io | client "vanthang" |
-| `okr-portal-btmh` | okr.baotinmanhhai.vn | 8643 | https://okr.baotinmanhhai.vn | client "vanthang" |
-
-```bash
-# ví dụ container vanthang (client mới truyền qua -e, không để trong .env)
-docker run -d --name okr-portal-vt \
-  --env-file .../.env \
-  -e AUTH_URL=https://okr.vanthang.io -e APP_URL=https://okr.vanthang.io \
-  -e GOOGLE_CLIENT_ID=<client vanthang> -e GOOGLE_CLIENT_SECRET=<secret vanthang> \
-  -p 127.0.0.1:8641:3000 --add-host=host.docker.internal:host-gateway \
-  --restart unless-stopped okr-portal:latest
-```
-
-> ⚠️ Cổng 8640–8643 chỉ ví dụ. **Kiểm `docker ps`/`ss -ltnp` để tránh trùng** cổng price-engine (3001) & app khác.
-
----
-
-## 7. Chạy migration schema (`okr_*`)
-
-Nếu `btmh_data` đến từ bản `pg_dump` đầy đủ của price-engine thì bảng `okr_*` **đã có sẵn** → chỉ cần chạy để
-đảm bảo mới nhất. Nếu là DB trắng → phải chạy **baseline + migration**.
-
-**Cách 1 — DB trắng (lần đầu):** chạy toàn bộ `db/*.sql` theo thứ tự số, bằng **superuser**:
-
-```bash
-cd /home/<user>/okr-portal-src/okr-portal
-for f in $(ls db/*.sql | sort -t/ -k2 -V); do
-  echo "== $f"; docker exec -i <container_postgres> psql -U postgres -d btmh_data -v ON_ERROR_STOP=1 < "$f" || break
-done
-```
-
-**Cách 2 — đã có DB (nâng cấp):** chỉ chạy migration ≥ 320 (idempotent), giống node deploy n8n:
-
-```bash
-for f in $(ls db/*.sql | sort -V | awk -F/ '$2+0>=320'); do
-  echo "== $f"; docker exec -i <container_postgres> psql -U postgres -d btmh_data -v ON_ERROR_STOP=1 < "$f" || break
-done
-```
-
-**Tạo role runtime (nếu DB trắng):**
-
-```sql
--- chạy bằng superuser postgres
-CREATE ROLE btmh_app LOGIN PASSWORD '<mật khẩu>';
-GRANT USAGE ON SCHEMA public TO btmh_app;
-GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO btmh_app;
-GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO btmh_app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT,INSERT,UPDATE,DELETE ON TABLES TO btmh_app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE,SELECT ON SEQUENCES TO btmh_app;
--- OKR cần đọc cấu hình Metabase của price-engine:
-GRANT SELECT ON pe_pricing_config TO btmh_app;
--- OKR cần XOÁ nhật ký (retention):
-GRANT DELETE ON okr_audit_log TO btmh_app;
-```
-
----
-
-## 8. nginx vhost + TLS
-
-Tạo vhost `/etc/nginx/sites-available/okr.baotinmanhhai.vn` → proxy về cổng container (8643):
-
-```nginx
-server {
-  listen 443 ssl;
-  server_name okr.baotinmanhhai.vn;
-
-  ssl_certificate     /etc/nginx/ssl/baotinmanhhai.vn/fullchain.pem;   # cert wildcard công ty
-  ssl_certificate_key /etc/nginx/ssl/baotinmanhhai.vn/privkey.pem;
-  include /etc/letsencrypt/options-ssl-nginx.conf;     # BẮT BUỘC (nếu thiếu → Chrome ERR_SSL_PROTOCOL_ERROR)
-  ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-
-  client_max_body_size 20m;
-  location / {
-    proxy_pass http://127.0.0.1:8643;
-    proxy_http_version 1.1;
-    proxy_set_header Host $host;
-    proxy_set_header X-Forwarded-Host $host;
-    proxy_set_header X-Forwarded-Proto $scheme;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-  }
-}
-server { listen 80; server_name okr.baotinmanhhai.vn; return 301 https://$host$request_uri; }
-```
-
-```bash
-ln -s /etc/nginx/sites-available/okr.baotinmanhhai.vn /etc/nginx/sites-enabled/
-nginx -t && nginx -s reload    # LUÔN test trước khi reload
-```
-
-> Nếu dùng **certbot** thay cert wildcard: `certbot --nginx -d okr.baotinmanhhai.vn` (server phải mở 80 + DNS đã trỏ).
-
----
-
-## 9. Google OAuth (chỉ khi ĐỔI domain)
-
-- **Giữ nguyên domain `okr.baotinmanhhai.vn`** → redirect URI cũ vẫn đúng → **không phải làm gì**.
-- Nếu domain mới: vào **Google Cloud Console → APIs & Services → Credentials → OAuth client** tương ứng, thêm
-  **Authorized redirect URI**: `https://<domain mới>/api/auth/callback/google`. (Tài khoản Google có quyền quản client.)
-
----
-
-## 10. n8n — deploy tự động + các cron của OKR
-
-OKR dựa vào n8n cho **deploy** và **~10 cron nghiệp vụ**. Trên server công ty cần **tạo/điều chỉnh** các workflow
-để **SSH đúng server mới + curl đúng cổng**. Nếu dùng lại n8n hiện tại → chỉ sửa **cred SSH + host + cổng**.
-
-**Workflow deploy (bắt buộc):** node SSH chạy:
-```bash
-cd /home/<user>/okr-portal-src && git fetch origin && git reset --hard origin/<branch> \
- && cd okr-portal && docker build -t okr-portal:latest . \
- && <chạy lại 1–3 container ở mục 6> \
- && <chạy migration ≥320 ở mục 7 cách 2> \
- && <smoke: curl -so /dev/null -w '%{http_code}' https://okr.baotinmanhhai.vn/login>
-```
-
-**Các cron nghiệp vụ (SSH đọc `SYNC_KEY` từ `.env` rồi `curl` route nội bộ `127.0.0.1:8643`):**
-
-| Mục đích | Route | Lịch (giờ VN) |
+| Job | Route (đã có, gated x-sync-key) | Lịch (giờ VN) |
 |---|---|---|
 | Đồng bộ KPI BigQuery | `POST /api/kpi/sync` | `0 7-22 * * *` |
 | Nhắc check-in | `POST /api/reminders/checkin` | `0 8 * * *` |
-| Nhắc việc (đến hạn+quá hạn) | `POST /api/reminders/tasks?kind=daily` | `0 8 * * *` |
+| Nhắc việc đến hạn/quá hạn | `POST /api/reminders/tasks?kind=daily` | `0 8 * * *` |
 | Tổng hợp quá hạn tuần | `POST /api/reminders/tasks?kind=weekly` | T2 `07:30` |
 | Digest sáng | `POST /api/digest/daily` | `0 8 * * 1-6` |
 | Bản tin tuần | `POST /api/digest/weekly` | T2 `07:30` |
 | Dispatch thay đổi việc | `POST /api/task-changes/dispatch` | `*/30 5-22 * * *` |
 | Dọn nhật ký (retention) | `POST /api/audit/prune` | hằng ngày |
-| Checkpoint tự audit | `POST /api/admin/checkpoint?...` | `05:30` |
+| Checkpoint tự audit | `POST /api/admin/checkpoint` | `05:30` |
 
-> Route đều gác bằng header `x-sync-key: <SYNC_KEY>`. Mẫu 1 node SSH:
-> `KEY=$(grep ^SYNC_KEY .env|cut -d= -f2); curl -s -X POST -H "x-sync-key: $KEY" http://127.0.0.1:8643/api/kpi/sync`
->
-> Cách nhanh nhất: **export các workflow OKR từ n8n cũ → import vào n8n công ty → sửa cred SSH + host + cổng**.
+**4) Auth/domain:** 1 domain `okr.baotinmanhhai.vn`, 1 app container. **BẮT BUỘC set `AUTH_URL`** (Auth.js v5
+build này không dựng redirect_uri từ header → thiếu sẽ nhảy `0.0.0.0`). Giữ domain → redirect URI Google không
+đổi. **`nodemailer` để external** (đã cấu hình `next.config.mjs`).
+
+**5) Endpoint ghi DB không xác thực:** đã kiểm — 9 route cron đều gated `x-sync-key` HOẶC session admin; route
+người dùng (`/api/notifications/act`, `/api/comments`…) kiểm session. ⇒ Nhóm D/E phần endpoint = đạt (vẫn rà lại).
 
 ---
 
-## 11. Cắt DNS (blue-green — an toàn nhất)
+# PHẦN A — HƯỚNG DẪN
 
-1. Chạy **song song** server cũ + mới; server mới chỉ truy cập nội bộ/qua `--resolve` để verify.
-2. Verify đầy đủ (mục 12).
-3. **Đổi DNS A record** `okr.baotinmanhhai.vn` → IP server mới; chờ TTL.
-4. **Giữ server cũ chạy vài ngày** để rollback nếu cần; **tạm dừng cron ở server cũ** để tránh gửi email trùng.
+## 1. Mục tiêu
+Đưa app OKR từ VPS cá nhân cũ sang **server công ty**, đóng gói Docker, làm sạch bảo mật theo bộ audit IT, bàn
+giao code review **không còn vi phạm**.
 
-```bash
-# verify không phụ thuộc DNS:
-curl -k --resolve okr.baotinmanhhai.vn:443:<IP mới> https://okr.baotinmanhhai.vn/login -o /dev/null -w '%{http_code}\n'
+## 2. Ràng buộc BẮT BUỘC (giống BTMH MIS)
+1. **KHÔNG đụng/sửa gì trên VPS cá nhân cũ** (`45.77.247.185`) — chỉ đọc để lấy dump `okr_*`.
+2. **Chỉ thao tác trên server công ty.** Chạm server ngoài/cá nhân → **hỏi & chờ xác nhận**.
+3. **SOP/secret bản OKR lưu vào MỘT tài liệu Outline RIÊNG cho OKR** (tách khỏi doc BTMH MIS & doc app cũ).
+4. Server công ty **chỉ vào qua VPN (FortiClient)** → chạy lệnh từ **laptop đã nối VPN**, **SSH key IT cấp**.
+
+## 3. Kiến trúc mục tiêu (Docker Compose — chỉ Caddy mở cổng)
+
+| Container | Vai trò | Ghi chú OKR |
+|---|---|---|
+| `caddy` | TLS + reverse proxy, Let's Encrypt auto-renew | domain `okr.baotinmanhhai.vn` |
+| `app` | App OKR (Next.js standalone, cổng nội bộ 3000) | `AUTH_URL` bắt buộc; `nodemailer` external |
+| `worker` | **BẮT BUỘC** — chạy 8 job nền (§0.5-mục 3) | thay toàn bộ cron n8n |
+| `postgres` | DB **RIÊNG** của OKR (`okr_*`), user quyền hẹp | mạng `internal`, KHÔNG ra internet |
+
+Egress cho phép (khai báo residual): **Metabase/BigQuery** (nếu giữ KPI), **Google** (OAuth+Calendar),
+**SMTP** (`smtp.gmail.com:587`). Ngoài ra chặn.
+
+**Template:** sao khung deploy từ repo BTMH MIS: `deploy/scripts/{bootstrap-server,gen-secrets,deploy,backup,
+restore,healthcheck,migrate-pull,migrate-export,first-setup}.sh`, `deploy/sql/grants.sql`,
+`docker-compose.yml`, `Caddyfile`, `.env.example` — chỉ chỉnh tên/biến + thêm service `worker`.
+
+## 4. Cần chuẩn bị (xin trước)
+- **Từ IT:** SSH key server công ty; xác nhận 80/443 mở cho OKR; DNS `okr.baotinmanhhai.vn`.
+- **Từ chủ sở hữu:** Google OAuth client (redirect `https://okr.baotinmanhhai.vn/api/auth/callback/google`);
+  quyền đọc VPS cũ lấy dump; **khoá backup age** (sinh mới, private key giữ offline); **quyết định luồng KPI**
+  (§0.5-mục 1) + `METABASE_URL`/`METABASE_API_KEY` nếu giữ.
+- **Dữ liệu:** OKR trong DB dùng chung `btmh_data` VPS cũ → **chỉ trích `okr_*`** (cân nhắc bỏ `okr_google_tokens`).
+
+## 5. Các bước triển khai (tuần tự, có checkpoint)
+1. **Bootstrap server** (1 lần, sudo): Docker+compose, swap, `ufw` (22/80/443), `fail2ban`, cron auto-deploy
+   `*/5` + backup đêm. In **deploy key** → thêm vào GitHub repo OKR **read-only**.
+2. **Di trú mã hoá đầu-cuối:** server sinh khoá age → VPS cũ dump **chỉ `okr_*`** → nén + age → chép **2 chặng
+   qua laptop** → server giải mã, kiểm `sha256` → **shred bản rõ** ở VPS cũ.
+3. **`gen-secrets`:** sinh mật khẩu DB/secret vào `.env` (chmod 600); điền domain + OAuth + ACME email +
+   (nếu giữ KPI) Metabase.
+4. **`first-setup`:** nạp dump `okr_*` vào Postgres trống → `grants.sql` → chạy migration → dựng stack (app+worker+caddy).
+5. **QC trước cắt DNS:** thêm tạm dòng hosts trỏ domain về IP server → đăng nhập, kiểm từng màn hình + KPI + email thử + 1 job worker.
+6. **Cắt chuyển:** đổi DNS A → server công ty; Caddy tự xin cert.
+7. **Self-audit/QC/fix nhiều vòng** tới khi **hội tụ** (§6).
+
+## 6. Checklist bảo mật (đối chiếu audit gốc — khép từng nhóm)
+- **Nhóm A — Egress AI/bên thứ 3:** OKR **không có** chatbot/AI/Telegram → **N/A** (ghi rõ). Luồng
+  Metabase/BigQuery là **kéo số tổng hợp về từ DWH công ty**, không đẩy PII ra AI → khai "residual có chủ đích"
+  + chặn egress ngoài danh sách cho phép + log.
+- **Nhóm B — Dữ liệu & vòng đời:** DB về VN (server công ty); **backup age + retention** (đã có nhật ký
+  retention `audit_retention_days`); **DSAR** — bổ sung tính năng **xem/xoá/ẩn danh dữ liệu 1 người** (user +
+  bình luận + nhật ký actor + tokens); xử lý `okr_google_tokens`.
+- **Nhóm C — Bí mật KD:** logic phân quyền/tài chính **server-side** (đã kiểm: 0 `NEXT_PUBLIC` secret); repo private.
+- **Nhóm D — Shadow IT:** **gỡ toàn bộ n8n** → job nền vào `worker/` (git); mọi endpoint ghi DB có khoá/kiểm quyền (đã có).
+- **Nhóm E — Kiểm soát truy cập:** 0 secret client bundle; route public tự kiểm khoá; DB **least-privilege**
+  (user app không super/createdb, grant theo bảng; thêm `GRANT SELECT pe_pricing_config` **CHỈ nếu** không refactor ENV;
+  `GRANT DELETE okr_audit_log`).
+- **Hạ tầng:** chỉ Caddy publish 80/443; Postgres `internal`; SSH key-only; không `docker.sock`, không
+  `privileged`; security headers (HSTS/nosniff/X-Frame).
+
+## 7. Làm sạch trước bàn giao IT
+- Xoá **mọi dấu vết hệ thống cũ**: n8n, Metabase-consultx, deck.consultx, domain `*.consultx.vn`/`*.vanthang.io`,
+  IP/username VPS cá nhân — trong **code, tài liệu, message commit**.
+- **Không secret trong file track**; quét `gitleaks`/`trufflehog`.
+- **Tách OKR ra repo riêng** rồi **squash về 1 commit sạch** (orphan) → repo **private**.
+- Quét hội tụ: `grep` toàn repo + **runtime bundle** = 0 dấu vết; `npm run build` sạch; các màn hình 200; healthcheck OK.
+
+## 8. Rủi ro IT sẽ ghi nhận (chuẩn bị trả lời)
+Single-admin/bus-factor · phụ thuộc VPN · rebuild image vá CVE định kỳ · kho secret Outline (bật 2FA/SSO) ·
+**egress Metabase/BigQuery** (nếu giữ KPI) — ghi rõ "residual có chủ đích".
+
+---
+
+# PHẦN B — PROMPT AI (dán vào Claude Code chạy trên laptop có VPN)
+
+> Mở Claude Code trên **laptop đã nối VPN công ty**, tại thư mục **repo app OKR**. Dán nguyên khối dưới đây.
+> Thay `«…»` bằng thông tin thực tế (hoặc để AI hỏi).
+
+```text
+Bạn là kỹ sư triển khai. Nhiệm vụ: đưa app OKR này (repo hiện tại) lên SERVER CÔNG TY, đóng gói Docker
+Compose, làm sạch bảo mật theo bộ audit CNTT, bàn giao code review không còn vi phạm. App chị em BTMH MIS
+(price-engine bản công ty) đã làm y hệt quy trình — TÁI SỬ DỤNG khung deploy đó (deploy/scripts,
+docker-compose.yml, Caddyfile, deploy/sql/grants.sql, .env.example), CHỈ chỉnh tên/biến + THÊM service worker.
+
+BỐI CẢNH & TÀI NGUYÊN
+- Server công ty: «IP», user «user», CHỈ vào qua VPN, SSH key IT cấp ở «đường dẫn key».
+- Domain: «okr.baotinmanhhai.vn». DNS/OAuth/cert: hỏi tôi khi cần.
+- Dữ liệu OKR nằm trong DB DÙNG CHUNG `btmh_data` trên VPS cá nhân cũ «45.77.247.185». Khi di trú CHỈ lấy
+  bảng `okr_*` — KHÔNG mang cả DB. CÂN NHẮC bỏ bảng `okr_google_tokens` (token OAuth — để user tự nối lại).
+
+ĐẶC THÙ OKR — BẮT BUỘC XỬ LÝ (khác price-engine)
+1. App KHÔNG có chatbot/AI/Telegram → Nhóm A (egress AI) = N/A, ghi rõ.
+2. NHƯNG app CÓ kéo KPI từ BigQuery qua Metabase (src/lib/bigquery.ts). Hiện đọc cấu hình từ bảng
+   `pe_pricing_config` (của price-engine) — bảng này KHÔNG có trong DB riêng OKR. HÃY REFACTOR đọc cấu hình
+   Metabase từ ENV (METABASE_URL/METABASE_API_KEY) thay vì DB, để cắt phụ thuộc chéo. Hỏi tôi có GIỮ luồng KPI
+   không; nếu bỏ thì tắt job kpi/sync.
+3. App CÓ ~8 job nền (đang chạy bằng n8n) — PHẢI dựng service `worker` (in-repo, node-cron) thay n8n, gọi các
+   route nội bộ kèm header x-sync-key=«SYNC_KEY»: kpi/sync (7-22h), reminders/checkin (8h), reminders/tasks
+   ?kind=daily (8h) & ?kind=weekly (T2 7:30), digest/daily (8h T2-T7), digest/weekly (T2 7:30),
+   task-changes/dispatch (*/30 5-22h), audit/prune (hằng ngày), admin/checkpoint (5:30). GỠ BỎ mọi n8n.
+4. PII nặng + OAuth token → Nhóm B DSAR: bổ sung tính năng xem/xoá/ẩn danh dữ liệu 1 người (user + bình luận +
+   nhật ký actor + google tokens). Backup mã hoá age + retention.
+5. Code OKR đang trong repo `decks` (thư mục okr-portal/, chung với decks + mcp-server). Để squash sạch + repo
+   private: TÁCH OKR ra repo riêng trước, rồi orphan-squash. Đưa lệnh cho tôi tự chạy phần force-push.
+6. Email dùng SMTP trực tiếp (nodemailer, đã có) — BỎ N8N_MAIL_WEBHOOK. Bỏ việc publish deck giới thiệu.
+7. AUTH_URL bắt buộc set = domain (nếu thiếu Auth.js nhảy 0.0.0.0). Giữ next.config experimental
+   serverComponentsExternalPackages:['nodemailer'].
+
+RÀNG BUỘC BẮT BUỘC
+1. KHÔNG thay đổi gì trên VPS cá nhân cũ — chỉ đọc để lấy dump.
+2. Chỉ thao tác trên server công ty. Chạm server ngoài/cá nhân → HỎI & chờ tôi xác nhận.
+3. Lưu SOP/secret/khoá age vào MỘT tài liệu Outline RIÊNG cho OKR.
+4. Không secret vào code/log/commit. Auto-deploy KIỂU KÉO (cron */5 trên server), KHÔNG mở SSH cho CI.
+
+CÁCH LÀM VIỆC (ghi nhớ suốt phiên)
+- Làm TUẦN TỰ; xong việc đang làm mới sang việc mới.
+- Sau mỗi mốc lớn: DỪNG checkpoint, tóm tắt kết quả + rủi ro để tôi QC.
+- Self-audit/QC/fix NHIỀU VÒNG tới khi vòng sau KHỚP vòng trước (hội tụ).
+- Thao tác phá huỷ (force-push, xoá dữ liệu, đổi DNS) → đưa lệnh sẵn cho tôi tự chạy.
+
+KIẾN TRÚC MỤC TIÊU
+- Docker Compose: caddy (80/443, Let's Encrypt auto-renew) + app + worker + postgres (internal, không ra
+  internet). Chỉ Caddy publish cổng.
+- Postgres least-privilege: user app KHÔNG super/createdb/createrole; GRANT theo bảng; GRANT DELETE
+  okr_audit_log (retention). (Không cần pe_pricing_config sau khi refactor Metabase sang ENV.)
+- Auto-deploy KÉO: cron */5 chạy deploy.sh --if-changed (git reset --hard origin/main → build → migrate
+  (db/*.sql ≥320 idempotent) → healthcheck → audit log); deploy key GitHub read-only. Actions chỉ CI.
+- Backup: pg_dump → age → file 600 + retention + restore.sh + diễn tập khôi phục.
+
+CÁC PHA (checkpoint giữa mỗi pha)
+A. KHẢO SÁT app OKR: liệt kê dịch vụ ngoài (Metabase/BigQuery, SMTP, Google), secret đang dùng, PII lưu ở đâu,
+   job nền, endpoint ghi DB. Báo cáo trước khi sửa.
+B. ĐÓNG GÓI: docker-compose + Caddyfile + scripts (mượn BTMH MIS) + service worker; refactor Metabase→ENV;
+   tham số hoá hằng số; tách secret ra .env; build sạch (npm run build).
+C. HARDENING theo audit (khép từng nhóm, ghi N/A nếu không áp): Nhóm A = N/A; DB về VN + backup age +
+   retention + DSAR; server-side/0 secret client; bỏ shadow-IT (n8n→worker); least-privilege DB; security
+   headers; SSH key-only; không docker.sock/privileged.
+D. TRIỂN KHAI: bootstrap server → deploy key → di trú (age: dump CHỈ okr_* [bỏ tokens] → mã hoá → 2 chặng qua
+   laptop → giải mã + sha256 → shred) → gen-secrets → first-setup → QC qua hosts tạm (login + KPI + email +
+   1 job worker) → (khi tôi duyệt) cắt DNS + Let's Encrypt.
+E. LÀM SẠCH BÀN GIAO: xoá dấu vết cũ (n8n/Metabase-consultx/deck.consultx/domain consultx+vanthang.io/IP VPS)
+   trong code+tài liệu+commit; gitleaks/trufflehog=0; TÁCH repo OKR riêng + orphan-squash (đưa lệnh force-push
+   cho tôi); quét hội tụ repo + runtime bundle = 0.
+
+ĐẦU RA MỖI PHA: đã làm gì, verify bằng lệnh gì, kết quả, rủi ro còn lại. Cập nhật Outline OKR.
+Bắt đầu PHA A và HỎI tôi thông tin còn thiếu («…») trước khi chạy lệnh chạm server.
 ```
 
 ---
 
-## 12. Checklist nghiệm thu (verify)
-
-- ☐ `docker ps` — (các) container OKR **Up**.
-- ☐ `curl .../login` = **200** trên từng domain.
-- ☐ Đăng nhập Google thành công (không lỗi `redirect_uri_mismatch`, không nhảy `0.0.0.0`).
-- ☐ Dashboard/OKR/Công việc hiển thị dữ liệu (DB kết nối OK).
-- ☐ Bấm "Đồng bộ KPI" ở `/admin` chạy được (Metabase reachable).
-- ☐ Gửi email thử (digest `?test=1`) tới hộp thư → nhận được (SMTP OK).
-- ☐ Chạy tay 1 workflow cron → 200.
-- ☐ Checkpoint `/api/admin/checkpoint?dry=1` sạch.
-- ☐ Backup DB tự động đã bật (mục 13).
-
----
-
-## 13. Backup & an toàn (nên làm ngay khi lên server công ty)
-
-- **pg_dump định kỳ** `btmh_data` → lưu **off-site** (S3/khác máy), giữ ≥ 14 bản; kiểm thử restore định kỳ.
-- **`.env` cất trong secret manager** của công ty (không để lộ; sao lưu riêng, mã hoá).
-- **Phân quyền server**: tách quyền sudo/DB theo người; bật audit log hệ điều hành.
-- **Chứng chỉ**: theo dõi hạn cert; certbot auto-renew hoặc lịch thay cert wildcard.
-
----
-
-## 14. Rollback nhanh
-
-- **App lỗi**: nginx trỏ lại container cũ (đổi `proxy_pass` cổng) + `nginx -s reload`; hoặc `docker run` lại image tag trước.
-- **DNS**: trỏ A record về IP cũ (đã giữ server cũ chạy).
-- **DB**: restore từ pg_dump gần nhất (chỉ khi migration hỏng — hiếm vì idempotent).
-
----
-
-## Phụ lục A — Bảng cổng & container (quy ước OKR)
-
-| Domain | Container | Cổng host nội bộ |
-|---|---|---|
-| okr.consultx.vn | `okr-portal` | 127.0.0.1:8640 |
-| okr.vanthang.io | `okr-portal-vt` | 127.0.0.1:8641 |
-| okr.baotinmanhhai.vn | `okr-portal-btmh` | 127.0.0.1:8643 |
-
-## Phụ lục B — Nếu OKR đi RIÊNG (không kèm price-engine)
-
-Phải cắt 2 phụ thuộc chéo:
-1. **DB**: tạo DB riêng (vd `btmh_okr`) → `pg_dump -t 'okr_*'` từ DB cũ → restore sang; sửa `DATABASE_URL`.
-2. **Cấu hình Metabase**: OKR đang đọc `pe_pricing_config` (bảng của price-engine). Khi tách DB, phải **copy dòng
-   config Metabase** sang DB mới (tạo bảng `pe_pricing_config` tối thiểu chỉ với key `metabase`), HOẶC sửa
-   `src/lib/bigquery.ts` để đọc config từ **env** thay vì DB. → Đây là thay đổi CODE, cần 1 task riêng + test.
-
-> Khuyến nghị: **đi cùng cụm dùng chung DB** để khỏi đụng code. Chỉ tách khi có lý do bắt buộc.
-
-## Phụ lục C — Biến môi trường (tham chiếu nhanh)
-
-`DATABASE_URL` · `AUTH_URL` · `AUTH_SECRET` · `AUTH_TRUST_HOST` · `GOOGLE_CLIENT_ID` · `GOOGLE_CLIENT_SECRET` ·
-`APP_URL` · `SMTP_HOST` · `SMTP_PORT` · `SMTP_USER` · `SMTP_PASS` · `MAIL_FROM` · `SYNC_KEY` ·
-`N8N_MAIL_WEBHOOK` (tuỳ chọn).
-
----
-
-### Việc Claude Code hỗ trợ được (khi anh mở chat mới cho migration)
-- Soạn sẵn **script provisioning, `.env` mẫu, vhost nginx, lệnh docker run**, chỉnh code (Phụ lục B) qua PR.
-- **Tạo/sửa workflow n8n** (deploy + cron) qua n8n MCP, trỏ đúng server mới.
-- KHÔNG tự **SSH vào server / đổi DNS** → phần này đội IT chạy theo runbook, hoặc qua workflow n8n SSH.
+*Ghi chú (chủ sở hữu): điền sẵn `«…»` (IP server, key, domain, IP VPS cũ, SYNC_KEY, Metabase URL/key nếu giữ KPI)
+hoặc để team tự hỏi IT. Quyết định GIỮ/BỎ luồng KPI BigQuery nên chốt TRƯỚC khi mở chat mới.*
