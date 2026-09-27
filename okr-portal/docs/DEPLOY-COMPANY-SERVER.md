@@ -37,12 +37,13 @@ Bản gốc viết cho price-engine nên có vài chỗ **không đúng với OK
 
 ## §0.5. ĐẶC THÙ OKR (đọc kỹ trước khi làm)
 
-**1) Luồng KPI BigQuery — quyết định trước:**
-- Hiện: app gọi **Metabase** (`report.consultx.vn`) → Metabase truy vấn **BigQuery** (`btmh-dwh-485609`, DWH của
-  công ty). Đây là **kéo số liệu tổng hợp VỀ**, không phải đẩy PII ra AI.
-- Lựa chọn: **(a)** giữ, cho server công ty egress tới Metabase (khai báo là "residual có chủ đích"); **(b)**
-  trỏ sang **Metabase nội bộ công ty** nếu có; **(c)** tắt auto-KPI, nhập tay. → **CFO chốt.** Nếu (a)/(b): cần
-  `METABASE_URL` + `METABASE_API_KEY` trong `.env` (sau refactor).
+**1) Luồng KPI BigQuery — ✅ ĐÃ CHỐT: GIỮ (phương án a, CFO 27/09).**
+- App gọi **Metabase** (`report.consultx.vn`) → Metabase truy vấn **BigQuery** (`btmh-dwh-485609`, DWH của công
+  ty). Đây là **kéo số liệu tổng hợp VỀ**, không phải đẩy PII ra AI.
+- **Giữ nguyên luồng KPI.** Cho server công ty **egress tới Metabase** (khai báo Nhóm A là "residual có chủ
+  đích" + chặn mọi egress ngoài danh sách cho phép + log). **BẮT BUỘC** có `METABASE_URL` + `METABASE_API_KEY`
+  trong `.env` (sau khi refactor đọc cấu hình từ ENV — mục §0-điểm 2). Job `kpi/sync` GIỮ chạy ở worker.
+- *(Sau này nếu công ty dựng Metabase nội bộ thì chỉ đổi 2 biến ENV, không đụng code.)*
 
 **2) DB & di trú:** chỉ trích **bảng `okr_*`** từ `btmh_data` VPS cũ. Cân nhắc **loại `okr_google_tokens`**
 (token OAuth — nhạy cảm, để user tự nối lại). Sau restore: chạy **grants.sql** (least-privilege theo bảng).
@@ -103,8 +104,8 @@ restore,healthcheck,migrate-pull,migrate-export,first-setup}.sh`, `deploy/sql/gr
 ## 4. Cần chuẩn bị (xin trước)
 - **Từ IT:** SSH key server công ty; xác nhận 80/443 mở cho OKR; DNS `okr.baotinmanhhai.vn`.
 - **Từ chủ sở hữu:** Google OAuth client (redirect `https://okr.baotinmanhhai.vn/api/auth/callback/google`);
-  quyền đọc VPS cũ lấy dump; **khoá backup age** (sinh mới, private key giữ offline); **quyết định luồng KPI**
-  (§0.5-mục 1) + `METABASE_URL`/`METABASE_API_KEY` nếu giữ.
+  quyền đọc VPS cũ lấy dump; **khoá backup age** (sinh mới, private key giữ offline); **`METABASE_URL` +
+  `METABASE_API_KEY`** (KPI đã chốt GIỮ — §0.5-mục 1).
 - **Dữ liệu:** OKR trong DB dùng chung `btmh_data` VPS cũ → **chỉ trích `okr_*`** (cân nhắc bỏ `okr_google_tokens`).
 
 ## 5. Các bước triển khai (tuần tự, có checkpoint)
@@ -166,10 +167,10 @@ BỐI CẢNH & TÀI NGUYÊN
 
 ĐẶC THÙ OKR — BẮT BUỘC XỬ LÝ (khác price-engine)
 1. App KHÔNG có chatbot/AI/Telegram → Nhóm A (egress AI) = N/A, ghi rõ.
-2. NHƯNG app CÓ kéo KPI từ BigQuery qua Metabase (src/lib/bigquery.ts). Hiện đọc cấu hình từ bảng
-   `pe_pricing_config` (của price-engine) — bảng này KHÔNG có trong DB riêng OKR. HÃY REFACTOR đọc cấu hình
-   Metabase từ ENV (METABASE_URL/METABASE_API_KEY) thay vì DB, để cắt phụ thuộc chéo. Hỏi tôi có GIỮ luồng KPI
-   không; nếu bỏ thì tắt job kpi/sync.
+2. App CÓ kéo KPI từ BigQuery qua Metabase (src/lib/bigquery.ts). ĐÃ CHỐT: GIỮ luồng KPI (KHÔNG tắt kpi/sync).
+   Hiện đọc cấu hình từ bảng `pe_pricing_config` (của price-engine) — bảng này KHÔNG có trong DB riêng OKR.
+   HÃY REFACTOR đọc cấu hình Metabase từ ENV (METABASE_URL/METABASE_API_KEY) thay vì DB, để cắt phụ thuộc chéo.
+   Cho server egress tới Metabase và khai Nhóm A là "residual có chủ đích" (chặn mọi egress khác + log).
 3. App CÓ ~8 job nền (đang chạy bằng n8n) — PHẢI dựng service `worker` (in-repo, node-cron) thay n8n, gọi các
    route nội bộ kèm header x-sync-key=«SYNC_KEY»: kpi/sync (7-22h), reminders/checkin (8h), reminders/tasks
    ?kind=daily (8h) & ?kind=weekly (T2 7:30), digest/daily (8h T2-T7), digest/weekly (T2 7:30),
@@ -224,5 +225,5 @@ Bắt đầu PHA A và HỎI tôi thông tin còn thiếu («…») trước khi
 
 ---
 
-*Ghi chú (chủ sở hữu): điền sẵn `«…»` (IP server, key, domain, IP VPS cũ, SYNC_KEY, Metabase URL/key nếu giữ KPI)
-hoặc để team tự hỏi IT. Quyết định GIỮ/BỎ luồng KPI BigQuery nên chốt TRƯỚC khi mở chat mới.*
+*Ghi chú (chủ sở hữu): điền sẵn `«…»` (IP server, key, domain, IP VPS cũ, SYNC_KEY, METABASE_URL/METABASE_API_KEY)
+hoặc để team tự hỏi IT. Luồng KPI BigQuery: ĐÃ CHỐT GIỮ (27/09) — chat mới không cần hỏi lại.*
